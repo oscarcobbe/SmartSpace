@@ -105,7 +105,7 @@ export default function InstallationPage() {
               <ArrowRight className="h-4 w-4" />
             </Link>
             <a
-              href="tel:+353000000000"
+              href="tel:+35315130424"
               className="inline-flex items-center justify-center gap-2 border-2 border-white/30 text-white font-semibold px-10 py-4 rounded-full hover:bg-white/10 transition-all"
             >
               <Phone className="h-4 w-4" />

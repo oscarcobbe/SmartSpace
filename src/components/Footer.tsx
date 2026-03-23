@@ -1,10 +1,10 @@
 import Link from "next/link";
 
 const productLinks = [
-  { href: "/products?category=doorbell", label: "Video Doorbells" },
-  { href: "/products?category=camera", label: "Security Cameras" },
-  { href: "/products?category=alarm", label: "Alarm Systems" },
-  { href: "/products?category=bundle", label: "Bundles & Packs" },
+  { href: "/products/doorbells", label: "Video Doorbells" },
+  { href: "/products/cameras", label: "Security Cameras" },
+  { href: "/products/bundles", label: "Bundles & Packs" },
+  { href: "/products/services", label: "Services" },
 ];
 
 const companyLinks = [
@@ -67,8 +67,8 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="tel:+353000000000" className="hover:text-white transition-colors">
-                  +353 1 000 0000
+                <a href="tel:+35315130424" className="hover:text-white transition-colors">
+                  +353 1 513 0424
                 </a>
               </li>
               <li>Dublin, Ireland</li>

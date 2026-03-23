@@ -11,6 +11,7 @@ const navLinks = [
   { href: "/installation", label: "Installation" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
+  { href: "https://smartcareliving.ie", label: "SmartGuardian", external: true },
 ];
 
 export default function Navbar() {
@@ -55,19 +56,31 @@ export default function Navbar() {
 
             {/* Desktop Nav */}
             <div className="hidden md:flex items-center gap-8">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`text-sm font-medium transition-colors ${
-                    pathname === link.href
-                      ? "text-brand-500"
-                      : "text-[#555] hover:text-[#1a1a1a]"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {navLinks.map((link) =>
+                link.external ? (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium transition-colors text-[#555] hover:text-[#1a1a1a]"
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`text-sm font-medium transition-colors ${
+                      pathname === link.href
+                        ? "text-brand-500"
+                        : "text-[#555] hover:text-[#1a1a1a]"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                )
+              )}
             </div>
 
             {/* Desktop CTA + Cart */}
@@ -111,16 +124,29 @@ export default function Navbar() {
           {/* Mobile Menu */}
           {isOpen && (
             <div className="md:hidden border-t border-[#eee] py-4 space-y-1 bg-white">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setIsOpen(false)}
-                  className="block py-2.5 px-2 text-sm font-medium text-[#333] hover:text-brand-500"
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {navLinks.map((link) =>
+                link.external ? (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setIsOpen(false)}
+                    className="block py-2.5 px-2 text-sm font-medium text-[#333] hover:text-brand-500"
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setIsOpen(false)}
+                    className="block py-2.5 px-2 text-sm font-medium text-[#333] hover:text-brand-500"
+                  >
+                    {link.label}
+                  </Link>
+                )
+              )}
               <Link
                 href="/products"
                 onClick={() => setIsOpen(false)}

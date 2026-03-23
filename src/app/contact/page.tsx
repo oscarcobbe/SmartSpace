@@ -41,8 +41,8 @@ export default function ContactPage() {
                   {
                     icon: Phone,
                     label: "Phone",
-                    value: "+353 1 000 0000",
-                    href: "tel:+353000000000",
+                    value: "+353 1 513 0424",
+                    href: "tel:+35315130424",
                   },
                   {
                     icon: MapPin,

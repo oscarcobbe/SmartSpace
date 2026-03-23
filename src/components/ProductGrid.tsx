@@ -1,71 +1,60 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import { products, categoryInfo, ProductCategory } from "@/data/products";
+import { getAllProducts, ShopifyProduct } from "@/lib/shopify";
 import ProductCard from "./ProductCard";
-import clsx from "clsx";
 
-const allCategories: (ProductCategory | "all")[] = [
-  "all",
-  "doorbell",
-  "camera",
-  "alarm",
-  "bundle",
-  "accessory",
-];
+function isHardwareProduct(product: ShopifyProduct): boolean {
+  const price = parseFloat(product.priceRange.minVariantPrice.amount);
+  if (price === 0) return false;
+  if (product.productType === "Consultation") return false;
+  const titleLower = product.title.toLowerCase();
+  if (titleLower.includes("consultation")) return false;
+  if (titleLower.includes("subscription")) return false;
+  if (titleLower.includes("installation service")) return false;
+  return true;
+}
 
 export default function ProductGrid() {
-  const searchParams = useSearchParams();
-  const categoryParam = searchParams.get("category") as ProductCategory | null;
-  const [active, setActive] = useState<ProductCategory | "all">(categoryParam || "all");
+  const [products, setProducts] = useState<ShopifyProduct[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (categoryParam && allCategories.includes(categoryParam)) {
-      setActive(categoryParam);
-    }
-  }, [categoryParam]);
+    getAllProducts()
+      .then((all) => {
+        const hardware = all.filter(isHardwareProduct);
+        setProducts(hardware);
+      })
+      .catch((err) => console.error("Failed to load products:", err))
+      .finally(() => setLoading(false));
+  }, []);
 
-  const filtered =
-    active === "all"
-      ? products
-      : products.filter((p) => p.category === active);
+  if (loading) {
+    return (
+      <div className="py-12 text-center">
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-r-transparent" />
+        <p className="mt-4 text-gray-400">Loading products...</p>
+      </div>
+    );
+  }
 
   return (
     <div>
-      {/* Filter Pills */}
-      <div className="flex flex-wrap gap-2 mb-10">
-        {allCategories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setActive(cat)}
-            className={clsx(
-              "px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200",
-              active === cat
-                ? "bg-brand-500 text-white shadow-md shadow-brand-500/30"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800"
-            )}
-          >
-            {cat === "all" ? "All Products" : categoryInfo[cat].label}
-          </button>
-        ))}
-      </div>
-
       {/* Count */}
       <p className="text-sm text-gray-500 mb-6">
-        Showing {filtered.length} product{filtered.length !== 1 ? "s" : ""}
+        Showing {products.length} product{products.length !== 1 ? "s" : ""}
       </p>
 
       {/* Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filtered.map((product) => (
+        {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
 
-      {filtered.length === 0 && (
+      {products.length === 0 && (
         <p className="text-center text-gray-400 py-12 text-lg">
-          No products in this category yet. Check back soon!
+          No products available. Check back soon!
         </p>
       )}
     </div>

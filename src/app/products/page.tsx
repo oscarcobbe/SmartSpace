@@ -1,12 +1,7 @@
-import { Suspense } from "react";
-import type { Metadata } from "next";
-import ProductGrid from "@/components/ProductGrid";
+"use client";
 
-export const metadata: Metadata = {
-  title: "All Products | Smart Space",
-  description:
-    "Browse our complete range of Ring doorbells, security cameras, alarm systems and bundles. Professional installation available across Ireland.",
-};
+import { Suspense } from "react";
+import ProductGrid from "@/components/ProductGrid";
 
 export default function ProductsPage() {
   return (

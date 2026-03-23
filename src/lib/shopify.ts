@@ -1,5 +1,5 @@
 const domain = "smart-space-ie.myshopify.com";
-const storefrontAccessToken = "b0eff740ce814b6467453dfac304228b";
+const storefrontAccessToken = "af5cf48192a7940f34ff18bafd9a39d9";
 
 const SHOPIFY_GRAPHQL_URL = `https://${domain}/api/2024-01/graphql.json`;
 
