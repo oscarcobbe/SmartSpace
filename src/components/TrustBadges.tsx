@@ -8,8 +8,8 @@ const badges = [
   },
   {
     icon: Truck,
-    title: "Free Delivery",
-    description: "Free shipping on all orders across Leinster",
+    title: "Serving Leinster",
+    description: "Professional installation across Leinster",
   },
   {
     icon: Headphones,

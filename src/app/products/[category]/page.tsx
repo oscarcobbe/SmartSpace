@@ -9,7 +9,7 @@ import ProductCard from "@/components/ProductCard";
 import { getProductImage, getColourImage } from "@/data/productImages";
 import { getProductFeatures, getFeatureIcon } from "@/data/productFeatures";
 import {
-  Star, Truck, Shield, Wrench, Award, Check, Phone,
+  Star, Shield, Wrench, Award, Check, Phone,
 } from "lucide-react";
 import BookingCalendar from "@/components/BookingCalendar";
 
@@ -352,12 +352,6 @@ function ProductByHandle({ handle }: { handle: string }) {
                   </span>
                 </>
               )}
-            </div>
-
-            {/* Free delivery */}
-            <div className="flex items-center gap-1.5 text-sm text-gray-500 mb-5">
-              <Truck className="w-4 h-4" />
-              <span>Free delivery across Leinster</span>
             </div>
 
             {/* Short description */}
