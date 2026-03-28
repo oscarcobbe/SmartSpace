@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Wrench, Clock, Shield, Wifi, Check, ArrowRight, Phone } from "lucide-react";
+import { Wrench, Clock, Shield, Wifi, ArrowRight, Phone } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Installation Only & Other Brands | Smart Space",
