@@ -4,7 +4,7 @@ const steps = [
   {
     icon: Search,
     title: "Browse",
-    description: "Explore our range of Ring doorbells, cameras, and alarm systems.",
+    description: "Explore our range of Ring doorbells, cameras, and floodlights.",
     step: "01",
   },
   {

@@ -29,8 +29,6 @@ export const ringStockImages: Record<string, string> = {
     "https://images.ctfassets.net/2xsswpd01u70/6oP3FvB0kESCnQarf0aZne/2a1822b84a39ba1bab9f9f36499bd03e/ring_products_build_your_system_mobile_2x.jpg",
 
   // Services / Consultations - use Ring app/lifestyle images
-  "onsite-troubleshoot-installation-set-up-of-customer-bought-ring-products":
-    "https://images.ctfassets.net/2xsswpd01u70/6TPIeNbWxKepB7Xj8nQqcX/17d4d73b2ea10a46d7b9c884852bc74c/UK_LOS_doorbell_PDP_carousel_01_mobile_375x375_2x.jpg",
   "onsite-ring-of-security-consultation":
     "https://images.ctfassets.net/2xsswpd01u70/REgLnOYBXmHlBFx7AQdxb/90e8d42f40c993cf417a2f6b937f32e4/UK_LOS_doorbell_PDP_carousel_02_mobile_375x375_2x.jpg",
   "book-your-consultation-call":
@@ -40,6 +38,29 @@ export const ringStockImages: Record<string, string> = {
   "smartguardian-monthly-subscription":
     "https://images.ctfassets.net/2xsswpd01u70/6oP3FvB0kESCnQarf0aZne/2a1822b84a39ba1bab9f9f36499bd03e/ring_products_build_your_system_mobile_2x.jpg",
 };
+
+// Colour-specific images for cameras (Black/White variants)
+export const colourImages: Record<string, Record<string, string>> = {
+  "security-cam-spotlight-cam": {
+    White: "https://images.ctfassets.net/2xsswpd01u70/variant-29621751513111-en-eu/578f2cdbd3e7a49cb728063cd33b5916/variant-29621751513111-en-eu.jpg",
+    Black: "https://images.ctfassets.net/2xsswpd01u70/variant-29621751676951-en-eu/297a49412bd534682fd6445e302f6120/variant-29621751676951-en-eu.jpg",
+  },
+  "security-cam-floodlight-cam-plus": {
+    White: "https://images.ctfassets.net/2xsswpd01u70/variant-28075982946327-en-eu/e19341cec67feccd048794376c80287d/variant-28075982946327-en-eu.png",
+    Black: "https://images.ctfassets.net/2xsswpd01u70/variant-28075983011863-en-eu/760b7fcb29154d357c5200e60d80169d/variant-28075983011863-en-eu.png",
+  },
+  "floodlight-cam-pro-mains-powered-copy": {
+    White: "https://images.ctfassets.net/2xsswpd01u70/variant-27953690181655-en-eu/aa0401f9965e1c40923bc2ac2edbee2a/variant-27953690181655-en-eu.png",
+    Black: "https://images.ctfassets.net/2xsswpd01u70/variant-27953690247191-en-eu/4aac054e5b3696ce179ca1b329c50bcb/variant-27953690247191-en-eu.png",
+  },
+};
+
+/**
+ * Get colour-specific image for a product variant
+ */
+export function getColourImage(handle: string, colour: string): string | null {
+  return colourImages[handle]?.[colour] ?? null;
+}
 
 /**
  * Get the Ring stock image for a product, falling back to the Shopify image

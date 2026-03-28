@@ -1,27 +1,29 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { Send, CheckCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Calendar } from "lucide-react";
 
 export default function ContactForm() {
-  const [submitted, setSubmitted] = useState(false);
+  const router = useRouter();
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-  };
+    setSubmitting(true);
 
-  if (submitted) {
-    return (
-      <div className="bg-green-50 rounded-2xl p-10 text-center">
-        <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-        <h3 className="text-xl font-bold text-gray-900 mb-2">Message Sent!</h3>
-        <p className="text-gray-500">
-          Thanks for reaching out. We&apos;ll get back to you within 24 hours.
-        </p>
-      </div>
-    );
-  }
+    const form = e.target as HTMLFormElement;
+    const data = {
+      name: (form.elements.namedItem("name") as HTMLInputElement).value,
+      email: (form.elements.namedItem("email") as HTMLInputElement).value,
+      phone: (form.elements.namedItem("phone") as HTMLInputElement).value,
+      subject: (form.elements.namedItem("subject") as HTMLSelectElement).value,
+      message: (form.elements.namedItem("message") as HTMLTextAreaElement).value,
+    };
+
+    sessionStorage.setItem("bookingContact", JSON.stringify(data));
+    router.push("/booking");
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
@@ -33,6 +35,7 @@ export default function ContactForm() {
           <input
             type="text"
             id="name"
+            name="name"
             required
             className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-gray-50"
             placeholder="John Murphy"
@@ -45,6 +48,7 @@ export default function ContactForm() {
           <input
             type="email"
             id="email"
+            name="email"
             required
             className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-gray-50"
             placeholder="john@example.com"
@@ -59,8 +63,9 @@ export default function ContactForm() {
         <input
           type="tel"
           id="phone"
+          name="phone"
           className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-gray-50"
-          placeholder="+353 1 234 5678"
+          placeholder="01 5130424"
         />
       </div>
 
@@ -70,6 +75,7 @@ export default function ContactForm() {
         </label>
         <select
           id="subject"
+          name="subject"
           required
           className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-gray-50"
         >
@@ -88,6 +94,7 @@ export default function ContactForm() {
         </label>
         <textarea
           id="message"
+          name="message"
           required
           rows={5}
           className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-gray-50 resize-none"
@@ -97,10 +104,11 @@ export default function ContactForm() {
 
       <button
         type="submit"
-        className="w-full sm:w-auto flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-bold px-10 py-4 rounded-xl transition-all shadow-lg shadow-brand-500/25 text-base"
+        disabled={submitting}
+        className="w-full sm:w-auto flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-bold px-10 py-4 rounded-xl transition-all shadow-lg shadow-brand-500/25 text-base disabled:opacity-60"
       >
-        <Send className="h-4 w-4" />
-        Send Message
+        <Calendar className="h-4 w-4" />
+        {submitting ? "Redirecting..." : "Choose a Time"}
       </button>
     </form>
   );

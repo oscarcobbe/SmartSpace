@@ -38,6 +38,10 @@ export interface ShopifyProduct {
     minVariantPrice: { amount: string; currencyCode: string };
     maxVariantPrice: { amount: string; currencyCode: string };
   };
+  options: {
+    name: string;
+    values: string[];
+  }[];
   images: {
     edges: { node: { url: string; altText: string | null; width: number; height: number } }[];
   };
@@ -49,6 +53,7 @@ export interface ShopifyProduct {
         availableForSale: boolean;
         price: { amount: string; currencyCode: string };
         compareAtPrice: { amount: string; currencyCode: string } | null;
+        selectedOptions: { name: string; value: string }[];
       };
     }[];
   };
@@ -95,6 +100,10 @@ const PRODUCTS_QUERY = `
           descriptionHtml
           productType
           tags
+          options {
+            name
+            values
+          }
           priceRange {
             minVariantPrice { amount currencyCode }
             maxVariantPrice { amount currencyCode }
@@ -108,7 +117,7 @@ const PRODUCTS_QUERY = `
               node { url altText width height }
             }
           }
-          variants(first: 10) {
+          variants(first: 30) {
             edges {
               node {
                 id
@@ -116,6 +125,7 @@ const PRODUCTS_QUERY = `
                 availableForSale
                 price { amount currencyCode }
                 compareAtPrice { amount currencyCode }
+                selectedOptions { name value }
               }
             }
           }
@@ -135,6 +145,10 @@ const PRODUCT_BY_HANDLE_QUERY = `
       descriptionHtml
       productType
       tags
+      options {
+        name
+        values
+      }
       priceRange {
         minVariantPrice { amount currencyCode }
         maxVariantPrice { amount currencyCode }
@@ -148,7 +162,7 @@ const PRODUCT_BY_HANDLE_QUERY = `
           node { url altText width height }
         }
       }
-      variants(first: 10) {
+      variants(first: 30) {
         edges {
           node {
             id
@@ -156,6 +170,7 @@ const PRODUCT_BY_HANDLE_QUERY = `
             availableForSale
             price { amount currencyCode }
             compareAtPrice { amount currencyCode }
+            selectedOptions { name value }
           }
         }
       }

@@ -1,4 +1,4 @@
-export type ProductCategory = "doorbell" | "camera" | "bundle" | "accessory" | "alarm";
+export type ProductCategory = "doorbell" | "camera" | "bundle" | "accessory";
 
 export interface Product {
   id: string;
@@ -28,11 +28,6 @@ export const categoryInfo: Record<
     label: "Security Cameras",
     description: "Keep watch over your home inside and out with Ring Security Cameras.",
     slug: "cameras",
-  },
-  alarm: {
-    label: "Alarm Systems",
-    description: "Whole-home security with Ring Alarm. Easy to install, easy to use.",
-    slug: "alarms",
   },
   bundle: {
     label: "Bundles & Packs",
@@ -262,59 +257,6 @@ export const products: Product[] = [
       "Connectivity": "Wi-Fi 802.11 a/b/g/n/ac",
       "Dimensions": "7.1 x 6.2 x 3.4 cm",
       "Compatibility": "All Ring doorbells and cameras",
-    },
-  },
-  {
-    id: "alarm-5-piece",
-    name: "Alarm Security Kit (5-piece)",
-    category: "alarm",
-    price: 249.99,
-    image: "https://eu.ring.com/cdn/shop/files/variant-28004695932951-en-eu_3cdc2c6c-bf35-4977-bc03-d52537267bbc.jpg",
-    description: "Complete home alarm system with base station, keypad, sensors, and extender.",
-    longDescription: "Ring Alarm 5-piece kit provides whole-home security that's easy to install yourself. Includes a base station, keypad, contact sensor, motion detector, and range extender. Set up in minutes, arm and disarm from anywhere, and get instant alerts when sensors are triggered.",
-    featured: false,
-    features: [
-      "Base station with 24/7 backup battery",
-      "Keypad with quick-arm buttons",
-      "Contact sensor for doors/windows",
-      "Motion detector",
-      "Range extender",
-      "Optional professional monitoring",
-    ],
-    specs: {
-      "Kit Contents": "5 pieces",
-      "Base Station": "Ethernet + Wi-Fi + Z-Wave",
-      "Backup": "24-hour battery backup",
-      "Sensors": "1 contact sensor, 1 motion detector",
-      "Range": "Extender included",
-      "Expandable": "Up to 100+ Z-Wave devices",
-    },
-  },
-  {
-    id: "alarm-8-piece",
-    name: "Alarm Security Kit (8-piece)",
-    category: "alarm",
-    price: 349.99,
-    image: "https://eu.ring.com/cdn/shop/files/variant-28004722016279-en-eu_a20fde9a-01b5-4730-af39-2bae0cca7349.jpg",
-    description: "Extended home alarm system with extra sensors for comprehensive coverage.",
-    longDescription: "The Ring Alarm 8-piece kit gives you comprehensive coverage right out of the box. With 4 contact sensors for multiple doors and windows, a motion detector, keypad, base station, and range extender, you can secure your whole home from day one. Easy DIY installation.",
-    featured: true,
-    badge: "Best Value",
-    features: [
-      "Base station with 24/7 backup battery",
-      "Keypad with one-touch arming",
-      "4 contact sensors for doors/windows",
-      "Motion detector with wide coverage",
-      "Range extender",
-      "Easy DIY installation",
-    ],
-    specs: {
-      "Kit Contents": "8 pieces",
-      "Contact Sensors": "4 included",
-      "Motion Detectors": "1 included",
-      "Base Station": "Ethernet + Wi-Fi + Z-Wave",
-      "Backup": "24-hour battery backup",
-      "Expandable": "Up to 100+ Z-Wave devices",
     },
   },
   {
