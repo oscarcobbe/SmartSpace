@@ -2,6 +2,10 @@ import Link from "next/link";
 import { ShopifyProduct } from "@/lib/shopify";
 import { getProductImage } from "@/data/productImages";
 
+function displayTitle(title: string): string {
+  return title.replace(/\(Budget\)/gi, "(Standard)").replace(/\(Premium\)/gi, "(Advanced)");
+}
+
 export default function ProductCard({ product }: { product: ShopifyProduct }) {
   const price = parseFloat(product.priceRange.minVariantPrice.amount);
   const comparePrice = parseFloat(product.compareAtPriceRange?.minVariantPrice?.amount || "0");
@@ -38,7 +42,7 @@ export default function ProductCard({ product }: { product: ShopifyProduct }) {
 
       {/* Info */}
       <h3 className="font-bold text-[#1a1a1a] text-sm mb-1.5 group-hover:text-brand-500 transition-colors">
-        {product.title}
+        {displayTitle(product.title)}
       </h3>
       <div className="flex items-baseline gap-2">
         <span className="text-lg font-extrabold text-[#1a1a1a]">

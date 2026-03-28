@@ -43,6 +43,21 @@ function formatPrice(amount: string, currencyCode: string) {
   return new Intl.NumberFormat("en-IE", { style: "currency", currency: currencyCode }).format(parseFloat(amount));
 }
 
+const titleRenames: [RegExp, string][] = [
+  [/\(Budget\)/gi, "(Standard)"],
+  [/\(Premium\)/gi, "(Advanced)"],
+  [/Budget/g, "Standard"],
+  [/Premium/g, "Advanced"],
+];
+
+function displayTitle(title: string): string {
+  let result = title;
+  for (const [pattern, replacement] of titleRenames) {
+    result = result.replace(pattern, replacement);
+  }
+  return result;
+}
+
 export default function CategoryPage() {
   const params = useParams();
   const category = params.category as string;
@@ -131,7 +146,7 @@ export default function CategoryPage() {
                   <div className="p-5">
                     <Link href={`/products/${product.handle}`}>
                       <h3 className="font-bold text-[#1a1a1a] group-hover:text-brand-500 transition-colors mb-2">
-                        {product.title}
+                        {displayTitle(product.title)}
                       </h3>
                     </Link>
                     <div className="flex items-center gap-2 mb-4">
@@ -259,7 +274,7 @@ function ProductByHandle({ handle }: { handle: string }) {
             </>
           )}
           <span>/</span>
-          <span className="text-[#1a1a1a] font-medium truncate max-w-[200px]">{product.title}</span>
+          <span className="text-[#1a1a1a] font-medium truncate max-w-[200px]">{displayTitle(product.title)}</span>
         </nav>
 
         {/* ── Section 1: Hero — Image Gallery + Product Info ── */}
@@ -307,7 +322,7 @@ function ProductByHandle({ handle }: { handle: string }) {
             )}
 
             <h1 className="text-3xl sm:text-4xl font-extrabold text-[#1a1a1a] leading-tight mb-3">
-              {product.title}
+              {displayTitle(product.title)}
             </h1>
 
             {/* Social proof */}
