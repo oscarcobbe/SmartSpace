@@ -47,7 +47,7 @@ export default function InstallationOnlyPage() {
   const [bookingSelection, setBookingSelection] = useState<{ date: string; timeSlot: string; dateLabel: string; slotLabel: string } | null>(null);
 
   useEffect(() => {
-    getProductByHandle("onsite-troubleshoot-installation-set-up-of-customer-bought-ring-products")
+    getProductByHandle("installation-only")
       .then((p) => {
         setProduct(p);
         // Set default options
