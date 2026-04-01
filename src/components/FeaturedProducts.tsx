@@ -6,30 +6,15 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getAllProducts, ShopifyProduct } from "@/lib/shopify";
 import ProductCard from "./ProductCard";
 
+const NEW_SINGLES = ["plus-video-doorbell", "budget-video-doorbell", "pro-video-doorbell", "plus-floodlight-cam", "pro-floodlight-cam"];
+const NEW_BUNDLES = ["plus-driveway-bundle", "pro-driveway-bundle", "plus-whole-home-bundle", "pro-whole-home-bundle", "eldercare-security-bundle"];
+
 function isSingleProduct(product: ShopifyProduct): boolean {
-  const price = parseFloat(product.priceRange.minVariantPrice.amount);
-  if (price === 0) return false;
-  if (product.productType === "Consultation") return false;
-  const titleLower = product.title.toLowerCase();
-  if (titleLower.includes("consultation")) return false;
-  if (titleLower.includes("subscription")) return false;
-  if (titleLower.includes("installation service")) return false;
-  if (titleLower.includes("bundle")) return false;
-  if (titleLower.includes("calculator")) return false;
-  if (product.tags.includes("Bundle")) return false;
-  return true;
+  return NEW_SINGLES.includes(product.handle);
 }
 
 function isBundleProduct(product: ShopifyProduct): boolean {
-  const price = parseFloat(product.priceRange.minVariantPrice.amount);
-  if (price === 0) return false;
-  if (product.productType === "Consultation") return false;
-  const titleLower = product.title.toLowerCase();
-  return (
-    titleLower.includes("bundle") ||
-    titleLower.includes("calculator") ||
-    product.tags.includes("Bundle")
-  );
+  return NEW_BUNDLES.includes(product.handle);
 }
 
 type Tab = "singles" | "bundles";

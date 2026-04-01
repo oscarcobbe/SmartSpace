@@ -18,7 +18,8 @@ export default function CameraServicePage() {
   useEffect(() => {
     getAllProducts()
       .then((all) => {
-        const cameras = all.filter((p) => p.productType === "Security Cam");
+        const newHandles = ["plus-floodlight-cam", "pro-floodlight-cam"];
+        const cameras = all.filter((p) => newHandles.includes(p.handle));
         setProducts(cameras);
       })
       .catch(console.error)

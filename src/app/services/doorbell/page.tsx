@@ -18,9 +18,8 @@ export default function DoorbellServicePage() {
   useEffect(() => {
     getAllProducts()
       .then((all) => {
-        const doorbells = all.filter(
-          (p) => p.productType === "Video Doorbell" && !p.title.toLowerCase().includes("bundle")
-        );
+        const newHandles = ["plus-video-doorbell", "budget-video-doorbell", "pro-video-doorbell"];
+        const doorbells = all.filter((p) => newHandles.includes(p.handle));
         setProducts(doorbells);
       })
       .catch(console.error)

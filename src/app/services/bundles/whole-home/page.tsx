@@ -19,7 +19,7 @@ export default function WholeHomeBundlePage() {
     getAllProducts()
       .then((all) => {
         const wholeHome = all.filter(
-          (p) => p.handle.includes("whole-home-bundle")
+          (p) => p.handle === "plus-whole-home-bundle" || p.handle === "pro-whole-home-bundle"
         );
         setProducts(wholeHome);
       })

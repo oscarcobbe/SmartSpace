@@ -1,50 +1,60 @@
-// Ring stock images from eu.ring.com mapped to Shopify product handles
-// These override Shopify product images with clean Ring product shots
+// Product images mapped to Shopify product handles
+// Local images in /public/products/ from Website assets folder
 
+// ── New product lineup (from Excel) ──
 export const ringStockImages: Record<string, string> = {
-  // Video Doorbells
+  // Single Doorbells
+  "plus-video-doorbell": "/products/plus-video-doorbell.png",
+  "budget-video-doorbell": "/products/plus-video-doorbell.png", // same image until new gen arrives
+  "pro-video-doorbell": "/products/pro-video-doorbell.png",
+
+  // Single Floodlights (default = black)
+  "plus-floodlight-cam": "/products/plus-floodlight-black.png",
+  "pro-floodlight-cam": "/products/pro-floodlight-black.png",
+
+  // Driveway Bundles (default = black)
+  "plus-driveway-bundle": "/products/plus-driveway-black.png",
+  "pro-driveway-bundle": "/products/pro-driveway-black.png",
+
+  // Whole Home Bundles (default = both black)
+  "plus-whole-home-bundle": "/products/plus-wholehome-black-black.png",
+  "pro-whole-home-bundle": "/products/pro-wholehome-black-black.png",
+
+  // Eldercare
+  "eldercare-security-bundle": "/products/plus-video-doorbell.png",
+
+  // Smart Keybox (for reference)
+  "smart-keybox": "/products/smart-keybox.jpg",
+
+  // ── Legacy products (kept in Shopify but hidden from new pages) ──
   "basic-video-doorbell-mains-or-battery-powered":
     "https://eu.ring.com/cdn/shop/files/variant-54340225663314-en-eu_b933453b-ed71-4b63-8bf5-2763bd08b28d_860x.png?v=1773731264",
   "advanced-video-doorbell-pro-wired":
     "https://eu.ring.com/cdn/shop/files/product-41968146940242-media-en-eu_0d4fb0a7-cdfb-4b3a-8b74-791fc8399893_860x.png?v=1773731736",
   "ring-video-doorbell-wired":
     "https://eu.ring.com/cdn/shop/files/variant-16702725357591-en-eu_860x.png?v=1759386441",
-
-  // Security Cameras
   "security-cam-spotlight-cam":
     "https://eu.ring.com/cdn/shop/files/variant-29621751513111-en-eu_850c921b-6af4-48ee-821f-c74eaf0c0e7d_1280x1280_crop_center.jpg?v=1773731722",
   "security-cam-floodlight-cam-plus":
     "https://eu.ring.com/cdn/shop/files/variant-28075982946327-en-eu.png?v=1773731654",
   "floodlight-cam-pro-mains-powered-copy":
     "https://eu.ring.com/cdn/shop/files/variant-27953690181655-en-eu_b4dad571-f98e-4646-9d27-37debc690d79.png?v=1773731442",
-
-  // Bundles - use a composite/doorbell image
   "ring-driveway-bundle":
     "https://eu.ring.com/cdn/shop/files/variant-52307160990034-en-eu_31ab8c86-a453-4e7f-a1f9-849fc1d2413e_860x.png?v=1773731141",
   "ring-driveway-bundle-premium":
     "https://eu.ring.com/cdn/shop/files/product-22856112963607-media-en-eu_97181620-a6bd-4a37-9eb8-359c0a8bf46b_860x.jpg?v=1773731198",
-
-  // Driveway Bundles (new Standard/Advanced)
+  "whole-house-security-calculator":
+    "https://images.ctfassets.net/2xsswpd01u70/6oP3FvB0kESCnQarf0aZne/2a1822b84a39ba1bab9f9f36499bd03e/ring_products_build_your_system_mobile_2x.jpg",
   "driveway-bundle-standard":
     "https://eu.ring.com/cdn/shop/files/variant-52307160990034-en-eu_31ab8c86-a453-4e7f-a1f9-849fc1d2413e_860x.png?v=1773731141",
   "driveway-bundle-advanced":
     "https://eu.ring.com/cdn/shop/files/product-22856112963607-media-en-eu_97181620-a6bd-4a37-9eb8-359c0a8bf46b_860x.jpg?v=1773731198",
-
-  // Whole Home Bundles
   "whole-home-bundle-standard":
     "https://images.ctfassets.net/2xsswpd01u70/6oP3FvB0kESCnQarf0aZne/2a1822b84a39ba1bab9f9f36499bd03e/ring_products_build_your_system_mobile_2x.jpg",
   "whole-home-bundle-advanced":
     "https://images.ctfassets.net/2xsswpd01u70/6oP3FvB0kESCnQarf0aZne/2a1822b84a39ba1bab9f9f36499bd03e/ring_products_build_your_system_mobile_2x.jpg",
-
-  // Eldercare Bundle
   "eldercare-bundle":
     "https://eu.ring.com/cdn/shop/files/variant-16702725357591-en-eu_860x.png?v=1759386441",
-
-  // Whole home calculator
-  "whole-house-security-calculator":
-    "https://images.ctfassets.net/2xsswpd01u70/6oP3FvB0kESCnQarf0aZne/2a1822b84a39ba1bab9f9f36499bd03e/ring_products_build_your_system_mobile_2x.jpg",
-
-  // Services / Consultations - use Ring app/lifestyle images
   "onsite-ring-of-security-consultation":
     "https://images.ctfassets.net/2xsswpd01u70/REgLnOYBXmHlBFx7AQdxb/90e8d42f40c993cf417a2f6b937f32e4/UK_LOS_doorbell_PDP_carousel_02_mobile_375x375_2x.jpg",
   "book-your-consultation-call":
@@ -55,19 +65,38 @@ export const ringStockImages: Record<string, string> = {
     "https://images.ctfassets.net/2xsswpd01u70/6oP3FvB0kESCnQarf0aZne/2a1822b84a39ba1bab9f9f36499bd03e/ring_products_build_your_system_mobile_2x.jpg",
 };
 
-// Colour-specific images for cameras (Black/White variants)
+// Colour-specific images for products with colour variants
 export const colourImages: Record<string, Record<string, string>> = {
-  "security-cam-spotlight-cam": {
-    White: "https://images.ctfassets.net/2xsswpd01u70/variant-29621751513111-en-eu/578f2cdbd3e7a49cb728063cd33b5916/variant-29621751513111-en-eu.jpg",
-    Black: "https://images.ctfassets.net/2xsswpd01u70/variant-29621751676951-en-eu/297a49412bd534682fd6445e302f6120/variant-29621751676951-en-eu.jpg",
+  // Floodlights
+  "plus-floodlight-cam": {
+    Black: "/products/plus-floodlight-black.png",
+    White: "/products/plus-floodlight-white.png",
   },
-  "security-cam-floodlight-cam-plus": {
-    White: "https://images.ctfassets.net/2xsswpd01u70/variant-28075982946327-en-eu/e19341cec67feccd048794376c80287d/variant-28075982946327-en-eu.png",
-    Black: "https://images.ctfassets.net/2xsswpd01u70/variant-28075983011863-en-eu/760b7fcb29154d357c5200e60d80169d/variant-28075983011863-en-eu.png",
+  "pro-floodlight-cam": {
+    Black: "/products/pro-floodlight-black.png",
+    White: "/products/pro-floodlight-white.png",
   },
-  "floodlight-cam-pro-mains-powered-copy": {
-    White: "https://images.ctfassets.net/2xsswpd01u70/variant-27953690181655-en-eu/aa0401f9965e1c40923bc2ac2edbee2a/variant-27953690181655-en-eu.png",
-    Black: "https://images.ctfassets.net/2xsswpd01u70/variant-27953690247191-en-eu/4aac054e5b3696ce179ca1b329c50bcb/variant-27953690247191-en-eu.png",
+  // Driveway Bundles
+  "plus-driveway-bundle": {
+    Black: "/products/plus-driveway-black.png",
+    White: "/products/plus-driveway-white.png",
+  },
+  "pro-driveway-bundle": {
+    Black: "/products/pro-driveway-black.png",
+    White: "/products/pro-driveway-white.png",
+  },
+  // Whole Home Bundles (keyed by Floodlight Colours option value)
+  "plus-whole-home-bundle": {
+    "Both Black": "/products/plus-wholehome-black-black.png",
+    "Both White": "/products/plus-wholehome-white-white.png",
+    "Black Front / White Rear": "/products/plus-wholehome-black-white.png",
+    "White Front / Black Rear": "/products/plus-wholehome-white-white.png", // fallback - missing image
+  },
+  "pro-whole-home-bundle": {
+    "Both Black": "/products/pro-wholehome-black-black.png",
+    "Both White": "/products/pro-wholehome-white-white.png",
+    "Black Front / White Rear": "/products/pro-wholehome-black-black.png", // fallback - missing image
+    "White Front / Black Rear": "/products/pro-wholehome-white-black.png",
   },
 };
 
