@@ -50,7 +50,7 @@ export default function Navbar() {
             {/* Logo */}
             <Link href="/">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/Logo1.png" alt="Smart Space" className="h-20 w-auto" />
+              <img src="/Logo1.png" alt="Smart Space" className="h-16 sm:h-20 w-auto" />
             </Link>
 
             {/* Desktop Nav */}
