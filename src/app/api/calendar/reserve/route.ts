@@ -1,48 +1,38 @@
 import { NextResponse } from "next/server";
-import { reserveSlot, releaseSlot } from "@/lib/slotReservation";
+import { getAvailableSlots } from "@/lib/calendly";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { date, timeSlot, cartId, customerEmail, productTitle } = body;
+    const { date, timeSlot } = body;
 
-    if (!date || !timeSlot || !cartId) {
-      return NextResponse.json({ error: "Missing required fields: date, timeSlot, cartId" }, { status: 400 });
+    if (!date || !timeSlot) {
+      return NextResponse.json({ error: "Missing required fields: date, timeSlot" }, { status: 400 });
     }
 
-    const result = await reserveSlot(date, timeSlot, cartId, customerEmail, productTitle);
+    // Verify the slot is still available on Calendly
+    const available = await getAvailableSlots(date);
+    const isAvailable = available.some((s) => s.value === timeSlot);
 
-    if (!result.reserved) {
+    if (!isAvailable) {
       return NextResponse.json(
-        { error: "This time slot is already reserved by another customer. Please choose a different time.", reserved: false },
+        { error: "This time slot is no longer available. Please choose a different time.", reserved: false },
         { status: 409 }
       );
     }
 
     return NextResponse.json({
       reserved: true,
-      expiresIn: result.expiresIn,
-      message: `Slot reserved for ${Math.round(result.expiresIn / 60)} minutes. Complete checkout to confirm.`,
+      expiresIn: 1200,
+      message: "Slot confirmed as available. Complete checkout to confirm your booking.",
     });
   } catch (err) {
     console.error("Reservation error:", err);
-    return NextResponse.json({ error: "Failed to reserve slot" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to check slot" }, { status: 500 });
   }
 }
 
-export async function DELETE(request: Request) {
-  try {
-    const body = await request.json();
-    const { date, timeSlot, cartId } = body;
-
-    if (!date || !timeSlot || !cartId) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-    }
-
-    await releaseSlot(date, timeSlot, cartId);
-    return NextResponse.json({ released: true });
-  } catch (err) {
-    console.error("Release error:", err);
-    return NextResponse.json({ error: "Failed to release slot" }, { status: 500 });
-  }
+export async function DELETE() {
+  // No-op — Calendly manages availability, no Redis reservation to release
+  return NextResponse.json({ released: true });
 }

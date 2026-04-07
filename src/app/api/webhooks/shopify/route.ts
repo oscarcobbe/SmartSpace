@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { createBookingEvent } from "@/lib/googleCalendar";
-import { confirmSlot } from "@/lib/slotReservation";
+import { createBookingEvent } from "@/lib/calendly";
 
 export async function POST(request: Request) {
   try {
@@ -20,7 +19,7 @@ export async function POST(request: Request) {
       const bookingSlot = properties.find((p: { name: string }) => p.name === "_booking_slot")?.value;
 
       if (bookingDate && bookingSlot) {
-        console.log("📅 Payment confirmed — creating calendar event:", {
+        console.log("📅 Payment confirmed — creating Calendly booking:", {
           orderId,
           customerName,
           email,
@@ -29,10 +28,7 @@ export async function POST(request: Request) {
           slot: bookingSlot,
         });
 
-        // Remove the temporary reservation from Redis
-        await confirmSlot(bookingDate, bookingSlot);
-
-        // Create the permanent event in Google Calendar
+        // Create the booking in Calendly
         await createBookingEvent({
           date: bookingDate,
           timeSlot: bookingSlot,
