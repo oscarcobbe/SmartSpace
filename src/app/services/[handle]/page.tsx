@@ -11,7 +11,7 @@ import { getProductFeatures, getFeatureIcon } from "@/data/productFeatures";
 import {
   Star, Shield, Wrench, Award, Check, Phone,
 } from "lucide-react";
-import CalendlyEmbed from "@/components/CalendlyEmbed";
+import BookingCalendar from "@/components/BookingCalendar";
 
 function formatPrice(amount: string, currencyCode: string) {
   return new Intl.NumberFormat("en-IE", { style: "currency", currency: currencyCode }).format(parseFloat(amount));
@@ -46,8 +46,7 @@ export default function ServiceDetailPage() {
   const [notFound, setNotFound] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
-  const [calendlyBooked, setCalendlyBooked] = useState(false);
-  const [calendlyEventUri, setCalendlyEventUri] = useState<string>("");
+  const [bookingSelection, setBookingSelection] = useState<{ date: string; timeSlot: string; dateLabel: string; slotLabel: string } | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -313,15 +312,12 @@ export default function ServiceDetailPage() {
               </div>
             )}
 
-            {/* Book Installation */}
+            {/* Booking Calendar */}
             {!isService && (
               <div className="mb-6">
-                <CalendlyEmbed
+                <BookingCalendar
                   compact
-                  onEventScheduled={(uri) => {
-                    setCalendlyBooked(true);
-                    setCalendlyEventUri(uri);
-                  }}
+                  onSelectionChange={setBookingSelection}
                 />
               </div>
             )}
@@ -333,11 +329,13 @@ export default function ServiceDetailPage() {
                   variantId={variantId}
                   size="lg"
                   className="w-full"
-                  disabled={!isService && !calendlyBooked}
-                  disabledText="Book an Installation Date First"
-                  attributes={calendlyBooked ? [
-                    { key: "Calendly Booking", value: "Confirmed" },
-                    { key: "_calendly_event_uri", value: calendlyEventUri },
+                  disabled={!isService && !bookingSelection}
+                  disabledText="Select an Installation Date"
+                  attributes={bookingSelection ? [
+                    { key: "Installation Date", value: bookingSelection.dateLabel },
+                    { key: "Installation Time", value: bookingSelection.slotLabel },
+                    { key: "_booking_date", value: bookingSelection.date },
+                    { key: "_booking_slot", value: bookingSelection.timeSlot },
                   ] : undefined}
                 />
               )}
