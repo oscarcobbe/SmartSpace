@@ -118,7 +118,7 @@ export async function createBookingEvent(params: {
     const firstName = nameParts[0] || "Customer";
     const lastName = nameParts.slice(1).join(" ") || undefined;
 
-    const res = await fetch("https://api.calendly.com/scheduled_events/invitees", {
+    const res = await fetch("https://api.calendly.com/invitees", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${CALENDLY_TOKEN}`,
@@ -130,7 +130,7 @@ export async function createBookingEvent(params: {
         invitee: {
           email: params.email,
           first_name: firstName,
-          last_name: lastName,
+          last_name: lastName || undefined,
           timezone: "Europe/Dublin",
           text_reminder_number: params.phone || undefined,
         },
