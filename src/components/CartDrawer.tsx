@@ -121,7 +121,7 @@ export default function CartDrawer() {
             </div>
             <p className="text-xs text-gray-400">Shipping and taxes calculated at checkout</p>
             <a
-              href={cart?.checkoutUrl?.replace("https://smart-space.ie/", "https://smart-space-ie.myshopify.com/")}
+              href={cart?.checkoutUrl?.replace(/https:\/\/(www\.)?smart-space\.ie\//, "https://smart-space-ie.myshopify.com/")}
               className="block w-full bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm py-3.5 rounded-full text-center transition-colors"
             >
               Checkout
