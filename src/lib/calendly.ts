@@ -47,20 +47,41 @@ export async function getAvailableSlots(dateStr: string): Promise<typeof TIME_SL
     }
 
     const data = await res.json();
-    const availableStartTimes = (data.collection || [])
-      .filter((t: { status: string }) => t.status === "available")
-      .map((t: { start_time: string }) => {
-        // Convert UTC start_time to Dublin local hour:minute
-        const d = new Date(t.start_time);
-        const dublin = new Date(d.toLocaleString("en-US", { timeZone: "Europe/Dublin" }));
-        return `${String(dublin.getHours()).padStart(2, "0")}:${String(dublin.getMinutes()).padStart(2, "0")}`;
-      });
+    const collection = (data.collection || []).filter((t: { status: string }) => t.status === "available");
 
-    // Match Calendly available times to our fixed slots
-    return TIME_SLOTS.filter((slot) => {
-      const slotStart = `${String(slot.startHour).padStart(2, "0")}:${String(slot.startMin).padStart(2, "0")}`;
-      return availableStartTimes.includes(slotStart);
-    });
+    console.log(`📅 Calendly available times for ${dateStr}:`, collection.map((t: { start_time: string }) => t.start_time));
+
+    // Map Calendly UTC start times to our slot values
+    // Calendly returns UTC times; our slots are in Dublin time (Europe/Dublin)
+    // Instead of toLocaleString (unreliable in Node), manually compute Dublin offset
+    const availableSlotValues = new Set<string>();
+
+    for (const t of collection) {
+      const utcDate = new Date((t as { start_time: string }).start_time);
+      // Get Dublin offset: create a formatter that outputs hour/minute in Dublin tz
+      const parts = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Europe/Dublin",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }).formatToParts(utcDate);
+
+      const hour = parts.find(p => p.type === "hour")?.value || "00";
+      const minute = parts.find(p => p.type === "minute")?.value || "00";
+      const localTime = `${hour}:${minute}`;
+
+      // Find which slot this start time matches
+      for (const slot of TIME_SLOTS) {
+        const slotStart = `${String(slot.startHour).padStart(2, "0")}:${String(slot.startMin).padStart(2, "0")}`;
+        if (localTime === slotStart) {
+          availableSlotValues.add(slot.value);
+        }
+      }
+    }
+
+    console.log(`📅 Matched slots for ${dateStr}:`, Array.from(availableSlotValues));
+
+    return TIME_SLOTS.filter((slot) => availableSlotValues.has(slot.value));
   } catch (err) {
     console.error("Calendly API error:", err);
     return TIME_SLOTS;
