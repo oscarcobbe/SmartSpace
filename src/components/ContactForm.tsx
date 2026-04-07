@@ -6,10 +6,12 @@ import { Send, Check } from "lucide-react";
 export default function ContactForm() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+    setError(null);
 
     const form = e.target as HTMLFormElement;
     const data = {
@@ -21,14 +23,20 @@ export default function ContactForm() {
     };
 
     try {
-      await fetch("/api/contact", {
+      const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+
+      if (!res.ok) {
+        setError(json.error ?? "Failed to send message. Please try again.");
+        return;
+      }
       setSubmitted(true);
     } catch {
-      alert("Failed to send message. Please try again.");
+      setError("Failed to send message. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -48,6 +56,14 @@ export default function ContactForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {error ? (
+        <div
+          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+          role="alert"
+        >
+          {error}
+        </div>
+      ) : null}
       <div className="grid sm:grid-cols-2 gap-5">
         <div>
           <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
