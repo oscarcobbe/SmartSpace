@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     // Send notification email to Smart Space
     await resend.emails.send({
       from: "Smart Space <onboarding@resend.dev>",
-      to: "info@smart-space.ie",
+      to: "nigel@smart-space.ie",
       replyTo: email,
       subject: `New enquiry from ${name}${subject ? `: ${subject}` : ""}`,
       text: [
@@ -32,23 +32,6 @@ export async function POST(request: Request) {
       ]
         .filter(Boolean)
         .join("\n"),
-    });
-
-    // Send confirmation email to customer
-    await resend.emails.send({
-      from: "Smart Space <onboarding@resend.dev>",
-      to: email,
-      subject: "Thanks for contacting Smart Space",
-      text: [
-        `Hi ${name},`,
-        "",
-        "Thanks for getting in touch! We've received your message and will get back to you shortly.",
-        "",
-        "Best regards,",
-        "The Smart Space Team",
-        "01 513 0424",
-        "info@smart-space.ie",
-      ].join("\n"),
     });
 
     return NextResponse.json({ success: true });
