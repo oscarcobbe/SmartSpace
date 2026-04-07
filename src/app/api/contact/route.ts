@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
   try {
@@ -12,29 +15,47 @@ export async function POST(request: Request) {
       );
     }
 
-    // Log the contact message (ready for email service integration)
-    console.log("📧 New contact message:", {
-      name,
-      email,
-      phone,
-      subject,
-      message,
-      receivedAt: new Date().toISOString(),
+    // Send notification email to Smart Space
+    await resend.emails.send({
+      from: "Smart Space <onboarding@resend.dev>",
+      to: "info@smart-space.ie",
+      replyTo: email,
+      subject: `New enquiry from ${name}${subject ? `: ${subject}` : ""}`,
+      text: [
+        `Name: ${name}`,
+        `Email: ${email}`,
+        phone ? `Phone: ${phone}` : null,
+        subject ? `Subject: ${subject}` : null,
+        "",
+        "Message:",
+        message,
+      ]
+        .filter(Boolean)
+        .join("\n"),
     });
 
-    // TODO: Send email to info@smart-space.ie using SendGrid/Resend/Nodemailer
-    // Example with Resend:
-    // await resend.emails.send({
-    //   from: 'Smart Space <noreply@smart-space.ie>',
-    //   to: 'info@smart-space.ie',
-    //   subject: `New enquiry from ${name}: ${subject}`,
-    //   text: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\n\n${message}`,
-    // });
+    // Send confirmation email to customer
+    await resend.emails.send({
+      from: "Smart Space <onboarding@resend.dev>",
+      to: email,
+      subject: "Thanks for contacting Smart Space",
+      text: [
+        `Hi ${name},`,
+        "",
+        "Thanks for getting in touch! We've received your message and will get back to you shortly.",
+        "",
+        "Best regards,",
+        "The Smart Space Team",
+        "01 513 0424",
+        "info@smart-space.ie",
+      ].join("\n"),
+    });
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (err) {
+    console.error("Email send error:", err);
     return NextResponse.json(
-      { error: "Failed to process message" },
+      { error: "Failed to send message" },
       { status: 500 }
     );
   }
