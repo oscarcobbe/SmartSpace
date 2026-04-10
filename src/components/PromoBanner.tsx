@@ -1,4 +1,5 @@
 import Link from "next/link";
+import TypeformButton from "@/components/TypeformButton";
 
 export default function PromoBanner() {
   return (
@@ -11,12 +12,9 @@ export default function PromoBanner() {
           As Leinster&apos;s top-rated Ring installer, we deliver and professionally set up your entire system.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link
-            href="/contact"
-            className="inline-block bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm px-8 py-3 rounded-full transition-colors"
-          >
-            Contact Us
-          </Link>
+          <TypeformButton className="inline-block bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm px-8 py-3 rounded-full transition-colors">
+            Get a Quote
+          </TypeformButton>
           <Link
             href="/services/installation-only"
             className="inline-block border border-[#444] hover:border-[#666] text-white font-semibold text-sm px-8 py-3 rounded-full transition-colors"

@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
 import { CartProvider } from "@/context/CartContext";
+import GclidCapture from "@/components/GclidCapture";
 
 export const metadata: Metadata = {
   title: "Smart Space | Ring Doorbells & Security Cameras Leinster",
@@ -44,6 +45,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased bg-white text-gray-900" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
         <CartProvider>
+          <GclidCapture />
           <Navbar />
           <main className="min-h-screen">{children}</main>
           <CartDrawer />

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import TypeformButton from "@/components/TypeformButton";
 import { getAllProducts, ShopifyProduct } from "@/lib/shopify";
 import { getProductImage } from "@/data/productImages";
 import { Check, Shield, Star, Wrench, Award, Info } from "lucide-react";
@@ -186,12 +187,9 @@ export default function EldercareBundlePage() {
 
         {/* Contact CTA */}
         <div className="mt-12 text-center">
-          <Link
-            href="/contact"
-            className="inline-flex items-center gap-2 text-brand-500 hover:text-brand-600 font-semibold transition-colors"
-          >
-            Have questions? Contact us
-          </Link>
+          <TypeformButton className="inline-flex items-center gap-2 text-brand-500 hover:text-brand-600 font-semibold transition-colors">
+            Have questions? Get a free quote
+          </TypeformButton>
         </div>
       </div>
     </div>
