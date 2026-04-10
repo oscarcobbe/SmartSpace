@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { uploadConversion, lookupGclidByEmail } from "@/lib/conversions";
+import { createBookingEvent } from "@/lib/calendly";
 
 export async function POST(req: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -61,9 +62,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Redirect URL for success page is set on the payment link/session
-    // The success_url should be: https://smart-space.ie/smartspace-payment-success?session_id={CHECKOUT_SESSION_ID}&amount=AMOUNT
-    // That page fires the client-side gtag conversion event.
+    // Create Calendly booking if booking date/slot present in metadata
+    const bookingDate = session.metadata?.booking_date;
+    const bookingSlot = session.metadata?.booking_slot;
+    const productName = session.metadata?.product_name ?? "Installation";
+    const customerName = session.customer_details?.name ?? email.split("@")[0];
+    const phone = session.customer_details?.phone ?? "";
+
+    if (bookingDate && bookingSlot) {
+      const result = await createBookingEvent({
+        date: bookingDate,
+        timeSlot: bookingSlot,
+        customerName,
+        email,
+        phone,
+        productTitle: productName,
+        orderId: sessionId,
+      });
+      if (result) {
+        console.log(`[stripe] calendly booking created for session=${sessionId}`);
+      } else {
+        console.error(`[stripe] calendly booking FAILED for session=${sessionId} date=${bookingDate} slot=${bookingSlot}`);
+      }
+    }
   }
 
   return NextResponse.json({ received: true });

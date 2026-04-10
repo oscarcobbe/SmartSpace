@@ -93,6 +93,9 @@ export default function CartDrawer() {
                     <p className="text-sm font-bold text-[#1a1a1a] mt-1">
                       {formatPrice(item.price)}
                     </p>
+                    {item.bookingLabel && (
+                      <p className="text-xs text-brand-500 mt-1">Installation: {item.bookingLabel}</p>
+                    )}
 
                     <div className="flex items-center gap-2 mt-2">
                       <button

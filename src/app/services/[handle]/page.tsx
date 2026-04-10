@@ -337,6 +337,9 @@ export default function ServiceDetailPage() {
                 className="w-full"
                 disabled={!isService && !bookingSelection}
                 disabledText="Select an Installation Date"
+                bookingDate={bookingSelection?.date}
+                bookingSlot={bookingSelection?.timeSlot}
+                bookingLabel={bookingSelection ? `${bookingSelection.dateLabel} ${bookingSelection.slotLabel}` : undefined}
               />
             </div>
 

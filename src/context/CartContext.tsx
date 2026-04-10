@@ -8,6 +8,9 @@ export interface CartItem {
   price: number;
   image: string;
   quantity: number;
+  bookingDate?: string;
+  bookingSlot?: string;
+  bookingLabel?: string;
 }
 
 interface CartContextType {

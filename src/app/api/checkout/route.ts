@@ -6,6 +6,9 @@ interface CartItem {
   price: number;
   image: string;
   quantity: number;
+  bookingDate?: string;
+  bookingSlot?: string;
+  bookingLabel?: string;
 }
 
 interface CheckoutBody {
@@ -43,6 +46,15 @@ export async function POST(request: Request) {
     params.append("custom_fields[0][optional]", "true");
     params.append("allow_promotion_codes", "true");
     params.append("metadata[gclid]", gclid ?? "");
+
+    // Pass booking info from the first item that has it
+    const bookedItem = items.find((i) => i.bookingDate && i.bookingSlot);
+    if (bookedItem) {
+      params.append("metadata[booking_date]", bookedItem.bookingDate ?? "");
+      params.append("metadata[booking_slot]", bookedItem.bookingSlot ?? "");
+      params.append("metadata[booking_label]", bookedItem.bookingLabel ?? "");
+      params.append("metadata[product_name]", bookedItem.name);
+    }
 
     items.forEach((item, i) => {
       params.append(`line_items[${i}][price_data][currency]`, "eur");

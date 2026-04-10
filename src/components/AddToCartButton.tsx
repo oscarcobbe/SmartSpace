@@ -13,6 +13,9 @@ interface AddToCartButtonProps {
   size?: "sm" | "md" | "lg";
   disabled?: boolean;
   disabledText?: string;
+  bookingDate?: string;
+  bookingSlot?: string;
+  bookingLabel?: string;
 }
 
 export default function AddToCartButton({
@@ -24,13 +27,16 @@ export default function AddToCartButton({
   size = "md",
   disabled,
   disabledText,
+  bookingDate,
+  bookingSlot,
+  bookingLabel,
 }: AddToCartButtonProps) {
   const { addItem } = useCart();
   const [status, setStatus] = useState<"idle" | "loading" | "added">("idle");
 
   const handleClick = async () => {
     setStatus("loading");
-    addItem({ productId, name, price, image, quantity: 1 });
+    addItem({ productId, name, price, image, quantity: 1, bookingDate, bookingSlot, bookingLabel });
     setStatus("added");
     setTimeout(() => setStatus("idle"), 2000);
   };
