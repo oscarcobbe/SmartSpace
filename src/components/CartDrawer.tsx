@@ -122,6 +122,16 @@ export default function CartDrawer() {
             <p className="text-xs text-gray-400">Shipping and taxes calculated at checkout</p>
             <a
               href={cart?.checkoutUrl}
+              onClick={() => {
+                if (typeof window !== "undefined" && (window as any).gtag) {
+                  (window as any).gtag('event', 'conversion', {
+                    send_to: 'AW-17978501655/YTk9CKrhmZkcEJfU6PxC',
+                    value: total,
+                    currency: currency || 'EUR',
+                    transaction_id: cart?.id,
+                  });
+                }
+              }}
               className="block w-full bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm py-3.5 rounded-full text-center transition-colors"
             >
               Checkout
