@@ -8,6 +8,7 @@ import { X, Minus, Plus, ShoppingBag } from "lucide-react";
 export default function CartDrawer() {
   const { items, isOpen, totalQuantity, totalAmount, closeCart, updateQuantity, removeItem } = useCart();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -17,6 +18,7 @@ export default function CartDrawer() {
 
   const handleCheckout = async () => {
     setIsCheckingOut(true);
+    setCheckoutError(null);
     try {
       const gclid = getStoredGclid() ?? "";
       const res = await fetch("/api/checkout", {
@@ -27,9 +29,14 @@ export default function CartDrawer() {
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
+      } else {
+        console.error("Checkout error:", data);
+        setCheckoutError(data.error ?? "Checkout failed. Please try again.");
+        setIsCheckingOut(false);
       }
     } catch (error) {
       console.error("Checkout failed:", error);
+      setCheckoutError("Something went wrong. Please try again.");
       setIsCheckingOut(false);
     }
   };
@@ -129,6 +136,9 @@ export default function CartDrawer() {
               <span className="text-lg font-bold text-[#1a1a1a]">{formatPrice(totalAmount)}</span>
             </div>
             <p className="text-xs text-gray-400">Shipping and taxes calculated at checkout</p>
+            {checkoutError && (
+              <p className="text-xs text-red-600 bg-red-50 px-3 py-2 rounded-lg">{checkoutError}</p>
+            )}
             <button
               onClick={handleCheckout}
               disabled={isCheckingOut}

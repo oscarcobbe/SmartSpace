@@ -39,7 +39,7 @@ export async function POST(request: Request) {
           unit_amount: Math.round(item.price * 100),
           product_data: {
             name: item.name,
-            images: [item.image],
+            ...(item.image?.startsWith("https://") ? { images: [item.image] } : {}),
           },
         },
         quantity: item.quantity,
@@ -52,10 +52,11 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ url: session.url });
-  } catch (err) {
-    console.error("Stripe checkout error:", err);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error("Stripe checkout error:", message, err);
     return NextResponse.json(
-      { error: "Failed to create checkout session" },
+      { error: `Checkout failed: ${message}` },
       { status: 500 }
     );
   }
