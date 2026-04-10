@@ -41,6 +41,7 @@ export async function POST(request: Request) {
     params.append("custom_fields[0][label][custom]", "Installation Address (if different from billing)");
     params.append("custom_fields[0][type]", "text");
     params.append("custom_fields[0][optional]", "true");
+    params.append("allow_promotion_codes", "true");
     params.append("metadata[gclid]", gclid ?? "");
 
     items.forEach((item, i) => {
