@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { uploadConversion } from "@/lib/conversions";
 
 const SUBJECT_LABELS: Record<string, string> = {
   general: "General Enquiry",
@@ -34,12 +35,13 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, email, phone, subject, message } = body as {
+    const { name, email, phone, subject, message, gclid } = body as {
       name?: string;
       email?: string;
       phone?: string;
       subject?: string;
       message?: string;
+      gclid?: string;
     };
 
     if (!name?.trim() || !email?.trim() || !message?.trim()) {
@@ -83,6 +85,26 @@ export async function POST(request: Request) {
         { error: "Could not send email. Please try again later." },
         { status: 502 }
       );
+    }
+
+    // Upload offline conversion to Google Ads via Zapier Tables (fire-and-forget)
+    // Both conversion names are uploaded — Google Ads credits whichever campaign
+    // generated the GCLID, so only the correct one gets counted.
+    if (gclid) {
+      const conversionBase = {
+        gclid,
+        email: email.trim(),
+        name: name.trim(),
+        phone: phone?.trim() ?? "",
+        conversion_time: new Date().toISOString(),
+        conversion_value: 10,
+        currency: "EUR",
+      };
+      Promise.all([
+        uploadConversion({ ...conversionBase, conversion_name: "Installer Lead" }),
+        uploadConversion({ ...conversionBase, conversion_name: "Specialist Lead" }),
+      ]).catch((err) => console.error("[contact] conversion upload failed:", err));
+      console.log(`[contact] gclid=${gclid} email=${email.trim()} conversion upload queued`);
     }
 
     return NextResponse.json({ success: true, id: data?.id });

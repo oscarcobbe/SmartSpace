@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { Send, Check } from "lucide-react";
+import { getStoredGclid } from "@/lib/gclid";
 
 export default function ContactForm() {
   const [submitting, setSubmitting] = useState(false);
@@ -20,6 +21,7 @@ export default function ContactForm() {
       phone: (form.elements.namedItem("phone") as HTMLInputElement).value,
       subject: (form.elements.namedItem("subject") as HTMLSelectElement).value,
       message: (form.elements.namedItem("message") as HTMLTextAreaElement).value,
+      gclid: getStoredGclid() ?? "",
     };
 
     try {
