@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 // Typeform is used by SmartCareLiving, not smart-space.ie.
 // Leads for smart-space.ie come from contact form submissions and phone calls.
 // This route is kept as a no-op to avoid 404s if Typeform still points here.
 
-export async function POST(_req: NextRequest) {
+export async function POST(_req: NextRequest): Promise<NextResponse> {
   return NextResponse.json({ ok: true });
 }
