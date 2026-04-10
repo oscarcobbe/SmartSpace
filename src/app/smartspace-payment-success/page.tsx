@@ -5,23 +5,27 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, Home, Phone } from "lucide-react";
 
-// Google Ads conversion tag for SmartSpace Quote Payments
-const GADS_CONVERSION_TAG = "AW-17978501655/IofPCOiZuJkcEJfU6PxC";
+// Google Ads conversion tag for SmartSpace Specialist Payment
+// Set this via env var NEXT_PUBLIC_GADS_SPECIALIST_PAYMENT_TAG once the
+// conversion action is created in Google Ads (Goals → Conversions → New).
+const GADS_TAG = process.env.NEXT_PUBLIC_GADS_SPECIALIST_PAYMENT_TAG ?? "AW-17978501655/IofPCOiZuJkcEJfU6PxC";
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
+  // Stripe passes ?amount=XX (in major currency units, e.g. 350 = €350)
+  const amountParam = searchParams.get("amount");
+  const amount = amountParam ? parseFloat(amountParam) : undefined;
 
   useEffect(() => {
-    // Fire Google Ads conversion once on mount
-    if (typeof window !== "undefined" && (window as any).gtag) {
-      (window as any).gtag("event", "conversion", {
-        send_to: GADS_CONVERSION_TAG,
-        // Value will be set dynamically if Stripe passes it, otherwise
-        // we leave it undefined so Google Ads uses the default action value.
-      });
-    }
-  }, []);
+    if (typeof window === "undefined" || !(window as any).gtag) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).gtag("event", "conversion", {
+      send_to: GADS_TAG,
+      ...(amount !== undefined && { value: amount, currency: "EUR" }),
+      ...(sessionId && { transaction_id: sessionId }),
+    });
+  }, [amount, sessionId]);
 
   return (
     <div className="pt-32 lg:pt-40 pb-16 lg:pb-24">
@@ -54,7 +58,7 @@ function PaymentSuccessContent() {
               Back to Home
             </Link>
             <a
-              href="tel:+353871234567"
+              href="tel:+35315493131"
               className="inline-flex items-center justify-center gap-2 border-2 border-brand-500 text-brand-500 hover:bg-brand-50 font-semibold text-sm px-8 py-3.5 rounded-full transition-colors"
             >
               <Phone className="w-4 h-4" />

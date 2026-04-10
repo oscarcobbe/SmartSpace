@@ -20,6 +20,12 @@ export const metadata: Metadata = {
   },
 };
 
+const GTAG_ID = "AW-17978501655";
+// Business phone number shown on the site — Google Ads replaces this with a
+// tracked forwarding number for website call reporting (configured in Goals →
+// Conversions → Phone calls → Calls from a phone number on your website).
+const BUSINESS_PHONE = "+35315493131";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -34,16 +40,34 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
           rel="stylesheet"
         />
-        {/* Google Ads tag */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17978501655" />
-        <script dangerouslySetInnerHTML={{ __html: `
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'AW-17978501655');
-        `}} />
+        {/* Google Ads global tag */}
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${GTAG_ID}`} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${GTAG_ID}', { allow_enhanced_conversions: true });
+
+              // Website call tracking — Google Ads dynamically replaces this number
+              // with a forwarding number so calls are attributed to the correct campaign.
+              // Conversion label is set in Google Ads under Goals → Conversions →
+              // Phone calls → Calls to a phone number on your website.
+              var callLabel = window.__GADS_CALL_LABEL__ || '';
+              if (callLabel) {
+                gtag('config', '${GTAG_ID}/' + callLabel, {
+                  phone_conversion_number: '${BUSINESS_PHONE}'
+                });
+              }
+            `,
+          }}
+        />
       </head>
-      <body className="antialiased bg-white text-gray-900" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+      <body
+        className="antialiased bg-white text-gray-900"
+        style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}
+      >
         <CartProvider>
           <GclidCapture />
           <Navbar />

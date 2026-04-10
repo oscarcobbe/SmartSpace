@@ -1,10 +1,11 @@
 "use client";
 
 import { useCart } from "@/context/CartContext";
+import { getStoredGclid } from "@/lib/gclid";
 import { X, Minus, Plus, ShoppingBag } from "lucide-react";
 
 export default function CartDrawer() {
-  const { cart, isOpen, isLoading, closeCart, updateItem, removeItem } = useCart();
+  const { cart, isOpen, isLoading, closeCart, updateItem, removeItem, setCartAttribute } = useCart();
 
   if (!isOpen) return null;
 
@@ -14,6 +15,21 @@ export default function CartDrawer() {
 
   const formatPrice = (amount: string, code: string) => {
     return new Intl.NumberFormat("en-IE", { style: "currency", currency: code }).format(parseFloat(amount));
+  };
+
+  const handleCheckout = async () => {
+    // Attach GCLID to the cart as an attribute so it appears on the Shopify
+    // order and can be picked up by the order webhook for offline conversion upload.
+    const gclid = getStoredGclid();
+    if (gclid) {
+      await setCartAttribute("gclid", gclid);
+    }
+    // Redirect to Shopify checkout
+    const url = cart?.checkoutUrl?.replace(
+      /https:\/\/(www\.)?smart-space\.ie\//,
+      "https://smart-space-ie.myshopify.com/"
+    );
+    if (url) window.location.href = url;
   };
 
   return (
@@ -54,7 +70,6 @@ export default function CartDrawer() {
                 const image = line.merchandise.product.images.edges[0]?.node.url;
                 return (
                   <li key={line.id} className="flex gap-4 py-4 border-b border-gray-100">
-                    {/* Image */}
                     {image && (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -64,7 +79,6 @@ export default function CartDrawer() {
                       />
                     )}
 
-                    {/* Details */}
                     <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-semibold text-[#1a1a1a] truncate">
                         {line.merchandise.product.title}
@@ -76,7 +90,6 @@ export default function CartDrawer() {
                         {formatPrice(line.merchandise.price.amount, line.merchandise.price.currencyCode)}
                       </p>
 
-                      {/* Quantity controls */}
                       <div className="flex items-center gap-2 mt-2">
                         <button
                           onClick={() => {
@@ -120,22 +133,13 @@ export default function CartDrawer() {
               <span className="text-lg font-bold text-[#1a1a1a]">{formatPrice(total, currency)}</span>
             </div>
             <p className="text-xs text-gray-400">Shipping and taxes calculated at checkout</p>
-            <a
-              href={cart?.checkoutUrl?.replace(/https:\/\/(www\.)?smart-space\.ie\//, "https://smart-space-ie.myshopify.com/")}
-              onClick={() => {
-                if (typeof window !== "undefined" && (window as any).gtag) {
-                  (window as any).gtag('event', 'conversion', {
-                    send_to: 'AW-17978501655/YTk9CKrhmZkcEJfU6PxC',
-                    value: total,
-                    currency: currency || 'EUR',
-                    transaction_id: cart?.id,
-                  });
-                }
-              }}
-              className="block w-full bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm py-3.5 rounded-full text-center transition-colors"
+            <button
+              onClick={handleCheckout}
+              disabled={isLoading}
+              className="block w-full bg-brand-500 hover:bg-brand-600 disabled:opacity-60 text-white font-semibold text-sm py-3.5 rounded-full text-center transition-colors"
             >
               Checkout
-            </a>
+            </button>
             <button
               onClick={closeCart}
               className="block w-full text-center text-sm text-gray-500 hover:text-[#1a1a1a] transition-colors"

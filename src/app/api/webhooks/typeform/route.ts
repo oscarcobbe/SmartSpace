@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { uploadConversion } from "@/lib/conversions";
 
 // Typeform sends a POST when a form is submitted.
-// We extract the hidden gclid field and forward it to:
-//   1. Zapier Tables (ZAPIER_TABLES_ID + ZAPIER_TABLES_SECRET env vars)
-//   2. Optional generic Zapier webhook (ZAPIER_TYPEFORM_WEBHOOK_URL env var)
+// We extract the hidden gclid field, upload to Zapier Tables as both an
+// "Installer Lead" and "Specialist Lead" offline conversion (€10 each),
+// so that whichever campaign the click came from gets credit.
 
 interface TypeformAnswer {
   field: { id: string; ref?: string; type: string };
@@ -39,43 +40,39 @@ export async function POST(req: NextRequest) {
 
     const gclid = hidden?.gclid ?? "";
     const email = extractField(answers, "email");
-    const name = extractField(answers, "short_text") || extractField(answers, "long_text");
+    const name =
+      extractField(answers, "short_text") || extractField(answers, "long_text");
     const phone = extractField(answers, "phone_number");
+    const conversionTime = new Date(submitted_at).toISOString();
 
-    const payload = {
+    const base = {
       gclid,
       email,
       name,
       phone,
       submitted_at,
       form_id: form_response.form_id,
-      conversion_name: "SmartSpace Lead",
-      conversion_time: new Date(submitted_at).toISOString(),
+      conversion_time: conversionTime,
+      conversion_value: 10,
+      currency: "EUR",
     };
 
-    // 1. Post to Zapier Tables
-    const tablesId = process.env.ZAPIER_TABLES_ID;
-    const tablesSecret = process.env.ZAPIER_TABLES_SECRET;
-    if (tablesId && tablesSecret) {
-      await fetch(`https://tables.zapier.com/api/v1/tables/${tablesId}/records/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${tablesSecret}`,
-        },
-        body: JSON.stringify({ data: payload }),
-      });
-    }
-
-    // 2. Optional generic Zapier webhook
-    const zapierUrl = process.env.ZAPIER_TYPEFORM_WEBHOOK_URL;
-    if (zapierUrl) {
-      await fetch(zapierUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-    }
+    // Upload as both campaign conversion types so the right one gets credited
+    // (Google Ads only counts the conversion for the campaign that generated the GCLID)
+    await Promise.all([
+      uploadConversion({ ...base, conversion_name: "Installer Lead" }),
+      uploadConversion({ ...base, conversion_name: "Specialist Lead" }),
+      // Also post to Zapier Tables via legacy env var webhook if configured
+      ...(process.env.ZAPIER_TYPEFORM_WEBHOOK_URL
+        ? [
+            fetch(process.env.ZAPIER_TYPEFORM_WEBHOOK_URL, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ...base, conversion_name: "SmartSpace Lead" }),
+            }),
+          ]
+        : []),
+    ]);
 
     if (gclid) {
       console.log(`[typeform] gclid=${gclid} email=${email} at ${submitted_at}`);

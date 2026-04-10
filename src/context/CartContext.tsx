@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
-import { ShopifyCart, createCart, addToCart, updateCartLine, removeFromCart } from "@/lib/shopify";
+import { ShopifyCart, createCart, addToCart, updateCartLine, removeFromCart, updateCartAttributes } from "@/lib/shopify";
 
 interface CartContextType {
   cart: ShopifyCart | null;
@@ -12,6 +12,7 @@ interface CartContextType {
   addItem: (variantId: string, quantity?: number, attributes?: { key: string; value: string }[]) => Promise<void>;
   updateItem: (lineId: string, quantity: number) => Promise<void>;
   removeItem: (lineId: string) => Promise<void>;
+  setCartAttribute: (key: string, value: string) => Promise<void>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -88,9 +89,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [cart]);
 
+  const setCartAttribute = useCallback(async (key: string, value: string) => {
+    if (!cart?.id) return;
+    try {
+      await updateCartAttributes(cart.id, [{ key, value }]);
+    } catch (error) {
+      console.error("Failed to set cart attribute:", error);
+    }
+  }, [cart]);
+
   return (
     <CartContext.Provider
-      value={{ cart, isOpen, isLoading, openCart, closeCart, addItem, updateItem, removeItem }}
+      value={{ cart, isOpen, isLoading, openCart, closeCart, addItem, updateItem, removeItem, setCartAttribute }}
     >
       {children}
     </CartContext.Provider>

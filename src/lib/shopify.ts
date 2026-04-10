@@ -379,3 +379,24 @@ export async function removeFromCart(cartId: string, lineIds: string[]): Promise
   );
   return data.cartLinesRemove.cart;
 }
+
+const UPDATE_CART_ATTRIBUTES_MUTATION = `
+  mutation CartAttributesUpdate($cartId: ID!, $attributes: [AttributeInput!]!) {
+    cartAttributesUpdate(cartId: $cartId, attributes: $attributes) {
+      cart {
+        id
+        checkoutUrl
+        attributes { key value }
+      }
+      userErrors { field message }
+    }
+  }
+`;
+
+/** Attach key/value attributes (e.g. gclid) to a cart so they appear on the Shopify order */
+export async function updateCartAttributes(
+  cartId: string,
+  attributes: { key: string; value: string }[]
+): Promise<void> {
+  await shopifyFetch<unknown>(UPDATE_CART_ATTRIBUTES_MUTATION, { cartId, attributes });
+}
