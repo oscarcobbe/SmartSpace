@@ -22,6 +22,10 @@ const nextConfig = {
   },
   async redirects() {
     return [
+      // Bundle shortcut URLs → proper bundle pages
+      { source: "/services/driveway-bundle", destination: "/services/bundles/driveway", permanent: true },
+      { source: "/services/whole-home-bundle", destination: "/services/bundles/whole-home", permanent: true },
+
       // Old pages -> home page
       { source: "/pages/how-it-works", destination: "/", permanent: true },
       { source: "/pages/about-us", destination: "/", permanent: true },
