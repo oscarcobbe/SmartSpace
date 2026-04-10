@@ -35,7 +35,6 @@ export async function POST(request: Request) {
     );
     params.append("cancel_url", "https://smart-space.ie");
     params.append("billing_address_collection", "auto");
-    params.append("shipping_address_collection[allowed_countries][0]", "IE");
     params.append("metadata[gclid]", gclid ?? "");
 
     items.forEach((item, i) => {
