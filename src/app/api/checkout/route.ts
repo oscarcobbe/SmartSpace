@@ -34,7 +34,13 @@ export async function POST(request: Request) {
       `https://smart-space.ie/smartspace-payment-success?session_id={CHECKOUT_SESSION_ID}&amount=${totalEur.toFixed(2)}`
     );
     params.append("cancel_url", "https://smart-space.ie");
-    params.append("billing_address_collection", "auto");
+    params.append("billing_address_collection", "required");
+    params.append("phone_number_collection[enabled]", "true");
+    params.append("custom_fields[0][key]", "installation_address");
+    params.append("custom_fields[0][label][type]", "custom");
+    params.append("custom_fields[0][label][custom]", "Installation Address (if different from billing)");
+    params.append("custom_fields[0][type]", "text");
+    params.append("custom_fields[0][optional]", "true");
     params.append("metadata[gclid]", gclid ?? "");
 
     items.forEach((item, i) => {
