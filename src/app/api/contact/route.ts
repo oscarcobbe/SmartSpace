@@ -16,7 +16,6 @@ function escapeHtml(text: string) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 }
->>>>>>> claude/great-wilson
 
 export async function POST(request: Request) {
   try {
