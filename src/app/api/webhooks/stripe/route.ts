@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { uploadConversion, lookupGclidByEmail } from "@/lib/conversions";
 
-// Disable body parsing — Stripe requires the raw body for signature verification
-export const config = { api: { bodyParser: false } };
-
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2024-06-20",
 });
