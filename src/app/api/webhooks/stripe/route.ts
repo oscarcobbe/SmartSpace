@@ -12,11 +12,18 @@ export async function POST(req: NextRequest) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET ?? "";
 
   let event: Stripe.Event;
-  try {
-    event = stripe.webhooks.constructEvent(rawBody, sig, secret);
-  } catch (err) {
-    console.error("[stripe webhook] signature verification failed:", err);
-    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+  if (secret) {
+    // Verify signature when secret is configured (recommended for production)
+    try {
+      event = stripe.webhooks.constructEvent(rawBody, sig, secret);
+    } catch (err) {
+      console.error("[stripe webhook] signature verification failed:", err);
+      return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+    }
+  } else {
+    // No secret configured — parse without verification (set STRIPE_WEBHOOK_SECRET in Vercel to harden)
+    console.warn("[stripe webhook] STRIPE_WEBHOOK_SECRET not set — skipping signature verification");
+    event = JSON.parse(rawBody) as Stripe.Event;
   }
 
   if (event.type === "checkout.session.completed") {
