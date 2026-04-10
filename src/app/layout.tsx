@@ -52,9 +52,9 @@ export default function RootLayout({
 
               // Website call tracking — Google Ads dynamically replaces this number
               // with a forwarding number so calls are attributed to the correct campaign.
-              // Conversion label is set in Google Ads under Goals → Conversions →
-              // Phone calls → Calls to a phone number on your website.
-              var callLabel = window.__GADS_CALL_LABEL__ || '';
+              // Set NEXT_PUBLIC_GADS_CALL_LABEL in Vercel env vars to the conversion label
+              // found in Google Ads → Goals → Conversions → Calls from website visits → Tag setup.
+              var callLabel = '${process.env.NEXT_PUBLIC_GADS_CALL_LABEL ?? ''}';
               if (callLabel) {
                 gtag('config', '${GTAG_ID}/' + callLabel, {
                   phone_conversion_number: '${BUSINESS_PHONE}'
