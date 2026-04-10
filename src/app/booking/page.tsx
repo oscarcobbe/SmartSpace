@@ -82,6 +82,14 @@ export default function BookingPage() {
       });
       sessionStorage.removeItem("bookingContact");
       setConfirmed(true);
+      // Google Ads conversion: Book appointment
+      if (typeof window !== "undefined" && (window as any).gtag) {
+        (window as any).gtag('event', 'conversion', {
+          send_to: 'AW-17978501655/5LUUCKfhmZkcEJfU6PxC',
+          value: 150.0,
+          currency: 'EUR',
+        });
+      }
     } catch (err) {
       console.error("Booking failed:", err);
     } finally {
