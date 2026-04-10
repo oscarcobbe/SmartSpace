@@ -41,7 +41,7 @@ function formatDateISO(date: Date): string {
 }
 
 export default function BookingCalendar({ onSelectionChange, compact }: BookingCalendarProps) {
-  const { cart } = useCart();
+  const { totalQuantity } = useCart();
   const [availableDates] = useState(getAvailableDates);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedSlot, setSelectedSlot] = useState<string>("");
@@ -91,7 +91,7 @@ export default function BookingCalendar({ onSelectionChange, compact }: BookingC
   }, []);
 
   const reserveSelectedSlot = useCallback(async (date: string, slot: string) => {
-    const cartId = cart?.id || "anonymous";
+    const cartId = totalQuantity > 0 ? "cart" : "anonymous";
     setReserving(true);
     setReservationError("");
 
@@ -119,7 +119,7 @@ export default function BookingCalendar({ onSelectionChange, compact }: BookingC
     } finally {
       setReserving(false);
     }
-  }, [cart?.id, fetchSlots]);
+  }, [totalQuantity, fetchSlots]);
 
   useEffect(() => {
     if (selectedDate) {
