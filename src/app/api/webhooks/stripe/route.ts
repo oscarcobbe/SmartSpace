@@ -3,9 +3,8 @@ import Stripe from "stripe";
 import { uploadConversion, lookupGclidByEmail } from "@/lib/conversions";
 
 export async function POST(req: NextRequest) {
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: "2026-03-25.dahlia",
-  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY! as any);
 
   const rawBody = await req.text();
   const sig = req.headers.get("stripe-signature") ?? "";

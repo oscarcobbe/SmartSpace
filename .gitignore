@@ -38,3 +38,4 @@ next-env.d.ts
 # google ads
 google-ads.yaml
 client_secret_*.json
+.env.local

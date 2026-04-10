@@ -22,9 +22,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No items provided" }, { status: 400 });
     }
 
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: "2026-03-25.dahlia",
-    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY! as any);
 
     const totalEur = items.reduce(
       (sum, item) => sum + item.price * item.quantity,
