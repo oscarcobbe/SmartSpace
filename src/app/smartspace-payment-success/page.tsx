@@ -18,6 +18,7 @@ function PaymentSuccessContent() {
   const amount = amountParam ? parseFloat(amountParam) : undefined;
 
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (typeof window === "undefined" || !(window as any).gtag) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).gtag("event", "conversion", {

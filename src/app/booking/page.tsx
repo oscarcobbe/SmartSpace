@@ -83,7 +83,9 @@ export default function BookingPage() {
       sessionStorage.removeItem("bookingContact");
       setConfirmed(true);
       // Google Ads conversion: Book appointment
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (typeof window !== "undefined" && (window as any).gtag) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any).gtag('event', 'conversion', {
           send_to: 'AW-17978501655/5LUUCKfhmZkcEJfU6PxC',
           value: 150.0,

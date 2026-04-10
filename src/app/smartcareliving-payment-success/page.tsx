@@ -14,7 +14,9 @@ function PaymentSuccessContent() {
 
   useEffect(() => {
     // Fire Google Ads conversion once on mount
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (typeof window !== "undefined" && (window as any).gtag) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (window as any).gtag("event", "conversion", {
         send_to: GADS_CONVERSION_TAG,
       });
