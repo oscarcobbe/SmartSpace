@@ -5,9 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, Home, Phone } from "lucide-react";
 
-// Fires the Google Ads conversion for Stripe quote payments.
-// Replace CONVERSION_LABEL below with the label from your Google Ads
-// "Stripe Quote Payment" conversion action once it has been created.
+// Google Ads conversion tag for SmartSpace Quote Payments
 const GADS_CONVERSION_TAG = "AW-17978501655/IofPCOiZuJkcEJfU6PxC";
 
 function PaymentSuccessContent() {
@@ -69,7 +67,7 @@ function PaymentSuccessContent() {
   );
 }
 
-export default function PaymentSuccessPage() {
+export default function SmartSpacePaymentSuccessPage() {
   return (
     <Suspense
       fallback={
