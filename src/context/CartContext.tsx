@@ -1,106 +1,83 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
-import { ShopifyCart, createCart, addToCart, updateCartLine, removeFromCart, updateCartAttributes } from "@/lib/shopify";
+import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+
+export interface CartItem {
+  productId: string;
+  name: string;
+  price: number;
+  image: string;
+  quantity: number;
+}
 
 interface CartContextType {
-  cart: ShopifyCart | null;
+  items: CartItem[];
   isOpen: boolean;
-  isLoading: boolean;
+  totalQuantity: number;
+  totalAmount: number;
   openCart: () => void;
   closeCart: () => void;
-  addItem: (variantId: string, quantity?: number, attributes?: { key: string; value: string }[]) => Promise<void>;
-  updateItem: (lineId: string, quantity: number) => Promise<void>;
-  removeItem: (lineId: string) => Promise<void>;
-  setCartAttribute: (key: string, value: string) => Promise<void>;
+  addItem: (item: CartItem) => void;
+  updateQuantity: (productId: string, qty: number) => void;
+  removeItem: (productId: string) => void;
+  clearCart: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [cart, setCart] = useState<ShopifyCart | null>(null);
+  const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
-  // Initialize cart
-  useEffect(() => {
-    const savedCartId = localStorage.getItem("shopify_cart_id");
-    if (!savedCartId) {
-      createCart().then((newCart) => {
-        setCart(newCart);
-        localStorage.setItem("shopify_cart_id", newCart.id);
-      }).catch(console.error);
-    }
-  }, []);
+  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+  const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const openCart = () => setIsOpen(true);
   const closeCart = () => setIsOpen(false);
 
-  const getOrCreateCart = useCallback(async (): Promise<string> => {
-    if (cart?.id) return cart.id;
-    const newCart = await createCart();
-    setCart(newCart);
-    localStorage.setItem("shopify_cart_id", newCart.id);
-    return newCart.id;
-  }, [cart]);
+  const addItem = useCallback((item: CartItem) => {
+    setItems((prev) => {
+      const existing = prev.find((i) => i.productId === item.productId);
+      if (existing) {
+        return prev.map((i) =>
+          i.productId === item.productId
+            ? { ...i, quantity: i.quantity + item.quantity }
+            : i
+        );
+      }
+      return [...prev, item];
+    });
+    setIsOpen(true);
+  }, []);
 
-  const addItem = useCallback(async (variantId: string, quantity = 1, attributes?: { key: string; value: string }[]) => {
-    setIsLoading(true);
-    try {
-      const cartId = await getOrCreateCart();
-      const updatedCart = await addToCart(cartId, variantId, quantity, attributes);
-      setCart(updatedCart);
-      setIsOpen(true);
-    } catch (error) {
-      console.error("Failed to add to cart:", error);
-      const newCart = await createCart();
-      localStorage.setItem("shopify_cart_id", newCart.id);
-      const updatedCart = await addToCart(newCart.id, variantId, quantity, attributes);
-      setCart(updatedCart);
-      setIsOpen(true);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [getOrCreateCart]);
+  const updateQuantity = useCallback((productId: string, qty: number) => {
+    setItems((prev) =>
+      prev.map((i) => (i.productId === productId ? { ...i, quantity: qty } : i))
+    );
+  }, []);
 
-  const updateItem = useCallback(async (lineId: string, quantity: number) => {
-    if (!cart?.id) return;
-    setIsLoading(true);
-    try {
-      const updatedCart = await updateCartLine(cart.id, lineId, quantity);
-      setCart(updatedCart);
-    } catch (error) {
-      console.error("Failed to update cart:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [cart]);
+  const removeItem = useCallback((productId: string) => {
+    setItems((prev) => prev.filter((i) => i.productId !== productId));
+  }, []);
 
-  const removeItem = useCallback(async (lineId: string) => {
-    if (!cart?.id) return;
-    setIsLoading(true);
-    try {
-      const updatedCart = await removeFromCart(cart.id, [lineId]);
-      setCart(updatedCart);
-    } catch (error) {
-      console.error("Failed to remove from cart:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [cart]);
-
-  const setCartAttribute = useCallback(async (key: string, value: string) => {
-    if (!cart?.id) return;
-    try {
-      await updateCartAttributes(cart.id, [{ key, value }]);
-    } catch (error) {
-      console.error("Failed to set cart attribute:", error);
-    }
-  }, [cart]);
+  const clearCart = useCallback(() => {
+    setItems([]);
+  }, []);
 
   return (
     <CartContext.Provider
-      value={{ cart, isOpen, isLoading, openCart, closeCart, addItem, updateItem, removeItem, setCartAttribute }}
+      value={{
+        items,
+        isOpen,
+        totalQuantity,
+        totalAmount,
+        openCart,
+        closeCart,
+        addItem,
+        updateQuantity,
+        removeItem,
+        clearCart,
+      }}
     >
       {children}
     </CartContext.Provider>

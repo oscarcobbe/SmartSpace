@@ -1,35 +1,37 @@
 "use client";
 
+import { useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { getStoredGclid } from "@/lib/gclid";
 import { X, Minus, Plus, ShoppingBag } from "lucide-react";
 
 export default function CartDrawer() {
-  const { cart, isOpen, isLoading, closeCart, updateItem, removeItem, setCartAttribute } = useCart();
+  const { items, isOpen, totalQuantity, totalAmount, closeCart, updateQuantity, removeItem } = useCart();
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   if (!isOpen) return null;
 
-  const lines = cart?.lines?.edges ?? [];
-  const total = cart?.cost?.totalAmount?.amount ?? "0";
-  const currency = cart?.cost?.totalAmount?.currencyCode ?? "EUR";
-
-  const formatPrice = (amount: string, code: string) => {
-    return new Intl.NumberFormat("en-IE", { style: "currency", currency: code }).format(parseFloat(amount));
+  const formatPrice = (amount: number) => {
+    return new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(amount);
   };
 
   const handleCheckout = async () => {
-    // Attach GCLID to the cart as an attribute so it appears on the Shopify
-    // order and can be picked up by the order webhook for offline conversion upload.
-    const gclid = getStoredGclid();
-    if (gclid) {
-      await setCartAttribute("gclid", gclid);
+    setIsCheckingOut(true);
+    try {
+      const gclid = getStoredGclid() ?? "";
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items, gclid }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error("Checkout failed:", error);
+      setIsCheckingOut(false);
     }
-    // Redirect to Shopify checkout
-    const url = cart?.checkoutUrl?.replace(
-      /https:\/\/(www\.)?smart-space\.ie\//,
-      "https://smart-space-ie.myshopify.com/"
-    );
-    if (url) window.location.href = url;
   };
 
   return (
@@ -43,7 +45,7 @@ export default function CartDrawer() {
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <h2 className="text-lg font-bold text-[#1a1a1a] flex items-center gap-2">
             <ShoppingBag className="w-5 h-5" />
-            Your Cart {cart?.totalQuantity ? `(${cart.totalQuantity})` : ""}
+            Your Cart {totalQuantity ? `(${totalQuantity})` : ""}
           </h2>
           <button onClick={closeCart} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
             <X className="w-5 h-5" />
@@ -52,7 +54,7 @@ export default function CartDrawer() {
 
         {/* Items */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
-          {lines.length === 0 ? (
+          {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
               <ShoppingBag className="w-12 h-12 text-gray-300 mb-4" />
               <p className="text-gray-500 font-medium">Your cart is empty</p>
@@ -66,79 +68,73 @@ export default function CartDrawer() {
             </div>
           ) : (
             <ul className="space-y-4">
-              {lines.map(({ node: line }) => {
-                const image = line.merchandise.product.images.edges[0]?.node.url;
-                return (
-                  <li key={line.id} className="flex gap-4 py-4 border-b border-gray-100">
-                    {image && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={image}
-                        alt={line.merchandise.product.title}
-                        className="w-20 h-20 object-contain bg-gray-50 rounded-lg flex-shrink-0"
-                      />
-                    )}
+              {items.map((item) => (
+                <li key={item.productId} className="flex gap-4 py-4 border-b border-gray-100">
+                  {item.image && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-20 h-20 object-contain bg-gray-50 rounded-lg flex-shrink-0"
+                    />
+                  )}
 
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-semibold text-[#1a1a1a] truncate">
-                        {line.merchandise.product.title}
-                      </h3>
-                      {line.merchandise.title !== "Default Title" && (
-                        <p className="text-xs text-gray-500 mt-0.5">{line.merchandise.title}</p>
-                      )}
-                      <p className="text-sm font-bold text-[#1a1a1a] mt-1">
-                        {formatPrice(line.merchandise.price.amount, line.merchandise.price.currencyCode)}
-                      </p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold text-[#1a1a1a] truncate">
+                      {item.name}
+                    </h3>
+                    <p className="text-sm font-bold text-[#1a1a1a] mt-1">
+                      {formatPrice(item.price)}
+                    </p>
 
-                      <div className="flex items-center gap-2 mt-2">
-                        <button
-                          onClick={() => {
-                            if (line.quantity === 1) removeItem(line.id);
-                            else updateItem(line.id, line.quantity - 1);
-                          }}
-                          disabled={isLoading}
-                          className="w-7 h-7 flex items-center justify-center border border-gray-300 rounded text-gray-600 hover:bg-gray-100 disabled:opacity-50"
-                        >
-                          <Minus className="w-3 h-3" />
-                        </button>
-                        <span className="text-sm font-medium w-6 text-center">{line.quantity}</span>
-                        <button
-                          onClick={() => updateItem(line.id, line.quantity + 1)}
-                          disabled={isLoading}
-                          className="w-7 h-7 flex items-center justify-center border border-gray-300 rounded text-gray-600 hover:bg-gray-100 disabled:opacity-50"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </button>
-                        <button
-                          onClick={() => removeItem(line.id)}
-                          disabled={isLoading}
-                          className="ml-auto text-xs text-gray-400 hover:text-red-500 transition-colors"
-                        >
-                          Remove
-                        </button>
-                      </div>
+                    <div className="flex items-center gap-2 mt-2">
+                      <button
+                        onClick={() => {
+                          if (item.quantity === 1) removeItem(item.productId);
+                          else updateQuantity(item.productId, item.quantity - 1);
+                        }}
+                        disabled={isCheckingOut}
+                        className="w-7 h-7 flex items-center justify-center border border-gray-300 rounded text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+                      >
+                        <Minus className="w-3 h-3" />
+                      </button>
+                      <span className="text-sm font-medium w-6 text-center">{item.quantity}</span>
+                      <button
+                        onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                        disabled={isCheckingOut}
+                        className="w-7 h-7 flex items-center justify-center border border-gray-300 rounded text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={() => removeItem(item.productId)}
+                        disabled={isCheckingOut}
+                        className="ml-auto text-xs text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        Remove
+                      </button>
                     </div>
-                  </li>
-                );
-              })}
+                  </div>
+                </li>
+              ))}
             </ul>
           )}
         </div>
 
         {/* Footer */}
-        {lines.length > 0 && (
+        {items.length > 0 && (
           <div className="border-t px-6 py-4 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Subtotal</span>
-              <span className="text-lg font-bold text-[#1a1a1a]">{formatPrice(total, currency)}</span>
+              <span className="text-lg font-bold text-[#1a1a1a]">{formatPrice(totalAmount)}</span>
             </div>
             <p className="text-xs text-gray-400">Shipping and taxes calculated at checkout</p>
             <button
               onClick={handleCheckout}
-              disabled={isLoading}
+              disabled={isCheckingOut}
               className="block w-full bg-brand-500 hover:bg-brand-600 disabled:opacity-60 text-white font-semibold text-sm py-3.5 rounded-full text-center transition-colors"
             >
-              Checkout
+              {isCheckingOut ? "Redirecting..." : "Checkout"}
             </button>
             <button
               onClick={closeCart}

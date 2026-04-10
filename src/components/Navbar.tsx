@@ -17,9 +17,9 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
-  const { cart, openCart } = useCart();
+  const { totalQuantity, openCart } = useCart();
 
-  const totalItems = cart?.totalQuantity ?? 0;
+  const totalItems = totalQuantity;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);

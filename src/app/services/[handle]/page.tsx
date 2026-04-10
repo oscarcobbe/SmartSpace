@@ -119,8 +119,11 @@ export default function ServiceDetailPage() {
   const price = matchedVariant?.price ?? product.priceRange.minVariantPrice;
   const comparePrice = matchedVariant?.compareAtPrice ?? product.compareAtPriceRange?.minVariantPrice;
   const hasDiscount = comparePrice && parseFloat(comparePrice.amount) > parseFloat(price.amount);
-  const variantId = matchedVariant?.id ?? product.variants.edges[0]?.node.id;
   const isService = product.productType === "Consultation" || product.productType === "Subscription";
+  const productPrice = parseFloat(
+    matchedVariant?.price?.amount ?? product.variants.edges[0]?.node.price?.amount ?? "0"
+  );
+  const productImage = allImages[0] ?? shopifyImages[0] ?? "";
 
   // Curated features
   const features = getProductFeatures(product.handle, product.productType);
@@ -325,21 +328,16 @@ export default function ServiceDetailPage() {
 
             {/* CTAs */}
             <div className="flex flex-col gap-3 mb-6">
-              {variantId && (
-                <AddToCartButton
-                  variantId={variantId}
-                  size="lg"
-                  className="w-full"
-                  disabled={!isService && !bookingSelection}
-                  disabledText="Select an Installation Date"
-                  attributes={bookingSelection ? [
-                    { key: "Installation Date", value: bookingSelection.dateLabel },
-                    { key: "Installation Time", value: bookingSelection.slotLabel },
-                    { key: "_booking_date", value: bookingSelection.date },
-                    { key: "_booking_slot", value: bookingSelection.timeSlot },
-                  ] : undefined}
-                />
-              )}
+              <AddToCartButton
+                productId={product.handle}
+                name={displayTitle(product.title)}
+                price={productPrice}
+                image={productImage}
+                size="lg"
+                className="w-full"
+                disabled={!isService && !bookingSelection}
+                disabledText="Select an Installation Date"
+              />
             </div>
 
             {/* ── Trust Strip ── */}

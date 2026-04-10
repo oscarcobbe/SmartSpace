@@ -74,7 +74,10 @@ export default function InstallationOnlyPage() {
   )?.node ?? product?.variants.edges[0]?.node;
 
   const price = matchedVariant?.price ?? product?.priceRange.minVariantPrice;
-  const variantId = matchedVariant?.id;
+  const productPrice = parseFloat(
+    matchedVariant?.price?.amount ?? product?.variants.edges[0]?.node.price?.amount ?? "0"
+  );
+  const productImage = product?.images.edges[0]?.node.url ?? "";
 
   return (
     <div className="pt-32 lg:pt-36">
@@ -168,19 +171,16 @@ export default function InstallationOnlyPage() {
                 })}
 
                 {/* Add to Cart */}
-                {variantId && (
+                {product && (
                   <AddToCartButton
-                    variantId={variantId}
+                    productId="installation-only"
+                    name={product.title}
+                    price={productPrice}
+                    image={productImage}
                     size="lg"
                     className="w-full"
                     disabled={!bookingSelection}
                     disabledText="Select an Installation Date"
-                    attributes={bookingSelection ? [
-                      { key: "Installation Date", value: bookingSelection.dateLabel },
-                      { key: "Installation Time", value: bookingSelection.slotLabel },
-                      { key: "_booking_date", value: bookingSelection.date },
-                      { key: "_booking_slot", value: bookingSelection.timeSlot },
-                    ] : undefined}
                   />
                 )}
               </div>

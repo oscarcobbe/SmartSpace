@@ -5,21 +5,32 @@ import { useCart } from "@/context/CartContext";
 import { ShoppingBag, Check, Loader2 } from "lucide-react";
 
 interface AddToCartButtonProps {
-  variantId: string;
+  productId: string;
+  name: string;
+  price: number;
+  image: string;
   className?: string;
   size?: "sm" | "md" | "lg";
-  attributes?: { key: string; value: string }[];
   disabled?: boolean;
   disabledText?: string;
 }
 
-export default function AddToCartButton({ variantId, className = "", size = "md", attributes, disabled, disabledText }: AddToCartButtonProps) {
+export default function AddToCartButton({
+  productId,
+  name,
+  price,
+  image,
+  className = "",
+  size = "md",
+  disabled,
+  disabledText,
+}: AddToCartButtonProps) {
   const { addItem } = useCart();
   const [status, setStatus] = useState<"idle" | "loading" | "added">("idle");
 
   const handleClick = async () => {
     setStatus("loading");
-    await addItem(variantId, 1, attributes);
+    addItem({ productId, name, price, image, quantity: 1 });
     setStatus("added");
     setTimeout(() => setStatus("idle"), 2000);
   };
@@ -43,7 +54,13 @@ export default function AddToCartButton({ variantId, className = "", size = "md"
       {status === "loading" && <Loader2 className="w-4 h-4 animate-spin" />}
       {status === "added" && <Check className="w-4 h-4" />}
       {status === "idle" && <ShoppingBag className="w-4 h-4" />}
-      {status === "loading" ? "Adding..." : status === "added" ? "Added!" : disabled && disabledText ? disabledText : "Add to Cart"}
+      {status === "loading"
+        ? "Adding..."
+        : status === "added"
+        ? "Added!"
+        : disabled && disabledText
+        ? disabledText
+        : "Add to Cart"}
     </button>
   );
 }
