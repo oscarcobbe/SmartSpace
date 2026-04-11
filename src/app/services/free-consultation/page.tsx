@@ -108,7 +108,7 @@ export default function FreeConsultationPage() {
                 productId="free-consultation"
                 name="Free Home Consultation"
                 price={0}
-                image="/products/consultation.png"
+                image="/products/consultation.jpg"
                 size="lg"
                 className="w-full"
                 disabled={!bookingSelection}

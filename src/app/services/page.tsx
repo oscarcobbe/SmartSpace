@@ -44,7 +44,7 @@ const serviceCategories = [
     description: "Not sure what you need? Book a free home visit — no obligation.",
     href: "/services/free-consultation",
     filter: () => false,
-    staticImage: "/products/consultation.png",
+    staticImage: "/products/consultation.jpg",
   },
 ];
 
