@@ -12,7 +12,6 @@ import {
   Star, Shield, Wrench, Award, Check, Phone,
 } from "lucide-react";
 import BookingCalendar from "@/components/BookingCalendar";
-import TypeformButton from "@/components/TypeformButton";
 
 function formatPrice(amount: string, currencyCode: string) {
   return new Intl.NumberFormat("en-IE", { style: "currency", currency: currencyCode }).format(parseFloat(amount));
@@ -463,9 +462,9 @@ export default function ServiceDetailPage() {
               <Phone className="w-4 h-4" />
               01 513 0424
             </a>
-            <TypeformButton className="inline-flex items-center justify-center bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm px-8 py-3.5 rounded-full transition-colors">
+            <Link href="/contact" className="inline-flex items-center justify-center bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm px-8 py-3.5 rounded-full transition-colors">
               Get a Free Quote
-            </TypeformButton>
+            </Link>
           </div>
         </section>
       </div>

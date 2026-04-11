@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ShieldCheck, Award, Users, MapPin, ArrowRight } from "lucide-react";
-import TypeformButton from "@/components/TypeformButton";
 
 export const metadata: Metadata = {
   title: "About Us | Smart Space",
@@ -135,9 +134,9 @@ export default function AboutPage() {
               Browse Services
               <ArrowRight className="h-4 w-4" />
             </Link>
-            <TypeformButton className="inline-flex items-center justify-center gap-2 border-2 border-gray-200 text-gray-700 font-semibold px-10 py-4 rounded-full hover:border-brand-500 hover:text-brand-500 transition-all">
+            <Link href="/contact" className="inline-flex items-center justify-center gap-2 border-2 border-gray-200 text-gray-700 font-semibold px-10 py-4 rounded-full hover:border-brand-500 hover:text-brand-500 transition-all">
               Get a Quote
-            </TypeformButton>
+            </Link>
           </div>
         </div>
       </section>

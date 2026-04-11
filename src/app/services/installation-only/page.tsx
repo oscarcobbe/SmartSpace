@@ -181,6 +181,9 @@ export default function InstallationOnlyPage() {
                     className="w-full"
                     disabled={!bookingSelection}
                     disabledText="Select an Installation Date"
+                    bookingDate={bookingSelection?.date}
+                    bookingSlot={bookingSelection?.timeSlot}
+                    bookingLabel={bookingSelection ? `${bookingSelection.dateLabel} ${bookingSelection.slotLabel}` : undefined}
                   />
                 )}
               </div>

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Check, ArrowRight } from "lucide-react";
-import TypeformButton from "@/components/TypeformButton";
 
 export const metadata: Metadata = {
   title: "Ring Home Bundles | Smart Space",
@@ -161,9 +160,9 @@ export default function BundlesPage() {
             If you need something different, get in touch and we&apos;ll put
             together a package tailored to your home.
           </p>
-          <TypeformButton className="inline-flex items-center justify-center bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm px-8 py-3.5 rounded-full transition-colors">
+          <Link href="/contact" className="inline-flex items-center justify-center bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm px-8 py-3.5 rounded-full transition-colors">
             Get a Free Quote
-          </TypeformButton>
+          </Link>
         </div>
       </div>
     </div>
