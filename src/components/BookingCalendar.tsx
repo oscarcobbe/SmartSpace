@@ -16,6 +16,8 @@ interface TimeSlot {
 interface BookingCalendarProps {
   onSelectionChange?: (selection: { date: string; timeSlot: string; dateLabel: string; slotLabel: string } | null) => void;
   compact?: boolean;
+  heading?: string;
+  confirmLabel?: string;
 }
 
 function getAvailableDates(): Date[] {
@@ -40,7 +42,7 @@ function formatDateISO(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-export default function BookingCalendar({ onSelectionChange, compact }: BookingCalendarProps) {
+export default function BookingCalendar({ onSelectionChange, compact, heading = "Choose an Installation Date", confirmLabel = "Installation" }: BookingCalendarProps) {
   const { totalQuantity } = useCart();
   const [availableDates] = useState(getAvailableDates);
   const [selectedDate, setSelectedDate] = useState<string>("");
@@ -161,7 +163,7 @@ export default function BookingCalendar({ onSelectionChange, compact }: BookingC
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
         <Calendar className="w-5 h-5 text-brand-500" />
-        <h3 className="text-sm font-bold text-gray-900">Choose an Installation Date</h3>
+        <h3 className="text-sm font-bold text-gray-900">{heading}</h3>
       </div>
 
       {/* Error message */}
@@ -268,7 +270,7 @@ export default function BookingCalendar({ onSelectionChange, compact }: BookingC
             <Timer className="w-4 h-4 text-brand-500 flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-xs font-semibold text-brand-600">
-                Installation: {availableDates.find((d) => formatDateISO(d) === selectedDate) &&
+                {confirmLabel}: {availableDates.find((d) => formatDateISO(d) === selectedDate) &&
                   `${DAY_NAMES[availableDates.find((d) => formatDateISO(d) === selectedDate)!.getDay()]} ${availableDates.find((d) => formatDateISO(d) === selectedDate)!.getDate()} ${MONTH_NAMES[availableDates.find((d) => formatDateISO(d) === selectedDate)!.getMonth()]}`}{" "}
                 at {slots.find((s) => s.value === selectedSlot)?.label}
               </p>

@@ -83,23 +83,23 @@ export default function FreeConsultationPage() {
                 <ul className="space-y-2 text-sm text-gray-600">
                   <li className="flex items-start gap-2">
                     <span className="text-brand-500 mt-0.5">✓</span>
-                    30-minute visit at your home
+                    Specialist visit to your home by our expert installer
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-brand-500 mt-0.5">✓</span>
-                    Property assessment for optimal device placement
+                    Full property assessment for optimal device placement
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-brand-500 mt-0.5">✓</span>
-                    Wi-Fi and wiring check
+                    Wi-Fi coverage and wiring check
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-brand-500 mt-0.5">✓</span>
-                    Personalised written quote
+                    Personalised written quote tailored to your home
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-brand-500 mt-0.5">✓</span>
-                    No pressure — decide in your own time
+                    Same-day installation available if you&apos;d like to go ahead
                   </li>
                 </ul>
               </div>
@@ -125,7 +125,11 @@ export default function FreeConsultationPage() {
 
             {/* Right: Booking Calendar */}
             <div>
-              <BookingCalendar onSelectionChange={setBookingSelection} />
+              <BookingCalendar
+                onSelectionChange={setBookingSelection}
+                heading="Choose a Consultation Date"
+                confirmLabel="Consultation"
+              />
             </div>
           </div>
         </div>
