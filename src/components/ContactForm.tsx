@@ -2,7 +2,6 @@
 
 import { useState, FormEvent } from "react";
 import { Send, Check } from "lucide-react";
-import { getStoredGclid } from "@/lib/gclid";
 
 export default function ContactForm() {
   const [submitting, setSubmitting] = useState(false);
@@ -21,7 +20,6 @@ export default function ContactForm() {
       phone: (form.elements.namedItem("phone") as HTMLInputElement).value,
       subject: (form.elements.namedItem("subject") as HTMLSelectElement).value,
       message: (form.elements.namedItem("message") as HTMLTextAreaElement).value,
-      gclid: getStoredGclid() ?? "",
     };
 
     try {
@@ -37,6 +35,16 @@ export default function ContactForm() {
         return;
       }
       setSubmitted(true);
+      // Fire Google Ads lead conversion
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (typeof window !== "undefined" && (window as any).gtag) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any).gtag("event", "conversion", {
+          send_to: "AW-17978501655",
+          value: 10.0,
+          currency: "EUR",
+        });
+      }
     } catch {
       setError("Failed to send message. Please try again.");
     } finally {
