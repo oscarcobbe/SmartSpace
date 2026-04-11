@@ -63,7 +63,7 @@ function PaymentSuccessContent() {
               Back to Home
             </Link>
             <a
-              href="tel:+35315493131"
+              href="tel:+35315130424"
               className="inline-flex items-center justify-center gap-2 border-2 border-brand-500 text-brand-500 hover:bg-brand-50 font-semibold text-sm px-8 py-3.5 rounded-full transition-colors"
             >
               <Phone className="w-4 h-4" />

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createBookingEvent } from "@/lib/calendly";
-import { uploadConversion } from "@/lib/conversions";
 
 interface CartItem {
   productId: string;
@@ -20,7 +19,7 @@ interface FreeCheckoutBody {
 
 export async function POST(request: Request) {
   try {
-    const { items, gclid }: FreeCheckoutBody = await request.json();
+    const { items }: FreeCheckoutBody = await request.json();
 
     if (!items || items.length === 0) {
       return NextResponse.json({ error: "No items provided" }, { status: 400 });
@@ -47,17 +46,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // Upload conversion if GCLID present
-    if (gclid) {
-      await uploadConversion({
-        gclid,
-        conversion_name: "Installer Lead",
-        conversion_value: 0,
-        conversion_time: new Date().toISOString(),
-        currency: "EUR",
-      }).catch((err) => console.error("[free-checkout] conversion upload failed:", err));
-    }
-
+    // Conversion tracking is handled client-side via gtag on the success page
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";

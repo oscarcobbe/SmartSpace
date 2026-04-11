@@ -87,8 +87,8 @@ export default function BookingPage() {
       if (typeof window !== "undefined" && (window as any).gtag) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any).gtag('event', 'conversion', {
-          send_to: 'AW-17978501655/5LUUCKfhmZkcEJfU6PxC',
-          value: 150.0,
+          send_to: 'AW-17978501655/u8cHCNyipZocEJfU6PxC',
+          value: 10.0,
           currency: 'EUR',
         });
       }

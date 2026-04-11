@@ -24,7 +24,7 @@ const GTAG_ID = "AW-17978501655";
 // Business phone number shown on the site — Google Ads replaces this with a
 // tracked forwarding number for website call reporting (configured in Goals →
 // Conversions → Phone calls → Calls from a phone number on your website).
-const BUSINESS_PHONE = "+35315493131";
+const BUSINESS_PHONE = "+35315130424";
 
 export default function RootLayout({
   children,
