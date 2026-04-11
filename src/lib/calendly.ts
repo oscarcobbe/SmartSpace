@@ -110,9 +110,23 @@ export async function createBookingEvent(params: {
     const slot = TIME_SLOTS.find((s) => s.value === params.timeSlot);
     if (!slot) throw new Error(`Invalid time slot: ${params.timeSlot}`);
 
-    // Build Dublin local time and convert to ISO for Calendly
-    const localStart = `${params.date}T${String(slot.startHour).padStart(2, "0")}:${String(slot.startMin).padStart(2, "0")}:00`;
-    const startTimeIso = new Date(localStart).toISOString();
+    // Build Dublin local time with correct timezone offset for Calendly.
+    // Ireland uses IST (UTC+1) in summer and GMT (UTC+0) in winter.
+    // Vercel runs in UTC, so naive `new Date("...T10:00:00")` would be wrong in summer.
+    const hh = String(slot.startHour).padStart(2, "0");
+    const mm = String(slot.startMin).padStart(2, "0");
+    const dublinDateStr = `${params.date}T${hh}:${mm}:00`;
+    // Determine Dublin's UTC offset for this date
+    const probe = new Date(`${params.date}T12:00:00Z`);
+    const dublinParts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/Dublin",
+      hour: "2-digit",
+      hour12: false,
+    }).formatToParts(probe);
+    const dublinHour = parseInt(dublinParts.find((p) => p.type === "hour")?.value ?? "12");
+    const offsetHours = dublinHour - 12; // +1 in summer, 0 in winter
+    const isoOffset = `${offsetHours >= 0 ? "+" : "-"}${String(Math.abs(offsetHours)).padStart(2, "0")}:00`;
+    const startTimeIso = new Date(`${dublinDateStr}${isoOffset}`).toISOString();
 
     const nameParts = params.customerName.trim().split(/\s+/);
     const firstName = nameParts[0] || "Customer";
