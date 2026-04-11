@@ -117,7 +117,7 @@ const PRODUCTS_QUERY = `
               node { url altText width height }
             }
           }
-          variants(first: 30) {
+          variants(first: 100) {
             edges {
               node {
                 id
@@ -162,7 +162,7 @@ const PRODUCT_BY_HANDLE_QUERY = `
           node { url altText width height }
         }
       }
-      variants(first: 30) {
+      variants(first: 100) {
         edges {
           node {
             id
