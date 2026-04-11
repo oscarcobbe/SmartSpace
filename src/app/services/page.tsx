@@ -39,6 +39,13 @@ const serviceCategories = [
     filter: () => false,
     staticImage: "/products/installation.png",
   },
+  {
+    title: "Free Consultation",
+    description: "Not sure what you need? Book a free home visit — no obligation.",
+    href: "/services/free-consultation",
+    filter: () => false,
+    staticImage: "/products/consultation.png",
+  },
 ];
 
 export default function ServicesPage() {

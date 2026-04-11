@@ -21,6 +21,25 @@ export default function CartDrawer() {
     setCheckoutError(null);
     try {
       const gclid = getStoredGclid() ?? "";
+
+      // If all items are free (e.g. free consultation), skip Stripe and book directly
+      const isFree = items.every((i) => i.price === 0);
+      if (isFree) {
+        const res = await fetch("/api/checkout/free", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items, gclid }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          window.location.href = "/smartspace-payment-success?free=true";
+        } else {
+          setCheckoutError(data.error ?? "Booking failed. Please try again.");
+          setIsCheckingOut(false);
+        }
+        return;
+      }
+
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -22,6 +22,7 @@ export const ringStockImages: Record<string, string> = {
   // Eldercare
   "eldercare-security-bundle": "/products/Eldercare bundle.png",
   "installation-only": "/products/installation.png",
+  "free-consultation": "/products/consultation.png",
   "onsite-troubleshoot-installation-set-up-of-customer-bought-ring-products":
     "/products/installation.png",
 
