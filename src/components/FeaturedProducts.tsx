@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getAllProducts, ShopifyProduct } from "@/lib/shopify";
 import ProductCard from "./ProductCard";
 
-const NEW_SINGLES = ["plus-video-doorbell", "budget-video-doorbell", "pro-video-doorbell", "plus-floodlight-cam", "pro-floodlight-cam"];
+const NEW_SINGLES = ["plus-video-doorbell", "pro-video-doorbell", "plus-floodlight-cam", "pro-floodlight-cam"];
 const NEW_BUNDLES = ["plus-driveway-bundle", "pro-driveway-bundle", "plus-whole-home-bundle", "pro-whole-home-bundle", "eldercare-security-bundle"];
 
 function isSingleProduct(product: ShopifyProduct): boolean {

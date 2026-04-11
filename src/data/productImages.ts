@@ -5,7 +5,6 @@
 export const ringStockImages: Record<string, string> = {
   // Single Doorbells
   "plus-video-doorbell": "/products/plus-video-doorbell.png",
-  "budget-video-doorbell": "/products/plus-video-doorbell.png", // same image until new gen arrives
   "pro-video-doorbell": "/products/pro-video-doorbell.png",
 
   // Single Floodlights (default = black)

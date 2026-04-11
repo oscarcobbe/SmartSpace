@@ -19,7 +19,6 @@ function formatPrice(amount: string, currencyCode: string) {
 }
 
 const titleRenames: [RegExp, string][] = [
-  [/\(Budget\)/gi, "(Plus)"],
   [/\(Premium\)/gi, "(Pro)"],
 ];
 

@@ -11,7 +11,7 @@ const serviceCategories = [
     title: "Video Doorbells",
     description: "See, hear, and speak to anyone at your door. Professionally installed.",
     href: "/services/doorbell",
-    filter: (p: ShopifyProduct) => ["plus-video-doorbell", "budget-video-doorbell", "pro-video-doorbell"].includes(p.handle),
+    filter: (p: ShopifyProduct) => ["plus-video-doorbell", "pro-video-doorbell"].includes(p.handle),
   },
   {
     title: "Floodlight Cameras",

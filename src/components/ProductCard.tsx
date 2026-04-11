@@ -3,7 +3,7 @@ import { ShopifyProduct } from "@/lib/shopify";
 import { getProductImage } from "@/data/productImages";
 
 function displayTitle(title: string): string {
-  return title.replace(/\(Budget\)/gi, "(Plus)").replace(/\(Premium\)/gi, "(Pro)");
+  return title.replace(/\(Premium\)/gi, "(Pro)");
 }
 
 export default function ProductCard({ product }: { product: ShopifyProduct }) {
