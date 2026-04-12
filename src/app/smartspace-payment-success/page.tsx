@@ -8,7 +8,8 @@ import { CheckCircle, Home, Phone } from "lucide-react";
 // Google Ads conversion tag for SmartSpace Specialist Payment
 // Set this via env var NEXT_PUBLIC_GADS_SPECIALIST_PAYMENT_TAG once the
 // conversion action is created in Google Ads (Goals → Conversions → New).
-const GADS_TAG = process.env.NEXT_PUBLIC_GADS_SPECIALIST_PAYMENT_TAG ?? "AW-17978501655/IofPCOiZuJkcEJfU6PxC";
+const GADS_PAYMENT_TAG = "AW-17978501655/IofPCOiZuJkcEJfU6PxC";
+const GADS_FREE_CONSULTATION_TAG = "AW-17978501655/fH4ZCMHv7ZocEJfU6PxC";
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
@@ -21,13 +22,25 @@ function PaymentSuccessContent() {
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (typeof window === "undefined" || !(window as any).gtag) return;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).gtag("event", "conversion", {
-      send_to: GADS_TAG,
-      ...(amount !== undefined && { value: amount, currency: "EUR" }),
-      ...(sessionId && { transaction_id: sessionId }),
-    });
-  }, [amount, sessionId]);
+
+    if (isFree) {
+      // Free consultation booking — high-value lead (€300)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).gtag("event", "conversion", {
+        send_to: GADS_FREE_CONSULTATION_TAG,
+        value: 300.0,
+        currency: "EUR",
+      });
+    } else {
+      // Stripe payment — dynamic value from checkout
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).gtag("event", "conversion", {
+        send_to: GADS_PAYMENT_TAG,
+        ...(amount !== undefined && { value: amount, currency: "EUR" }),
+        ...(sessionId && { transaction_id: sessionId }),
+      });
+    }
+  }, [amount, sessionId, isFree]);
 
   return (
     <div className="pt-32 lg:pt-40 pb-16 lg:pb-24">
