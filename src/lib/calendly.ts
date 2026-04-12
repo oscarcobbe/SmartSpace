@@ -110,23 +110,41 @@ export async function createBookingEvent(params: {
     const slot = TIME_SLOTS.find((s) => s.value === params.timeSlot);
     if (!slot) throw new Error(`Invalid time slot: ${params.timeSlot}`);
 
-    // Build Dublin local time with correct timezone offset for Calendly.
-    // Ireland uses IST (UTC+1) in summer and GMT (UTC+0) in winter.
-    // Vercel runs in UTC, so naive `new Date("...T10:00:00")` would be wrong in summer.
-    const hh = String(slot.startHour).padStart(2, "0");
-    const mm = String(slot.startMin).padStart(2, "0");
-    const dublinDateStr = `${params.date}T${hh}:${mm}:00`;
-    // Determine Dublin's UTC offset for this date
-    const probe = new Date(`${params.date}T12:00:00Z`);
-    const dublinParts = new Intl.DateTimeFormat("en-GB", {
-      timeZone: "Europe/Dublin",
-      hour: "2-digit",
-      hour12: false,
-    }).formatToParts(probe);
-    const dublinHour = parseInt(dublinParts.find((p) => p.type === "hour")?.value ?? "12");
-    const offsetHours = dublinHour - 12; // +1 in summer, 0 in winter
-    const isoOffset = `${offsetHours >= 0 ? "+" : "-"}${String(Math.abs(offsetHours)).padStart(2, "0")}:00`;
-    const startTimeIso = new Date(`${dublinDateStr}${isoOffset}`).toISOString();
+    // Look up the exact Calendly available start time for this slot.
+    // Calendly requires the start_time to exactly match one of its available times.
+    const availableRes = await fetch(
+      `https://api.calendly.com/event_type_available_times?event_type=${encodeURIComponent(EVENT_TYPE_URI!)}&start_time=${params.date}T00:00:00Z&end_time=${params.date}T23:59:59Z`,
+      { headers: { Authorization: `Bearer ${CALENDLY_TOKEN}`, "Content-Type": "application/json" } }
+    );
+    const availableData = await availableRes.json();
+    const availableTimes: { start_time: string; status: string }[] = (availableData.collection || []).filter(
+      (t: { status: string }) => t.status === "available"
+    );
+
+    // Match our Dublin-time slot to a Calendly available time
+    let startTimeIso: string | null = null;
+    for (const t of availableTimes) {
+      const utcDate = new Date(t.start_time);
+      const parts = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Europe/Dublin",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }).formatToParts(utcDate);
+      const hour = parseInt(parts.find((p) => p.type === "hour")?.value ?? "0");
+      const minute = parseInt(parts.find((p) => p.type === "minute")?.value ?? "0");
+      if (hour === slot.startHour && minute === slot.startMin) {
+        startTimeIso = t.start_time;
+        break;
+      }
+    }
+
+    if (!startTimeIso) {
+      console.error(`[calendly] No available time matching ${slot.startHour}:${slot.startMin} on ${params.date}`);
+      return null;
+    }
+
+    console.log(`[calendly] Booking: slot=${params.timeSlot} → startTime=${startTimeIso}`);
 
     const nameParts = params.customerName.trim().split(/\s+/);
     const firstName = nameParts[0] || "Customer";
