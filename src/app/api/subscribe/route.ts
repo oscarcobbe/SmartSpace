@@ -9,12 +9,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Valid email required" }, { status: 400 });
     }
 
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    const apiKey = process.env.RESEND_API_KEY;
+    const from = process.env.RESEND_FROM_EMAIL ?? "Smart Space <onboarding@resend.dev>";
+    const to = process.env.CONTACT_TO_EMAIL ?? "nigel@smart-space.ie";
 
-    // Notify Smart Space of new subscriber
+    if (!apiKey) {
+      console.error("Subscribe: RESEND_API_KEY not set");
+      return NextResponse.json({ error: "Email not configured" }, { status: 503 });
+    }
+
+    const resend = new Resend(apiKey);
+
     await resend.emails.send({
-      from: "Smart Space <onboarding@resend.dev>",
-      to: "info@smart-space.ie",
+      from,
+      to: [to],
       subject: `New mailing list subscriber: ${email}`,
       text: `New subscriber: ${email}\nSubscribed at: ${new Date().toISOString()}`,
     });
