@@ -1,10 +1,12 @@
 // Calendly API integration
-// Requires env vars: CALENDLY_PERSONAL_TOKEN, CALENDLY_EVENT_TYPE_URI
+// Requires env vars: CALENDLY_PERSONAL_TOKEN, CALENDLY_CONSULTATION_EVENT_TYPE_URI, CALENDLY_INSTALLATION_EVENT_TYPE_URI
 
 const CALENDLY_TOKEN = process.env.CALENDLY_PERSONAL_TOKEN;
-const EVENT_TYPE_URI = process.env.CALENDLY_EVENT_TYPE_URI;
+const CONSULTATION_EVENT_TYPE_URI = process.env.CALENDLY_CONSULTATION_EVENT_TYPE_URI;
+// Fall back to old env var name so existing Vercel deployments keep working
+const INSTALLATION_EVENT_TYPE_URI = process.env.CALENDLY_INSTALLATION_EVENT_TYPE_URI || process.env.CALENDLY_EVENT_TYPE_URI;
 
-// Time slots available for booking (Dublin time → UTC offset is +0 in winter, +1 in summer)
+// Time slots available for booking (Dublin time)
 export const TIME_SLOTS = [
   { label: "10:00 – 12:00", value: "10:00-12:00", startHour: 10, startMin: 0, endHour: 12, endMin: 0 },
   { label: "12:30 – 14:30", value: "12:30-14:30", startHour: 12, startMin: 30, endHour: 14, endMin: 30 },
@@ -14,17 +16,23 @@ export const TIME_SLOTS = [
 // Available days: Tuesday (2), Wednesday (3), Thursday (4)
 export const AVAILABLE_DAYS = [2, 3, 4];
 
-function isConfigured(): boolean {
-  return !!(CALENDLY_TOKEN && EVENT_TYPE_URI);
+type EventKind = "consultation" | "installation";
+
+function getEventTypeUri(kind: EventKind): string | undefined {
+  return kind === "consultation" ? CONSULTATION_EVENT_TYPE_URI : INSTALLATION_EVENT_TYPE_URI;
 }
+
 
 /**
  * Get available time slots for a given date by checking Calendly availability.
  * Maps Calendly's available start times back to our fixed TIME_SLOTS.
  */
-export async function getAvailableSlots(dateStr: string): Promise<typeof TIME_SLOTS> {
-  if (!isConfigured()) {
-    return TIME_SLOTS;
+export async function getAvailableSlots(dateStr: string, kind: EventKind = "installation"): Promise<typeof TIME_SLOTS> {
+  const eventTypeUri = getEventTypeUri(kind);
+
+  if (!CALENDLY_TOKEN || !eventTypeUri) {
+    console.error(`[calendly] Not configured for ${kind}. CALENDLY_PERSONAL_TOKEN=${CALENDLY_TOKEN ? "set" : "MISSING"}, event_type_uri=${eventTypeUri ? "set" : "MISSING"}`);
+    return [];
   }
 
   try {
@@ -32,7 +40,7 @@ export async function getAvailableSlots(dateStr: string): Promise<typeof TIME_SL
     const endTime = `${dateStr}T23:59:59Z`;
 
     const res = await fetch(
-      `https://api.calendly.com/event_type_available_times?event_type=${encodeURIComponent(EVENT_TYPE_URI!)}&start_time=${startTime}&end_time=${endTime}`,
+      `https://api.calendly.com/event_type_available_times?event_type=${encodeURIComponent(eventTypeUri)}&start_time=${startTime}&end_time=${endTime}`,
       {
         headers: {
           Authorization: `Bearer ${CALENDLY_TOKEN}`,
@@ -42,23 +50,18 @@ export async function getAvailableSlots(dateStr: string): Promise<typeof TIME_SL
     );
 
     if (!res.ok) {
-      console.error("Calendly API error:", res.status, await res.text());
-      return TIME_SLOTS;
+      console.error("[calendly] API error:", res.status, await res.text());
+      return [];
     }
 
     const data = await res.json();
     const collection = (data.collection || []).filter((t: { status: string }) => t.status === "available");
 
-    console.log(`📅 Calendly available times for ${dateStr}:`, collection.map((t: { start_time: string }) => t.start_time));
-
-    // Map Calendly UTC start times to our slot values
-    // Calendly returns UTC times; our slots are in Dublin time (Europe/Dublin)
-    // Instead of toLocaleString (unreliable in Node), manually compute Dublin offset
+    // Map Calendly UTC start times to our slot values using Dublin timezone
     const availableSlotValues = new Set<string>();
 
     for (const t of collection) {
       const utcDate = new Date((t as { start_time: string }).start_time);
-      // Get Dublin offset: create a formatter that outputs hour/minute in Dublin tz
       const parts = new Intl.DateTimeFormat("en-GB", {
         timeZone: "Europe/Dublin",
         hour: "2-digit",
@@ -70,7 +73,6 @@ export async function getAvailableSlots(dateStr: string): Promise<typeof TIME_SL
       const minute = parts.find(p => p.type === "minute")?.value || "00";
       const localTime = `${hour}:${minute}`;
 
-      // Find which slot this start time matches
       for (const slot of TIME_SLOTS) {
         const slotStart = `${String(slot.startHour).padStart(2, "0")}:${String(slot.startMin).padStart(2, "0")}`;
         if (localTime === slotStart) {
@@ -79,12 +81,10 @@ export async function getAvailableSlots(dateStr: string): Promise<typeof TIME_SL
       }
     }
 
-    console.log(`📅 Matched slots for ${dateStr}:`, Array.from(availableSlotValues));
-
     return TIME_SLOTS.filter((slot) => availableSlotValues.has(slot.value));
   } catch (err) {
-    console.error("Calendly API error:", err);
-    return TIME_SLOTS;
+    console.error("[calendly] API error:", err);
+    return [];
   }
 }
 
@@ -100,9 +100,13 @@ export async function createBookingEvent(params: {
   phone?: string;
   productTitle: string;
   orderId?: string;
+  kind?: EventKind;
 }): Promise<{ eventId: string } | null> {
-  if (!isConfigured()) {
-    console.log("📅 Calendly not configured. Booking logged:", params);
+  const kind = params.kind ?? "installation";
+  const eventTypeUri = getEventTypeUri(kind);
+
+  if (!CALENDLY_TOKEN || !eventTypeUri) {
+    console.error(`[calendly] Cannot create booking — not configured for ${kind}`);
     return null;
   }
 
@@ -110,10 +114,9 @@ export async function createBookingEvent(params: {
     const slot = TIME_SLOTS.find((s) => s.value === params.timeSlot);
     if (!slot) throw new Error(`Invalid time slot: ${params.timeSlot}`);
 
-    // Look up the exact Calendly available start time for this slot.
-    // Calendly requires the start_time to exactly match one of its available times.
+    // Look up the exact Calendly available start time for this slot
     const availableRes = await fetch(
-      `https://api.calendly.com/event_type_available_times?event_type=${encodeURIComponent(EVENT_TYPE_URI!)}&start_time=${params.date}T00:00:00Z&end_time=${params.date}T23:59:59Z`,
+      `https://api.calendly.com/event_type_available_times?event_type=${encodeURIComponent(eventTypeUri)}&start_time=${params.date}T00:00:00Z&end_time=${params.date}T23:59:59Z`,
       { headers: { Authorization: `Bearer ${CALENDLY_TOKEN}`, "Content-Type": "application/json" } }
     );
     const availableData = await availableRes.json();
@@ -144,7 +147,7 @@ export async function createBookingEvent(params: {
       return null;
     }
 
-    console.log(`[calendly] Booking: slot=${params.timeSlot} → startTime=${startTimeIso}`);
+    console.log(`[calendly] Booking: kind=${kind} slot=${params.timeSlot} → startTime=${startTimeIso}`);
 
     const nameParts = params.customerName.trim().split(/\s+/);
     const firstName = nameParts[0] || "Customer";
@@ -157,7 +160,7 @@ export async function createBookingEvent(params: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        event_type: EVENT_TYPE_URI,
+        event_type: eventTypeUri,
         start_time: startTimeIso,
         invitee: {
           email: params.email,
@@ -182,16 +185,16 @@ export async function createBookingEvent(params: {
 
     if (!res.ok) {
       const errText = await res.text();
-      console.error("Calendly booking error:", res.status, errText);
+      console.error("[calendly] Booking error:", res.status, errText);
       return null;
     }
 
     const event = await res.json();
     const eventId = event.resource?.uri || event.uri || "created";
-    console.log("📅 Calendly booking created:", eventId);
+    console.log("[calendly] Booking created:", eventId);
     return { eventId };
   } catch (err) {
-    console.error("Failed to create Calendly booking:", err);
+    console.error("[calendly] Failed to create booking:", err);
     return null;
   }
 }

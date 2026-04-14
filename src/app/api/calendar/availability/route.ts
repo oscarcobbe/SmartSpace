@@ -6,6 +6,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const date = searchParams.get("date");
+  const kind = (searchParams.get("kind") ?? "installation") as "consultation" | "installation";
 
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return NextResponse.json({ error: "Invalid date format. Use YYYY-MM-DD" }, { status: 400 });
@@ -25,7 +26,7 @@ export async function GET(request: Request) {
   }
 
   // Get available slots from Calendly
-  const availableSlots = await getAvailableSlots(date);
+  const availableSlots = await getAvailableSlots(date, kind);
 
   return NextResponse.json({
     date,

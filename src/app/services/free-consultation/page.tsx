@@ -129,6 +129,7 @@ export default function FreeConsultationPage() {
                 onSelectionChange={setBookingSelection}
                 heading="Choose a Consultation Date"
                 confirmLabel="Consultation"
+                kind="consultation"
               />
             </div>
           </div>

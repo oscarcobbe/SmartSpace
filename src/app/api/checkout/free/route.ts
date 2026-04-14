@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     const bookedItem = items.find((i) => i.bookingDate && i.bookingSlot);
 
     if (bookedItem?.bookingDate && bookedItem?.bookingSlot) {
-      // Create Calendly booking
+      // Create Calendly booking for consultation
       const result = await createBookingEvent({
         date: bookedItem.bookingDate,
         timeSlot: bookedItem.bookingSlot,
@@ -37,12 +37,17 @@ export async function POST(request: Request) {
         email: "consultation@smart-space.ie",
         productTitle: bookedItem.name,
         orderId: `free-${Date.now()}`,
+        kind: "consultation",
       });
 
       if (result) {
         console.log("[free-checkout] Calendly booking created:", result.eventId);
       } else {
         console.error("[free-checkout] Calendly booking failed");
+        return NextResponse.json(
+          { error: "Failed to book your consultation. Please try again or contact us." },
+          { status: 500 }
+        );
       }
     }
 

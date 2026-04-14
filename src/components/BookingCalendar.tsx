@@ -18,6 +18,7 @@ interface BookingCalendarProps {
   compact?: boolean;
   heading?: string;
   confirmLabel?: string;
+  kind?: "consultation" | "installation";
 }
 
 function getAvailableDates(): Date[] {
@@ -42,7 +43,7 @@ function formatDateISO(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-export default function BookingCalendar({ onSelectionChange, compact, heading = "Choose an Installation Date", confirmLabel = "Installation" }: BookingCalendarProps) {
+export default function BookingCalendar({ onSelectionChange, compact, heading = "Choose an Installation Date", confirmLabel = "Installation", kind = "installation" }: BookingCalendarProps) {
   const { totalQuantity } = useCart();
   const [availableDates] = useState(getAvailableDates);
   const [selectedDate, setSelectedDate] = useState<string>("");
@@ -82,7 +83,7 @@ export default function BookingCalendar({ onSelectionChange, compact, heading = 
     setLoadingSlots(true);
     setReservationError("");
     try {
-      const res = await fetch(`/api/calendar/availability?date=${date}`);
+      const res = await fetch(`/api/calendar/availability?date=${date}&kind=${kind}`);
       const data = await res.json();
       setSlots(data.slots || []);
     } catch {
@@ -101,7 +102,7 @@ export default function BookingCalendar({ onSelectionChange, compact, heading = 
       const res = await fetch("/api/calendar/reserve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date, timeSlot: slot, cartId }),
+        body: JSON.stringify({ date, timeSlot: slot, cartId, kind }),
       });
       const data = await res.json();
 

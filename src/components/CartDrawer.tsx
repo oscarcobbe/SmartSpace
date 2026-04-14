@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { getStoredGclid } from "@/lib/gclid";
-import { X, Minus, Plus, ShoppingBag } from "lucide-react";
+import { X, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 
 export default function CartDrawer() {
   const { items, isOpen, totalQuantity, totalAmount, closeCart, updateQuantity, removeItem } = useCart();
@@ -138,9 +138,10 @@ export default function CartDrawer() {
                       <button
                         onClick={() => removeItem(item.productId)}
                         disabled={isCheckingOut}
-                        className="ml-auto text-xs text-gray-400 hover:text-red-500 transition-colors"
+                        className="ml-auto p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                        aria-label={`Remove ${item.name}`}
                       >
-                        Remove
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>

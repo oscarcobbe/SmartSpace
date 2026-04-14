@@ -4,14 +4,14 @@ import { getAvailableSlots } from "@/lib/calendly";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { date, timeSlot } = body;
+    const { date, timeSlot, kind = "installation" } = body;
 
     if (!date || !timeSlot) {
       return NextResponse.json({ error: "Missing required fields: date, timeSlot" }, { status: 400 });
     }
 
     // Verify the slot is still available on Calendly
-    const available = await getAvailableSlots(date);
+    const available = await getAvailableSlots(date, kind);
     const isAvailable = available.some((s) => s.value === timeSlot);
 
     if (!isAvailable) {
