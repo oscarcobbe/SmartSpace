@@ -57,7 +57,7 @@ export default function FreeConsultationPage() {
           items: [
             {
               productId: "free-consultation",
-              name: "Free Home Consultation",
+              name: "Complimentary Home Consultation",
               price: 0,
               image: "/products/consultation.jpg",
               quantity: 1,
@@ -94,14 +94,14 @@ export default function FreeConsultationPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 bg-green-50 text-green-700 text-sm font-semibold px-4 py-1.5 rounded-full mb-6">
             <span className="w-2 h-2 bg-green-500 rounded-full" />
-            100% Free — No Obligation
+            Complimentary — No Obligation
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4">
-            Free Home Consultation
+            Complimentary Home Consultation
           </h1>
           <p className="text-gray-500 text-lg max-w-2xl mx-auto">
             Not sure what you need? We&apos;ll come to your home, assess your property, and give you an
-            honest recommendation with a written quote — completely free.
+            honest recommendation with a written quote — completely complimentary.
           </p>
         </div>
       </section>
@@ -111,7 +111,7 @@ export default function FreeConsultationPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">
-              Book Your Free Visit
+              Book Your Consultation
             </h2>
             <p className="text-gray-500 text-lg max-w-xl mx-auto">
               Choose a day and time that suits you — we&apos;ll be there
@@ -123,7 +123,7 @@ export default function FreeConsultationPage() {
             <div className="space-y-6">
               <div className="bg-green-50 rounded-2xl p-6">
                 <div className="text-sm text-gray-500 mb-1">Price</div>
-                <div className="text-3xl font-extrabold text-green-600">FREE</div>
+                <div className="text-3xl font-extrabold text-green-600">Complimentary</div>
                 <div className="text-xs text-gray-400 mt-1">
                   No obligation • No card required
                 </div>
@@ -207,7 +207,7 @@ export default function FreeConsultationPage() {
                 ) : !bookingSelection ? (
                   "Select a Date First"
                 ) : (
-                  "Book Free Consultation"
+                  "Book Complimentary Consultation"
                 )}
               </button>
             </div>

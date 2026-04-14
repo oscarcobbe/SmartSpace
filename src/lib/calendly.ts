@@ -173,12 +173,17 @@ export async function createBookingEvent(params: {
         },
         location: {
           kind: "physical",
-          location: params.address || "Customer's home",
+          location: "Customer's home",
         },
         questions_and_answers: [
           {
             question: "Please share anything that will help prepare for our meeting.",
-            answer: `Product: ${params.productTitle}${params.orderId ? ` | Order: ${params.orderId}` : ""}${params.address ? ` | Address: ${params.address}` : ""}`,
+            answer: [
+              `Product: ${params.productTitle}`,
+              params.orderId ? `Order: ${params.orderId}` : "",
+              params.address ? `Address: ${params.address}` : "",
+              params.phone ? `Phone: ${params.phone}` : "",
+            ].filter(Boolean).join(" | "),
             position: 0,
           },
         ],

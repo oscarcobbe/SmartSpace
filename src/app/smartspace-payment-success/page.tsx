@@ -48,24 +48,18 @@ function PaymentSuccessContent() {
         <div className="bg-green-50 rounded-2xl p-10">
           <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-5" />
           <h1 className="text-3xl font-extrabold text-gray-900 mb-3">
-            {isFree ? "Booking Confirmed!" : "Payment Received!"}
+            {isFree ? "Thank You for Booking!" : "Thank You for Your Payment!"}
           </h1>
           <p className="text-gray-600 mb-2 text-lg">
             {isFree
-              ? "Thank you — your free consultation has been booked."
-              : "Thank you — your payment has been processed successfully."}
+              ? "Your complimentary consultation has been booked successfully."
+              : "Your payment has been processed successfully."}
           </p>
           <p className="text-gray-500 text-sm mb-6">
             {isFree
               ? "Our specialist will visit your home at the time you selected. We\u2019ll be in touch to confirm."
               : "You\u2019ll receive a receipt by email shortly. Our team will be in touch to confirm your installation date."}
           </p>
-
-          {sessionId && (
-            <p className="text-xs text-gray-400 mb-6 font-mono break-all">
-              Reference: {sessionId}
-            </p>
-          )}
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
