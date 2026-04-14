@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { logLead } from "@/lib/leads";
 
 export async function POST(request: Request) {
   try {
@@ -25,6 +26,12 @@ export async function POST(request: Request) {
       to: [to],
       subject: `New mailing list subscriber: ${email}`,
       text: `New subscriber: ${email}\nSubscribed at: ${new Date().toISOString()}`,
+    });
+
+    logLead({
+      type: "Newsletter Signup",
+      email,
+      source: "smart-space.ie",
     });
 
     return NextResponse.json({ success: true });

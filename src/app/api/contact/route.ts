@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { logLead } from "@/lib/leads";
 
 const SUBJECT_LABELS: Record<string, string> = {
   general: "General Enquiry",
@@ -84,6 +85,16 @@ export async function POST(request: Request) {
         { status: 502 }
       );
     }
+
+    // Log to tracking sheet
+    logLead({
+      type: "Contact Enquiry",
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone?.trim(),
+      notes: `${subjectLabel}: ${message.trim()}`,
+      source: "smart-space.ie",
+    });
 
     // Conversion tracking is handled client-side via gtag in ContactForm.tsx
     return NextResponse.json({ success: true, id: data?.id });

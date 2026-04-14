@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createBookingEvent } from "@/lib/calendly";
+import { logLead } from "@/lib/leads";
 
 interface CartItem {
   productId: string;
@@ -107,6 +108,21 @@ export async function POST(request: Request) {
         });
       }
     }
+
+    // Log to tracking sheet
+    logLead({
+      type: "Free Consultation",
+      name: customer?.name,
+      email: customer?.email,
+      phone: customer?.phone,
+      address: customer?.address,
+      product: bookedItem?.name || "Free Home Consultation",
+      amount: 0,
+      currency: "EUR",
+      bookingDate: bookedItem?.bookingLabel || bookedItem?.bookingDate,
+      bookingSlot: bookedItem?.bookingSlot,
+      source: "smart-space.ie",
+    });
 
     // Conversion tracking is handled client-side via gtag on the success page
     return NextResponse.json({ success: true });

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { uploadConversion, lookupGclidByEmail } from "@/lib/conversions";
 import { createBookingEvent } from "@/lib/calendly";
+import { logLead } from "@/lib/leads";
 
 export async function POST(req: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -68,6 +69,22 @@ export async function POST(req: NextRequest) {
     const productName = session.metadata?.product_name ?? "Installation";
     const customerName = session.customer_details?.name ?? email.split("@")[0];
     const phone = session.customer_details?.phone ?? "";
+
+    // Log paid order to tracking sheet
+    logLead({
+      type: "Paid Order",
+      name: customerName,
+      email,
+      phone,
+      product: productName,
+      amount: amountTotal,
+      currency,
+      bookingDate: bookingDate || undefined,
+      bookingSlot: bookingSlot || undefined,
+      orderId: sessionId,
+      gclid: gclid || undefined,
+      source: "smart-space.ie",
+    });
 
     if (bookingDate && bookingSlot) {
       const result = await createBookingEvent({
