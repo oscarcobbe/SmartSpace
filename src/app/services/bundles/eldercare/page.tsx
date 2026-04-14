@@ -82,7 +82,7 @@ export default function EldercareBundlePage() {
         {!loading && products.length > 0 && (
           <>
             <h2 className="text-xl font-bold text-gray-900 mb-6">Choose your doorbell</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="flex flex-wrap justify-center gap-6">
               {products.map((product) => {
                 const image = getProductImage(product.handle, product.images.edges[0]?.node.url);
                 const price = product.priceRange.minVariantPrice;
@@ -90,7 +90,7 @@ export default function EldercareBundlePage() {
                 const hasDiscount = comparePrice && parseFloat(comparePrice.amount) > parseFloat(price.amount);
 
                 return (
-                  <div key={product.id} className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow">
+                  <div key={product.id} className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow w-full sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]">
                     <Link href={`/services/${product.handle}`}>
                       <div className="relative bg-transparent aspect-square p-6 flex items-center justify-center">
                         {image && (
