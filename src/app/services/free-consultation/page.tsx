@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ClipboardCheck, Home, MessageCircle, Lightbulb, Shield, Star, Wrench, Award } from "lucide-react";
-import AddToCartButton from "@/components/AddToCartButton";
+import { ClipboardCheck, Home, MessageCircle, Lightbulb, Shield, Star, Wrench, Award, Loader2 } from "lucide-react";
 import BookingCalendar from "@/components/BookingCalendar";
 
 const benefits = [
@@ -36,6 +35,58 @@ export default function FreeConsultationPage() {
     slotLabel: string;
   } | null>(null);
 
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const formValid = name.trim() && email.trim() && phone.trim() && address.trim() && bookingSelection;
+
+  const handleSubmit = async () => {
+    if (!formValid || !bookingSelection) return;
+    setSubmitting(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/checkout/free", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: [
+            {
+              productId: "free-consultation",
+              name: "Free Home Consultation",
+              price: 0,
+              image: "/products/consultation.jpg",
+              quantity: 1,
+              bookingDate: bookingSelection.date,
+              bookingSlot: bookingSelection.timeSlot,
+              bookingLabel: `${bookingSelection.dateLabel} ${bookingSelection.slotLabel}`,
+            },
+          ],
+          customer: {
+            name: name.trim(),
+            email: email.trim(),
+            phone: phone.trim(),
+            address: address.trim(),
+          },
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.location.href = "/smartspace-payment-success?free=true";
+      } else {
+        setError(data.error ?? "Booking failed. Please try again.");
+        setSubmitting(false);
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="pt-32 lg:pt-36">
       {/* Hero */}
@@ -68,59 +119,97 @@ export default function FreeConsultationPage() {
           </div>
 
           <div className="grid lg:grid-cols-2 gap-8">
-            {/* Left: Info + CTA */}
+            {/* Left: Info + Form */}
             <div className="space-y-6">
               <div className="bg-green-50 rounded-2xl p-6">
                 <div className="text-sm text-gray-500 mb-1">Price</div>
                 <div className="text-3xl font-extrabold text-green-600">FREE</div>
                 <div className="text-xs text-gray-400 mt-1">
-                  No obligation • No card required at checkout
+                  No obligation • No card required
                 </div>
               </div>
 
-              <div className="bg-gray-50 rounded-2xl p-6 space-y-3">
-                <h3 className="font-bold text-gray-900">What to expect</h3>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li className="flex items-start gap-2">
-                    <span className="text-brand-500 mt-0.5">✓</span>
-                    Specialist visit to your home by our expert installer
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-brand-500 mt-0.5">✓</span>
-                    Full property assessment for optimal device placement
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-brand-500 mt-0.5">✓</span>
-                    Wi-Fi coverage and wiring check
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-brand-500 mt-0.5">✓</span>
-                    Personalised written quote tailored to your home
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-brand-500 mt-0.5">✓</span>
-                    Same-day installation available if you&apos;d like to go ahead
-                  </li>
-                </ul>
+              {/* Customer details form */}
+              <div className="border border-gray-200 rounded-2xl p-5 space-y-4">
+                <h3 className="text-sm font-bold text-gray-900">Your Details</h3>
+
+                <div>
+                  <label htmlFor="consult-name" className="block text-xs font-medium text-gray-600 mb-1">
+                    Full Name *
+                  </label>
+                  <input
+                    id="consult-name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="John Smith"
+                    className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="consult-phone" className="block text-xs font-medium text-gray-600 mb-1">
+                    Phone Number *
+                  </label>
+                  <input
+                    id="consult-phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="085 123 4567"
+                    className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="consult-email" className="block text-xs font-medium text-gray-600 mb-1">
+                    Email *
+                  </label>
+                  <input
+                    id="consult-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="john@example.com"
+                    className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="consult-address" className="block text-xs font-medium text-gray-600 mb-1">
+                    Address / Eircode *
+                  </label>
+                  <input
+                    id="consult-address"
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="123 Main St, Dublin 12 or D12 AB34"
+                    className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
+                  />
+                </div>
               </div>
 
-              <AddToCartButton
-                productId="free-consultation"
-                name="Free Home Consultation"
-                price={0}
-                image="/products/consultation.jpg"
-                size="lg"
-                className="w-full"
-                disabled={!bookingSelection}
-                disabledText="Select a Date First"
-                bookingDate={bookingSelection?.date}
-                bookingSlot={bookingSelection?.timeSlot}
-                bookingLabel={
-                  bookingSelection
-                    ? `${bookingSelection.dateLabel} ${bookingSelection.slotLabel}`
-                    : undefined
-                }
-              />
+              {error && (
+                <p className="text-sm text-red-600 bg-red-50 px-4 py-2.5 rounded-xl">{error}</p>
+              )}
+
+              <button
+                onClick={handleSubmit}
+                disabled={!formValid || submitting}
+                className="w-full bg-brand-500 hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm py-4 rounded-full transition-colors flex items-center justify-center gap-2"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Booking...
+                  </>
+                ) : !bookingSelection ? (
+                  "Select a Date First"
+                ) : (
+                  "Book Free Consultation"
+                )}
+              </button>
             </div>
 
             {/* Right: Booking Calendar */}
@@ -167,7 +256,7 @@ export default function FreeConsultationPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: Shield, text: "Dublin's Only 5★ Ring Installer" },
+              { icon: Shield, text: "Dublin's Only 5\u2605 Ring Installer" },
               { icon: Star, text: "5-Star Google Rating" },
               { icon: Wrench, text: "5,000+ Installations" },
               { icon: Award, text: "SME Winner 2025" },

@@ -98,6 +98,7 @@ export async function createBookingEvent(params: {
   customerName: string;
   email: string;
   phone?: string;
+  address?: string;
   productTitle: string;
   orderId?: string;
   kind?: EventKind;
@@ -171,12 +172,12 @@ export async function createBookingEvent(params: {
         },
         location: {
           kind: "physical",
-          location: "Customer's home",
+          location: params.address || "Customer's home",
         },
         questions_and_answers: [
           {
             question: "Please share anything that will help prepare for our meeting.",
-            answer: `Product: ${params.productTitle}${params.orderId ? ` | Order: ${params.orderId}` : ""}`,
+            answer: `Product: ${params.productTitle}${params.orderId ? ` | Order: ${params.orderId}` : ""}${params.address ? ` | Address: ${params.address}` : ""}`,
             position: 0,
           },
         ],

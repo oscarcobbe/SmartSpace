@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Resend } from "resend";
 import { createBookingEvent } from "@/lib/calendly";
 
 interface CartItem {
@@ -12,14 +13,30 @@ interface CartItem {
   bookingLabel?: string;
 }
 
+interface CustomerDetails {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+}
+
 interface FreeCheckoutBody {
   items: CartItem[];
+  customer?: CustomerDetails;
   gclid?: string;
+}
+
+function escapeHtml(text: string) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 export async function POST(request: Request) {
   try {
-    const { items }: FreeCheckoutBody = await request.json();
+    const { items, customer }: FreeCheckoutBody = await request.json();
 
     if (!items || items.length === 0) {
       return NextResponse.json({ error: "No items provided" }, { status: 400 });
@@ -29,15 +46,22 @@ export async function POST(request: Request) {
     const bookedItem = items.find((i) => i.bookingDate && i.bookingSlot);
 
     if (bookedItem?.bookingDate && bookedItem?.bookingSlot) {
-      // Create Calendly booking for consultation
+      const customerName = customer?.name || "Free Consultation";
+      const customerEmail = customer?.email || "nigel@smart-space.ie";
+      const customerPhone = customer?.phone;
+      const customerAddress = customer?.address;
+
+      // Create Calendly booking for consultation with real customer details
       const result = await createBookingEvent({
         date: bookedItem.bookingDate,
         timeSlot: bookedItem.bookingSlot,
-        customerName: "Free Consultation",
-        email: "consultation@smart-space.ie",
+        customerName,
+        email: customerEmail,
+        phone: customerPhone,
         productTitle: bookedItem.name,
         orderId: `free-${Date.now()}`,
         kind: "consultation",
+        address: customerAddress,
       });
 
       if (result) {
@@ -48,6 +72,39 @@ export async function POST(request: Request) {
           { error: "Failed to book your consultation. Please try again or contact us." },
           { status: 500 }
         );
+      }
+
+      // Send notification email to Nigel with customer details
+      const apiKey = process.env.RESEND_API_KEY;
+      const from = process.env.RESEND_FROM_EMAIL;
+      if (apiKey && from) {
+        const resend = new Resend(apiKey);
+        await resend.emails.send({
+          from,
+          to: ["nigel@smart-space.ie"],
+          replyTo: customerEmail,
+          subject: `New Free Consultation Booking — ${customerName}`,
+          text: [
+            `New free consultation booked on smart-space.ie`,
+            "",
+            `Name: ${customerName}`,
+            `Email: ${customerEmail}`,
+            `Phone: ${customerPhone || "—"}`,
+            `Address: ${customerAddress || "—"}`,
+            `Date: ${bookedItem.bookingLabel || bookedItem.bookingDate}`,
+            `Time Slot: ${bookedItem.bookingSlot}`,
+          ].join("\n"),
+          html: `
+            <h2>New Free Consultation Booking</h2>
+            <p><strong>Name:</strong> ${escapeHtml(customerName)}</p>
+            <p><strong>Email:</strong> ${escapeHtml(customerEmail)}</p>
+            <p><strong>Phone:</strong> ${escapeHtml(customerPhone || "—")}</p>
+            <p><strong>Address:</strong> ${escapeHtml(customerAddress || "—")}</p>
+            <hr />
+            <p><strong>Date:</strong> ${escapeHtml(bookedItem.bookingLabel || bookedItem.bookingDate || "")}</p>
+            <p><strong>Time Slot:</strong> ${escapeHtml(bookedItem.bookingSlot || "")}</p>
+          `,
+        });
       }
     }
 
