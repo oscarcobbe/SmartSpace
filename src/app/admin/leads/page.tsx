@@ -1,0 +1,252 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { RefreshCw, Search, Filter } from "lucide-react";
+
+interface Lead {
+  date: string;
+  type: string;
+  name: string;
+  email: string;
+  phone: string;
+  product: string;
+  amount: string;
+  bookingDate: string;
+  bookingSlot: string;
+  status: string;
+  orderId: string;
+}
+
+const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
+  "Paid Order": { bg: "bg-blue-50", text: "text-blue-700" },
+  Installation: { bg: "bg-indigo-50", text: "text-indigo-700" },
+  Consultation: { bg: "bg-green-50", text: "text-green-700" },
+  Upcoming: { bg: "bg-amber-50", text: "text-amber-700" },
+};
+
+const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
+  Paid: { bg: "bg-green-100", text: "text-green-800" },
+  Upcoming: { bg: "bg-blue-100", text: "text-blue-800" },
+  Complimentary: { bg: "bg-emerald-100", text: "text-emerald-800" },
+};
+
+export default function AdminLeadsPage() {
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [key, setKey] = useState("");
+  const [authed, setAuthed] = useState(false);
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState("All");
+
+  const fetchLeads = useCallback(async (adminKey: string) => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/leads?key=${encodeURIComponent(adminKey)}`);
+      if (res.status === 401) {
+        setError("Invalid key");
+        setAuthed(false);
+        setLoading(false);
+        return;
+      }
+      const data = await res.json();
+      setLeads(data.leads || []);
+      setAuthed(true);
+    } catch {
+      setError("Failed to load");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem("admin_key");
+    if (stored) {
+      setKey(stored);
+      fetchLeads(stored);
+    } else {
+      setLoading(false);
+    }
+  }, [fetchLeads]);
+
+  const handleAuth = (e: React.FormEvent) => {
+    e.preventDefault();
+    sessionStorage.setItem("admin_key", key);
+    fetchLeads(key);
+  };
+
+  const filtered = leads.filter((l) => {
+    const matchesSearch =
+      !search ||
+      [l.name, l.email, l.phone, l.product, l.orderId]
+        .join(" ")
+        .toLowerCase()
+        .includes(search.toLowerCase());
+    const matchesType = typeFilter === "All" || l.type === typeFilter;
+    return matchesSearch && matchesType;
+  });
+
+  const types = ["All", ...Array.from(new Set(leads.map((l) => l.type)))];
+
+  if (!authed) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <form onSubmit={handleAuth} className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm">
+          <h1 className="text-xl font-bold text-gray-900 mb-4">Admin Access</h1>
+          {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
+          <input
+            type="password"
+            value={key}
+            onChange={(e) => setKey(e.target.value)}
+            placeholder="Enter admin key"
+            className="w-full border rounded-xl px-4 py-3 mb-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+          />
+          <button
+            type="submit"
+            className="w-full bg-gray-900 text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition-colors"
+          >
+            {loading ? "Loading..." : "View Dashboard"}
+          </button>
+        </form>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 pt-6 pb-12">
+      <div className="max-w-7xl mx-auto px-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Smart Space Dashboard</h1>
+            <p className="text-sm text-gray-500">{leads.length} total records</p>
+          </div>
+          <button
+            onClick={() => fetchLeads(key)}
+            disabled={loading}
+            className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 font-medium text-sm px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </button>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {[
+            { label: "Paid Orders", count: leads.filter((l) => l.type === "Paid Order").length, color: "border-blue-500" },
+            { label: "Installations", count: leads.filter((l) => l.type === "Installation").length, color: "border-indigo-500" },
+            { label: "Consultations", count: leads.filter((l) => l.type === "Consultation").length, color: "border-green-500" },
+            {
+              label: "Revenue",
+              count: leads
+                .filter((l) => l.type === "Paid Order")
+                .reduce((sum, l) => sum + parseFloat(l.amount.replace(/[^0-9.]/g, "") || "0"), 0),
+              color: "border-amber-500",
+              isMoney: true,
+            },
+          ].map((s) => (
+            <div key={s.label} className={`bg-white rounded-xl border-l-4 ${s.color} p-4 shadow-sm`}>
+              <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">{s.label}</div>
+              <div className="text-2xl font-bold text-gray-900 mt-1">
+                {"isMoney" in s && s.isMoney ? `\u20AC${(s.count as number).toFixed(2)}` : s.count}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name, email, phone, product..."
+              className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            />
+          </div>
+          <div className="relative">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="bg-white border border-gray-200 rounded-xl pl-10 pr-8 py-2.5 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            >
+              {types.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-100">
+                  <th className="text-left px-4 py-3 font-semibold text-gray-600">Date</th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-600">Type</th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-600">Customer</th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-600">Product</th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-600">Amount</th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-600">Booking</th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-600">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
+                      No records found
+                    </td>
+                  </tr>
+                ) : (
+                  filtered.map((lead, i) => {
+                    const typeColor = TYPE_COLORS[lead.type] || { bg: "bg-gray-50", text: "text-gray-700" };
+                    const statusColor = STATUS_COLORS[lead.status] || { bg: "bg-gray-100", text: "text-gray-700" };
+                    return (
+                      <tr key={i} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-xs">{lead.date}</td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${typeColor.bg} ${typeColor.text}`}>
+                            {lead.type}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="font-medium text-gray-900">{lead.name}</div>
+                          <div className="text-xs text-gray-400">{lead.email}</div>
+                          {lead.phone !== "—" && <div className="text-xs text-gray-400">{lead.phone}</div>}
+                        </td>
+                        <td className="px-4 py-3 text-gray-700 max-w-[200px] truncate">{lead.product}</td>
+                        <td className="px-4 py-3 font-semibold text-gray-900">{lead.amount}</td>
+                        <td className="px-4 py-3 text-gray-600 text-xs">
+                          {lead.bookingDate !== "—" && (
+                            <>
+                              <div>{lead.bookingDate}</div>
+                              {lead.bookingSlot !== "—" && <div className="text-gray-400">{lead.bookingSlot}</div>}
+                            </>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${statusColor.bg} ${statusColor.text}`}>
+                            {lead.status}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
