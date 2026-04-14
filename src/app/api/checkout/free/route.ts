@@ -68,9 +68,9 @@ export async function POST(request: Request) {
       if (result) {
         console.log("[free-checkout] Calendly booking created:", result.eventId);
       } else {
-        console.error("[free-checkout] Calendly booking failed");
+        console.error("[free-checkout] Calendly booking failed — check [calendly] logs above for details");
         return NextResponse.json(
-          { error: "Failed to book your consultation. Please try again or contact us." },
+          { error: "Failed to book your consultation. Please try again or contact us.", debug: { date: bookedItem.bookingDate, slot: bookedItem.bookingSlot, kind: "consultation" } },
           { status: 500 }
         );
       }

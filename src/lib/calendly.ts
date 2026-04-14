@@ -145,15 +145,28 @@ export async function createBookingEvent(params: {
     }
 
     if (!startTimeIso) {
-      console.error(`[calendly] No available time matching ${slot.startHour}:${slot.startMin} on ${params.date}`);
+      console.error(`[calendly] No available time matching ${slot.startHour}:${slot.startMin} on ${params.date}. Available times:`, availableTimes.map((t: { start_time: string }) => t.start_time));
       return null;
     }
 
-    console.log(`[calendly] Booking: kind=${kind} slot=${params.timeSlot} → startTime=${startTimeIso}`);
+    console.log(`[calendly] Booking: kind=${kind} slot=${params.timeSlot} → startTime=${startTimeIso} eventType=${eventTypeUri}`);
 
     const nameParts = params.customerName.trim().split(/\s+/);
     const firstName = nameParts[0] || "Customer";
     const lastName = nameParts.slice(1).join(" ") || undefined;
+
+    // Format phone to E.164 for Calendly (convert Irish local to +353)
+    let formattedPhone: string | undefined;
+    if (params.phone) {
+      const digits = params.phone.replace(/[\s\-()]/g, "");
+      if (digits.startsWith("+")) {
+        formattedPhone = digits;
+      } else if (digits.startsWith("0")) {
+        formattedPhone = "+353" + digits.slice(1);
+      } else {
+        formattedPhone = "+353" + digits;
+      }
+    }
 
     const res = await fetch("https://api.calendly.com/invitees", {
       method: "POST",
@@ -169,11 +182,11 @@ export async function createBookingEvent(params: {
           first_name: firstName,
           last_name: lastName || undefined,
           timezone: "Europe/Dublin",
-          text_reminder_number: params.phone || undefined,
+          text_reminder_number: formattedPhone || undefined,
         },
         location: {
           kind: "physical",
-          location: "Customer's home",
+          location: "Customer\u0027s home",
         },
         questions_and_answers: [
           {
@@ -192,7 +205,7 @@ export async function createBookingEvent(params: {
 
     if (!res.ok) {
       const errText = await res.text();
-      console.error("[calendly] Booking error:", res.status, errText);
+      console.error(`[calendly] Booking error: ${res.status} ${errText}. Request: eventType=${eventTypeUri} startTime=${startTimeIso} email=${params.email}`);
       return null;
     }
 
