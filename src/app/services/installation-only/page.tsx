@@ -134,11 +134,23 @@ export default function InstallationOnlyPage() {
                 {/* Variant selectors */}
                 {productOptions.map((option) => {
                   const selectedVal = effectiveOptions[option.name] ?? option.values[0];
+                  const installLabels: Record<string, { label: string; help?: string }> = {
+                    "How Many Ring or Similar Products Are To Be Installed": { label: "Number of Devices to Install" },
+                    "Video Doorbell To Be Installed ? Is There An Existing Working Wired Doorbell At The Desired Location": { label: "Doorbell Wiring", help: "Is there an existing wired doorbell where you want the new one?" },
+                    "External Video Camera(s) To Be Installed ? How Many Require New Mains Power Cabling": { label: "Cameras Needing New Wiring", help: "How many cameras need a new power cable run to them?" },
+                  };
+                  const rawName = option.name.replace(/\s*\?\s*$/, "");
+                  const mapped = installLabels[rawName];
+                  const displayLabel = mapped?.label ?? rawName;
+                  const helpText = mapped?.help;
                   return (
                     <div key={option.name}>
-                      <label className="block text-sm font-semibold text-[#1a1a1a] mb-2">
-                        {option.name.replace(/\s*\?\s*$/, "")}
+                      <label className="block text-sm font-semibold text-[#1a1a1a] mb-1">
+                        {displayLabel}
                       </label>
+                      {helpText && (
+                        <p className="text-xs text-gray-400 mb-2">{helpText}</p>
+                      )}
                       {option.values.length <= 4 ? (
                         <div className="flex flex-wrap gap-2">
                           {option.values.map((val) => (

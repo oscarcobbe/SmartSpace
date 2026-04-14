@@ -15,7 +15,7 @@ export default function PromoBanner() {
             Get a Quote
           </Link>
           <Link
-            href="/services/installation-only"
+            href="/services"
             className="inline-block border border-[#444] hover:border-[#666] text-white font-semibold text-sm px-8 py-3 rounded-full transition-colors"
           >
             Learn More

@@ -243,13 +243,46 @@ export default function ServiceDetailPage() {
                   const isMixed = (v: string) => v.toLowerCase().includes("mixed");
                   const selectedVal = effectiveOptions[option.name] ?? option.values[0];
 
+                  // Friendly option labels + helper text
+                  const optionLabels: Record<string, { label: string; help?: string }> = {
+                    "Choose A Power Option": { label: "Doorbell Power Source", help: "Do you have an existing wired doorbell we can connect to, or will new wiring be needed?" },
+                    "Power Options": { label: "Doorbell Power Source" },
+                    "Video Doorbell - Power Options": { label: "Doorbell Power Source", help: "Do you have an existing wired doorbell at the location?" },
+                    "How Many Ring or Similar Products Are To Be Installed": { label: "Number of Devices to Install" },
+                    "Video Doorbell To Be Installed ? Is There An Existing Working Wired Doorbell At The Desired Location": { label: "Doorbell Wiring", help: "Is there an existing wired doorbell where you want the new one?" },
+                    "External Video Camera(s) To Be Installed ? How Many Require New Mains Power Cabling": { label: "Cameras Needing New Wiring", help: "How many cameras need a new power cable run to them?" },
+                    "Quantity Of Spotlights To Be Installed": { label: "Number of Spotlight Cams" },
+                    "How Many Spotlights Are On The Exact Position Of An Existing Working Light or Power Source": { label: "Spotlights Replacing Existing Lights", help: "How many will be fitted where there\u2019s already a working light or power point?" },
+                    "Quantity Of Floodlights To Be Installed": { label: "Number of Floodlight Cams" },
+                    "How Many Floodlights Are On The Exact Position Of An Existing Working Light or Power Source": { label: "Floodlights Replacing Existing Lights", help: "How many will be fitted where there\u2019s already a working light or power point?" },
+                    "Will The Floodlight Cam Replace An Existing Working Light ? Or Will A New Power Source Be Required": { label: "Floodlight Cam Power Source", help: "Will the floodlight cam replace an existing working light, or does it need new wiring?" },
+                    "Will A New Power Source Be Required": { label: "Floodlight Cam Power Source", help: "Will the floodlight cam replace an existing working light, or does it need new wiring?" },
+                    "Will The Floodlight Cams Replace Existing Working Lights": { label: "Floodlight Cam Power Sources", help: "Will the floodlight cams replace existing working lights, or need new wiring?" },
+                    "Colour Preference Of Floodlight Cam": { label: "Floodlight Cam Colour" },
+                    "Colour Preference Of Floodlight Cams": { label: "Floodlight Cam Colour" },
+                    "Spotlight Cam Colour": { label: "Spotlight Cam Colour" },
+                    "Floodlight Cam Colour": { label: "Floodlight Cam Colour" },
+                    "Number of Floodlight Cams Required & How Many Require New Power Sources": { label: "Floodlight Cams & Power Sources", help: "Select how many floodlight cams you need and how many require new wiring" },
+                  };
+
+                  const rawName = option.name.replace(/\s*\?\s*$/, "");
+                  const mapped = optionLabels[rawName];
+                  let displayLabel: string;
+                  if (/accessor/i.test(option.name) && product.productType === "Video Doorbell") {
+                    displayLabel = "Add An Accessory (One Chime Already Included)";
+                  } else {
+                    displayLabel = mapped?.label ?? rawName;
+                  }
+                  const helpText = mapped?.help;
+
                   return (
                     <div key={option.name}>
-                      <label className="block text-sm font-semibold text-[#1a1a1a] mb-1.5">
-                        {/accessor/i.test(option.name) && product.productType === "Video Doorbell"
-                          ? "Add An Accessory (One Chime Already Included)"
-                          : option.name.replace(/\s*\?\s*$/, "")}{isColour && selectedVal ? `: ${selectedVal}` : ""}
+                      <label className="block text-sm font-semibold text-[#1a1a1a] mb-1">
+                        {displayLabel}{isColour && selectedVal ? `: ${selectedVal}` : ""}
                       </label>
+                      {helpText && (
+                        <p className="text-xs text-gray-400 mb-2">{helpText}</p>
+                      )}
                       {isColour ? (
                         <div className="flex flex-wrap gap-3">
                           {option.values.map((val) => {
