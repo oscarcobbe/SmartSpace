@@ -28,8 +28,8 @@ export async function GET(request: Request) {
   // Get available slots from Calendly
   const availableSlots = await getAvailableSlots(date, kind);
 
-  return NextResponse.json({
-    date,
-    slots: availableSlots.map((s) => ({ label: s.label, value: s.value })),
-  });
+  return NextResponse.json(
+    { date, slots: availableSlots.map((s) => ({ label: s.label, value: s.value })) },
+    { headers: { "Cache-Control": "no-store, max-age=0" } }
+  );
 }

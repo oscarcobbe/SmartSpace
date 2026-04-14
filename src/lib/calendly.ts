@@ -46,6 +46,7 @@ export async function getAvailableSlots(dateStr: string, kind: EventKind = "inst
           Authorization: `Bearer ${CALENDLY_TOKEN}`,
           "Content-Type": "application/json",
         },
+        cache: "no-store",
       }
     );
 
@@ -118,7 +119,7 @@ export async function createBookingEvent(params: {
     // Look up the exact Calendly available start time for this slot
     const availableRes = await fetch(
       `https://api.calendly.com/event_type_available_times?event_type=${encodeURIComponent(eventTypeUri)}&start_time=${params.date}T00:00:00Z&end_time=${params.date}T23:59:59Z`,
-      { headers: { Authorization: `Bearer ${CALENDLY_TOKEN}`, "Content-Type": "application/json" } }
+      { headers: { Authorization: `Bearer ${CALENDLY_TOKEN}`, "Content-Type": "application/json" }, cache: "no-store" }
     );
     const availableData = await availableRes.json();
     const availableTimes: { start_time: string; status: string }[] = (availableData.collection || []).filter(
