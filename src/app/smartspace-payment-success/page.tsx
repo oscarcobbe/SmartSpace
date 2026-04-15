@@ -16,24 +16,33 @@ function PaymentSuccessContent() {
   const amountParam = searchParams.get("amount");
   const amount = amountParam ? parseFloat(amountParam) : undefined;
 
-  // Build the inline conversion script that fires immediately
-  const conversionScript = isFree
-    ? `gtag('event', 'conversion', { send_to: '${GADS_FREE_CONSULTATION_TAG}', value: 300.0, currency: 'EUR' });`
-    : `gtag('event', 'conversion', { send_to: '${GADS_PAYMENT_TAG}'${amount !== undefined ? `, value: ${amount}, currency: 'EUR'` : ""}${sessionId ? `, transaction_id: '${sessionId}'` : ""} });`;
+  // Fire Google Ads conversion after hydration
+  const convData = isFree
+    ? { send_to: GADS_FREE_CONSULTATION_TAG, value: 300.0, currency: "EUR" }
+    : {
+        send_to: GADS_PAYMENT_TAG,
+        ...(amount !== undefined && { value: amount, currency: "EUR" }),
+        ...(sessionId && { transaction_id: sessionId }),
+      };
+
+  // Encode as base64 so no special characters can break the script context
+  const convB64 = typeof btoa === "function"
+    ? btoa(JSON.stringify(convData))
+    : Buffer.from(JSON.stringify(convData)).toString("base64");
 
   return (
     <div className="pt-32 lg:pt-40 pb-16 lg:pb-24">
-      {/* Fire conversion immediately via inline script — not dependent on React hydration */}
+      {/* Fire conversion immediately via inline script */}
       <Script
         id="gads-conversion"
         strategy="afterInteractive"
         dangerouslySetInnerHTML={{
-          __html: `
-            if (typeof gtag === 'function') {
-              ${conversionScript}
-              console.log('[gtag] conversion fired: ${isFree ? "Free Consultation" : "Payment"}');
-            }
-          `,
+          __html: [
+            "try {",
+            "  var d = JSON.parse(atob('" + convB64 + "'));",
+            "  if (typeof gtag === 'function') { gtag('event', 'conversion', d); }",
+            "} catch(e) {}",
+          ].join("\n"),
         }}
       />
 
