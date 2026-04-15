@@ -44,23 +44,18 @@ export default function RootLayout({
         <script async src={`https://www.googletagmanager.com/gtag/js?id=${GTAG_ID}`} />
         <script
           dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', '${GTAG_ID}', { allow_enhanced_conversions: true });
-
-              // Website call tracking — Google Ads dynamically replaces this number
-              // with a forwarding number so calls are attributed to the correct campaign.
-              // Set NEXT_PUBLIC_GADS_CALL_LABEL in Vercel env vars to the conversion label
-              // found in Google Ads → Goals → Conversions → Calls from website visits → Tag setup.
-              var callLabel = '${process.env.NEXT_PUBLIC_GADS_CALL_LABEL ?? ''}';
-              if (callLabel) {
-                gtag('config', '${GTAG_ID}/' + callLabel, {
-                  phone_conversion_number: '${BUSINESS_PHONE}'
-                });
-              }
-            `,
+            __html: [
+              "window.dataLayer = window.dataLayer || [];",
+              "function gtag(){dataLayer.push(arguments);}",
+              "gtag('js', new Date());",
+              "gtag('config', " + JSON.stringify(GTAG_ID) + ", { allow_enhanced_conversions: true });",
+              "var callLabel = " + JSON.stringify(process.env.NEXT_PUBLIC_GADS_CALL_LABEL || "") + ";",
+              "if (callLabel) {",
+              "  gtag('config', " + JSON.stringify(GTAG_ID) + " + '/' + callLabel, {",
+              "    phone_conversion_number: " + JSON.stringify(BUSINESS_PHONE),
+              "  });",
+              "}",
+            ].join("\n"),
           }}
         />
       </head>
