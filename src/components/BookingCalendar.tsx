@@ -26,7 +26,7 @@ function getAvailableDates(): Date[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  for (let i = 7; i <= 49; i++) {
+  for (let i = 5; i <= 49; i++) {
     const date = new Date(today);
     date.setDate(today.getDate() + i);
     if (AVAILABLE_DAYS.includes(date.getDay())) {
