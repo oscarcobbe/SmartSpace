@@ -160,11 +160,12 @@ export default function AdminLeadsPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {[
-            { label: "Paid Orders", count: leads.filter((l) => l.type === "Paid Order").length, color: "border-blue-500" },
-            { label: "Installations", count: leads.filter((l) => l.type === "Installation").length, color: "border-indigo-500" },
-            { label: "Consultations", count: leads.filter((l) => l.type === "Consultation").length, color: "border-green-500" },
+            { label: "Paid Orders", filterType: "Paid Order", count: leads.filter((l) => l.type === "Paid Order").length, color: "border-blue-500" },
+            { label: "Installations", filterType: "Installation", count: leads.filter((l) => l.type === "Installation").length, color: "border-indigo-500" },
+            { label: "Consultations", filterType: "Consultation", count: leads.filter((l) => l.type === "Consultation").length, color: "border-green-500" },
             {
               label: "Revenue",
+              filterType: "Paid Order",
               count: leads
                 .filter((l) => l.type === "Paid Order")
                 .reduce((sum, l) => sum + parseFloat(l.amount.replace(/[^0-9.]/g, "") || "0"), 0),
@@ -172,12 +173,18 @@ export default function AdminLeadsPage() {
               isMoney: true,
             },
           ].map((s) => (
-            <div key={s.label} className={`bg-white rounded-xl border-l-4 ${s.color} p-4 shadow-sm`}>
+            <button
+              key={s.label}
+              onClick={() => { setView("all"); setTypeFilter(s.filterType); }}
+              className={`bg-white rounded-xl border-l-4 ${s.color} p-4 shadow-sm text-left hover:shadow-md transition-shadow cursor-pointer ${
+                view === "all" && typeFilter === s.filterType ? "ring-2 ring-gray-300" : ""
+              }`}
+            >
               <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">{s.label}</div>
               <div className="text-2xl font-bold text-gray-900 mt-1">
                 {"isMoney" in s && s.isMoney ? `\u20AC${(s.count as number).toFixed(2)}` : s.count}
               </div>
-            </div>
+            </button>
           ))}
         </div>
 

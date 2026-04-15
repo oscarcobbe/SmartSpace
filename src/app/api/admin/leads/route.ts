@@ -32,7 +32,7 @@ export async function GET(request: Request) {
   // 1. Fetch recent Stripe checkout sessions (paid orders)
   try {
     const stripeRes = await fetch(
-      "https://api.stripe.com/v1/checkout/sessions?limit=100&status=complete",
+      "https://api.stripe.com/v1/checkout/sessions?limit=100&status=complete&expand[]=data.custom_fields",
       {
         headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}` },
         cache: "no-store",
@@ -100,13 +100,23 @@ export async function GET(request: Request) {
           if (inv) {
             inviteeName = inv.name || "—";
             inviteeEmail = inv.email || "—";
-            inviteePhone = inv.text_reminder_number || "—";
+            // Phone from text_reminder_number or parsed from Q&A
+            const qaList: { answer: string }[] = inv.questions_and_answers || [];
+            const phoneFromQA = qaList.map((q) => q.answer).join(" ").match(/Phone:\s*([^|]+)/i)?.[1]?.trim();
+            inviteePhone = inv.text_reminder_number || phoneFromQA || "—";
             const qas: { question: string; answer: string }[] = inv.questions_and_answers || [];
             notes = qas.map((q) => q.answer).join("; ");
-            // Extract address from Q&A answers (format: "Address: ..." or just the answer itself)
-            const addrAnswer = qas.find((q) => /address|eircode|location/i.test(q.question))?.answer;
-            if (addrAnswer) {
-              inviteeAddress = addrAnswer.replace(/^Address:\s*/i, "");
+            // Extract address from Q&A — may be in question text OR embedded in answer as "Address: ..."
+            for (const qa of qas) {
+              if (/address|eircode|location/i.test(qa.question)) {
+                inviteeAddress = qa.answer.replace(/^Address:\s*/i, "");
+                break;
+              }
+              const addrMatch = qa.answer.match(/Address:\s*([^|]+)/i);
+              if (addrMatch) {
+                inviteeAddress = addrMatch[1].trim();
+                break;
+              }
             }
           }
         } catch { /* ignore */ }
