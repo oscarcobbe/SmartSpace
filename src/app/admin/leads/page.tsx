@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { RefreshCw, Search, Filter, Calendar, MapPin, Phone, Mail, User } from "lucide-react";
+import { RefreshCw, Search, Filter, Calendar, MapPin, Phone, Mail, User, ChevronDown, ChevronUp, ExternalLink, CreditCard, Clock, Package } from "lucide-react";
 
 interface Lead {
   date: string;
@@ -42,6 +42,7 @@ export default function AdminLeadsPage() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
   const [view, setView] = useState<DashView>("upcoming");
+  const [expandedCard, setExpandedCard] = useState<number | null>(null);
 
   const fetchLeads = useCallback(async (adminKey: string) => {
     setLoading(true);
@@ -216,38 +217,118 @@ export default function AdminLeadsPage() {
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {upcoming.map((lead, i) => {
                     const typeColor = TYPE_COLORS[lead.type] || { bg: "bg-gray-50", text: "text-gray-700" };
+                    const isExpanded = expandedCard === i;
+                    const mapsUrl = lead.address !== "—" ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lead.address)}` : null;
                     return (
-                      <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${typeColor.bg} ${typeColor.text}`}>
-                            {lead.type}
-                          </span>
-                          <span className="text-xs font-medium text-gray-400">{lead.bookingSlot}</span>
-                        </div>
-                        <div className="text-sm font-bold text-gray-900 mb-1">{lead.bookingDate}</div>
-                        <div className="text-sm font-medium text-gray-700 mb-3">{lead.product}</div>
-                        <div className="space-y-1.5 text-xs text-gray-600">
+                      <div
+                        key={i}
+                        className={`bg-white rounded-2xl border shadow-sm transition-all cursor-pointer ${
+                          isExpanded ? "border-brand-500 shadow-lg ring-1 ring-brand-500/20" : "border-gray-100 hover:shadow-md"
+                        }`}
+                      >
+                        {/* Card header — always visible, clickable */}
+                        <div className="p-5" onClick={() => setExpandedCard(isExpanded ? null : i)}>
+                          <div className="flex items-center justify-between mb-3">
+                            <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${typeColor.bg} ${typeColor.text}`}>
+                              {lead.type}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium text-gray-400">{lead.bookingSlot}</span>
+                              {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <Calendar className="w-4 h-4 text-brand-500 flex-shrink-0" />
+                            <span className="text-sm font-bold text-gray-900">{lead.bookingDate}</span>
+                          </div>
+                          <div className="flex items-center gap-2 mb-3">
+                            <Package className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                            <span className="text-sm font-medium text-gray-700">{lead.product}</span>
+                          </div>
                           <div className="flex items-center gap-2">
                             <User className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                            <span className="font-medium text-gray-900">{lead.name}</span>
+                            <span className="text-sm font-medium text-gray-900">{lead.name}</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Mail className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                            <a href={`mailto:${lead.email}`} className="hover:text-brand-500 truncate">{lead.email}</a>
-                          </div>
-                          {lead.phone !== "—" && (
-                            <div className="flex items-center gap-2">
-                              <Phone className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                              <a href={`tel:${lead.phone}`} className="hover:text-brand-500">{lead.phone}</a>
-                            </div>
-                          )}
-                          {lead.address !== "—" && (
-                            <div className="flex items-start gap-2">
-                              <MapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" />
-                              <span>{lead.address}</span>
-                            </div>
-                          )}
                         </div>
+
+                        {/* Expanded details */}
+                        {isExpanded && (
+                          <div className="border-t border-gray-100 px-5 pb-5 pt-4 space-y-3">
+                            {/* Payment */}
+                            <div className="flex items-center gap-2 text-sm">
+                              <CreditCard className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                              <span className="text-gray-600">Payment:</span>
+                              <span className={`font-semibold ${lead.amount === "Complimentary" ? "text-emerald-600" : "text-gray-900"}`}>
+                                {lead.amount}
+                              </span>
+                              {lead.status === "Paid" && (
+                                <span className="ml-1 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">Paid</span>
+                              )}
+                            </div>
+
+                            {/* Time */}
+                            <div className="flex items-center gap-2 text-sm">
+                              <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                              <span className="text-gray-600">Time:</span>
+                              <span className="font-medium text-gray-900">{lead.bookingSlot}</span>
+                            </div>
+
+                            {/* Contact details */}
+                            <div className="bg-gray-50 rounded-xl p-3 space-y-2">
+                              <div className="flex items-center gap-2 text-sm">
+                                <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                <a href={`mailto:${lead.email}`} className="text-brand-500 hover:underline truncate">{lead.email}</a>
+                              </div>
+                              {lead.phone !== "—" && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                  <a href={`tel:${lead.phone}`} className="text-brand-500 hover:underline">{lead.phone}</a>
+                                </div>
+                              )}
+                              {lead.address !== "—" && (
+                                <div className="flex items-start gap-2 text-sm">
+                                  <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                                  <span className="text-gray-700">{lead.address}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Action buttons */}
+                            <div className="flex flex-wrap gap-2 pt-1">
+                              {mapsUrl && (
+                                <a
+                                  href={mapsUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <MapPin className="w-3.5 h-3.5" />
+                                  Google Maps
+                                  <ExternalLink className="w-3 h-3" />
+                                </a>
+                              )}
+                              {lead.phone !== "—" && (
+                                <a
+                                  href={`tel:${lead.phone}`}
+                                  className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 hover:bg-green-100 text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <Phone className="w-3.5 h-3.5" />
+                                  Call
+                                </a>
+                              )}
+                              <a
+                                href={`mailto:${lead.email}`}
+                                className="inline-flex items-center gap-1.5 bg-purple-50 text-purple-700 hover:bg-purple-100 text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Mail className="w-3.5 h-3.5" />
+                                Email
+                              </a>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
