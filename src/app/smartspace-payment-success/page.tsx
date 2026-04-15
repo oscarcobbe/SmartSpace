@@ -1,10 +1,9 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, Home, Phone } from "lucide-react";
-import Script from "next/script";
 
 const GADS_PAYMENT_TAG = "AW-17978501655/IofPCOiZuJkcEJfU6PxC";
 const GADS_FREE_CONSULTATION_TAG = "AW-17978501655/fH4ZCMHv7ZocEJfU6PxC";
@@ -15,36 +14,33 @@ function PaymentSuccessContent() {
   const isFree = searchParams.get("free") === "true";
   const amountParam = searchParams.get("amount");
   const amount = amountParam ? parseFloat(amountParam) : undefined;
+  const fired = useRef(false);
 
-  // Fire Google Ads conversion after hydration
-  const convData = isFree
-    ? { send_to: GADS_FREE_CONSULTATION_TAG, value: 300.0, currency: "EUR" }
-    : {
-        send_to: GADS_PAYMENT_TAG,
-        ...(amount !== undefined && { value: amount, currency: "EUR" }),
-        ...(sessionId && { transaction_id: sessionId }),
-      };
+  // Fire Google Ads conversion via useEffect — gtag is loaded globally in layout.tsx
+  useEffect(() => {
+    if (fired.current) return;
+    fired.current = true;
 
-  // Encode as base64 so no special characters can break the script context
-  const convB64 = typeof btoa === "function"
-    ? btoa(JSON.stringify(convData))
-    : Buffer.from(JSON.stringify(convData)).toString("base64");
+    const w = window as unknown as { gtag?: (...args: unknown[]) => void };
+    if (typeof w.gtag !== "function") {
+      console.warn("[gtag] gtag not found, conversion not fired");
+      return;
+    }
+
+    const convData = isFree
+      ? { send_to: GADS_FREE_CONSULTATION_TAG, value: 300.0, currency: "EUR" }
+      : {
+          send_to: GADS_PAYMENT_TAG,
+          ...(amount !== undefined && { value: amount, currency: "EUR" }),
+          ...(sessionId && { transaction_id: sessionId }),
+        };
+
+    w.gtag("event", "conversion", convData);
+    console.log("[gtag] conversion fired", convData);
+  }, [isFree, amount, sessionId]);
 
   return (
     <div className="pt-32 lg:pt-40 pb-16 lg:pb-24">
-      {/* Fire conversion immediately via inline script */}
-      <Script
-        id="gads-conversion"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: [
-            "try {",
-            "  var d = JSON.parse(atob('" + convB64 + "'));",
-            "  if (typeof gtag === 'function') { gtag('event', 'conversion', d); }",
-            "} catch(e) {}",
-          ].join("\n"),
-        }}
-      />
 
       <div className="max-w-xl mx-auto px-4 text-center">
         <div className="bg-green-50 rounded-2xl p-10">
