@@ -12,7 +12,7 @@ export default function Hero() {
       />
 
       {/* Text — upper area */}
-      <div className="absolute z-10 top-[15%] sm:top-[16%] left-0 right-0 px-4">
+      <div className="absolute z-10 top-[25%] sm:top-[16%] left-0 right-0 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-[2rem] sm:text-5xl lg:text-[3.5rem] font-extrabold text-[#1a1a1a] leading-[1.1] tracking-tight mb-3 sm:mb-5">
             Expertly Installed.<br className="hidden sm:block" /> Perfectly Secured.
