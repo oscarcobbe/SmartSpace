@@ -9,7 +9,7 @@ import ProductCard from "@/components/ProductCard";
 import { getProductImage, getColourImage } from "@/data/productImages";
 import { getProductFeatures, getFeatureIcon } from "@/data/productFeatures";
 import {
-  Star, Shield, Wrench, Award, Check, Phone,
+  Star, Shield, Wrench, Award, Check, Phone, Info,
 } from "lucide-react";
 import BookingCalendar from "@/components/BookingCalendar";
 
@@ -145,6 +145,16 @@ export default function ServiceDetailPage() {
           <span>/</span>
           <span className="text-[#1a1a1a] font-medium truncate max-w-[200px]">{displayTitle(product.title)}</span>
         </nav>
+
+        {/* Chime notice — show for all products except standalone floodlight cam packs */}
+        {!(product.productType === "Security Cam" && !isBundle) && !isService && (
+          <div className="flex items-start gap-3 bg-brand-50 border border-brand-100 rounded-xl p-4 mb-10">
+            <Info className="h-5 w-5 text-brand-500 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-gray-700">
+              <strong>All doorbell installations include the supply and setup of a Ring Chime</strong> — so you never miss a visitor, even when you&apos;re away from your phone.
+            </p>
+          </div>
+        )}
 
         {/* ── Section 1: Hero — Image Gallery + Product Info ── */}
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-14">

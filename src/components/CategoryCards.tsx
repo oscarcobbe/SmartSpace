@@ -83,7 +83,7 @@ export default function CategoryCards() {
                 className={`block text-center font-bold py-3.5 rounded-xl transition-all ${
                   pkg.popular
                     ? "bg-brand-500 hover:bg-brand-600 text-white shadow-lg shadow-brand-500/25"
-                    : "bg-gray-100 hover:bg-gray-200 text-gray-900"
+                    : "bg-brand-500 hover:bg-brand-600 text-white"
                 }`}
               >
                 Get Started
