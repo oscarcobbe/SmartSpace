@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, Suspense } from "react";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, Home, Phone } from "lucide-react";
+import Script from "next/script";
 
-// Google Ads conversion tag for SmartSpace Specialist Payment
-// Set this via env var NEXT_PUBLIC_GADS_SPECIALIST_PAYMENT_TAG once the
-// conversion action is created in Google Ads (Goals → Conversions → New).
 const GADS_PAYMENT_TAG = "AW-17978501655/IofPCOiZuJkcEJfU6PxC";
 const GADS_FREE_CONSULTATION_TAG = "AW-17978501655/fH4ZCMHv7ZocEJfU6PxC";
 
@@ -15,35 +13,30 @@ function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const isFree = searchParams.get("free") === "true";
-  // Stripe passes ?amount=XX (in major currency units, e.g. 350 = €350)
   const amountParam = searchParams.get("amount");
   const amount = amountParam ? parseFloat(amountParam) : undefined;
 
-  useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (typeof window === "undefined" || !(window as any).gtag) return;
-
-    if (isFree) {
-      // Free consultation booking — high-value lead (€300)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).gtag("event", "conversion", {
-        send_to: GADS_FREE_CONSULTATION_TAG,
-        value: 300.0,
-        currency: "EUR",
-      });
-    } else {
-      // Stripe payment — dynamic value from checkout
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).gtag("event", "conversion", {
-        send_to: GADS_PAYMENT_TAG,
-        ...(amount !== undefined && { value: amount, currency: "EUR" }),
-        ...(sessionId && { transaction_id: sessionId }),
-      });
-    }
-  }, [amount, sessionId, isFree]);
+  // Build the inline conversion script that fires immediately
+  const conversionScript = isFree
+    ? `gtag('event', 'conversion', { send_to: '${GADS_FREE_CONSULTATION_TAG}', value: 300.0, currency: 'EUR' });`
+    : `gtag('event', 'conversion', { send_to: '${GADS_PAYMENT_TAG}'${amount !== undefined ? `, value: ${amount}, currency: 'EUR'` : ""}${sessionId ? `, transaction_id: '${sessionId}'` : ""} });`;
 
   return (
     <div className="pt-32 lg:pt-40 pb-16 lg:pb-24">
+      {/* Fire conversion immediately via inline script — not dependent on React hydration */}
+      <Script
+        id="gads-conversion"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            if (typeof gtag === 'function') {
+              ${conversionScript}
+              console.log('[gtag] conversion fired: ${isFree ? "Free Consultation" : "Payment"}');
+            }
+          `,
+        }}
+      />
+
       <div className="max-w-xl mx-auto px-4 text-center">
         <div className="bg-green-50 rounded-2xl p-10">
           <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-5" />

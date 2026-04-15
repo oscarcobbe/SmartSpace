@@ -2,11 +2,13 @@
 
 import { useState, FormEvent } from "react";
 import { Send, Check } from "lucide-react";
+import Script from "next/script";
 
 export default function ContactForm() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fireConversion, setFireConversion] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -35,16 +37,7 @@ export default function ContactForm() {
         return;
       }
       setSubmitted(true);
-      // Fire Google Ads lead conversion
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (typeof window !== "undefined" && (window as any).gtag) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window as any).gtag("event", "conversion", {
-          send_to: "AW-17978501655/u8cHCNyipZocEJfU6PxC",
-          value: 10.0,
-          currency: "EUR",
-        });
-      }
+      setFireConversion(true);
     } catch {
       setError("Failed to send message. Please try again.");
     } finally {
@@ -55,6 +48,24 @@ export default function ContactForm() {
   if (submitted) {
     return (
       <div className="text-center py-10">
+        {fireConversion && (
+          <Script
+            id="gads-contact-conversion"
+            strategy="afterInteractive"
+            dangerouslySetInnerHTML={{
+              __html: `
+                if (typeof gtag === 'function') {
+                  gtag('event', 'conversion', {
+                    send_to: 'AW-17978501655/u8cHCNyipZocEJfU6PxC',
+                    value: 10.0,
+                    currency: 'EUR'
+                  });
+                  console.log('[gtag] contact form conversion fired');
+                }
+              `,
+            }}
+          />
+        )}
         <div className="inline-flex items-center justify-center w-16 h-16 bg-green-50 text-green-500 rounded-full mb-4">
           <Check className="w-8 h-8" />
         </div>
