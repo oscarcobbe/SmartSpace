@@ -8,6 +8,7 @@ interface Lead {
   name: string;
   email: string;
   phone: string;
+  address: string;
   product: string;
   amount: string;
   bookingDate: string;
@@ -41,12 +42,19 @@ export async function GET(request: Request) {
 
     for (const session of stripeData.data || []) {
       const created = new Date(session.created * 1000);
+      // Build address from Stripe billing address or custom installation address field
+      const addr = session.customer_details?.address;
+      const addrParts = [addr?.line1, addr?.line2, addr?.city, addr?.postal_code].filter(Boolean);
+      const installAddr = session.custom_fields?.find((f: { key: string; text?: { value: string } }) => f.key === "installation_address")?.text?.value;
+      const address = installAddr || addrParts.join(", ") || "—";
+
       leads.push({
         date: created.toLocaleString("en-GB", { timeZone: "Europe/Dublin", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false }),
         type: "Paid Order",
         name: session.customer_details?.name || "—",
         email: session.customer_details?.email || "—",
         phone: session.customer_details?.phone || "—",
+        address,
         product: session.metadata?.product_name || "Order",
         amount: `€${(session.amount_total / 100).toFixed(2)}`,
         bookingDate: session.metadata?.booking_label || session.metadata?.booking_date || "—",
@@ -79,6 +87,7 @@ export async function GET(request: Request) {
         let inviteeName = "—";
         let inviteeEmail = "—";
         let inviteePhone = "—";
+        let inviteeAddress = "—";
         let notes = "";
 
         try {
@@ -92,7 +101,13 @@ export async function GET(request: Request) {
             inviteeName = inv.name || "—";
             inviteeEmail = inv.email || "—";
             inviteePhone = inv.text_reminder_number || "—";
-            notes = (inv.questions_and_answers || []).map((q: { answer: string }) => q.answer).join("; ");
+            const qas: { question: string; answer: string }[] = inv.questions_and_answers || [];
+            notes = qas.map((q) => q.answer).join("; ");
+            // Extract address from Q&A answers (format: "Address: ..." or just the answer itself)
+            const addrAnswer = qas.find((q) => /address|eircode|location/i.test(q.question))?.answer;
+            if (addrAnswer) {
+              inviteeAddress = addrAnswer.replace(/^Address:\s*/i, "");
+            }
           }
         } catch { /* ignore */ }
 
@@ -107,6 +122,7 @@ export async function GET(request: Request) {
           name: inviteeName,
           email: inviteeEmail,
           phone: inviteePhone,
+          address: inviteeAddress,
           product: event.name || "—",
           amount: isConsultation ? "Complimentary" : "—",
           bookingDate: startStr,
