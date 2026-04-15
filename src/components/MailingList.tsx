@@ -41,7 +41,7 @@ export default function MailingList() {
             Thanks for subscribing!
           </p>
         ) : (
-          <form onSubmit={handleSubmit} className="flex gap-2">
+          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
             <input
               type="email"
               required

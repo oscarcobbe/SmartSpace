@@ -46,7 +46,7 @@ export default function CategoryCards() {
   return (
     <section className="py-16 lg:py-24 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-14">
+        <div className="text-center mb-10 sm:mb-14">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">
             Choose Your Installation
           </h2>
@@ -55,11 +55,11 @@ export default function CategoryCards() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto">
           {packages.map((pkg) => (
             <div
               key={pkg.name}
-              className={`bg-white rounded-2xl p-8 shadow-sm border-2 ${
+              className={`bg-white rounded-2xl p-6 sm:p-8 shadow-sm border-2 ${
                 pkg.popular ? "border-brand-500 relative" : "border-transparent"
               }`}
             >

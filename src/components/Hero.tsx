@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function Hero() {
   return (
-    <section className="w-full bg-[#d4d4d4] h-screen relative overflow-hidden">
+    <section className="w-full bg-[#d4d4d4] h-[70vh] sm:h-screen relative overflow-hidden">
       {/* Full-bleed desktop hero image from ring.com */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -12,7 +12,7 @@ export default function Hero() {
       />
 
       {/* Text — upper area */}
-      <div className="absolute z-10 top-[22%] sm:top-[16%] left-0 right-0 px-4">
+      <div className="absolute z-10 top-[15%] sm:top-[16%] left-0 right-0 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-[2rem] sm:text-5xl lg:text-[3.5rem] font-extrabold text-[#1a1a1a] leading-[1.1] tracking-tight mb-3 sm:mb-5">
             Expertly Installed.<br className="hidden sm:block" /> Perfectly Secured.
@@ -24,7 +24,7 @@ export default function Hero() {
       </div>
 
       {/* Button — lower area */}
-      <div className="absolute z-10 bottom-28 sm:bottom-32 lg:bottom-36 left-0 right-0 px-4 text-center">
+      <div className="absolute z-10 bottom-16 sm:bottom-32 lg:bottom-36 left-0 right-0 px-4 text-center">
         <Link
           href="/services/bundles"
           className="inline-block bg-[#1a1a1a] hover:bg-black text-white font-semibold text-sm px-8 py-3 rounded-full transition-colors"

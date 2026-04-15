@@ -137,7 +137,7 @@ export default function FeaturedProducts() {
             {featured.map((product) => (
               <div
                 key={product.id}
-                className="flex-shrink-0 w-[260px] sm:w-[280px] snap-start"
+                className="flex-shrink-0 w-[220px] sm:w-[280px] snap-start"
               >
                 <ProductCard product={product} />
               </div>
