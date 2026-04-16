@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   Shield, Wifi, Camera, Home, ClipboardCheck, ChevronDown, ChevronUp,
-  Star, ArrowRight, Phone, Mail, MapPin, Download,
+  Star, ArrowRight, Phone, Mail, MapPin,
 } from "lucide-react";
 
 const FAQS = [
@@ -183,39 +183,6 @@ export default function SurveyLandingPage() {
                 <p className="text-sm text-gray-600 leading-relaxed">{body}</p>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── FREE CHECKLIST LEAD MAGNET ── */}
-      <section className="py-16 lg:py-20 bg-gradient-to-br from-brand-500 to-brand-600 text-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-[1fr,auto] items-center gap-8">
-            <div>
-              <div className="inline-block bg-white/15 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-4">
-                Free Guide
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold mb-3">
-                The Irish Homeowner&apos;s Home Security Checklist
-              </h2>
-              <p className="text-white/90 leading-relaxed mb-6 max-w-xl">
-                10 things our installers walk through on every consultation. Use it to sanity-check your own home in about 20 minutes — no sign-up needed.
-              </p>
-              <a
-                href="/downloads/home-security-checklist.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-white text-brand-600 hover:bg-gray-100 font-bold text-sm px-6 py-3.5 rounded-full transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                Download Free Checklist (PDF)
-              </a>
-            </div>
-            <div className="hidden md:flex items-center justify-center">
-              <div className="w-40 h-52 bg-white/10 border-2 border-dashed border-white/30 rounded-xl flex items-center justify-center">
-                <ClipboardCheck className="w-16 h-16 text-white/40" />
-              </div>
-            </div>
           </div>
         </div>
       </section>
