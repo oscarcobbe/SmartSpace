@@ -13,8 +13,27 @@ html::-webkit-scrollbar {
 }
 
 body {
-  color: #171717;
-  background: #ffffff;
+  color: #26221E;
+  background: #FBFAF7;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+}
+
+/* Refined heading typography — slightly tighter for premium feel */
+h1 { letter-spacing: -0.035em; }
+h2 { letter-spacing: -0.03em; }
+h3 { letter-spacing: -0.02em; }
+
+p {
+  line-height: 1.7;
+}
+
+/* Softer selection */
+::selection {
+  background: rgba(242, 100, 25, 0.15);
+  color: #1a1a1a;
 }
 
 @layer utilities {
@@ -27,5 +46,99 @@ body {
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Premium fade + slide-up entrance */
+  .fade-up {
+    animation: fadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .fade-up-delay-1 { animation: fadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both; }
+  .fade-up-delay-2 { animation: fadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; }
+  .fade-up-delay-3 { animation: fadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Subtle sheen animation for premium buttons */
+  .btn-sheen {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .btn-sheen::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,0.25) 50%, transparent 80%);
+    transition: left 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 1;
+    pointer-events: none;
+  }
+  .btn-sheen:hover::before {
+    left: 120%;
+  }
+
+  /* Premium card lift */
+  .card-lift {
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .card-lift:hover {
+    transform: translateY(-6px);
+  }
+
+  /* Soft noise-free gradient text */
+  .gradient-text-brand {
+    background: linear-gradient(135deg, #FF7A1A 0%, #F26419 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Layered premium shadow — diffuse like studio lighting */
+  .shadow-premium {
+    box-shadow:
+      0 1px 1px rgba(38, 34, 30, 0.02),
+      0 4px 8px rgba(38, 34, 30, 0.04),
+      0 16px 32px -8px rgba(38, 34, 30, 0.08);
+  }
+  .shadow-premium-lg {
+    box-shadow:
+      0 2px 4px rgba(38, 34, 30, 0.03),
+      0 12px 24px rgba(38, 34, 30, 0.06),
+      0 40px 80px -20px rgba(38, 34, 30, 0.12);
+  }
+
+  /* Warmer neutrals */
+  .bg-cream { background-color: #FBFAF7; }
+  .bg-cream-100 { background-color: #F5F3EE; }
+  .bg-cream-200 { background-color: #EDEAE3; }
+  .text-ink { color: #26221E; }
+  .text-ink-soft { color: #5A524C; }
+  .text-ink-muted { color: #8A817A; }
+
+  /* Glow pulse for premium badges */
+  @keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(242,100,25,0.35); }
+    50% { box-shadow: 0 0 0 12px rgba(242,100,25,0); }
+  }
+  .pulse-glow {
+    animation: glowPulse 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Subtle grain overlay for premium feel on dark sections */
+  .grain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.4;
+    pointer-events: none;
+    mix-blend-mode: overlay;
   }
 }

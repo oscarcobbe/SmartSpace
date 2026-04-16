@@ -44,13 +44,20 @@ const packages = [
 
 export default function CategoryCards() {
   return (
-    <section className="py-16 lg:py-24 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-10 sm:mb-14">
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">
+    <section className="py-20 lg:py-28 bg-gradient-to-b from-cream to-white relative overflow-hidden">
+      {/* Soft decorative orbs */}
+      <div className="absolute top-20 -left-40 w-80 h-80 bg-brand-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-20 -right-40 w-80 h-80 bg-brand-500/5 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <div className="text-center mb-12 sm:mb-16">
+          <div className="inline-block text-brand-500 text-xs font-bold uppercase tracking-[0.2em] mb-4">
+            Our Packages
+          </div>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-ink mb-4 tracking-[-0.035em]">
             Choose Your Installation
           </h2>
-          <p className="text-gray-500 text-lg max-w-xl mx-auto">
+          <p className="text-ink-soft text-base sm:text-lg max-w-xl mx-auto">
             Transparent pricing with no hidden fees
           </p>
         </div>
@@ -59,35 +66,48 @@ export default function CategoryCards() {
           {packages.map((pkg) => (
             <div
               key={pkg.name}
-              className={`bg-white rounded-2xl p-6 sm:p-8 shadow-sm border-2 ${
-                pkg.popular ? "border-brand-500 relative" : "border-transparent"
+              className={`card-lift group relative bg-white rounded-3xl p-7 sm:p-9 ${
+                pkg.popular
+                  ? "shadow-[0_30px_70px_-20px_rgba(242,100,25,0.35)] border-2 border-brand-500 md:-mt-4 md:mb-4"
+                  : "shadow-premium hover:shadow-premium-lg border border-gray-100/80"
               }`}
             >
               {pkg.popular && (
-                <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-brand-500 text-white text-xs font-bold px-4 py-1.5 rounded-full">
-                  Most Popular
-                </span>
+                <>
+                  {/* Gradient halo on popular card */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-brand-500/5 via-transparent to-transparent rounded-2xl pointer-events-none" />
+                  <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-brand-500 to-brand-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg shadow-brand-500/30 tracking-wide uppercase">
+                    Most Popular
+                  </span>
+                </>
               )}
-              <h3 className="text-xl font-bold text-gray-900 mb-2">{pkg.name}</h3>
-              <div className="text-3xl font-extrabold text-brand-500 mb-6">{pkg.price}</div>
-              <ul className="space-y-3 mb-8">
-                {pkg.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-3 text-sm text-gray-600">
-                    <Check className="h-5 w-5 text-brand-500 flex-shrink-0 mt-0.5" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href={pkg.href}
-                className={`block text-center font-bold py-3.5 rounded-xl transition-all ${
-                  pkg.popular
-                    ? "bg-brand-500 hover:bg-brand-600 text-white shadow-lg shadow-brand-500/25"
-                    : "bg-brand-500 hover:bg-brand-600 text-white"
-                }`}
-              >
-                Get Started
-              </Link>
+              <div className="relative">
+                <h3 className="text-xl font-bold text-ink mb-2 tracking-[-0.02em] leading-snug">{pkg.name}</h3>
+                <div className={`text-3xl sm:text-4xl font-extrabold mb-7 tracking-[-0.03em] ${pkg.popular ? "gradient-text-brand" : "text-brand-500"}`}>
+                  {pkg.price}
+                </div>
+                <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-6" />
+                <ul className="space-y-3.5 mb-8">
+                  {pkg.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-3 text-[13.5px] text-ink-soft leading-relaxed">
+                      <span className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full bg-brand-500/10 flex items-center justify-center">
+                        <Check className="h-3 w-3 text-brand-500" strokeWidth={3} />
+                      </span>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href={pkg.href}
+                  className={`btn-sheen group/btn flex items-center justify-center gap-2 text-center font-bold py-3.5 rounded-xl transition-all ${
+                    pkg.popular
+                      ? "bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-600 text-white shadow-lg shadow-brand-500/30"
+                      : "bg-brand-500 hover:bg-brand-600 text-white shadow-md shadow-brand-500/20 hover:shadow-lg hover:shadow-brand-500/30"
+                  }`}
+                >
+                  <span className="relative z-10">Get Started</span>
+                </Link>
+              </div>
             </div>
           ))}
         </div>
