@@ -7,16 +7,32 @@ import { CartProvider } from "@/context/CartContext";
 import GclidCapture from "@/components/GclidCapture";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.smart-space.ie"),
   title: "Smart Space | Ring Doorbells & Security Cameras Leinster",
   description:
     "Leinster's trusted Ring installer. Shop Ring doorbells, security cameras and smart home bundles. Professional installation available.",
   keywords:
     "Ring doorbell Leinster, Ring camera Leinster, Ring security, smart home Leinster, Ring installer Dublin",
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "Smart Space | Ring Doorbells & Security Cameras Leinster",
     description:
       "Shop Ring doorbells and security cameras. Professional installation across Leinster.",
     type: "website",
+    url: "https://www.smart-space.ie",
+    siteName: "Smart Space",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 
