@@ -4,28 +4,48 @@ import { uploadConversion, lookupGclidByEmail } from "@/lib/conversions";
 import { createBookingEvent } from "@/lib/calendly";
 import { logLead } from "@/lib/leads";
 
+// In-memory idempotency cache — event IDs processed in the last hour.
+// For multi-instance deployments, swap for Redis/Upstash.
+const processedEvents = new Map<string, number>();
+const IDEMPOTENCY_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+function pruneProcessed() {
+  const now = Date.now();
+  Array.from(processedEvents.entries()).forEach(([id, ts]) => {
+    if (now - ts > IDEMPOTENCY_TTL_MS) processedEvents.delete(id);
+  });
+}
+
 export async function POST(req: NextRequest) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY! as any);
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  // Fail closed if either secret is missing — never process unsigned events
+  if (!secretKey || !webhookSecret) {
+    console.error("[stripe webhook] Missing STRIPE_SECRET_KEY or STRIPE_WEBHOOK_SECRET");
+    return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
+  }
+
+  const stripe = new Stripe(secretKey, { apiVersion: "2026-03-25.dahlia" });
 
   const rawBody = await req.text();
   const sig = req.headers.get("stripe-signature") ?? "";
-  const secret = process.env.STRIPE_WEBHOOK_SECRET ?? "";
 
   let event: Stripe.Event;
-  if (secret) {
-    // Verify signature when secret is configured (recommended for production)
-    try {
-      event = stripe.webhooks.constructEvent(rawBody, sig, secret);
-    } catch (err) {
-      console.error("[stripe webhook] signature verification failed:", err);
-      return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
-    }
-  } else {
-    // No secret configured — parse without verification (set STRIPE_WEBHOOK_SECRET in Vercel to harden)
-    console.warn("[stripe webhook] STRIPE_WEBHOOK_SECRET not set — skipping signature verification");
-    event = JSON.parse(rawBody) as Stripe.Event;
+  try {
+    event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
+  } catch (err) {
+    console.error("[stripe webhook] signature verification failed:", err);
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
+
+  // Idempotency — skip if we've already processed this event ID
+  pruneProcessed();
+  if (processedEvents.has(event.id)) {
+    console.log(`[stripe webhook] duplicate event ${event.id} skipped`);
+    return NextResponse.json({ received: true, duplicate: true });
+  }
+  processedEvents.set(event.id, Date.now());
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;

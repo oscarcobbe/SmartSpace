@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, Home, Phone } from "lucide-react";
@@ -8,36 +8,83 @@ import { CheckCircle, Home, Phone } from "lucide-react";
 const GADS_PAYMENT_TAG = "AW-17978501655/IofPCOiZuJkcEJfU6PxC";
 const GADS_FREE_CONSULTATION_TAG = "AW-17978501655/fH4ZCMHv7ZocEJfU6PxC";
 
+type VerifyState =
+  | { status: "loading" }
+  | { status: "free" }
+  | { status: "paid"; amount: number; currency: string; sessionId: string }
+  | { status: "invalid" };
+
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const isFree = searchParams.get("free") === "true";
-  const amountParam = searchParams.get("amount");
-  const amount = amountParam ? parseFloat(amountParam) : undefined;
   const fired = useRef(false);
+  const [state, setState] = useState<VerifyState>({ status: "loading" });
 
-  // Fire Google Ads conversion via useEffect — gtag is loaded globally in layout.tsx
+  // Verify the session server-side before rendering a receipt or firing gtag.
+  // A crafted URL with ?session_id=fake will fail this check.
   useEffect(() => {
-    if (fired.current) return;
-    fired.current = true;
-
-    const w = window as unknown as { gtag?: (...args: unknown[]) => void };
-    if (typeof w.gtag !== "function") {
-      console.warn("[gtag] gtag not found, conversion not fired");
+    if (isFree) {
+      setState({ status: "free" });
       return;
     }
+    if (!sessionId) {
+      setState({ status: "invalid" });
+      return;
+    }
+    fetch(`/api/verify-session?session_id=${encodeURIComponent(sessionId)}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then((d: { paid?: boolean; amount?: number; currency?: string }) => {
+        if (d.paid && typeof d.amount === "number") {
+          setState({ status: "paid", amount: d.amount, currency: d.currency ?? "EUR", sessionId });
+        } else {
+          setState({ status: "invalid" });
+        }
+      })
+      .catch(() => setState({ status: "invalid" }));
+  }, [isFree, sessionId]);
 
-    const convData = isFree
-      ? { send_to: GADS_FREE_CONSULTATION_TAG, value: 300.0, currency: "EUR" }
-      : {
-          send_to: GADS_PAYMENT_TAG,
-          ...(amount !== undefined && { value: amount, currency: "EUR" }),
-          ...(sessionId && { transaction_id: sessionId }),
-        };
+  // Only fire conversion after server-verified payment or confirmed free booking
+  useEffect(() => {
+    if (fired.current) return;
+    const w = window as unknown as { gtag?: (...args: unknown[]) => void };
+    if (typeof w.gtag !== "function") return;
 
-    w.gtag("event", "conversion", convData);
-    console.log("[gtag] conversion fired", convData);
-  }, [isFree, amount, sessionId]);
+    if (state.status === "free") {
+      fired.current = true;
+      w.gtag("event", "conversion", {
+        send_to: GADS_FREE_CONSULTATION_TAG,
+        value: 300.0,
+        currency: "EUR",
+      });
+    } else if (state.status === "paid") {
+      fired.current = true;
+      w.gtag("event", "conversion", {
+        send_to: GADS_PAYMENT_TAG,
+        value: state.amount,
+        currency: state.currency,
+        transaction_id: state.sessionId,
+      });
+    }
+  }, [state]);
+
+  if (state.status === "loading") {
+    return (
+      <div className="pt-40 flex justify-center py-20">
+        <div className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (state.status === "invalid") {
+    return (
+      <div className="pt-40 pb-20 text-center max-w-xl mx-auto px-4">
+        <h1 className="text-2xl font-bold text-[#1a1a1a] mb-3">We couldn&apos;t verify this payment</h1>
+        <p className="text-gray-500 mb-6">If you just paid, please give it a moment and refresh. Otherwise, contact us and we&apos;ll help.</p>
+        <Link href="/" className="text-brand-500 hover:underline">Back to home</Link>
+      </div>
+    );
+  }
 
   return (
     <div className="pt-32 lg:pt-40 pb-16 lg:pb-24">

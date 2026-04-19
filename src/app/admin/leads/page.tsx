@@ -48,10 +48,18 @@ export default function AdminLeadsPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`/api/admin/leads?key=${encodeURIComponent(adminKey)}`);
+      const res = await fetch("/api/admin/leads", {
+        headers: { Authorization: `Bearer ${adminKey}` },
+        cache: "no-store",
+      });
       if (res.status === 401) {
         setError("Invalid key");
         setAuthed(false);
+        setLoading(false);
+        return;
+      }
+      if (res.status === 429) {
+        setError("Too many attempts — try again in a minute");
         setLoading(false);
         return;
       }

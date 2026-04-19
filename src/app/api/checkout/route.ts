@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getProductById } from "@/data/products";
 
 interface CartItem {
   productId: string;
@@ -16,6 +17,52 @@ interface CheckoutBody {
   gclid?: string;
 }
 
+interface ResolvedItem {
+  id: string;
+  title: string;
+  unitAmountCents: number;
+  quantity: number;
+  image: string;
+  bookingDate?: string;
+  bookingSlot?: string;
+  bookingLabel?: string;
+}
+
+/**
+ * Resolve every cart item against the local product catalog. NEVER trusts
+ * the client-submitted price or name — uses src/data/products.ts as the
+ * authoritative source. Fails the whole checkout if any product is unknown
+ * or has an invalid quantity.
+ */
+function resolveItems(items: CartItem[]): ResolvedItem[] {
+  return items.map((item) => {
+    if (!item.productId || !Number.isFinite(item.quantity) || item.quantity <= 0 || item.quantity > 20) {
+      throw new Error(`Invalid quantity for item ${item.productId}`);
+    }
+
+    const product = getProductById(item.productId);
+    if (!product) {
+      throw new Error(`Unknown product: ${item.productId}`);
+    }
+
+    const authoritativeCents = Math.round(product.price * 100);
+    if (authoritativeCents <= 0 || authoritativeCents > 20_000_00) {
+      throw new Error(`Price out of bounds for ${item.productId}`);
+    }
+
+    return {
+      id: product.id,
+      title: product.name, // server-side name, never client-submitted
+      unitAmountCents: authoritativeCents,
+      quantity: item.quantity,
+      image: item.image?.startsWith("https://") ? item.image : "",
+      bookingDate: item.bookingDate,
+      bookingSlot: item.bookingSlot,
+      bookingLabel: item.bookingLabel,
+    };
+  });
+}
+
 export async function POST(request: Request) {
   try {
     const { items, gclid }: CheckoutBody = await request.json();
@@ -24,17 +71,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No items provided" }, { status: 400 });
     }
 
-    const totalEur = items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
+    let resolved: ResolvedItem[];
+    try {
+      resolved = resolveItems(items);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Invalid items";
+      console.error("[checkout] item resolution failed:", msg);
+      return NextResponse.json({ error: msg }, { status: 400 });
+    }
 
     // Build form-encoded body for Stripe REST API
     const params = new URLSearchParams();
     params.append("mode", "payment");
     params.append(
       "success_url",
-      `https://smart-space.ie/smartspace-payment-success?session_id={CHECKOUT_SESSION_ID}&amount=${totalEur.toFixed(2)}`
+      `https://smart-space.ie/smartspace-payment-success?session_id={CHECKOUT_SESSION_ID}`
     );
     params.append("cancel_url", "https://smart-space.ie");
     params.append("billing_address_collection", "required");
@@ -48,29 +99,20 @@ export async function POST(request: Request) {
     params.append("metadata[gclid]", gclid ?? "");
 
     // Pass booking info from the first item that has it
-    const bookedItem = items.find((i) => i.bookingDate && i.bookingSlot);
+    const bookedItem = resolved.find((i) => i.bookingDate && i.bookingSlot);
     if (bookedItem) {
       params.append("metadata[booking_date]", bookedItem.bookingDate ?? "");
       params.append("metadata[booking_slot]", bookedItem.bookingSlot ?? "");
       params.append("metadata[booking_label]", bookedItem.bookingLabel ?? "");
-      params.append("metadata[product_name]", bookedItem.name);
+      params.append("metadata[product_name]", bookedItem.title);
     }
 
-    items.forEach((item, i) => {
+    resolved.forEach((item, i) => {
       params.append(`line_items[${i}][price_data][currency]`, "eur");
-      params.append(
-        `line_items[${i}][price_data][unit_amount]`,
-        String(Math.round(item.price * 100))
-      );
-      params.append(
-        `line_items[${i}][price_data][product_data][name]`,
-        item.name
-      );
-      if (item.image?.startsWith("https://")) {
-        params.append(
-          `line_items[${i}][price_data][product_data][images][0]`,
-          item.image
-        );
+      params.append(`line_items[${i}][price_data][unit_amount]`, String(item.unitAmountCents));
+      params.append(`line_items[${i}][price_data][product_data][name]`, item.title);
+      if (item.image) {
+        params.append(`line_items[${i}][price_data][product_data][images][0]`, item.image);
       }
       params.append(`line_items[${i}][quantity]`, String(item.quantity));
     });

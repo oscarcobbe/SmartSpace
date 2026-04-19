@@ -1,6 +1,36 @@
 import { NextResponse } from "next/server";
+import { timingSafeEqual } from "crypto";
 
 export const dynamic = "force-dynamic";
+
+// Simple in-memory rate limiter: 10 requests per minute per IP.
+// Swap for @upstash/ratelimit for multi-instance deployments.
+const RATE_WINDOW_MS = 60 * 1000;
+const RATE_MAX = 10;
+const rateBuckets = new Map<string, number[]>();
+
+function rateLimitOk(ip: string): boolean {
+  const now = Date.now();
+  const hits = (rateBuckets.get(ip) ?? []).filter((t) => now - t < RATE_WINDOW_MS);
+  if (hits.length >= RATE_MAX) {
+    rateBuckets.set(ip, hits);
+    return false;
+  }
+  hits.push(now);
+  rateBuckets.set(ip, hits);
+  return true;
+}
+
+function safeEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a);
+  const bb = Buffer.from(b);
+  if (ab.length !== bb.length) return false;
+  try {
+    return timingSafeEqual(ab, bb);
+  } catch {
+    return false;
+  }
+}
 
 interface Lead {
   date: string;
@@ -18,12 +48,29 @@ interface Lead {
 }
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const key = searchParams.get("key");
+  // IP-based rate limiting to blunt brute-force guessing of ADMIN_KEY
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  if (!rateLimitOk(ip)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
 
-  // Simple auth — must match ADMIN_KEY env var
   const adminKey = process.env.ADMIN_KEY;
-  if (!adminKey || key !== adminKey) {
+  if (!adminKey) {
+    return NextResponse.json({ error: "Admin not configured" }, { status: 500 });
+  }
+
+  // Prefer Authorization: Bearer <key>. Fall back to ?key= for one release,
+  // but log it so we know when it's safe to remove the fallback.
+  const authHeader = request.headers.get("authorization") ?? "";
+  const headerKey = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+  const { searchParams } = new URL(request.url);
+  const queryKey = searchParams.get("key") ?? "";
+  if (queryKey && !headerKey) {
+    console.warn("[admin] deprecated ?key= query auth used; switch client to Authorization header");
+  }
+  const submittedKey = headerKey || queryKey;
+
+  if (!submittedKey || !safeEqual(submittedKey, adminKey)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
