@@ -26,6 +26,24 @@ const nextConfig = {
       { source: "/services/driveway-bundle", destination: "/services/bundles/driveway", permanent: true },
       { source: "/services/whole-home-bundle", destination: "/services/bundles/whole-home", permanent: true },
 
+      // Specific legacy pages → appropriate new pages
+      { source: "/pages/contact", destination: "/contact", permanent: true },
+      { source: "/pages/reviews", destination: "/reviews", permanent: true },
+      { source: "/pages/about", destination: "/about", permanent: true },
+      { source: "/pages/privacy-policy", destination: "/", permanent: true },
+      { source: "/pages/terms-and-conditions", destination: "/", permanent: true },
+      { source: "/pages/disclaimer", destination: "/", permanent: true },
+
+      // Catch-all wildcards for old Shopify URL structures
+      // Old product pages → services (we sell installation services now)
+      { source: "/products/:slug*", destination: "/services", permanent: true },
+      // Old collection pages → services
+      { source: "/collections/:slug*", destination: "/services", permanent: true },
+      // Any remaining /pages/* → home
+      { source: "/pages/:slug*", destination: "/", permanent: true },
+      // Legacy blog → SmartCareLiving (they own the blog content now)
+      { source: "/blogs/:slug*", destination: "https://www.smartcareliving.ie/blogs/news", permanent: true },
+
       // Old pages -> home page
       { source: "/pages/how-it-works", destination: "/", permanent: true },
       { source: "/pages/about-us", destination: "/", permanent: true },
