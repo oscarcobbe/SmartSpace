@@ -35,14 +35,12 @@ const nextConfig = {
       { source: "/pages/disclaimer", destination: "/", permanent: true },
 
       // Catch-all wildcards for old Shopify URL structures
-      // Old product pages → services (we sell installation services now)
-      { source: "/products/:slug*", destination: "/services", permanent: true },
-      // Old collection pages → services
-      { source: "/collections/:slug*", destination: "/services", permanent: true },
-      // Any remaining /pages/* → home
-      { source: "/pages/:slug*", destination: "/", permanent: true },
-      // Legacy blog → SmartCareLiving (they own the blog content now)
-      { source: "/blogs/:slug*", destination: "https://www.smartcareliving.ie/blogs/news", permanent: true },
+      // IMPORTANT: use [^.]+ so we don't accidentally redirect static files like
+      // /products/plus-video-doorbell.png (which must keep serving from /public).
+      { source: "/products/:slug([^.]+)", destination: "/services", permanent: true },
+      { source: "/collections/:slug([^.]+)", destination: "/services", permanent: true },
+      { source: "/pages/:slug([^.]+)", destination: "/", permanent: true },
+      { source: "/blogs/:slug([^.]+)", destination: "https://www.smartcareliving.ie/blogs/news", permanent: true },
 
       // Old pages -> home page
       { source: "/pages/how-it-works", destination: "/", permanent: true },
