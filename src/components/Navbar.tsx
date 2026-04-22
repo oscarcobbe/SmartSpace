@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ShoppingBag } from "lucide-react";
+import { Menu, X, ShoppingBag, Star } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 
 const navLinks = [
@@ -29,13 +29,22 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Promo strip */}
-      <div className="fixed top-0 left-0 right-0 z-[60] bg-brand-500 text-white text-center py-1 px-4 text-xs font-medium">
-        We&apos;ve Expanded! Our award-winning eldercare services have moved to SmartCareLiving.{" "}
-        <a href="https://smartcareliving.ie" target="_blank" rel="noopener noreferrer" className="underline font-bold">
-          Learn More
-        </a>
-      </div>
+      {/* Review strip */}
+      <Link
+        href="/reviews"
+        className="fixed top-0 left-0 right-0 z-[60] bg-[#1a1a1a] text-white text-center py-1 px-4 text-xs font-medium hover:bg-black transition-colors flex items-center justify-center gap-2"
+      >
+        <span className="inline-flex items-center gap-0.5 text-brand-500">
+          <Star className="w-3 h-3 fill-brand-500" />
+          <Star className="w-3 h-3 fill-brand-500" />
+          <Star className="w-3 h-3 fill-brand-500" />
+          <Star className="w-3 h-3 fill-brand-500" />
+          <Star className="w-3 h-3 fill-brand-500" />
+        </span>
+        <span className="font-semibold">5.0 on Google</span>
+        <span className="hidden sm:inline text-white/60">·</span>
+        <span className="hidden sm:inline">5,000+ installations across Dublin &amp; Leinster</span>
+      </Link>
 
       {/* Nav */}
       <header
@@ -46,7 +55,7 @@ export default function Navbar() {
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-24">
             {/* Logo */}
-            <Link href="/">
+            <Link href="/" aria-label="Smart Space — home">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/Logo1.png" alt="Smart Space" className="h-16 sm:h-20 w-auto" />
             </Link>
@@ -70,7 +79,7 @@ export default function Navbar() {
 
             {/* Desktop Cart */}
             <div className="hidden md:flex items-center">
-              <button onClick={openCart} className="relative p-2 hover:bg-gray-100 rounded-full transition-colors">
+              <button onClick={openCart} className="relative p-2 hover:bg-gray-100 rounded-full transition-colors" aria-label="Open cart">
                 <ShoppingBag className="w-5 h-5 text-[#1a1a1a]" />
                 {totalItems > 0 && (
                   <span className="absolute -top-1 -right-1 bg-brand-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
@@ -82,7 +91,7 @@ export default function Navbar() {
 
             {/* Mobile: Cart + toggle */}
             <div className="flex md:hidden items-center gap-2">
-              <button onClick={openCart} className="relative p-2">
+              <button onClick={openCart} className="relative p-2" aria-label="Open cart">
                 <ShoppingBag className="w-5 h-5 text-[#1a1a1a]" />
                 {totalItems > 0 && (
                   <span className="absolute -top-1 -right-1 bg-brand-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">

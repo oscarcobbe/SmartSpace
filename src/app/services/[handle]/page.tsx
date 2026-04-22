@@ -387,7 +387,7 @@ export default function ServiceDetailPage() {
             {/* ── Trust Strip ── */}
             <div className="grid grid-cols-2 gap-3 p-4 bg-gray-50 rounded-2xl">
               {[
-                { icon: Shield, text: "Dublin's Only 5★ Ring Installer" },
+                { icon: Shield, text: "Dublin's #1 5★ Ring Installer" },
                 { icon: Star, text: "5-Star Google Rating" },
                 { icon: Wrench, text: "5,000+ Installations" },
                 { icon: Award, text: "SME Winner 2025" },
@@ -459,7 +459,7 @@ export default function ServiceDetailPage() {
               <div className="max-w-3xl">
                 <h2 className="text-2xl sm:text-3xl font-extrabold mb-2">Supplied &amp; Fitted by Smart Space</h2>
                 <p className="text-white/70 mb-6">
-                  Let Leinster&apos;s top-rated Ring installer handle everything. Sit back while we set up your new device for optimal performance.
+                  Let Dublin&apos;s #1 Ring installer handle everything — we serve all of Leinster and set up your new device for optimal performance.
                 </p>
                 <div className="grid sm:grid-cols-2 gap-3">
                   {[

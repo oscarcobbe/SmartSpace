@@ -1,17 +1,23 @@
 import Link from "next/link";
 
 const serviceLinks = [
+  { href: "/services", label: "All Services" },
   { href: "/services/doorbell", label: "Video Doorbell" },
   { href: "/services/camera", label: "Floodlight Camera" },
-  { href: "/services/driveway-bundle", label: "Driveway Bundle" },
-  { href: "/services/whole-home-bundle", label: "Whole Home Bundle" },
+  { href: "/services/bundles/driveway", label: "Driveway Bundle" },
+  { href: "/services/bundles/whole-home", label: "Whole Home Bundle" },
+  { href: "/services/bundles/eldercare", label: "Eldercare Bundle" },
   { href: "/services/installation-only", label: "Installation Only" },
+  { href: "/services/free-consultation", label: "Free Consultation" },
 ];
 
 const companyLinks = [
   { href: "/about", label: "About Us" },
   { href: "/reviews", label: "Reviews" },
+  { href: "/areas", label: "Areas We Cover" },
+  { href: "/faq", label: "FAQ" },
   { href: "/contact", label: "Contact" },
+  { href: "/blog", label: "Guides" },
 ];
 
 export default function Footer() {
@@ -21,12 +27,25 @@ export default function Footer() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-2 lg:col-span-1">
-            <Link href="/" className="mb-4 block">
+            <Link href="/" className="mb-4 block" aria-label="Smart Space — home">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/Logo1.png" alt="Smart Space" className="h-10 w-auto brightness-0 invert" />
             </Link>
-            <p className="text-sm leading-relaxed">
-              Leinster&apos;s trusted Ring installer. Professional installation across Leinster.
+            <p className="text-sm leading-relaxed mb-4">
+              Dublin&apos;s #1 5-star Ring installer. Professional Ring doorbell and
+              security camera installation across Dublin and all of Leinster.
+            </p>
+            <p className="text-xs leading-relaxed text-[#666]">
+              For AI-powered eldercare monitoring, visit our sister brand{" "}
+              <a
+                href="https://smartcareliving.ie"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-white"
+              >
+                SmartCareLiving
+              </a>
+              .
             </p>
           </div>
 
@@ -81,7 +100,7 @@ export default function Footer() {
       <div className="border-t border-[#333]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
           <p>&copy; {new Date().getFullYear()} Smart Space. All rights reserved.</p>
-          <p>Dublin&apos;s Only 5-Star Ring Installer</p>
+          <p>Dublin&apos;s #1 5-Star Ring Installer — Serving All of Leinster</p>
         </div>
       </div>
     </footer>

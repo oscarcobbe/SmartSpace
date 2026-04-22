@@ -1,16 +1,42 @@
 import type { Metadata } from "next";
-import { Mail, Phone, MapPin, Clock } from "lucide-react";
+import { Mail, Phone, MapPin } from "lucide-react";
 import ContactForm from "@/components/ContactForm";
 
+const SITE = "https://smart-space.ie";
+
 export const metadata: Metadata = {
-  title: "Contact Us | Smart Space",
+  title: "Contact Us | Smart Space — Dublin's #1 Ring Installer",
   description:
-    "Get in touch with Smart Space about Ring doorbell and security camera installation in Leinster.",
+    "Get in touch with Smart Space for Ring doorbell and security camera installation. Serving Dublin and all of Leinster. Call 01 513 0424 or email info@smart-space.ie.",
+  alternates: { canonical: "/contact" },
+  openGraph: {
+    title: "Contact Smart Space | Dublin's #1 Ring Installer",
+    description:
+      "Call 01 513 0424 or email info@smart-space.ie. Serving Dublin and all of Leinster.",
+    url: `${SITE}/contact`,
+    type: "website",
+  },
+};
+
+const contactSchema = {
+  "@context": "https://schema.org",
+  "@type": "ContactPage",
+  url: `${SITE}/contact`,
+  name: "Contact Smart Space",
+  description:
+    "Contact Smart Space for Ring doorbell and security camera installation in Dublin and Leinster.",
+  mainEntity: { "@id": `${SITE}/#localbusiness` },
+  publisher: { "@id": `${SITE}/#organization` },
 };
 
 export default function ContactPage() {
   return (
     <div className="pt-32 lg:pt-36 pb-16 lg:pb-24">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(contactSchema) }}
+      />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-14">
@@ -45,13 +71,8 @@ export default function ContactPage() {
                   },
                   {
                     icon: MapPin,
-                    label: "Location",
-                    value: "Dublin, Ireland",
-                  },
-                  {
-                    icon: Clock,
-                    label: "Hours",
-                    value: "Mon–Fri: 9am–6pm",
+                    label: "Area Covered",
+                    value: "Dublin & all of Leinster",
                   },
                 ].map((item) => (
                   <div key={item.label} className="flex items-start gap-4">

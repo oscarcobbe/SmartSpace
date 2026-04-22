@@ -26,6 +26,9 @@ const nextConfig = {
       { source: "/services/driveway-bundle", destination: "/services/bundles/driveway", permanent: true },
       { source: "/services/whole-home-bundle", destination: "/services/bundles/whole-home", permanent: true },
 
+      // Old /survey page → new /faq
+      { source: "/survey", destination: "/faq", permanent: true },
+
       // Specific legacy pages → appropriate new pages
       { source: "/pages/contact", destination: "/contact", permanent: true },
       { source: "/pages/reviews", destination: "/reviews", permanent: true },

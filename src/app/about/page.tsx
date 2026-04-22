@@ -2,15 +2,41 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ShieldCheck, Award, Users, MapPin, ArrowRight } from "lucide-react";
 
+const SITE = "https://smart-space.ie";
+
 export const metadata: Metadata = {
-  title: "About Us | Smart Space",
+  title: "About Smart Space | Dublin's #1 5-Star Ring Installer",
   description:
-    "Smart Space is Leinster's trusted Ring installer. Learn about our mission to bring professional smart home security to every home in Leinster.",
+    "Smart Space is Dublin's only 5-star Ring installer, serving all of Leinster. SME Business Winner 2025, 5,000+ installations, and a team of trained Ring specialists.",
+  alternates: { canonical: "/about" },
+  openGraph: {
+    title: "About Smart Space | Dublin's #1 5-Star Ring Installer",
+    description:
+      "Dublin's only 5-star Ring installer. 5,000+ installations across Dublin and Leinster.",
+    url: `${SITE}/about`,
+    type: "website",
+  },
+};
+
+const aboutSchema = {
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  url: `${SITE}/about`,
+  name: "About Smart Space",
+  description:
+    "Smart Space is Dublin's only 5-star Ring installer, serving all of Leinster with 5,000+ professional installations.",
+  mainEntity: { "@id": `${SITE}/#localbusiness` },
+  publisher: { "@id": `${SITE}/#organization` },
 };
 
 export default function AboutPage() {
   return (
     <div className="pt-28 lg:pt-32">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutSchema) }}
+      />
+
       {/* Hero */}
       <section className="bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 py-20 lg:py-28 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
@@ -21,8 +47,8 @@ export default function AboutPage() {
             We&apos;re Smart Space
           </h1>
           <p className="text-xl text-white/80 max-w-2xl mx-auto leading-relaxed">
-            Dublin&apos;s only 5-star Ring installer, bringing professional smart home
-            security to homes across Leinster.
+            Dublin&apos;s #1 5-star Ring installer, bringing professional smart home
+            security to homes across Dublin and all of Leinster.
           </p>
         </div>
       </section>
@@ -38,17 +64,16 @@ export default function AboutPage() {
               </h2>
               <div className="space-y-4 text-gray-600 leading-relaxed">
                 <p>
-                  Smart Space started with a simple belief: every home in Leinster deserves
+                  Smart Space started with a simple belief: every home in Ireland deserves
                   professional-grade security that&apos;s easy to use and beautifully designed.
                 </p>
                 <p>
-                  As Leinster&apos;s top-rated Ring installer, we don&apos;t just sell products — we deliver
-                  a complete service. From helping you choose the right setup for your home,
-                  to professional installation and ongoing support, we&apos;re with you every
-                  step of the way.
+                  As Dublin&apos;s #1 Ring installer — now serving all of Leinster — we don&apos;t just
+                  sell products. We deliver a complete service: helping you choose the right
+                  setup for your home, professional installation, and ongoing support.
                 </p>
                 <p>
-                  Based in Dublin, we serve customers across Leinster with the same commitment
+                  Based in Dublin, we cover all 12 counties of Leinster with the same commitment
                   to quality and care that earned us recognition as Three Ireland SME
                   Business Winner 2025.
                 </p>

@@ -6,23 +6,42 @@ import CartDrawer from "@/components/CartDrawer";
 import { CartProvider } from "@/context/CartContext";
 import GclidCapture from "@/components/GclidCapture";
 
+const SITE = "https://smart-space.ie";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.smart-space.ie"),
-  title: "Smart Space | Ring Doorbells & Security Cameras Leinster",
-  description:
-    "Leinster's trusted Ring installer. Shop Ring doorbells, security cameras and smart home bundles. Professional installation available.",
-  keywords:
-    "Ring doorbell Leinster, Ring camera Leinster, Ring security, smart home Leinster, Ring installer Dublin",
-  alternates: {
-    canonical: "/",
+  metadataBase: new URL(SITE),
+  title: {
+    default: "Smart Space | Dublin's #1 5-Star Ring Installer — Serving Leinster",
+    template: "%s | Smart Space",
   },
+  description:
+    "Dublin's only 5-star Ring installer. Professional Ring doorbell and security camera installation across Dublin and all of Leinster. 5,000+ installations, SME Winner 2025.",
+  keywords:
+    "Ring installer Dublin, Ring doorbell installation Dublin, Ring camera Dublin, Ring installer Leinster, smart home Dublin, security camera installation Ireland",
+  alternates: { canonical: "/" },
   openGraph: {
-    title: "Smart Space | Ring Doorbells & Security Cameras Leinster",
-    description:
-      "Shop Ring doorbells and security cameras. Professional installation across Leinster.",
     type: "website",
-    url: "https://www.smart-space.ie",
+    url: SITE,
     siteName: "Smart Space",
+    title: "Smart Space | Dublin's #1 5-Star Ring Installer — Serving Leinster",
+    description:
+      "Professional Ring doorbell and security camera installation across Dublin and Leinster. 5,000+ installations, SME Winner 2025.",
+    locale: "en_IE",
+    images: [
+      {
+        url: "/og-default.png",
+        width: 1200,
+        height: 630,
+        alt: "Smart Space — Dublin's #1 5-Star Ring Installer",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Smart Space | Dublin's #1 5-Star Ring Installer",
+    description:
+      "Professional Ring doorbell and security camera installation across Dublin and Leinster.",
+    images: ["/og-default.png"],
   },
   robots: {
     index: true,
@@ -37,10 +56,79 @@ export const metadata: Metadata = {
 };
 
 const GTAG_ID = "AW-17978501655";
-// Business phone number shown on the site — Google Ads replaces this with a
-// tracked forwarding number for website call reporting (configured in Goals →
-// Conversions → Phone calls → Calls from a phone number on your website).
 const BUSINESS_PHONE = "+35315130424";
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE}/#organization`,
+      name: "Smart Space",
+      url: SITE,
+      logo: {
+        "@type": "ImageObject",
+        url: `${SITE}/Logo1.png`,
+      },
+      slogan: "Expertly Installed. Perfectly Secured.",
+      contactPoint: {
+        "@type": "ContactPoint",
+        telephone: BUSINESS_PHONE,
+        email: "info@smart-space.ie",
+        contactType: "customer service",
+        areaServed: "IE",
+        availableLanguage: "en",
+      },
+      sameAs: [],
+    },
+    {
+      "@type": "LocalBusiness",
+      "@id": `${SITE}/#localbusiness`,
+      name: "Smart Space",
+      url: SITE,
+      image: `${SITE}/og-default.png`,
+      logo: `${SITE}/Logo1.png`,
+      telephone: BUSINESS_PHONE,
+      email: "info@smart-space.ie",
+      priceRange: "€€",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Dublin",
+        addressRegion: "Leinster",
+        addressCountry: "IE",
+      },
+      areaServed: [
+        { "@type": "AdministrativeArea", name: "Dublin" },
+        { "@type": "AdministrativeArea", name: "Wicklow" },
+        { "@type": "AdministrativeArea", name: "Kildare" },
+        { "@type": "AdministrativeArea", name: "Meath" },
+        { "@type": "AdministrativeArea", name: "Louth" },
+        { "@type": "AdministrativeArea", name: "Wexford" },
+        { "@type": "AdministrativeArea", name: "Carlow" },
+        { "@type": "AdministrativeArea", name: "Kilkenny" },
+        { "@type": "AdministrativeArea", name: "Laois" },
+        { "@type": "AdministrativeArea", name: "Offaly" },
+        { "@type": "AdministrativeArea", name: "Westmeath" },
+        { "@type": "AdministrativeArea", name: "Longford" },
+      ],
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: "5.0",
+        bestRating: "5",
+        reviewCount: "100",
+      },
+      award: "Three Ireland SME Business Winner 2025",
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE}/#website`,
+      url: SITE,
+      name: "Smart Space",
+      publisher: { "@id": `${SITE}/#organization` },
+      inLanguage: "en-IE",
+    },
+  ],
+};
 
 export default function RootLayout({
   children,
@@ -48,7 +136,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en-IE">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -73,6 +161,11 @@ export default function RootLayout({
               "}",
             ].join("\n"),
           }}
+        />
+        {/* LocalBusiness + Organization + WebSite schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
       <body

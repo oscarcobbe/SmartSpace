@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 
+const BASE = "https://smart-space.ie";
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
@@ -13,10 +15,12 @@ export default function robots(): MetadataRoute.Robots {
           "/smartcareliving-payment-success",
           "/test123-checkout",
           "/booking",
+          "/backlink-outreach",
+          "/gbp-setup",
         ],
       },
     ],
-    sitemap: "https://www.smart-space.ie/sitemap.xml",
-    host: "https://www.smart-space.ie",
+    sitemap: `${BASE}/sitemap.xml`,
+    host: BASE,
   };
 }

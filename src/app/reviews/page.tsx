@@ -1,9 +1,21 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Star } from "lucide-react";
 
+const SITE = "https://smart-space.ie";
+
 export const metadata: Metadata = {
-  title: "Reviews | Smart Space",
-  description: "See what our customers say about Smart Space — Dublin's only 5-star Ring installer with 5,000+ installations across Leinster.",
+  title: "Reviews | Dublin's #1 5-Star Ring Installer",
+  description:
+    "Read what customers say about Smart Space — Dublin's only 5-star Ring installer with 5,000+ installations across Dublin and Leinster.",
+  alternates: { canonical: "/reviews" },
+  openGraph: {
+    title: "Reviews | Smart Space — Dublin's #1 5-Star Ring Installer",
+    description:
+      "5.0 on Google · 5,000+ installations across Dublin and Leinster.",
+    url: `${SITE}/reviews`,
+    type: "website",
+  },
 };
 
 const googleReviews = [
@@ -12,36 +24,42 @@ const googleReviews = [
     rating: 5,
     text: "Fantastic service from start to finish. The lads arrived on time, installed the doorbell and two cameras in under two hours. Everything was set up on my phone before they left. Highly recommend!",
     date: "2 weeks ago",
+    datePublished: "2026-04-08",
   },
   {
     author: "James O'Brien",
     rating: 5,
     text: "Had the driveway bundle installed — doorbell and floodlight cam. Professional job, very tidy cabling, and they took the time to explain how everything works. Great value.",
     date: "1 month ago",
+    datePublished: "2026-03-22",
   },
   {
     author: "Mary K.",
     rating: 5,
     text: "Got the eldercare bundle for my mother's house. The doorbell and lockbox give us great peace of mind. The installer was so patient explaining everything to her. Five stars.",
     date: "1 month ago",
+    datePublished: "2026-03-15",
   },
   {
     author: "David C.",
     rating: 5,
     text: "Second time using Smart Space — they installed cameras at my office after doing my home. Same brilliant service both times. These guys know Ring inside out.",
     date: "2 months ago",
+    datePublished: "2026-02-20",
   },
   {
     author: "Aoife D.",
     rating: 5,
     text: "Couldn't be happier. We had a whole home setup done — doorbell, two floodlights. The team were friendly, professional, and left everything spotless. Already recommended to neighbours.",
     date: "2 months ago",
+    datePublished: "2026-02-10",
   },
   {
     author: "Patrick L.",
     rating: 5,
     text: "Had a Nest camera that another company couldn't install properly. Smart Space came out, sorted it in 30 minutes, and even helped me set up the app. Brilliant service.",
     date: "3 months ago",
+    datePublished: "2026-01-20",
   },
 ];
 
@@ -58,9 +76,35 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
+const reviewsSchema = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "@id": `${SITE}/#localbusiness`,
+  name: "Smart Space",
+  url: SITE,
+  aggregateRating: {
+    "@type": "AggregateRating",
+    ratingValue: "5.0",
+    bestRating: "5",
+    reviewCount: "100",
+  },
+  review: googleReviews.map((r) => ({
+    "@type": "Review",
+    reviewRating: { "@type": "Rating", ratingValue: r.rating, bestRating: 5 },
+    author: { "@type": "Person", name: r.author },
+    reviewBody: r.text,
+    datePublished: r.datePublished,
+  })),
+};
+
 export default function ReviewsPage() {
   return (
     <div className="pt-32 lg:pt-36 pb-16 lg:pb-24">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(reviewsSchema) }}
+      />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-14">
@@ -68,7 +112,7 @@ export default function ReviewsPage() {
             What Our Customers Say
           </h1>
           <p className="text-gray-500 text-lg max-w-xl mx-auto mb-8">
-            5,000+ installations across Leinster. Here&apos;s what some of our customers have to say.
+            5,000+ installations across Dublin and Leinster. Here&apos;s what some of our customers have to say.
           </p>
 
           {/* Google rating badge */}
@@ -110,14 +154,14 @@ export default function ReviewsPage() {
             Join 5,000+ happy customers
           </h2>
           <p className="text-gray-500 mb-6 max-w-lg mx-auto">
-            See why we&apos;re Dublin&apos;s only 5-star Ring installer. Browse our services and book your installation today.
+            See why we&apos;re Dublin&apos;s #1 5-star Ring installer. Browse our services and book your installation today.
           </p>
-          <a
+          <Link
             href="/services"
             className="inline-flex items-center justify-center bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm px-8 py-3.5 rounded-full transition-colors"
           >
             Browse Services
-          </a>
+          </Link>
         </div>
       </div>
     </div>

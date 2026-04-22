@@ -17,7 +17,7 @@ export default function PromoBanner() {
           <span className="gradient-text-brand">We install it.</span>
         </h2>
         <p className="text-white/60 text-base sm:text-lg max-w-xl mx-auto mb-10 leading-relaxed">
-          As Leinster&apos;s top-rated Ring installer, we deliver and professionally set up your entire system — not just ship you a box.
+          As Dublin&apos;s top-rated Ring installer — serving all of Leinster — we deliver and professionally set up your entire system, not just ship you a box.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link

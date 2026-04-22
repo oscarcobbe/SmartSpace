@@ -21,13 +21,13 @@ export default function Hero() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="fade-up inline-flex items-center gap-2 bg-white/60 backdrop-blur-md border border-white/40 text-[#1a1a1a] text-[11px] font-semibold px-3 py-1.5 rounded-full uppercase tracking-[0.15em] mb-5 shadow-sm">
             <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" />
-            Leinster&apos;s 5-Star Ring Installer
+            Dublin&apos;s #1 5-Star Ring Installer
           </div>
           <h1 className="fade-up-delay-1 text-[2rem] sm:text-5xl lg:text-[3.75rem] font-extrabold text-[#1C1A18] leading-[1.02] tracking-[-0.04em] mb-3 sm:mb-5">
             Expertly Installed.<br className="hidden sm:block" /> Perfectly Secured.
           </h1>
           <p className="fade-up-delay-2 text-[#3a352f] text-sm sm:text-lg max-w-lg mx-auto font-medium leading-relaxed">
-            We professionally install every doorbell, camera, and floodlight. 5,000+ installations across Leinster.
+            Professional Ring doorbell and camera installation across Dublin and all of Leinster. 5,000+ installations completed.
           </p>
         </div>
       </div>
