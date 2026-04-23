@@ -19,7 +19,7 @@ export default function FreeConsultationCTA() {
               </div>
               <h2 className="text-3xl sm:text-4xl lg:text-[2.5rem] font-extrabold text-white leading-[1.08] tracking-[-0.025em] mb-4">
                 Not sure what you need? <br className="hidden sm:block" />
-                <span className="gradient-text-brand">Book a free on-site consultation.</span>
+                <span className="gradient-text-brand">Book a complimentary on-site consultation.</span>
               </h2>
               <p className="text-white/70 text-base sm:text-lg leading-relaxed mb-8 max-w-xl">
                 We&apos;ll come to your home, walk the property with you, identify the right
@@ -31,7 +31,7 @@ export default function FreeConsultationCTA() {
                   href="/services/free-consultation"
                   className="btn-sheen group inline-flex items-center justify-center gap-2 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-600 text-white font-bold text-sm px-8 py-4 rounded-full transition-all shadow-[0_10px_30px_-5px_rgba(242,100,25,0.5)] hover:shadow-[0_20px_40px_-5px_rgba(242,100,25,0.6)] hover:-translate-y-0.5"
                 >
-                  <span className="relative z-10">Book Free Consultation</span>
+                  <span className="relative z-10">Book Complimentary Consultation</span>
                   <ArrowRight className="relative z-10 w-4 h-4 transition-transform duration-500 group-hover:translate-x-1" />
                 </Link>
                 <a
