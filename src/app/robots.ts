@@ -17,6 +17,7 @@ export default function robots(): MetadataRoute.Robots {
           "/booking",
           "/backlink-outreach",
           "/gbp-setup",
+          "/ga4-setup",
         ],
       },
     ],

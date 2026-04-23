@@ -55,6 +55,10 @@ export const metadata: Metadata = {
 
 const GTAG_ID = "AW-17978501655";
 const BUSINESS_PHONE = "+35315130424";
+// Google Analytics 4 measurement ID. Set NEXT_PUBLIC_GA4_MEASUREMENT_ID
+// in Vercel env to enable GA4 pageview + event tracking. Falls back to
+// Ads-only when the env var isn't set.
+const GA4_ID = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID ?? "";
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -142,7 +146,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
           rel="stylesheet"
         />
-        {/* Google Ads global tag */}
+        {/* Google Ads + GA4 global tag (both use gtag.js) */}
         <script async src={`https://www.googletagmanager.com/gtag/js?id=${GTAG_ID}`} />
         <script
           dangerouslySetInnerHTML={{
@@ -150,7 +154,13 @@ export default function RootLayout({
               "window.dataLayer = window.dataLayer || [];",
               "function gtag(){dataLayer.push(arguments);}",
               "gtag('js', new Date());",
+              // Google Ads
               "gtag('config', " + JSON.stringify(GTAG_ID) + ", { allow_enhanced_conversions: true });",
+              // GA4 (only configured when the measurement ID env var is set)
+              GA4_ID
+                ? "gtag('config', " + JSON.stringify(GA4_ID) + ");"
+                : "// GA4 disabled — set NEXT_PUBLIC_GA4_MEASUREMENT_ID to enable",
+              // Phone-call conversion (Google Ads call tracking)
               "var callLabel = " + JSON.stringify(process.env.NEXT_PUBLIC_GADS_CALL_LABEL || "") + ";",
               "if (callLabel) {",
               "  gtag('config', " + JSON.stringify(GTAG_ID) + " + '/' + callLabel, {",

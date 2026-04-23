@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
-import { logLead } from "@/lib/leads";
+import { logLead, type AttributionRecord } from "@/lib/leads";
 
 const SUBJECT_LABELS: Record<string, string> = {
   general: "General Enquiry",
@@ -35,13 +35,14 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, email, phone, subject, message, gclid } = body as {
+    const { name, email, phone, subject, message, attribution, gclid } = body as {
       name?: string;
       email?: string;
       phone?: string;
       subject?: string;
       message?: string;
-      gclid?: string;
+      attribution?: AttributionRecord;
+      gclid?: string; // legacy — accept but prefer attribution.gclid
     };
 
     if (!name?.trim() || !email?.trim() || !message?.trim()) {
@@ -93,7 +94,7 @@ export async function POST(request: Request) {
       name: name.trim(),
       email: email.trim(),
       phone: phone?.trim(),
-      gclid: gclid?.trim() || undefined,
+      attribution: attribution ?? (gclid ? { gclid: gclid.trim() } : undefined),
       notes: `${subjectLabel}: ${message.trim()}`,
       source: "smart-space.ie",
     });

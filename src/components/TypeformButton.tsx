@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getStoredGclid } from "@/lib/gclid";
+import { getStoredGclid } from "@/lib/attribution";
 
 const TYPEFORM_BASE = "https://form.typeform.com/to/pQTqGNhh";
 

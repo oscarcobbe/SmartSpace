@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ClipboardCheck, Home, MessageCircle, Lightbulb, Shield, Star, Wrench, Award, Loader2 } from "lucide-react";
 import BookingCalendar from "@/components/BookingCalendar";
-import { getStoredGclid } from "@/lib/gclid";
+import { getAttribution } from "@/lib/attribution";
 
 const benefits = [
   {
@@ -73,7 +73,7 @@ export default function FreeConsultationPage() {
             phone: phone.trim(),
             address: address.trim(),
           },
-          gclid: getStoredGclid() ?? undefined,
+          attribution: getAttribution() ?? undefined,
         }),
       });
       const data = await res.json();

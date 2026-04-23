@@ -8,6 +8,17 @@
  * The expected payload shape matches google-apps-script.js (doPost).
  */
 
+export interface AttributionRecord {
+  gclid?: string;
+  landingPage?: string;
+  referrer?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmContent?: string;
+  utmTerm?: string;
+}
+
 export interface LeadRecord {
   type: "Free Consultation" | "Paid Order" | "Contact Enquiry" | "Newsletter Signup";
   name?: string;
@@ -20,9 +31,9 @@ export interface LeadRecord {
   bookingDate?: string;
   bookingSlot?: string;
   orderId?: string;
-  gclid?: string;
   source?: string;
   notes?: string;
+  attribution?: AttributionRecord;
 }
 
 /** Log a lead/order via the Apps Script webhook. Fire-and-forget — never blocks the user flow. */
@@ -34,11 +45,27 @@ export async function logLead(record: LeadRecord): Promise<void> {
   }
 
   try {
+    // Flatten attribution fields onto the top-level payload so the Apps Script
+    // can map each into its own column. gclid remains a top-level key for
+    // backwards compatibility with the older script that only knew about it.
+    const { attribution, ...rest } = record;
+    const payload = {
+      ...rest,
+      timestamp: new Date().toISOString(),
+      gclid: attribution?.gclid ?? undefined,
+      landingPage: attribution?.landingPage,
+      referrer: attribution?.referrer,
+      utmSource: attribution?.utmSource,
+      utmMedium: attribution?.utmMedium,
+      utmCampaign: attribution?.utmCampaign,
+      utmContent: attribution?.utmContent,
+      utmTerm: attribution?.utmTerm,
+    };
+
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...record, timestamp: new Date().toISOString() }),
-      // Apps Script web apps don't do CORS; keep the request simple
+      body: JSON.stringify(payload),
       cache: "no-store",
     });
     if (!res.ok) {

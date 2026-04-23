@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getProductByHandle } from "@/lib/shopify";
+import type { AttributionRecord } from "@/lib/leads";
 
 interface CartItem {
   productId: string;
@@ -14,7 +15,8 @@ interface CartItem {
 
 interface CheckoutBody {
   items: CartItem[];
-  gclid?: string;
+  attribution?: AttributionRecord;
+  gclid?: string; // legacy
 }
 
 interface ResolvedItem {
@@ -80,7 +82,8 @@ async function resolveItems(items: CartItem[]): Promise<ResolvedItem[]> {
 
 export async function POST(request: Request) {
   try {
-    const { items, gclid }: CheckoutBody = await request.json();
+    const { items, attribution, gclid: legacyGclid }: CheckoutBody = await request.json();
+    const gclid = attribution?.gclid ?? legacyGclid ?? "";
 
     if (!items || items.length === 0) {
       return NextResponse.json({ error: "No items provided" }, { status: 400 });
@@ -111,7 +114,16 @@ export async function POST(request: Request) {
     params.append("custom_fields[0][type]", "text");
     params.append("custom_fields[0][optional]", "true");
     params.append("allow_promotion_codes", "true");
-    params.append("metadata[gclid]", gclid ?? "");
+    params.append("metadata[gclid]", gclid);
+    // Attach additional attribution as Stripe metadata so the Stripe webhook
+    // can log it to the leads sheet once payment completes.
+    if (attribution?.landingPage) params.append("metadata[landing_page]", attribution.landingPage);
+    if (attribution?.referrer) params.append("metadata[referrer]", attribution.referrer);
+    if (attribution?.utmSource) params.append("metadata[utm_source]", attribution.utmSource);
+    if (attribution?.utmMedium) params.append("metadata[utm_medium]", attribution.utmMedium);
+    if (attribution?.utmCampaign) params.append("metadata[utm_campaign]", attribution.utmCampaign);
+    if (attribution?.utmContent) params.append("metadata[utm_content]", attribution.utmContent);
+    if (attribution?.utmTerm) params.append("metadata[utm_term]", attribution.utmTerm);
 
     // Pass booking info from the first item that has it
     const bookedItem = resolved.find((i) => i.bookingDate && i.bookingSlot);

@@ -76,7 +76,16 @@ export async function POST(req: NextRequest) {
       bookingDate: bookingDate || undefined,
       bookingSlot: bookingSlot || undefined,
       orderId: sessionId,
-      gclid: gclid || undefined,
+      attribution: {
+        gclid: gclid || undefined,
+        landingPage: (session.metadata?.landing_page as string) || undefined,
+        referrer: (session.metadata?.referrer as string) || undefined,
+        utmSource: (session.metadata?.utm_source as string) || undefined,
+        utmMedium: (session.metadata?.utm_medium as string) || undefined,
+        utmCampaign: (session.metadata?.utm_campaign as string) || undefined,
+        utmContent: (session.metadata?.utm_content as string) || undefined,
+        utmTerm: (session.metadata?.utm_term as string) || undefined,
+      },
       source: "smart-space.ie",
     });
 

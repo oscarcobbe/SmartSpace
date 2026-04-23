@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createBookingEvent } from "@/lib/calendly";
-import { logLead } from "@/lib/leads";
+import { logLead, type AttributionRecord } from "@/lib/leads";
 
 interface CartItem {
   productId: string;
@@ -24,7 +24,8 @@ interface CustomerDetails {
 interface FreeCheckoutBody {
   items: CartItem[];
   customer?: CustomerDetails;
-  gclid?: string;
+  attribution?: AttributionRecord;
+  gclid?: string; // legacy
 }
 
 
@@ -39,7 +40,8 @@ function escapeHtml(text: string) {
 
 export async function POST(request: Request) {
   try {
-    const { items, customer, gclid }: FreeCheckoutBody = await request.json();
+    const { items, customer, attribution, gclid }: FreeCheckoutBody = await request.json();
+    const finalAttribution = attribution ?? (gclid ? { gclid } : undefined);
 
     if (!items || items.length === 0) {
       return NextResponse.json({ error: "No items provided" }, { status: 400 });
@@ -123,7 +125,7 @@ export async function POST(request: Request) {
       currency: "EUR",
       bookingDate: bookedItem?.bookingLabel || bookedItem?.bookingDate,
       bookingSlot: bookedItem?.bookingSlot,
-      gclid: gclid?.trim() || undefined,
+      attribution: finalAttribution,
       source: "smart-space.ie",
     });
 
