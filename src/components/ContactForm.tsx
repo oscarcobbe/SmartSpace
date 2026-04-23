@@ -3,12 +3,13 @@
 import { useState, FormEvent } from "react";
 import { Send, Check } from "lucide-react";
 import Script from "next/script";
+import { getStoredGclid } from "@/lib/gclid";
 
 export default function ContactForm() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fireConversion, setFireConversion] = useState(false);
+  const [conversionData, setConversionData] = useState<{ email: string; phone: string } | null>(null);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -22,6 +23,7 @@ export default function ContactForm() {
       phone: (form.elements.namedItem("phone") as HTMLInputElement).value,
       subject: (form.elements.namedItem("subject") as HTMLSelectElement).value,
       message: (form.elements.namedItem("message") as HTMLTextAreaElement).value,
+      gclid: getStoredGclid() ?? undefined,
     };
 
     try {
@@ -37,7 +39,7 @@ export default function ContactForm() {
         return;
       }
       setSubmitted(true);
-      setFireConversion(true);
+      setConversionData({ email: data.email, phone: data.phone });
     } catch {
       setError("Failed to send message. Please try again.");
     } finally {
@@ -46,20 +48,33 @@ export default function ContactForm() {
   };
 
   if (submitted) {
+    // Enhanced conversions — pass user data so Google can stitch identity
+    // even when cookies are blocked. Google hashes these client-side.
+    const enhancedPayload = conversionData
+      ? JSON.stringify({
+          send_to: "AW-17978501655/u8cHCNyipZocEJfU6PxC",
+          value: 10.0,
+          currency: "EUR",
+          user_data: {
+            email_address: conversionData.email,
+            phone_number: conversionData.phone,
+          },
+        })
+      : "null";
     return (
       <div className="text-center py-10">
-        {fireConversion && (
+        {conversionData && (
           <Script
             id="gads-contact-conversion"
             strategy="afterInteractive"
             dangerouslySetInnerHTML={{
               __html: `
                 if (typeof gtag === 'function') {
-                  gtag('event', 'conversion', {
-                    send_to: 'AW-17978501655/u8cHCNyipZocEJfU6PxC',
-                    value: 10.0,
-                    currency: 'EUR'
+                  gtag('set', 'user_data', {
+                    email: ${JSON.stringify(conversionData.email)},
+                    phone_number: ${JSON.stringify(conversionData.phone)}
                   });
+                  gtag('event', 'conversion', ${enhancedPayload});
                   console.log('[gtag] contact form conversion fired');
                 }
               `,

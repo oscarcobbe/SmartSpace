@@ -35,7 +35,10 @@ export async function GET(request: Request) {
     const paid = session.payment_status === "paid";
     const amount = typeof session.amount_total === "number" ? session.amount_total / 100 : 0;
     const currency = (session.currency ?? "eur").toUpperCase();
-    return NextResponse.json({ paid, amount, currency });
+    // Email / phone for enhanced conversions on the success page
+    const email = session.customer_details?.email ?? undefined;
+    const phone = session.customer_details?.phone ?? undefined;
+    return NextResponse.json({ paid, amount, currency, email, phone });
   } catch (err) {
     console.error("[verify-session] error:", err);
     return NextResponse.json({ error: "Verification failed" }, { status: 500 });

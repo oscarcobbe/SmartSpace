@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { uploadConversion, lookupGclidByEmail } from "@/lib/conversions";
 import { createBookingEvent } from "@/lib/calendly";
 import { logLead } from "@/lib/leads";
 
@@ -57,40 +56,15 @@ export async function POST(req: NextRequest) {
     const amountTotal: number = (session.amount_total ?? 0) / 100; // pence → €
     const currency: string = (session.currency ?? "eur").toUpperCase();
     const sessionId: string = session.id;
+    const gclid: string = (session.metadata?.gclid as string) ?? "";
 
-    // Look for GCLID in session metadata first, then fall back to email lookup
-    let gclid: string = (session.metadata?.gclid as string) ?? "";
-    if (!gclid && email) {
-      gclid = (await lookupGclidByEmail(email)) ?? "";
-    }
-
-    if (gclid) {
-      await uploadConversion({
-        gclid,
-        email,
-        conversion_name: "Specialist Payment",
-        conversion_value: amountTotal,
-        conversion_time: new Date().toISOString(),
-        transaction_id: sessionId,
-        currency,
-      });
-      console.log(
-        `[stripe] conversion uploaded – session=${sessionId} gclid=${gclid} value=${amountTotal} ${currency}`
-      );
-    } else {
-      console.log(
-        `[stripe] no gclid for session=${sessionId} email=${email}`
-      );
-    }
-
-    // Create Calendly booking if booking date/slot present in metadata
     const bookingDate = session.metadata?.booking_date;
     const bookingSlot = session.metadata?.booking_slot;
     const productName = session.metadata?.product_name ?? "Installation";
     const customerName = session.customer_details?.name ?? email.split("@")[0];
     const phone = session.customer_details?.phone ?? "";
 
-    // Log paid order to tracking sheet
+    // Log paid order to tracking sheet (fire-and-forget — never blocks the webhook)
     logLead({
       type: "Paid Order",
       name: customerName,

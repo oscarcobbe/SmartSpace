@@ -27,6 +27,8 @@ interface FreeCheckoutBody {
   gclid?: string;
 }
 
+
+
 function escapeHtml(text: string) {
   return text
     .replace(/&/g, "&amp;")
@@ -37,7 +39,7 @@ function escapeHtml(text: string) {
 
 export async function POST(request: Request) {
   try {
-    const { items, customer }: FreeCheckoutBody = await request.json();
+    const { items, customer, gclid }: FreeCheckoutBody = await request.json();
 
     if (!items || items.length === 0) {
       return NextResponse.json({ error: "No items provided" }, { status: 400 });
@@ -109,7 +111,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // Log to tracking sheet
+    // Log to tracking sheet (fire-and-forget — never blocks the user flow)
     logLead({
       type: "Free Consultation",
       name: customer?.name,
@@ -121,6 +123,7 @@ export async function POST(request: Request) {
       currency: "EUR",
       bookingDate: bookedItem?.bookingLabel || bookedItem?.bookingDate,
       bookingSlot: bookedItem?.bookingSlot,
+      gclid: gclid?.trim() || undefined,
       source: "smart-space.ie",
     });
 

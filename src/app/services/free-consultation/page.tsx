@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ClipboardCheck, Home, MessageCircle, Lightbulb, Shield, Star, Wrench, Award, Loader2 } from "lucide-react";
 import BookingCalendar from "@/components/BookingCalendar";
+import { getStoredGclid } from "@/lib/gclid";
 
 const benefits = [
   {
@@ -72,11 +73,18 @@ export default function FreeConsultationPage() {
             phone: phone.trim(),
             address: address.trim(),
           },
+          gclid: getStoredGclid() ?? undefined,
         }),
       });
       const data = await res.json();
       if (data.success) {
-        window.location.href = "/smartspace-payment-success?free=true";
+        // Pass identity data to the success page for enhanced conversions
+        const params = new URLSearchParams({
+          free: "true",
+          e: email.trim(),
+          p: phone.trim(),
+        });
+        window.location.href = `/smartspace-payment-success?${params.toString()}`;
       } else {
         setError(data.error ?? "Booking failed. Please try again.");
         setSubmitting(false);

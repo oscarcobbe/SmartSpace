@@ -1,14 +1,12 @@
 /**
- * Lead tracking — logs every booking, order, and enquiry to Google Sheets.
+ * Lead tracking — POSTs every booking, order, and enquiry to a Google Apps
+ * Script webhook, which appends a row to the "Smart Space Leads" sheet.
  *
- * Requires env vars:
- *   GOOGLE_SHEET_ID           — the spreadsheet ID from the URL
- *   GOOGLE_SERVICE_ACCOUNT_EMAIL — service account email
- *   GOOGLE_SERVICE_ACCOUNT_KEY   — private key (with \n line breaks)
+ * Requires env var:
+ *   GOOGLE_SHEET_WEBHOOK_URL — the deployed Apps Script web-app URL
+ *
+ * The expected payload shape matches google-apps-script.js (doPost).
  */
-
-import { GoogleSpreadsheet } from "google-spreadsheet";
-import { JWT } from "google-auth-library";
 
 export interface LeadRecord {
   type: "Free Consultation" | "Paid Order" | "Contact Enquiry" | "Newsletter Signup";
@@ -27,64 +25,25 @@ export interface LeadRecord {
   notes?: string;
 }
 
-/** Log a lead/order to Google Sheets. Fire-and-forget — never blocks checkout. */
+/** Log a lead/order via the Apps Script webhook. Fire-and-forget — never blocks the user flow. */
 export async function logLead(record: LeadRecord): Promise<void> {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY?.replace(/\\n/g, "\n");
-
-  if (!sheetId || !clientEmail || !privateKey) {
-    console.warn("[leads] Google Sheets not configured — skipping lead log");
+  const url = process.env.GOOGLE_SHEET_WEBHOOK_URL;
+  if (!url) {
+    console.warn("[leads] GOOGLE_SHEET_WEBHOOK_URL not set — skipping lead log");
     return;
   }
 
   try {
-    const auth = new JWT({
-      email: clientEmail,
-      key: privateKey,
-      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...record, timestamp: new Date().toISOString() }),
+      // Apps Script web apps don't do CORS; keep the request simple
+      cache: "no-store",
     });
-
-    const doc = new GoogleSpreadsheet(sheetId, auth);
-    await doc.loadInfo();
-
-    let sheet = doc.sheetsByTitle["Leads"];
-    if (!sheet) {
-      sheet = await doc.addSheet({
-        title: "Leads",
-        headerValues: [
-          "Date", "Type", "Name", "Email", "Phone", "Address",
-          "Product", "Amount", "Currency", "Booking Date", "Booking Slot",
-          "Order ID", "Source", "Notes", "Status", "GCLID",
-        ],
-      });
+    if (!res.ok) {
+      console.error(`[leads] webhook responded ${res.status} ${res.statusText}`);
     }
-
-    const now = new Date();
-    const dublinDate = now.toLocaleString("en-GB", {
-      timeZone: "Europe/Dublin",
-      day: "2-digit", month: "2-digit", year: "numeric",
-      hour: "2-digit", minute: "2-digit", hour12: false,
-    });
-
-    await sheet.addRow({
-      Date: dublinDate,
-      Type: record.type,
-      Name: record.name || "",
-      Email: record.email || "",
-      Phone: record.phone || "",
-      Address: record.address || "",
-      Product: record.product || "",
-      Amount: record.amount !== undefined ? record.amount : "",
-      Currency: record.currency || "",
-      "Booking Date": record.bookingDate || "",
-      "Booking Slot": record.bookingSlot || "",
-      "Order ID": record.orderId || "",
-      Source: record.source || "",
-      Notes: record.notes || "",
-      Status: "New",
-      GCLID: record.gclid || "",
-    });
   } catch (err) {
     // Never let tracking failures break the user flow
     console.error("[leads] Failed to log lead:", err);
