@@ -82,7 +82,7 @@ export default function CategoryCards() {
                 </>
               )}
               <div className="relative flex flex-col flex-1">
-                <h3 className="text-xl font-bold text-ink mb-2 tracking-[-0.02em] leading-snug min-h-[3.5rem]">{pkg.name}</h3>
+                <h3 className="text-xl font-bold text-ink mb-2 tracking-[-0.02em] leading-snug h-14 overflow-hidden">{pkg.name}</h3>
                 <div className={`text-3xl sm:text-4xl font-extrabold mb-7 tracking-[-0.03em] ${pkg.popular ? "gradient-text-brand" : "text-brand-500"}`}>
                   {pkg.price}
                 </div>

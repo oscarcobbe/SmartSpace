@@ -21,7 +21,7 @@ export default function Hero() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="fade-up inline-flex items-center gap-2 bg-white/60 backdrop-blur-md border border-white/40 text-[#1a1a1a] text-[11px] font-semibold px-3 py-1.5 rounded-full uppercase tracking-[0.15em] mb-5 shadow-sm">
             <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" />
-            Dublin&apos;s #1 5-Star Ring Installer
+            Dublin&apos;s #1 <span className="tracking-normal">5-Star</span> Ring Installer
           </div>
           <h1 className="fade-up-delay-1 text-[2rem] sm:text-5xl lg:text-[3.75rem] font-extrabold text-[#1C1A18] leading-[1.02] tracking-[-0.04em] mb-3 sm:mb-5">
             Expertly Installed.<br className="hidden sm:block" /> Perfectly Secured.

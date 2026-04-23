@@ -58,8 +58,18 @@ export default function ServiceDetailPage() {
           return;
         }
         setProduct(p);
+        // Only show related products we have curated local images for — avoids
+        // showing cards with broken Shopify image links to legacy products.
+        const curatedHandles = new Set([
+          "plus-video-doorbell", "pro-video-doorbell",
+          "plus-floodlight-cam", "pro-floodlight-cam",
+          "plus-driveway-bundle", "pro-driveway-bundle",
+          "plus-whole-home-bundle", "pro-whole-home-bundle",
+          "eldercare-security-bundle",
+        ]);
         const related = all
           .filter((r) => r.productType === p.productType && r.handle !== p.handle)
+          .filter((r) => curatedHandles.has(r.handle))
           .slice(0, 4);
         setRelatedProducts(related);
       })
@@ -291,7 +301,7 @@ export default function ServiceDetailPage() {
                         {displayLabel}{isColour && selectedVal ? `: ${selectedVal}` : ""}
                       </label>
                       {helpText && (
-                        <p className="text-xs text-gray-400 mb-2">{helpText}</p>
+                        <p className="text-xs text-gray-600 mb-2">{helpText}</p>
                       )}
                       {isColour ? (
                         <div className="flex flex-wrap gap-3">
@@ -442,7 +452,10 @@ export default function ServiceDetailPage() {
               ))}
             </div>
           </section>
-        ) : product.descriptionHtml ? (
+        ) : !features && product.descriptionHtml ? (
+          // Only show raw Shopify "Product Details" if there's no curated
+          // feature set. Bundles intentionally have an empty specs object so
+          // neither section renders.
           <section className="mt-16 lg:mt-24">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1a1a1a] mb-8">Product Details</h2>
             <div

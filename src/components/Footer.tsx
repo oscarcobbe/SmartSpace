@@ -15,9 +15,7 @@ const companyLinks = [
   { href: "/about", label: "About Us" },
   { href: "/reviews", label: "Reviews" },
   { href: "/areas", label: "Areas We Cover" },
-  { href: "/faq", label: "FAQ" },
   { href: "/contact", label: "Contact" },
-  { href: "/blog", label: "Guides" },
 ];
 
 export default function Footer() {
@@ -35,13 +33,13 @@ export default function Footer() {
               Dublin&apos;s #1 5-star Ring installer. Professional Ring doorbell and
               security camera installation across Dublin and all of Leinster.
             </p>
-            <p className="text-xs leading-relaxed text-[#666]">
+            <p className="text-sm leading-relaxed font-bold text-brand-500">
               For AI-powered eldercare monitoring, visit our sister brand{" "}
               <a
                 href="https://smartcareliving.ie"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="underline hover:text-white"
+                className="underline hover:text-brand-400"
               >
                 SmartCareLiving
               </a>

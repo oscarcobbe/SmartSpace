@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getProductById } from "@/data/products";
+import { getProductByHandle } from "@/lib/shopify";
 
 interface CartItem {
   productId: string;
@@ -29,38 +29,53 @@ interface ResolvedItem {
 }
 
 /**
- * Resolve every cart item against the local product catalog. NEVER trusts
- * the client-submitted price or name — uses src/data/products.ts as the
- * authoritative source. Fails the whole checkout if any product is unknown
- * or has an invalid quantity.
+ * Resolve every cart item against Shopify's Storefront API. NEVER trusts the
+ * client-submitted name — uses Shopify's canonical title. Verifies the
+ * submitted price is within the product's variant price range (with a small
+ * tolerance for rounding). Fails the whole checkout if any product is unknown
+ * or the price is out of range.
  */
-function resolveItems(items: CartItem[]): ResolvedItem[] {
-  return items.map((item) => {
+async function resolveItems(items: CartItem[]): Promise<ResolvedItem[]> {
+  const resolved: ResolvedItem[] = [];
+  for (const item of items) {
     if (!item.productId || !Number.isFinite(item.quantity) || item.quantity <= 0 || item.quantity > 20) {
       throw new Error(`Invalid quantity for item ${item.productId}`);
     }
+    if (!Number.isFinite(item.price) || item.price <= 0 || item.price > 20_000) {
+      throw new Error(`Invalid price for item ${item.productId}`);
+    }
 
-    const product = getProductById(item.productId);
+    const product = await getProductByHandle(item.productId);
     if (!product) {
       throw new Error(`Unknown product: ${item.productId}`);
     }
 
-    const authoritativeCents = Math.round(product.price * 100);
-    if (authoritativeCents <= 0 || authoritativeCents > 20_000_00) {
-      throw new Error(`Price out of bounds for ${item.productId}`);
+    // Verify the submitted price is within the product's variant range
+    // (prevents a manipulated client from sending e.g. €1 for a €500 bundle).
+    // Allow a 5% tolerance either side to absorb rounding / price updates
+    // mid-session.
+    const minPrice = parseFloat(product.priceRange.minVariantPrice.amount);
+    const maxPrice = parseFloat(product.priceRange.maxVariantPrice.amount);
+    if (item.price < minPrice * 0.95 || item.price > maxPrice * 1.05) {
+      throw new Error(
+        `Price out of range for ${item.productId}: submitted €${item.price}, expected €${minPrice}–€${maxPrice}`
+      );
     }
 
-    return {
-      id: product.id,
-      title: product.name, // server-side name, never client-submitted
+    const authoritativeCents = Math.round(item.price * 100);
+
+    resolved.push({
+      id: item.productId,
+      title: product.title, // server-side title, never client-submitted
       unitAmountCents: authoritativeCents,
       quantity: item.quantity,
       image: item.image?.startsWith("https://") ? item.image : "",
       bookingDate: item.bookingDate,
       bookingSlot: item.bookingSlot,
       bookingLabel: item.bookingLabel,
-    };
-  });
+    });
+  }
+  return resolved;
 }
 
 export async function POST(request: Request) {
@@ -73,7 +88,7 @@ export async function POST(request: Request) {
 
     let resolved: ResolvedItem[];
     try {
-      resolved = resolveItems(items);
+      resolved = await resolveItems(items);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Invalid items";
       console.error("[checkout] item resolution failed:", msg);

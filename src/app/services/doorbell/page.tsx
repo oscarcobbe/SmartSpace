@@ -111,7 +111,14 @@ export default function DoorbellServicePage() {
                       )}
                     </div>
                     <ul className="space-y-1.5 mb-4">
-                      {["Professional installation", "Ring Chime included", "App setup & config"].map((f) => (
+                      {[
+                        product.handle === "pro-video-doorbell"
+                          ? "Retinal 4K image quality"
+                          : "Retinal 2K image quality",
+                        "Professional installation",
+                        "Ring Chime included",
+                        "App setup & config",
+                      ].map((f) => (
                         <li key={f} className="flex items-center gap-2 text-xs text-gray-500">
                           <Check className="h-3.5 w-3.5 text-brand-500 flex-shrink-0" />
                           {f}

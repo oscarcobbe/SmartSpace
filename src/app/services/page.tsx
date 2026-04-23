@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getAllProducts, ShopifyProduct } from "@/lib/shopify";
 import { getProductImage } from "@/data/productImages";
 import { ArrowRight } from "lucide-react";
+import FreeConsultationCTA from "@/components/FreeConsultationCTA";
 
 const serviceCategories = [
   {
@@ -17,7 +18,8 @@ const serviceCategories = [
     title: "Floodlight Cameras",
     description: "Powerful floodlight cameras for driveways, gardens, and entrances.",
     href: "/services/camera",
-    filter: (p: ShopifyProduct) => ["plus-floodlight-cam", "pro-floodlight-cam"].includes(p.handle),
+    filter: (p: ShopifyProduct) => p.handle === "pro-floodlight-cam",
+    staticImage: "/products/pro-floodlight-black.png",
   },
   {
     title: "Driveway Bundle",
@@ -35,18 +37,18 @@ const serviceCategories = [
     imageClass: "max-h-[70%] max-w-[70%]",
   },
   {
+    title: "Eldercare Bundle",
+    description: "Doorbell + smart keybox for elderly relatives and carer access.",
+    href: "/services/bundles/eldercare",
+    filter: (p: ShopifyProduct) => p.handle === "eldercare-security-bundle",
+    staticImage: "/products/Eldercare bundle.png",
+  },
+  {
     title: "Installation Only",
     description: "Already have a Ring, Eufy, Nest or Tapo device? We'll install it.",
     href: "/services/installation-only",
     filter: () => false,
     staticImage: "/products/installation.png",
-  },
-  {
-    title: "Free Consultation",
-    description: "Not sure what you need? Book a free home visit — no obligation.",
-    href: "/services/free-consultation",
-    filter: () => false,
-    staticImage: "/products/consultation.jpg",
   },
 ];
 
@@ -120,6 +122,11 @@ export default function ServicesPage() {
             })}
           </div>
         )}
+      </div>
+
+      {/* Complimentary consultation */}
+      <div className="mt-8">
+        <FreeConsultationCTA />
       </div>
     </div>
   );

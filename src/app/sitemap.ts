@@ -28,13 +28,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/reviews`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
     { url: `${BASE}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${BASE}/faq`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
 
-    // Blog
-    { url: `${BASE}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
-    { url: `${BASE}/blog/ring-doorbell-installation-ireland-guide`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${BASE}/blog/home-security-cameras-ireland-buyers-guide`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${BASE}/blog/smart-doorbell-vs-traditional-intercom-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    // /faq and /blog/* intentionally omitted — pages still accessible by
+    // direct link but withheld from search until content is refreshed.
   ];
 
   return staticRoutes;

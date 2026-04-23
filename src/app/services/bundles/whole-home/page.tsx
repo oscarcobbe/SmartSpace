@@ -107,7 +107,14 @@ export default function WholeHomeBundlePage() {
                       )}
                     </div>
                     <ul className="space-y-1.5 mb-4">
-                      {["Doorbell + 2x Floodlights", "Full professional installation", "Network optimisation"].map((f) => (
+                      {[
+                        product.handle === "pro-whole-home-bundle"
+                          ? "All Retinal 4K image quality"
+                          : "2K & 1080p image quality",
+                        "Doorbell + 2x Floodlights",
+                        "Full professional installation",
+                        "Network optimisation",
+                      ].map((f) => (
                         <li key={f} className="flex items-center gap-2 text-xs text-gray-500">
                           <Check className="h-3.5 w-3.5 text-brand-500 flex-shrink-0" />
                           {f}

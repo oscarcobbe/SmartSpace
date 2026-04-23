@@ -43,8 +43,8 @@ export default function EldercareBundlePage() {
           <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-3">
             Eldercare Bundle
           </h1>
-          <p className="text-gray-500 max-w-2xl">
-            A Basic Ring Video Doorbell + Digital Lockbox — designed for elderly relatives and their carers. See who&apos;s at the door and provide secure key access.
+          <p className="text-gray-700 max-w-2xl">
+            The Basic Ring Video Doorbell Plus + Digital Lockbox — designed for elderly relatives and their carers. See who&apos;s at the door and provide secure key access.
           </p>
         </div>
 
@@ -56,7 +56,7 @@ export default function EldercareBundlePage() {
           </div>
           <ul className="grid sm:grid-cols-2 gap-2">
             {[
-              "Basic Ring Video Doorbell supplied & installed",
+              "Basic Video Doorbell Plus supplied and installed",
               "Digital Lockbox for carer access",
               "Ring Chime included",
               "App setup for family members",
