@@ -5,6 +5,7 @@ import PromoBanner from "@/components/PromoBanner";
 import WholeHomeSection from "@/components/WholeHomeSection";
 import MailingList from "@/components/MailingList";
 import ReviewsSurfacing from "@/components/ReviewsSurfacing";
+import FreeConsultationCTA from "@/components/FreeConsultationCTA";
 
 export default function Home() {
   return (
@@ -12,6 +13,7 @@ export default function Home() {
       <Hero />
       <ReviewsSurfacing />
       <CategoryCards />
+      <FreeConsultationCTA />
       <FeaturedProducts />
       <PromoBanner />
       <WholeHomeSection />

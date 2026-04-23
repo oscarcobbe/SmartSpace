@@ -29,7 +29,7 @@ const packages = [
     href: "/services/bundles",
   },
   {
-    name: "Installation-Only & Other Brands",
+    name: "Installation-Only of Ring & Other Smart Brands",
     price: "From €139",
     features: [
       "Your existing device installed",
@@ -66,7 +66,7 @@ export default function CategoryCards() {
           {packages.map((pkg) => (
             <div
               key={pkg.name}
-              className={`card-lift group relative bg-white rounded-3xl p-7 sm:p-9 ${
+              className={`card-lift group relative bg-white rounded-3xl p-7 sm:p-9 flex flex-col ${
                 pkg.popular
                   ? "shadow-[0_30px_70px_-20px_rgba(242,100,25,0.35)] border-2 border-brand-500 md:-mt-4 md:mb-4"
                   : "shadow-premium hover:shadow-premium-lg border border-gray-100/80"
@@ -81,13 +81,13 @@ export default function CategoryCards() {
                   </span>
                 </>
               )}
-              <div className="relative">
-                <h3 className="text-xl font-bold text-ink mb-2 tracking-[-0.02em] leading-snug">{pkg.name}</h3>
+              <div className="relative flex flex-col flex-1">
+                <h3 className="text-xl font-bold text-ink mb-2 tracking-[-0.02em] leading-snug min-h-[3.5rem]">{pkg.name}</h3>
                 <div className={`text-3xl sm:text-4xl font-extrabold mb-7 tracking-[-0.03em] ${pkg.popular ? "gradient-text-brand" : "text-brand-500"}`}>
                   {pkg.price}
                 </div>
                 <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-6" />
-                <ul className="space-y-3.5 mb-8">
+                <ul className="space-y-3.5 mb-8 flex-1">
                   {pkg.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-3 text-[13.5px] text-ink-soft leading-relaxed">
                       <span className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full bg-brand-500/10 flex items-center justify-center">

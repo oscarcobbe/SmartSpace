@@ -13,7 +13,7 @@ const bundles = [
     name: "Driveway Bundle",
     description: "Video Doorbell + Floodlight Cam",
     price: "From €658",
-    image: "/products/plus-driveway-black.png",
+    image: "/products/pro-driveway-black.png",
     features: [
       "Ring Video Doorbell supplied & installed",
       "Ring Floodlight Cam supplied & installed",
@@ -29,7 +29,7 @@ const bundles = [
     description: "Video Doorbell + 2x Floodlight Cams",
     price: "From €987",
     popular: true,
-    image: "/products/plus-wholehome-black-black.png",
+    image: "/products/pro-wholehome-black-black.png",
     features: [
       "Ring Video Doorbell supplied & installed",
       "2x Ring Floodlight Cams (front & rear)",

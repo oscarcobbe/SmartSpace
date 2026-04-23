@@ -4,7 +4,7 @@
 // ── New product lineup (from Excel) ──
 export const ringStockImages: Record<string, string> = {
   // Single Doorbells
-  "plus-video-doorbell": "/products/plus-video-doorbell.png",
+  "plus-video-doorbell": "/products/plus-video-doorbell.jpg",
   "pro-video-doorbell": "/products/pro-video-doorbell.png",
 
   // Single Floodlights (default = black)
