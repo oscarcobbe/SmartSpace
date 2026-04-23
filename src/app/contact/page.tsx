@@ -7,7 +7,7 @@ const SITE = "https://smart-space.ie";
 export const metadata: Metadata = {
   title: "Contact Us | Smart Space — Dublin's #1 Ring Installer",
   description:
-    "Get in touch with Smart Space for Ring doorbell and security camera installation. Serving Dublin and all of Leinster. Call 01 513 0424 or email info@smart-space.ie.",
+    "Contact Smart Space for Ring installation in Dublin and Leinster. Call 01 513 0424 or email info@smart-space.ie.",
   alternates: { canonical: "/contact" },
   openGraph: {
     title: "Contact Smart Space | Dublin's #1 Ring Installer",

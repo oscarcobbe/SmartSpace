@@ -10,12 +10,10 @@ const SITE = "https://smart-space.ie";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
-  title: {
-    default: "Smart Space | Dublin's #1 5-Star Ring Installer — Serving Leinster",
-    template: "%s | Smart Space",
-  },
+  // Homepage title only; each page below sets its own complete title.
+  title: "Smart Space | Dublin's #1 5-Star Ring Installer",
   description:
-    "Dublin's only 5-star Ring installer. Professional Ring doorbell and security camera installation across Dublin and all of Leinster. 5,000+ installations, SME Winner 2025.",
+    "Dublin's only 5-star Ring installer. Professional Ring doorbell and security camera installation across Dublin and Leinster. 5,000+ installations, SME Winner 2025.",
   keywords:
     "Ring installer Dublin, Ring doorbell installation Dublin, Ring camera Dublin, Ring installer Leinster, smart home Dublin, security camera installation Ireland",
   alternates: { canonical: "/" },
@@ -23,7 +21,7 @@ export const metadata: Metadata = {
     type: "website",
     url: SITE,
     siteName: "Smart Space",
-    title: "Smart Space | Dublin's #1 5-Star Ring Installer — Serving Leinster",
+    title: "Smart Space | Dublin's #1 5-Star Ring Installer",
     description:
       "Professional Ring doorbell and security camera installation across Dublin and Leinster. 5,000+ installations, SME Winner 2025.",
     locale: "en_IE",

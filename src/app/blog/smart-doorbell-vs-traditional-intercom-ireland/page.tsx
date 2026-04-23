@@ -7,11 +7,11 @@ const SITE = "https://smart-space.ie";
 const post = getPostBySlug("smart-doorbell-vs-traditional-intercom-ireland")!;
 
 export const metadata: Metadata = {
-  title: post.title,
+  title: `${post.title} | Smart Space`,
   description: post.description,
   alternates: { canonical: `/blog/${post.slug}` },
   openGraph: {
-    title: post.title,
+    title: `${post.title} | Smart Space`,
     description: post.description,
     url: `${SITE}/blog/${post.slug}`,
     type: "article",

@@ -5,9 +5,9 @@ import { MapPin, ArrowRight, Phone, Mail } from "lucide-react";
 const SITE = "https://smart-space.ie";
 
 export const metadata: Metadata = {
-  title: "Areas We Cover | Ring Installation Dublin & Leinster | Smart Space",
+  title: "Areas We Cover | Ring Installation Across Leinster | Smart Space",
   description:
-    "Smart Space installs Ring doorbells and cameras across all 12 counties of Leinster — Dublin, Wicklow, Kildare, Meath, Louth, Wexford, Carlow, Kilkenny, Laois, Offaly, Westmeath and Longford.",
+    "Smart Space installs Ring doorbells and cameras across all 12 counties of Leinster — Dublin, Wicklow, Kildare, Meath, Louth, Wexford and more.",
   alternates: { canonical: "/areas" },
   openGraph: {
     title: "Ring Installation Across Leinster | Smart Space",

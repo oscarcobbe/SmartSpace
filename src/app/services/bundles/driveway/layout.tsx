@@ -5,7 +5,7 @@ const SITE = "https://smart-space.ie";
 export const metadata: Metadata = {
   title: "Ring Driveway Bundle Installation | Dublin & Leinster | Smart Space",
   description:
-    "Ring Driveway Bundle installation — Video Doorbell plus Floodlight Cam, supplied and professionally installed across Dublin and Leinster. Save €50. From €658.",
+    "Ring Driveway Bundle — Video Doorbell plus Floodlight Cam, installed across Dublin and Leinster. Save €50. From €658.",
   alternates: { canonical: "/services/bundles/driveway" },
   openGraph: {
     title: "Ring Driveway Bundle | Dublin & Leinster Installation",

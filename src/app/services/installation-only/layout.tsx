@@ -5,7 +5,7 @@ const SITE = "https://smart-space.ie";
 export const metadata: Metadata = {
   title: "Installation Only — Ring, Eufy, Nest & Tapo | Dublin & Leinster | Smart Space",
   description:
-    "Already bought a Ring, Eufy, Nest or Tapo device? We'll install it for you across Dublin and Leinster. Professional mounting, wiring, and app setup. From €139.",
+    "Already bought a Ring, Eufy, Nest or Tapo device? We'll install it across Dublin and Leinster. Mounting, wiring, app setup. From €139.",
   alternates: { canonical: "/services/installation-only" },
   openGraph: {
     title: "Installation Only | Dublin & Leinster | Smart Space",

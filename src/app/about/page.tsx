@@ -5,9 +5,9 @@ import { ShieldCheck, Award, Users, MapPin, ArrowRight } from "lucide-react";
 const SITE = "https://smart-space.ie";
 
 export const metadata: Metadata = {
-  title: "About Smart Space | Dublin's #1 5-Star Ring Installer",
+  title: "About Smart Space | Dublin's #1 Ring Installer",
   description:
-    "Smart Space is Dublin's only 5-star Ring installer, serving all of Leinster. SME Business Winner 2025, 5,000+ installations, and a team of trained Ring specialists.",
+    "Smart Space is Dublin's only 5-star Ring installer, serving all of Leinster. SME Business Winner 2025 with 5,000+ installations.",
   alternates: { canonical: "/about" },
   openGraph: {
     title: "About Smart Space | Dublin's #1 5-Star Ring Installer",

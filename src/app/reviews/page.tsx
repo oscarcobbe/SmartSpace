@@ -5,9 +5,9 @@ import { Star } from "lucide-react";
 const SITE = "https://smart-space.ie";
 
 export const metadata: Metadata = {
-  title: "Reviews | Dublin's #1 5-Star Ring Installer",
+  title: "Reviews | Smart Space — Dublin's #1 Ring Installer",
   description:
-    "Read what customers say about Smart Space — Dublin's only 5-star Ring installer with 5,000+ installations across Dublin and Leinster.",
+    "See customer reviews for Smart Space. Rated 5.0 on Google. 5,000+ Ring installations across Dublin and Leinster.",
   alternates: { canonical: "/reviews" },
   openGraph: {
     title: "Reviews | Smart Space — Dublin's #1 5-Star Ring Installer",
