@@ -27,7 +27,7 @@ export default function Hero() {
             Expertly Installed.<br className="hidden sm:block" /> Perfectly Secured.
           </h1>
           <p className="fade-up-delay-2 text-[#3a352f] text-sm sm:text-lg max-w-lg mx-auto font-medium leading-relaxed">
-            Professional Ring doorbell and camera installation across Dublin and all of Leinster. 5,000+ installations completed.
+            Professional smart doorbell and security camera installation — Ring, Eufy, Nest &amp; Tapo — across Dublin and all of Leinster. 5,000+ installations completed.
           </p>
         </div>
       </div>
