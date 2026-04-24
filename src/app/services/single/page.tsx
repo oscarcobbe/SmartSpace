@@ -10,13 +10,13 @@ const choices = [
   {
     title: "Video Doorbell",
     description: "See, hear, and speak to anyone at your door. All installations include a Ring Chime.",
-    image: "https://eu.ring.com/cdn/shop/files/variant-16702725357591-en-eu_860x.png?v=1759386441",
+    image: "/products/pro-video-doorbell.png",
     href: "/services/doorbell",
   },
   {
     title: "External Camera",
     description: "Powerful floodlight cameras for driveways, gardens, and rear entrances.",
-    image: "https://eu.ring.com/cdn/shop/files/variant-28075982946327-en-eu.png?v=1773731654",
+    image: "/products/pro-floodlight-black.png",
     href: "/services/camera",
   },
 ];
