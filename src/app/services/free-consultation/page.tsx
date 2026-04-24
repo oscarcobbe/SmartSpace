@@ -97,32 +97,15 @@ export default function FreeConsultationPage() {
 
   return (
     <div className="pt-32 lg:pt-36">
-      {/* Hero */}
-      <section className="py-12 bg-white border-b border-gray-100">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 bg-green-50 text-green-700 text-sm font-semibold px-4 py-1.5 rounded-full mb-6">
-            <span className="w-2 h-2 bg-green-500 rounded-full" />
-            Complimentary — No Obligation
-          </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4">
-            Complimentary Home Consultation
-          </h1>
-          <p className="text-gray-500 text-lg max-w-2xl mx-auto">
-            Not sure what you need? We&apos;ll come to your home, assess your property, and give you an
-            honest recommendation with a written quote — completely complimentary.
-          </p>
-        </div>
-      </section>
-
       {/* Book */}
-      <section className="py-16 lg:py-24">
+      <section className="py-12 lg:py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4">
               Book Your Consultation
-            </h2>
+            </h1>
             <p className="text-gray-500 text-lg max-w-xl mx-auto">
-              Choose a day and time that suits you — we&apos;ll be there
+              Choose a day and time that suits you — we&apos;ll be there.
             </p>
           </div>
 
