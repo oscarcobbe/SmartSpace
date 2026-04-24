@@ -79,7 +79,7 @@ export default function ServiceDetailPage() {
 
   if (loading) {
     return (
-      <div className="pt-40 flex justify-center py-20">
+      <div className="pt-28 sm:pt-40 flex justify-center py-20">
         <div className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -87,7 +87,7 @@ export default function ServiceDetailPage() {
 
   if (notFound || !product) {
     return (
-      <div className="pt-40 text-center py-20">
+      <div className="pt-28 sm:pt-40 text-center py-20">
         <h1 className="text-2xl font-bold text-[#1a1a1a] mb-4">Product not found</h1>
         <Link href="/services" className="text-brand-500 hover:underline">Back to Services</Link>
       </div>
@@ -137,10 +137,10 @@ export default function ServiceDetailPage() {
   const features = getProductFeatures(product.handle, product.productType);
 
   return (
-    <div className="pt-40 pb-20">
+    <div className="pt-28 sm:pt-40 pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 text-sm text-gray-400 mb-8">
+        {/* Breadcrumbs — horizontal scroll on mobile so they don't wrap */}
+        <nav className="flex items-center gap-2 text-sm text-gray-400 mb-8 overflow-x-auto whitespace-nowrap scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
           <Link href="/" className="hover:text-brand-500 transition-colors">Home</Link>
           <span>/</span>
           <Link href="/services" className="hover:text-brand-500 transition-colors">Services</Link>
@@ -153,7 +153,7 @@ export default function ServiceDetailPage() {
             </>
           )}
           <span>/</span>
-          <span className="text-[#1a1a1a] font-medium truncate max-w-[200px]">{displayTitle(product.title)}</span>
+          <span className="text-[#1a1a1a] font-medium">{displayTitle(product.title)}</span>
         </nav>
 
         {/* Chime notice — show for all products except standalone floodlight cam packs */}
@@ -496,9 +496,11 @@ export default function ServiceDetailPage() {
         {relatedProducts.length > 0 && (
           <section className="mt-16 lg:mt-24 text-center">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1a1a1a] mb-8">You may also like</h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
               {relatedProducts.map((rp) => (
-                <ProductCard key={rp.id} product={rp} />
+                <div key={rp.id} className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] max-w-xs">
+                  <ProductCard product={rp} />
+                </div>
               ))}
             </div>
           </section>

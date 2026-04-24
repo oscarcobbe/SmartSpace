@@ -12,8 +12,10 @@ export default function Hero() {
         className="absolute inset-0 w-full h-full object-cover object-bottom"
       />
 
-      {/* Subtle gradient vignettes for depth */}
-      <div className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-white/70 via-white/20 to-transparent pointer-events-none z-[5]" />
+      {/* Gradient vignettes. Mobile uses a much stronger, taller top gradient
+          so the subhead sits on a readable surface. Desktop keeps the
+          original subtle fade. */}
+      <div className="absolute inset-x-0 top-0 h-[72%] sm:h-48 bg-gradient-to-b from-white/95 via-white/85 to-transparent sm:from-white/70 sm:via-white/20 pointer-events-none z-[5]" />
       <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white/40 to-transparent pointer-events-none z-[5]" />
 
       {/* Text — upper area */}
