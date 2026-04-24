@@ -81,7 +81,7 @@ export default function CategoryCards() {
                   </span>
                 </>
               )}
-              <div className="relative flex flex-col flex-1">
+              <div className="relative flex flex-col flex-1 text-center sm:text-left">
                 <h3 className="text-xl font-bold text-ink mb-2 tracking-[-0.02em] leading-snug h-14 overflow-hidden">{pkg.name}</h3>
                 <div className={`text-3xl sm:text-4xl font-extrabold mb-7 tracking-[-0.03em] ${pkg.popular ? "gradient-text-brand" : "text-brand-500"}`}>
                   {pkg.price}
@@ -89,7 +89,7 @@ export default function CategoryCards() {
                 <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-6" />
                 <ul className="space-y-3.5 mb-8 flex-1">
                   {pkg.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-3 text-[13.5px] text-ink-soft leading-relaxed">
+                    <li key={feature} className="flex items-start justify-center sm:justify-start gap-3 text-[13.5px] text-ink-soft leading-relaxed">
                       <span className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full bg-brand-500/10 flex items-center justify-center">
                         <Check className="h-3 w-3 text-brand-500" strokeWidth={3} />
                       </span>

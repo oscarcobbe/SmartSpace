@@ -38,7 +38,7 @@ export default function Hero() {
       <div className="fade-up-delay-3 absolute z-10 bottom-16 sm:bottom-32 lg:bottom-36 left-0 right-0 px-4 text-center">
         <Link
           href="/services/bundles"
-          className="btn-sheen group inline-flex items-center gap-2 bg-[#1a1a1a] hover:bg-black text-white font-semibold text-sm px-9 py-3.5 rounded-full transition-all shadow-[0_10px_40px_rgba(0,0,0,0.35)] hover:shadow-[0_20px_60px_rgba(0,0,0,0.45)] hover:-translate-y-0.5"
+          className="btn-sheen group inline-flex items-center gap-2 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-600 text-white font-semibold text-sm px-9 py-3.5 rounded-full transition-all shadow-[0_10px_40px_-5px_rgba(242,130,34,0.55)] hover:shadow-[0_20px_60px_-5px_rgba(242,130,34,0.7)] hover:-translate-y-0.5 pulse-glow"
         >
           <span className="relative z-10">View Popular Bundles</span>
           <ArrowRight className="relative z-10 w-4 h-4 transition-transform duration-500 group-hover:translate-x-1" />
