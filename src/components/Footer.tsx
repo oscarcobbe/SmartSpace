@@ -30,7 +30,7 @@ export default function Footer() {
               <img src="/Logo1.png" alt="Smart Space" className="h-10 w-auto brightness-0 invert" />
             </Link>
             <p className="text-sm leading-relaxed mb-4">
-              Dublin&apos;s #1 5-star Ring installer. Professional Ring doorbell and
+              Dublin&apos;s #1 Ring installer. Professional Ring doorbell and
               security camera installation across Dublin and all of Leinster.
             </p>
             <p className="text-sm leading-relaxed font-bold text-brand-500">
@@ -98,7 +98,7 @@ export default function Footer() {
       <div className="border-t border-[#333]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
           <p>&copy; {new Date().getFullYear()} Smart Space. All rights reserved.</p>
-          <p>Dublin&apos;s #1 5-Star Ring Installer — Serving All of Leinster</p>
+          <p>Dublin&apos;s #1 Ring Installer — Serving All of Leinster</p>
         </div>
       </div>
     </footer>

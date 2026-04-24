@@ -157,7 +157,7 @@ export default function DrivewayBundlePage() {
         {/* Trust Strip */}
         <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-gray-50 rounded-2xl">
           {[
-            { icon: Shield, text: "Dublin's #1 5★ Ring Installer" },
+            { icon: Shield, text: "Dublin's #1 Ring Installer" },
             { icon: Star, text: "5-Star Google Rating" },
             { icon: Wrench, text: "5,000+ Installations" },
             { icon: Award, text: "SME Winner 2025" },

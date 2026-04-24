@@ -68,7 +68,7 @@ draw.text((W - 80 - text_w, star_y + 30), rating_text, font=f_rating, fill=WHITE
 
 # ── Main content block ──
 y_eyebrow = 320
-draw.text((80, y_eyebrow), "DUBLIN'S #1 5-STAR RING INSTALLER", font=f_eyebrow, fill=ORANGE)
+draw.text((80, y_eyebrow), "DUBLIN'S #1 RING INSTALLER", font=f_eyebrow, fill=ORANGE)
 draw.text((80, y_eyebrow + 40), "Expertly Installed.", font=f_head, fill=WHITE)
 draw.text((80, y_eyebrow + 125), "Perfectly Secured.", font=f_head, fill=WHITE)
 

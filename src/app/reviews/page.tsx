@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     "See customer reviews for Smart Space. Rated 5 on Google. 5,000+ Ring installations across Dublin and Leinster.",
   alternates: { canonical: "/reviews" },
   openGraph: {
-    title: "Reviews | Smart Space — Dublin's #1 5-Star Ring Installer",
+    title: "Reviews | Smart Space — Dublin's #1 Ring Installer",
     description:
       "5 on Google · 5,000+ installations across Dublin and Leinster.",
     url: `${SITE}/reviews`,
@@ -154,7 +154,7 @@ export default function ReviewsPage() {
             Join 5,000+ happy customers
           </h2>
           <p className="text-gray-500 mb-6 max-w-lg mx-auto">
-            See why we&apos;re Dublin&apos;s #1 5-star Ring installer. Browse our services and book your installation today.
+            See why we&apos;re Dublin&apos;s #1 Ring installer. Browse our services and book your installation today.
           </p>
           <Link
             href="/services"

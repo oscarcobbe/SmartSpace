@@ -397,7 +397,7 @@ export default function ServiceDetailPage() {
             {/* ── Trust Strip ── */}
             <div className="grid grid-cols-2 gap-3 p-4 bg-gray-50 rounded-2xl">
               {[
-                { icon: Shield, text: "Dublin's #1 5★ Ring Installer" },
+                { icon: Shield, text: "Dublin's #1 Ring Installer" },
                 { icon: Star, text: "5-Star Google Rating" },
                 { icon: Wrench, text: "5,000+ Installations" },
                 { icon: Award, text: "SME Winner 2025" },

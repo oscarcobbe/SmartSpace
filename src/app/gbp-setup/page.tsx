@@ -68,7 +68,7 @@ export default function GbpSetupPage() {
 
         <h3>Description (paste this)</h3>
         <blockquote>
-          Smart Space is Dublin&apos;s #1 5-star Ring installer, serving all 12 counties of
+          Smart Space is Dublin&apos;s #1 Ring installer, serving all 12 counties of
           Leinster. We professionally install Ring Video Doorbells, Floodlight Cams, smart
           locks and home security cameras. Over 5,000 installations completed. Three Ireland
           SME Business Winner 2025. Free consultations, honest written quotes, and a clean,

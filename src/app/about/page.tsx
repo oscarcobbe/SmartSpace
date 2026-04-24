@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     "Smart Space is Dublin's only 5-star Ring installer, serving all of Leinster. SME Business Winner 2025 with 5,000+ installations.",
   alternates: { canonical: "/about" },
   openGraph: {
-    title: "About Smart Space | Dublin's #1 5-Star Ring Installer",
+    title: "About Smart Space | Dublin's #1 Ring Installer",
     description:
       "Dublin's only 5-star Ring installer. 5,000+ installations across Dublin and Leinster.",
     url: `${SITE}/about`,
@@ -47,7 +47,7 @@ export default function AboutPage() {
             We&apos;re Smart Space
           </h1>
           <p className="text-xl text-white/80 max-w-2xl mx-auto leading-relaxed">
-            Dublin&apos;s #1 5-star Ring installer, bringing professional smart home
+            Dublin&apos;s #1 Ring installer, bringing professional smart home
             security to homes across Dublin and all of Leinster.
           </p>
         </div>

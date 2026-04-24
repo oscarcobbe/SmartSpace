@@ -247,7 +247,7 @@ export default function FreeConsultationPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: Shield, text: "Dublin's #1 5\u2605 Ring Installer" },
+              { icon: Shield, text: "Dublin's #1 Ring Installer" },
               { icon: Star, text: "5-Star Google Rating" },
               { icon: Wrench, text: "5,000+ Installations" },
               { icon: Award, text: "SME Winner 2025" },
