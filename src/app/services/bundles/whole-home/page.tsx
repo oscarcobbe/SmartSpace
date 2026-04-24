@@ -1,30 +1,17 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getAllProducts, ShopifyProduct } from "@/lib/shopify";
-import { getProductImage } from "@/data/productImages";
 import { Check, Shield, Star, Wrench, Award } from "lucide-react";
+import { getAllProducts } from "@/lib/shopify";
+import { getProductImage } from "@/data/productImages";
 
 function formatPrice(amount: string, currencyCode: string) {
   return new Intl.NumberFormat("en-IE", { style: "currency", currency: currencyCode }).format(parseFloat(amount));
 }
 
-export default function WholeHomeBundlePage() {
-  const [products, setProducts] = useState<ShopifyProduct[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getAllProducts()
-      .then((all) => {
-        const wholeHome = all.filter(
-          (p) => p.handle === "plus-whole-home-bundle" || p.handle === "pro-whole-home-bundle"
-        );
-        setProducts(wholeHome);
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+export default async function WholeHomeBundlePage() {
+  const all = await getAllProducts();
+  const products = all.filter(
+    (p) => p.handle === "plus-whole-home-bundle" || p.handle === "pro-whole-home-bundle"
+  );
 
   return (
     <div className="pt-32 lg:pt-36 pb-16 lg:pb-24">
@@ -50,19 +37,9 @@ export default function WholeHomeBundlePage() {
           </p>
         </div>
 
-        {/* Loading */}
-        {loading && (
-          <div className="flex justify-center py-20">
-            <div className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
-          </div>
-        )}
-
-        {/* Products */}
-        {!loading && products.length === 0 && (
+        {products.length === 0 ? (
           <p className="text-gray-500 text-center py-20">No whole home bundles found.</p>
-        )}
-
-        {!loading && products.length > 0 && (
+        ) : (
           <div className="flex flex-wrap justify-center gap-6">
             {products.map((product) => {
               const image = getProductImage(product.handle, product.images.edges[0]?.node.url);

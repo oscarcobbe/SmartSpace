@@ -1,28 +1,15 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getAllProducts, ShopifyProduct } from "@/lib/shopify";
-import { getProductImage } from "@/data/productImages";
 import { Check, Shield, Star, Wrench, Award, Info } from "lucide-react";
+import { getAllProducts } from "@/lib/shopify";
+import { getProductImage } from "@/data/productImages";
 
 function formatPrice(amount: string, currencyCode: string) {
   return new Intl.NumberFormat("en-IE", { style: "currency", currency: currencyCode }).format(parseFloat(amount));
 }
 
-export default function EldercareBundlePage() {
-  const [products, setProducts] = useState<ShopifyProduct[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getAllProducts()
-      .then((all) => {
-        const eldercare = all.filter((p) => p.handle === "eldercare-security-bundle");
-        setProducts(eldercare);
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+export default async function EldercareBundlePage() {
+  const all = await getAllProducts();
+  const products = all.filter((p) => p.handle === "eldercare-security-bundle");
 
   return (
     <div className="pt-32 lg:pt-36 pb-16 lg:pb-24">
@@ -71,15 +58,7 @@ export default function EldercareBundlePage() {
           </ul>
         </div>
 
-        {/* Loading */}
-        {loading && (
-          <div className="flex justify-center py-20">
-            <div className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
-          </div>
-        )}
-
-        {/* Products — basic doorbells */}
-        {!loading && products.length > 0 && (
+        {products.length > 0 && (
           <>
             <h2 className="text-xl font-bold text-gray-900 mb-6">Choose your doorbell</h2>
             <div className="flex flex-wrap justify-center gap-6">

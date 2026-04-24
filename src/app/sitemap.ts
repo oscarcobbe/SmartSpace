@@ -21,6 +21,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/services/installation-only`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     { url: `${BASE}/services/free-consultation`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
 
+    // Individual product detail pages (static-generated, one per curated handle)
+    { url: `${BASE}/services/plus-video-doorbell`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE}/services/pro-video-doorbell`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE}/services/plus-floodlight-cam`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE}/services/pro-floodlight-cam`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE}/services/plus-driveway-bundle`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE}/services/pro-driveway-bundle`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE}/services/plus-whole-home-bundle`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE}/services/pro-whole-home-bundle`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE}/services/eldercare-security-bundle`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+
     // Local SEO
     { url: `${BASE}/areas`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
 

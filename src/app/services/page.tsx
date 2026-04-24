@@ -1,10 +1,7 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getAllProducts, ShopifyProduct } from "@/lib/shopify";
-import { getProductImage } from "@/data/productImages";
 import { ArrowRight } from "lucide-react";
+import { getAllProducts, type ShopifyProduct } from "@/lib/shopify";
+import { getProductImage } from "@/data/productImages";
 import FreeConsultationCTA from "@/components/FreeConsultationCTA";
 
 const serviceCategories = [
@@ -52,16 +49,8 @@ const serviceCategories = [
   },
 ];
 
-export default function ServicesPage() {
-  const [products, setProducts] = useState<ShopifyProduct[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getAllProducts()
-      .then(setProducts)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+export default async function ServicesPage() {
+  const products = await getAllProducts();
 
   return (
     <div className="pt-32 lg:pt-36 pb-16 lg:pb-24">
@@ -76,52 +65,46 @@ export default function ServicesPage() {
           </p>
         </div>
 
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {serviceCategories.map((cat) => {
-              const matchingProduct = products.find(cat.filter);
-              const image = cat.staticImage
-                || (matchingProduct
-                  ? getProductImage(matchingProduct.handle, matchingProduct.images.edges[0]?.node.url)
-                  : null);
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {serviceCategories.map((cat) => {
+            const matchingProduct = products.find(cat.filter);
+            const image = cat.staticImage
+              || (matchingProduct
+                ? getProductImage(matchingProduct.handle, matchingProduct.images.edges[0]?.node.url)
+                : null);
 
-              return (
-                <Link
-                  key={cat.title}
-                  href={cat.href}
-                  className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow"
-                >
-                  <div className="relative bg-transparent aspect-[4/3] flex items-center justify-center p-4 overflow-hidden rounded-t-2xl">
-                    {image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={image}
-                        alt={cat.title}
-                        className={`${cat.imageClass || "max-h-full max-w-full"} object-cover rounded-xl group-hover:scale-105 transition-transform duration-300`}
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="text-gray-300 text-sm">No image</div>
-                    )}
-                  </div>
-                  <div className="p-6 text-center sm:text-left">
-                    <h2 className="text-lg font-bold text-gray-900 group-hover:text-brand-500 transition-colors mb-2">
-                      {cat.title}
-                    </h2>
-                    <p className="text-sm text-gray-500 mb-4">{cat.description}</p>
-                    <span className="inline-flex items-center gap-1 text-sm font-semibold text-brand-500">
-                      View Options <ArrowRight className="h-4 w-4" />
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        )}
+            return (
+              <Link
+                key={cat.title}
+                href={cat.href}
+                className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow"
+              >
+                <div className="relative bg-transparent aspect-[4/3] flex items-center justify-center p-4 overflow-hidden rounded-t-2xl">
+                  {image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={image}
+                      alt={cat.title}
+                      className={`${cat.imageClass || "max-h-full max-w-full"} object-cover rounded-xl group-hover:scale-105 transition-transform duration-300`}
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="text-gray-300 text-sm">No image</div>
+                  )}
+                </div>
+                <div className="p-6 text-center sm:text-left">
+                  <h2 className="text-lg font-bold text-gray-900 group-hover:text-brand-500 transition-colors mb-2">
+                    {cat.title}
+                  </h2>
+                  <p className="text-sm text-gray-500 mb-4">{cat.description}</p>
+                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-brand-500">
+                    View Options <ArrowRight className="h-4 w-4" />
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
       {/* Complimentary consultation */}
