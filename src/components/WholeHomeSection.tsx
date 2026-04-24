@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 
 export default function WholeHomeSection() {
   return (
-    <section className="py-20 lg:py-28 bg-gradient-to-b from-white to-cream relative overflow-hidden">
+    <section className="py-12 lg:py-28 bg-gradient-to-b from-white to-cream relative overflow-hidden">
       <div className="absolute top-1/2 -translate-y-1/2 -left-40 w-96 h-96 bg-brand-500/5 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">

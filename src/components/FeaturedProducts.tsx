@@ -75,7 +75,7 @@ export default function FeaturedProducts() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header with toggle */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
-          <div>
+          <div className="text-center sm:text-left">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1a1a1a] mb-4">
               Featured Products
             </h2>

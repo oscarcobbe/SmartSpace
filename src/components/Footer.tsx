@@ -21,19 +21,19 @@ const companyLinks = [
 export default function Footer() {
   return (
     <footer className="bg-[#1a1a1a] text-[#999]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 text-center lg:text-left">
           {/* Brand */}
-          <div className="col-span-2 lg:col-span-1">
+          <div className="col-span-2 lg:col-span-1 flex flex-col items-center lg:items-start">
             <Link href="/" className="mb-4 block" aria-label="Smart Space — home">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/Logo1.png" alt="Smart Space" className="h-10 w-auto brightness-0 invert" />
             </Link>
-            <p className="text-sm leading-relaxed mb-4">
+            <p className="text-sm leading-relaxed mb-4 max-w-sm lg:max-w-none">
               Dublin&apos;s #1 Ring installer. Professional Ring doorbell and
               security camera installation across Dublin and all of Leinster.
             </p>
-            <p className="text-sm leading-relaxed font-bold text-brand-500">
+            <p className="text-sm leading-relaxed font-bold text-brand-500 max-w-sm lg:max-w-none">
               For AI-powered eldercare monitoring, visit our sister brand{" "}
               <a
                 href="https://smartcareliving.ie"
@@ -76,7 +76,7 @@ export default function Footer() {
           </div>
 
           {/* Contact */}
-          <div>
+          <div className="col-span-2 lg:col-span-1">
             <h3 className="text-white font-semibold text-sm mb-4">Get in Touch</h3>
             <ul className="space-y-2.5 text-sm">
               <li>
@@ -96,7 +96,7 @@ export default function Footer() {
       </div>
 
       <div className="border-t border-[#333]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-center">
           <p>&copy; {new Date().getFullYear()} Smart Space. All rights reserved.</p>
           <p>Dublin&apos;s #1 Ring Installer — Serving All of Leinster</p>
         </div>

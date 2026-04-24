@@ -32,7 +32,7 @@ export default function MailingList() {
   };
 
   return (
-    <section className="py-20 lg:py-28 bg-cream">
+    <section className="py-10 lg:py-28 bg-cream">
       <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-3xl shadow-premium p-8 sm:p-10 text-center border border-gray-100">
           <div className="inline-flex items-center gap-2 bg-brand-500/10 text-brand-500 text-[11px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full mb-5">
