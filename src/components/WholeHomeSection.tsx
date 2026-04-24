@@ -18,7 +18,7 @@ export default function WholeHomeSection() {
               className="w-full h-auto"
             />
           </div>
-          <div className="order-1 lg:order-2">
+          <div className="order-1 lg:order-2 text-center">
             <div className="inline-block text-brand-500 text-xs font-bold uppercase tracking-[0.25em] mb-4">
               Built to Grow with You
             </div>
@@ -26,7 +26,7 @@ export default function WholeHomeSection() {
               Whole-home security,<br />
               <span className="text-ink-soft">one step at a time.</span>
             </h2>
-            <p className="text-ink-soft text-base sm:text-lg mb-8 leading-relaxed max-w-md">
+            <p className="text-ink-soft text-base sm:text-lg mb-8 leading-relaxed max-w-md mx-auto">
               Start with a doorbell and expand to cameras, floodlights, and more. Every Ring device works together through the Ring app.
             </p>
             <Link

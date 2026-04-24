@@ -28,10 +28,10 @@ export default function PromoBanner() {
             <ArrowRight className="relative z-10 w-4 h-4 transition-transform duration-500 group-hover:translate-x-1" />
           </Link>
           <Link
-            href="/services"
+            href="/reviews"
             className="inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/15 hover:border-white/25 text-white font-semibold text-sm px-8 py-3.5 rounded-full transition-all"
           >
-            Learn More
+            Reviews
           </Link>
         </div>
       </div>

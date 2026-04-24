@@ -41,7 +41,7 @@ export default function Navbar() {
           <Star className="w-3 h-3 fill-brand-500" />
           <Star className="w-3 h-3 fill-brand-500" />
         </span>
-        <span className="font-semibold">5.0 on Google</span>
+        <span className="font-semibold">5 on Google</span>
         <span className="hidden sm:inline text-white/60">·</span>
         <span className="hidden sm:inline">5,000+ installations across Dublin &amp; Leinster</span>
       </Link>

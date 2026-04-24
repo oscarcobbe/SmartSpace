@@ -223,7 +223,7 @@ export default function ServiceDetailPage() {
                   <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                 ))}
               </div>
-              <span className="text-sm text-gray-500">5.0</span>
+              <span className="text-sm text-gray-500">5</span>
               <span className="text-gray-300">|</span>
               <span className="text-sm text-gray-500">5,000+ installations</span>
             </div>

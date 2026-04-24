@@ -15,12 +15,12 @@ export default function ReviewsSurfacing() {
                 <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
               ))}
             </div>
-            <span className="text-2xl font-extrabold text-[#1a1a1a] ml-1">5.0</span>
+            <span className="text-2xl font-extrabold text-[#1a1a1a] ml-1">5</span>
           </div>
           <div className="h-8 w-px bg-gray-200 hidden sm:block" />
           <div>
             <div className="text-sm font-bold text-[#1a1a1a]">
-              Rated 5.0 on Google by 100+ customers
+              Rated 5 on Google by 100+ customers
             </div>
             <div className="text-xs text-gray-500">
               5,000+ Ring installations across Dublin &amp; Leinster

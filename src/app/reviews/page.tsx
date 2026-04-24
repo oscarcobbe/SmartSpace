@@ -7,12 +7,12 @@ const SITE = "https://smart-space.ie";
 export const metadata: Metadata = {
   title: "Reviews | Smart Space — Dublin's #1 Ring Installer",
   description:
-    "See customer reviews for Smart Space. Rated 5.0 on Google. 5,000+ Ring installations across Dublin and Leinster.",
+    "See customer reviews for Smart Space. Rated 5 on Google. 5,000+ Ring installations across Dublin and Leinster.",
   alternates: { canonical: "/reviews" },
   openGraph: {
     title: "Reviews | Smart Space — Dublin's #1 5-Star Ring Installer",
     description:
-      "5.0 on Google · 5,000+ installations across Dublin and Leinster.",
+      "5 on Google · 5,000+ installations across Dublin and Leinster.",
     url: `${SITE}/reviews`,
     type: "website",
   },
@@ -84,7 +84,7 @@ const reviewsSchema = {
   url: SITE,
   aggregateRating: {
     "@type": "AggregateRating",
-    ratingValue: "5.0",
+    ratingValue: "5",
     bestRating: "5",
     reviewCount: "100",
   },
@@ -118,7 +118,7 @@ export default function ReviewsPage() {
           {/* Google rating badge */}
           <div className="inline-flex items-center gap-3 bg-white border border-gray-200 rounded-2xl px-6 py-4 shadow-sm">
             <div className="flex flex-col items-center">
-              <span className="text-3xl font-extrabold text-gray-900">5.0</span>
+              <span className="text-3xl font-extrabold text-gray-900">5</span>
               <StarRating rating={5} />
             </div>
             <div className="h-10 w-px bg-gray-200" />
