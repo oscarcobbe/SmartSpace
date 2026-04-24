@@ -34,14 +34,14 @@ export default function Navbar() {
         href="/reviews"
         className="fixed top-0 left-0 right-0 z-[60] bg-[#1a1a1a] text-white text-center py-1 px-4 text-xs font-medium hover:bg-black transition-colors flex items-center justify-center gap-2"
       >
-        <span className="inline-flex items-center gap-0.5 text-brand-500">
-          <Star className="w-3 h-3 fill-brand-500" />
-          <Star className="w-3 h-3 fill-brand-500" />
-          <Star className="w-3 h-3 fill-brand-500" />
-          <Star className="w-3 h-3 fill-brand-500" />
-          <Star className="w-3 h-3 fill-brand-500" />
+        <span className="inline-flex items-center gap-0.5 text-yellow-400">
+          <Star className="w-3 h-3 fill-yellow-400" />
+          <Star className="w-3 h-3 fill-yellow-400" />
+          <Star className="w-3 h-3 fill-yellow-400" />
+          <Star className="w-3 h-3 fill-yellow-400" />
+          <Star className="w-3 h-3 fill-yellow-400" />
         </span>
-        <span className="font-semibold">5 on Google</span>
+        <span className="font-semibold">on Google</span>
         <span className="hidden sm:inline text-white/60">·</span>
         <span className="hidden sm:inline">5,000+ installations across Dublin &amp; Leinster</span>
       </Link>

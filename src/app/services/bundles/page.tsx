@@ -137,10 +137,10 @@ export default function BundlesPage() {
 
                 <Link
                   href={bundle.href}
-                  className={`flex items-center justify-center gap-2 font-bold py-3.5 rounded-xl transition-all ${
+                  className={`flex items-center justify-center gap-2 font-bold py-3.5 rounded-xl transition-all bg-brand-500 hover:bg-brand-600 text-white ${
                     bundle.popular
-                      ? "bg-brand-500 hover:bg-brand-600 text-white shadow-lg shadow-brand-500/25"
-                      : "bg-gray-100 hover:bg-gray-200 text-gray-900"
+                      ? "shadow-lg shadow-brand-500/25"
+                      : "shadow-md shadow-brand-500/15 hover:shadow-lg"
                   }`}
                 >
                   Configure Bundle
