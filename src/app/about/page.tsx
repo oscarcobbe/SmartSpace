@@ -159,8 +159,8 @@ export default function AboutPage() {
               Browse Services
               <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href="/services/free-consultation" className="inline-flex items-center justify-center gap-2 border-2 border-gray-200 text-gray-700 font-semibold px-10 py-4 rounded-full hover:border-brand-500 hover:text-brand-500 transition-all">
-              Get a Quote
+            <Link href="/contact" className="inline-flex items-center justify-center gap-2 border-2 border-gray-200 text-gray-700 font-semibold px-10 py-4 rounded-full hover:border-brand-500 hover:text-brand-500 transition-all">
+              Have a Question?
             </Link>
           </div>
         </div>

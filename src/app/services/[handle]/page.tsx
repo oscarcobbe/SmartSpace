@@ -519,7 +519,7 @@ export default function ServiceDetailPage() {
               01 513 0424
             </a>
             <Link href="/contact" className="inline-flex items-center justify-center bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm px-8 py-3.5 rounded-full transition-colors">
-              Get a Free Quote
+              Have a Question?
             </Link>
           </div>
         </section>
