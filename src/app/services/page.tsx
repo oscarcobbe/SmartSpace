@@ -108,7 +108,7 @@ export default function ServicesPage() {
                       <div className="text-gray-300 text-sm">No image</div>
                     )}
                   </div>
-                  <div className="p-6">
+                  <div className="p-6 text-center sm:text-left">
                     <h2 className="text-lg font-bold text-gray-900 group-hover:text-brand-500 transition-colors mb-2">
                       {cat.title}
                     </h2>

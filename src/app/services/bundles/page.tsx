@@ -114,7 +114,7 @@ export default function BundlesPage() {
               </div>
 
               {/* Content */}
-              <div className="p-6 sm:p-8 flex flex-col flex-1">
+              <div className="p-6 sm:p-8 flex flex-col flex-1 text-center sm:text-left">
                 <h2 className="text-xl font-bold text-gray-900 mb-1">
                   {bundle.name}
                 </h2>
@@ -127,7 +127,7 @@ export default function BundlesPage() {
                   {bundle.features.map((feature) => (
                     <li
                       key={feature}
-                      className="flex items-start gap-2.5 text-sm text-gray-600"
+                      className="flex items-start justify-center sm:justify-start gap-2.5 text-sm text-gray-600"
                     >
                       <Check className="h-4 w-4 text-brand-500 flex-shrink-0 mt-0.5" />
                       {feature}

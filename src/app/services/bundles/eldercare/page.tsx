@@ -109,13 +109,13 @@ export default function EldercareBundlePage() {
                         )}
                       </div>
                     </Link>
-                    <div className="p-5">
+                    <div className="p-5 text-center sm:text-left">
                       <Link href={`/services/${product.handle}`}>
                         <h3 className="font-bold text-[#1a1a1a] group-hover:text-brand-500 transition-colors mb-2">
                           {product.title}
                         </h3>
                       </Link>
-                      <div className="flex items-center gap-2 mb-3">
+                      <div className="flex items-center justify-center sm:justify-start gap-2 mb-3">
                         <span className="text-xl font-extrabold text-[#1a1a1a]">
                           {formatPrice(price.amount, price.currencyCode)}
                         </span>
@@ -127,7 +127,7 @@ export default function EldercareBundlePage() {
                       </div>
                       <ul className="space-y-1.5 mb-4">
                         {["+ Digital Lockbox", "Ring Chime included", "Full installation"].map((f) => (
-                          <li key={f} className="flex items-center gap-2 text-xs text-gray-500">
+                          <li key={f} className="flex items-center justify-center sm:justify-start gap-2 text-xs text-gray-500">
                             <Check className="h-3.5 w-3.5 text-brand-500 flex-shrink-0" />
                             {f}
                           </li>
