@@ -146,20 +146,20 @@ export default function EldercareBundlePage() {
 
         {/* Supplied & Fitted */}
         <section className="mt-16 lg:mt-24">
-          <div className="bg-gradient-to-br from-[#1a1a1a] to-[#333] rounded-2xl p-8 sm:p-12 text-white">
-            <div className="max-w-3xl">
+          <div className="bg-gradient-to-br from-[#1a1a1a] to-[#333] rounded-2xl p-8 sm:p-12 text-white text-center">
+            <div className="max-w-3xl mx-auto">
               <h2 className="text-2xl sm:text-3xl font-extrabold mb-2">Supplied &amp; Fitted by Smart Space</h2>
               <p className="text-white/70 mb-6">
                 We understand the importance of keeping elderly relatives safe. Our installation is quick, tidy, and we&apos;ll walk family members through the setup.
               </p>
-              <div className="grid sm:grid-cols-2 gap-3">
+              <div className="grid sm:grid-cols-2 gap-3 max-w-xl mx-auto">
                 {[
                   "Professional mounting & wiring",
                   "Lockbox positioned for easy access",
                   "Ring app setup for family members",
                   "Motion zone tuning & walkthrough",
                 ].map((item) => (
-                  <div key={item} className="flex items-center gap-2">
+                  <div key={item} className="flex items-center justify-center gap-2">
                     <Check className="w-4 h-4 text-brand-500 flex-shrink-0" />
                     <span className="text-sm text-white/90">{item}</span>
                   </div>

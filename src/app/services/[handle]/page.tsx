@@ -413,7 +413,7 @@ export default function ServiceDetailPage() {
 
         {/* ── Section 2: Key Features ── */}
         {features && features.highlights.length > 0 && (
-          <section className="mt-16 lg:mt-24">
+          <section className="mt-16 lg:mt-24 text-center">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1a1a1a] mb-8">Key Features</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {features.highlights.map((text, i) => {
@@ -421,12 +421,12 @@ export default function ServiceDetailPage() {
                 return (
                   <div
                     key={i}
-                    className="flex items-start gap-4 p-5 bg-white border border-gray-100 rounded-2xl hover:shadow-md transition-shadow"
+                    className="flex flex-col items-center gap-3 p-5 bg-white border border-gray-100 rounded-2xl hover:shadow-md transition-shadow"
                   >
                     <div className="flex-shrink-0 w-10 h-10 bg-brand-50 text-brand-500 rounded-xl flex items-center justify-center">
                       <Icon className="w-5 h-5" />
                     </div>
-                    <span className="text-sm font-semibold text-[#1a1a1a] leading-snug pt-2">{text}</span>
+                    <span className="text-sm font-semibold text-[#1a1a1a] leading-snug">{text}</span>
                   </div>
                 );
               })}
@@ -436,9 +436,9 @@ export default function ServiceDetailPage() {
 
         {/* ── Section 3: Technical Specs ── */}
         {features && Object.keys(features.specs).length > 0 ? (
-          <section className="mt-16 lg:mt-24">
+          <section className="mt-16 lg:mt-24 text-center">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1a1a1a] mb-8">Technical Specifications</h2>
-            <div className="rounded-2xl border border-gray-100 overflow-hidden">
+            <div className="rounded-2xl border border-gray-100 overflow-hidden max-w-2xl mx-auto text-left">
               {Object.entries(features.specs).map(([key, value], i) => (
                 <div
                   key={key}
@@ -456,10 +456,10 @@ export default function ServiceDetailPage() {
           // Only show raw Shopify "Product Details" if there's no curated
           // feature set. Bundles intentionally have an empty specs object so
           // neither section renders.
-          <section className="mt-16 lg:mt-24">
+          <section className="mt-16 lg:mt-24 text-center">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1a1a1a] mb-8">Product Details</h2>
             <div
-              className="text-gray-600 text-sm leading-relaxed prose prose-sm max-w-none bg-gray-50 rounded-2xl p-6 sm:p-8"
+              className="text-gray-600 text-sm leading-relaxed prose prose-sm max-w-none bg-gray-50 rounded-2xl p-6 sm:p-8 text-left"
               dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
             />
           </section>
@@ -468,20 +468,20 @@ export default function ServiceDetailPage() {
         {/* ── Section 4: Professional Installation Banner ── */}
         {!isService && (
           <section className="mt-16 lg:mt-24">
-            <div className="bg-gradient-to-br from-[#1a1a1a] to-[#333] rounded-2xl p-8 sm:p-12 text-white">
-              <div className="max-w-3xl">
+            <div className="bg-gradient-to-br from-[#1a1a1a] to-[#333] rounded-2xl p-8 sm:p-12 text-white text-center">
+              <div className="max-w-3xl mx-auto">
                 <h2 className="text-2xl sm:text-3xl font-extrabold mb-2">Supplied &amp; Fitted by Smart Space</h2>
                 <p className="text-white/70 mb-6">
                   Let Dublin&apos;s #1 Ring installer handle everything — we serve all of Leinster and set up your new device for optimal performance.
                 </p>
-                <div className="grid sm:grid-cols-2 gap-3">
+                <div className="grid sm:grid-cols-2 gap-3 max-w-xl mx-auto">
                   {[
                     "Professional mounting & wiring",
                     "Wi-Fi signal optimisation",
                     "Ring app setup & configuration",
                     "Motion zone tuning & walkthrough",
                   ].map((item) => (
-                    <div key={item} className="flex items-center gap-2">
+                    <div key={item} className="flex items-center justify-center gap-2">
                       <Check className="w-4 h-4 text-brand-500 flex-shrink-0" />
                       <span className="text-sm text-white/90">{item}</span>
                     </div>
@@ -494,7 +494,7 @@ export default function ServiceDetailPage() {
 
         {/* ── Section 5: Related Products ── */}
         {relatedProducts.length > 0 && (
-          <section className="mt-16 lg:mt-24">
+          <section className="mt-16 lg:mt-24 text-center">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1a1a1a] mb-8">You may also like</h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {relatedProducts.map((rp) => (

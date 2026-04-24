@@ -16,7 +16,7 @@ export default function ProductCard({ product }: { product: ShopifyProduct }) {
   return (
     <Link
       href={`/services/${product.handle}`}
-      className="group block bg-transparent rounded-2xl p-6 hover:shadow-lg transition-all duration-300"
+      className="group block bg-transparent rounded-2xl p-6 hover:shadow-lg transition-all duration-300 text-center"
     >
       {/* Image */}
       <div className="relative aspect-square flex items-center justify-center mb-4">
@@ -44,7 +44,7 @@ export default function ProductCard({ product }: { product: ShopifyProduct }) {
       <h3 className="font-bold text-[#1a1a1a] text-sm mb-1.5 group-hover:text-brand-500 transition-colors">
         {displayTitle(product.title)}
       </h3>
-      <div className="flex items-baseline gap-2">
+      <div className="flex items-baseline gap-2 justify-center">
         <span className="text-lg font-extrabold text-[#1a1a1a]">
           &euro;{price.toFixed(2)}
         </span>
