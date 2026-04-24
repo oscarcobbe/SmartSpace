@@ -19,6 +19,11 @@ export default function MailingList() {
         body: JSON.stringify({ email }),
       });
       setSubmitted(true);
+      // GA4 recommended signup event
+      const w = window as unknown as { gtag?: (...args: unknown[]) => void };
+      if (typeof w.gtag === "function") {
+        w.gtag("event", "sign_up", { method: "newsletter" });
+      }
     } catch {
       setSubmitted(true);
     } finally {

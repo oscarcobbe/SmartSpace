@@ -76,23 +76,37 @@ function PaymentSuccessContent() {
       fired.current = true;
       const ud = userData(state.email, state.phone);
       if (Object.keys(ud).length) w.gtag("set", "user_data", ud);
+      // Google Ads conversion
       w.gtag("event", "conversion", {
         send_to: GADS_FREE_CONSULTATION_TAG,
         value: FREE_CONSULTATION_VALUE,
         currency: "EUR",
       });
-      console.log("[gtag] free consultation conversion fired");
+      // GA4 recommended lead event — so GA4 reports this as a conversion too
+      w.gtag("event", "generate_lead", {
+        currency: "EUR",
+        value: FREE_CONSULTATION_VALUE,
+        lead_source: "free_consultation",
+      });
+      console.log("[gtag] free consultation conversion + lead fired");
     } else if (state.status === "paid") {
       fired.current = true;
       const ud = userData(state.email, state.phone);
       if (Object.keys(ud).length) w.gtag("set", "user_data", ud);
+      // Google Ads conversion
       w.gtag("event", "conversion", {
         send_to: GADS_PAYMENT_TAG,
         value: state.amount,
         currency: state.currency,
         transaction_id: state.sessionId,
       });
-      console.log("[gtag] paid order conversion fired");
+      // GA4 recommended ecommerce purchase event
+      w.gtag("event", "purchase", {
+        currency: state.currency,
+        value: state.amount,
+        transaction_id: state.sessionId,
+      });
+      console.log("[gtag] paid order conversion + purchase fired");
     }
   }, [state]);
 

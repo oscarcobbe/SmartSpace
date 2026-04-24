@@ -74,8 +74,15 @@ export default function ContactForm() {
                     email: ${JSON.stringify(conversionData.email)},
                     phone_number: ${JSON.stringify(conversionData.phone)}
                   });
+                  // Google Ads conversion
                   gtag('event', 'conversion', ${enhancedPayload});
-                  console.log('[gtag] contact form conversion fired');
+                  // GA4 recommended lead event
+                  gtag('event', 'generate_lead', {
+                    currency: 'EUR',
+                    value: 10,
+                    lead_source: 'contact_form'
+                  });
+                  console.log('[gtag] contact form conversion + lead fired');
                 }
               `,
             }}
