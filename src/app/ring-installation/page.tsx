@@ -165,7 +165,7 @@ export default function RingInstallationPage() {
               <div className="flex flex-wrap gap-x-6 gap-y-3 mb-7 text-sm font-semibold text-gray-700">
                 <div className="flex items-center gap-2">
                   <span className="text-amber-400 tracking-wider">★★★★★</span>
-                  <span>5.0 on Google</span>
+                  <span>5 Star on Google</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-brand-500 font-extrabold">5,000+</span>
@@ -181,7 +181,7 @@ export default function RingInstallationPage() {
               <div className="flex flex-col sm:flex-row gap-3 mb-5">
                 <Link
                   href="#book"
-                  className="inline-flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-bold px-7 py-4 rounded-full shadow-lg shadow-brand-500/30 transition-all hover:-translate-y-0.5"
+                  className="btn-sheen pulse-glow group inline-flex items-center justify-center gap-2 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-600 text-white font-bold px-8 py-4 rounded-full transition-all shadow-[0_10px_40px_-5px_rgba(242,130,34,0.55)] hover:shadow-[0_20px_60px_-5px_rgba(242,130,34,0.7)] hover:-translate-y-0.5"
                 >
                   Book Your Install
                   <ArrowRight className="w-4 h-4" />
@@ -223,7 +223,7 @@ export default function RingInstallationPage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
             {[
               { num: "5,000+", label: "Installs completed" },
-              { num: "5.0★", label: "Google rating" },
+              { num: "5★", label: "Google rating" },
               { num: "€139", label: "From price" },
               { num: "48h", label: "Average install time" },
             ].map((s) => (
@@ -412,7 +412,7 @@ export default function RingInstallationPage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="#book"
-              className="inline-flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-bold px-7 py-4 rounded-full shadow-lg shadow-brand-500/30 transition-all hover:-translate-y-0.5"
+              className="btn-sheen pulse-glow group inline-flex items-center justify-center gap-2 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-600 text-white font-bold px-8 py-4 rounded-full transition-all shadow-[0_10px_40px_-5px_rgba(242,130,34,0.65)] hover:shadow-[0_20px_60px_-5px_rgba(242,130,34,0.8)] hover:-translate-y-0.5"
             >
               Book Your Install
               <ArrowRight className="w-4 h-4" />
