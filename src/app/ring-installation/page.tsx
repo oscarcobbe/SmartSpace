@@ -1,3 +1,33 @@
+"use client";
+
+/**
+ * /ring-installation — Google Ads paid landing page.
+ *
+ * Mirrors /services/installation-only's proven flow exactly:
+ *   - Same Shopify product (installation-only) for live pricing
+ *   - Same interactive variant selectors that update the price
+ *   - Same AddToCartButton → Stripe checkout → Calendly auto-book
+ *   - Same BookingCalendar (Tue/Wed/Thu × 3 slots)
+ *
+ * The Stripe success path already fires the SS- Any value stripe
+ * Google Ads conversion (AW-17978501655/IofPCOiZuJkcEJfU6PxC) plus
+ * GA4 `purchase` event with hashed user_data — so this LP gets
+ * conversion tracking for free with no custom wiring.
+ *
+ * LP-specific additions on top of installation-only:
+ *   - Hero copy that matches the active RSA's "From €139 / Book
+ *     Online — Instant Dates" promise
+ *   - Brands We Install grid
+ *   - 5 Star reviews snippet
+ *   - <FeaturedProducts /> carousel
+ *   - FAQ
+ *   - Trust strip + cross-sell links
+ *
+ * Page itself is noindex (set in layout.tsx) so it doesn't compete
+ * organically with /services/installation-only.
+ */
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Wrench,
@@ -9,16 +39,55 @@ import {
   Award,
   CheckCircle2,
 } from "lucide-react";
-import RingBookingForm from "@/components/RingBookingForm";
+import { getProductByHandle, ShopifyProduct } from "@/lib/shopify";
+import AddToCartButton from "@/components/AddToCartButton";
+import BookingCalendar from "@/components/BookingCalendar";
 import FeaturedProducts from "@/components/FeaturedProducts";
 
 const PHONE_DISPLAY = "01 513 0424";
 const PHONE_TEL = "+35315130424";
 
-// Three real Google reviews lifted from /reviews
+const BRANDS = [
+  { name: "Ring", tag: "All models · Wired & battery" },
+  { name: "Eufy", tag: "Doorbell & floodlight cams" },
+  { name: "Tapo", tag: "Doorbell & cameras" },
+  { name: "Nest", tag: "Google Nest doorbells" },
+  { name: "Arlo", tag: "Wired & wireless" },
+];
+
+const STEPS = [
+  { num: "1", title: "Book Online", body: "Pick a date, configure your install." },
+  { num: "2", title: "We Confirm", body: "Quick call to confirm address details." },
+  { num: "3", title: "Installer Arrives", body: "Drilled, mounted, app-paired in 60–90 minutes." },
+  { num: "4", title: "Family Trained", body: "We don't leave until you can use it confidently." },
+];
+
+const INCLUDED = [
+  {
+    icon: Wrench,
+    title: "Professional Mounting",
+    body: "Drilled and fitted on any wall material. Cabling concealed where possible.",
+  },
+  {
+    icon: Cable,
+    title: "Hardwired or Battery",
+    body: "Hardwire to existing chime or battery — same flat fee.",
+  },
+  {
+    icon: Smartphone,
+    title: "App Setup & Training",
+    body: "Device paired, app on your phone, up to 4 family members added.",
+  },
+  {
+    icon: Bell,
+    title: "Motion Zones & Alerts",
+    body: "Tuned so you get alerts for real people, not leaves blowing.",
+  },
+];
+
 const REVIEWS = [
   {
-    text: "Fantastic service from start to finish. The lads arrived on time, installed the doorbell and two cameras in under two hours. Everything was set up on my phone before they left. Highly recommend!",
+    text: "Fantastic service from start to finish. Installed the doorbell and two cameras in under two hours. Everything was set up on my phone before they left. Highly recommend!",
     author: "Sarah M.",
     date: "2 weeks ago",
   },
@@ -34,44 +103,6 @@ const REVIEWS = [
   },
 ];
 
-const INCLUDED = [
-  {
-    icon: Wrench,
-    title: "Professional Mounting",
-    body: "Drilled and fitted on any wall material — render, brick, timber, PVC. Cabling concealed where possible.",
-  },
-  {
-    icon: Cable,
-    title: "Hardwired or Battery",
-    body: "If you want hardwired, we connect to your existing chime wiring. Battery models? Same flat fee.",
-  },
-  {
-    icon: Smartphone,
-    title: "App Setup & Training",
-    body: "We pair the device, configure the app on your phone, add up to 4 family members, and demo every feature.",
-  },
-  {
-    icon: Bell,
-    title: "Motion Zones & Alerts",
-    body: "We tune motion detection so you get alerts when a real person walks up, not when a leaf moves.",
-  },
-];
-
-const BRANDS = [
-  { name: "Ring", tag: "All models · Wired & battery" },
-  { name: "Eufy", tag: "Doorbell & floodlight cams" },
-  { name: "Tapo", tag: "Doorbell & cameras" },
-  { name: "Nest", tag: "Google Nest doorbells" },
-  { name: "Arlo", tag: "Wired & wireless" },
-];
-
-const STEPS = [
-  { num: "1", title: "Book Online", body: "Pick a date, tell us which doorbell you have." },
-  { num: "2", title: "We Confirm by Phone", body: "Quick call within an hour to confirm pricing & address." },
-  { num: "3", title: "Installer Arrives", body: "Drilled, mounted, app-paired in 60–90 minutes." },
-  { num: "4", title: "Family Trained", body: "We don't leave until you can use it confidently." },
-];
-
 const FAQ = [
   {
     q: "What's the €139 actually cover?",
@@ -79,7 +110,7 @@ const FAQ = [
   },
   {
     q: "When would it cost more than €139?",
-    a: "Only if there's something unusual: no chime to wire into and you want hardwired (we run an external transformer), unusually difficult wall like granite or thick concrete, or you want multiple cameras at once. We tell you the exact price on the booking call before we book the slot.",
+    a: "Only if there's something unusual: no chime to wire into and you want hardwired (we run an external transformer), unusually difficult wall like granite or thick concrete, or you want multiple cameras at once. The configurator above shows you the exact price before you book.",
   },
   {
     q: "Do I need to buy the doorbell from you?",
@@ -87,7 +118,7 @@ const FAQ = [
   },
   {
     q: "How fast can you come?",
-    a: "For Dublin and Leinster, usually next-working-day. Outside of Leinster, within 5 working days. Pick a date in the booking form and we'll confirm by phone within an hour.",
+    a: "We install Tuesdays, Wednesdays, and Thursdays in fixed 2-hour slots. Pick one in the calendar and you're booked. Outside Leinster usually within 5 working days.",
   },
   {
     q: "What if it doesn't work after you leave?",
@@ -95,11 +126,63 @@ const FAQ = [
   },
   {
     q: "Do you install other things — cameras, alarms, smart locks?",
-    a: "Yes. CCTV, floodlight cameras, smart locks, network access, video intercoms — we do all of it. Pick \u201cSomething else\u201d in the booking form and we'll quote on the call.",
+    a: "Yes. CCTV, floodlight cameras, smart locks, network access, video intercoms — we do all of it. Pick \u201cSomething else\u201d and we'll quote on the call.",
   },
 ];
 
+const supportedBrands = [
+  { name: "Ring", logo: "/Ring.png", className: "h-14" },
+  { name: "Eufy", logo: "/Eufy.png", className: "h-14" },
+  { name: "Nest", logo: "/Nest_logo.png", className: "h-14" },
+  { name: "Tapo", logo: "/Tapo.png", className: "h-28" },
+];
+
+function formatPrice(amount: string, currencyCode: string) {
+  return new Intl.NumberFormat("en-IE", { style: "currency", currency: currencyCode }).format(parseFloat(amount));
+}
+
 export default function RingInstallationPage() {
+  const [product, setProduct] = useState<ShopifyProduct | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
+  const [bookingSelection, setBookingSelection] = useState<{
+    date: string;
+    timeSlot: string;
+    dateLabel: string;
+    slotLabel: string;
+  } | null>(null);
+
+  useEffect(() => {
+    getProductByHandle("installation-only")
+      .then((p) => {
+        setProduct(p);
+        if (p?.options) {
+          const defaults: Record<string, string> = {};
+          p.options.forEach((o) => {
+            if (o.values.length > 0 && o.values[0] !== "Default Title") {
+              defaults[o.name] = o.values[0];
+            }
+          });
+          setSelectedOptions(defaults);
+        }
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const productOptions = product?.options?.filter((o) => !(o.values.length === 1 && o.values[0] === "Default Title")) ?? [];
+  const effectiveOptions = { ...Object.fromEntries(productOptions.map((o) => [o.name, o.values[0]])), ...selectedOptions };
+
+  const matchedVariant = product?.variants.edges.find((v) =>
+    v.node.selectedOptions?.every((so) => effectiveOptions[so.name] === so.value)
+  )?.node ?? product?.variants.edges[0]?.node;
+
+  const price = matchedVariant?.price ?? product?.priceRange.minVariantPrice;
+  const productPrice = parseFloat(
+    matchedVariant?.price?.amount ?? product?.variants.edges[0]?.node.price?.amount ?? "0"
+  );
+  const productImage = product?.images.edges[0]?.node.url ?? "";
+
   return (
     <div className="pt-32 lg:pt-36">
       {/* ──────────── Hero / header ──────────── */}
@@ -114,16 +197,137 @@ export default function RingInstallationPage() {
             <span className="text-brand-500">From €139</span>
           </h1>
           <p className="text-gray-500 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-            Professional installation by certified Irish installers. Wired or battery, every Ring
-            model. Book online in 90 seconds — pick a date that works.
+            Professional installation by certified Irish installers. Wired or battery, every Ring,
+            Eufy, Tapo, or Nest model. Configure your install and pick a date below.
           </p>
         </div>
       </section>
 
-      {/* ──────────── Booking ──────────── */}
-      <section id="book" className="pb-12 lg:pb-20 scroll-mt-32">
+      {/* ──────────── Supported Brands logos ──────────── */}
+      <section className="py-12 bg-white border-b border-gray-100">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-6">
+            We install all major brands at the same price
+          </p>
+          <div className="flex items-center justify-center gap-8 sm:gap-12 flex-wrap">
+            {supportedBrands.map((brand) => (
+              <div key={brand.name} className="flex items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={brand.logo} alt={brand.name} className={`${brand.className || "h-14"} opacity-60`} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ──────────── Configure & Book (mirrors /services/installation-only) ──────────── */}
+      <section id="book" className="py-16 lg:py-24 scroll-mt-32">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <RingBookingForm />
+          <div className="text-center mb-10">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">
+              Configure Your Installation
+            </h2>
+            <p className="text-gray-500 text-lg max-w-xl mx-auto">
+              Tell us about your setup and choose a date — instant pricing, instant booking.
+            </p>
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center py-20">
+              <div className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : product ? (
+            <div className="grid lg:grid-cols-2 gap-8">
+              {/* Left: Options */}
+              <div className="space-y-6">
+                {/* Price */}
+                <div className="bg-gray-50 rounded-2xl p-6">
+                  <div className="text-sm text-gray-500 mb-1">Total price</div>
+                  <div className="text-3xl font-extrabold text-[#1a1a1a]">
+                    {price ? formatPrice(price.amount, price.currencyCode) : "—"}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">Professional installation included</div>
+                </div>
+
+                {/* Variant selectors */}
+                {productOptions.map((option) => {
+                  const selectedVal = effectiveOptions[option.name] ?? option.values[0];
+                  const installLabels: Record<string, { label: string; help?: string }> = {
+                    "How Many Ring or Similar Products Are To Be Installed": { label: "Number of Devices to Install" },
+                    "Video Doorbell To Be Installed ? Is There An Existing Working Wired Doorbell At The Desired Location": { label: "Doorbell Wiring", help: "Is there an existing wired doorbell where you want the new one?" },
+                    "External Video Camera(s) To Be Installed ? How Many Require New Mains Power Cabling": { label: "Cameras Needing New Wiring", help: "How many cameras need a new power cable run to them?" },
+                  };
+                  const rawName = option.name.replace(/\s*\?\s*$/, "");
+                  const mapped = installLabels[rawName];
+                  const displayLabel = mapped?.label ?? rawName;
+                  const helpText = mapped?.help;
+                  return (
+                    <div key={option.name}>
+                      <label className="block text-sm font-semibold text-[#1a1a1a] mb-1">
+                        {displayLabel}
+                      </label>
+                      {helpText && (
+                        <p className="text-xs text-gray-400 mb-2">{helpText}</p>
+                      )}
+                      {option.values.length <= 4 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {option.values.map((val) => (
+                            <button
+                              key={val}
+                              onClick={() => setSelectedOptions((prev) => ({ ...prev, [option.name]: val }))}
+                              className={`px-4 py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${
+                                selectedVal === val
+                                  ? "border-brand-500 bg-brand-500/5 text-brand-500"
+                                  : "border-gray-200 text-gray-600 hover:border-gray-300"
+                              }`}
+                            >
+                              {val}
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <select
+                          value={selectedVal}
+                          onChange={(e) => setSelectedOptions((prev) => ({ ...prev, [option.name]: e.target.value }))}
+                          className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-none transition-colors"
+                        >
+                          {option.values.map((val) => (
+                            <option key={val} value={val}>{val}</option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* Add to Cart */}
+                {product && (
+                  <AddToCartButton
+                    productId="installation-only"
+                    name={product.title}
+                    price={productPrice}
+                    image={productImage}
+                    size="lg"
+                    className="w-full"
+                    disabled={!bookingSelection}
+                    disabledText="Select an Installation Date"
+                    bookingDate={bookingSelection?.date}
+                    bookingSlot={bookingSelection?.timeSlot}
+                    bookingLabel={bookingSelection ? `${bookingSelection.dateLabel} ${bookingSelection.slotLabel}` : undefined}
+                  />
+                )}
+              </div>
+
+              {/* Right: Booking Calendar */}
+              <div>
+                <BookingCalendar
+                  onSelectionChange={setBookingSelection}
+                />
+              </div>
+            </div>
+          ) : (
+            <p className="text-gray-500 text-center py-20">Installation service not available at the moment.</p>
+          )}
         </div>
       </section>
 
@@ -188,7 +392,7 @@ export default function RingInstallationPage() {
               How It Works
             </h2>
             <p className="text-gray-500 text-lg">
-              From booking to &ldquo;all done&rdquo; in under 48 hours, most weeks.
+              Configure, pay, install — in that order.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto">
@@ -294,7 +498,7 @@ export default function RingInstallationPage() {
         </div>
       </section>
 
-      {/* ──────────── Bottom CTA — link out to other site sections ──────────── */}
+      {/* ──────────── Bottom cross-sell ──────────── */}
       <section className="py-16 lg:py-20 bg-gray-50">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-3">
