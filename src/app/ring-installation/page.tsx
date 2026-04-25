@@ -9,8 +9,10 @@ import {
   Star,
   Phone,
   ArrowRight,
+  Award,
 } from "lucide-react";
 import RingBookingForm from "@/components/RingBookingForm";
+import MobileBookCTA from "@/components/MobileBookCTA";
 
 const PHONE_DISPLAY = "01 513 0424";
 const PHONE_TEL = "+35315130424";
@@ -120,6 +122,8 @@ const FAQ = [
 export default function RingInstallationPage() {
   return (
     <div className="bg-white">
+      {/* Mobile-only sticky bottom CTA — appears after scrolling past the hero */}
+      <MobileBookCTA />
       {/* ──────────── Sticky utility bar ──────────── */}
       <div className="sticky top-0 z-40 bg-slate-900 text-white text-xs sm:text-sm font-semibold">
         <div className="max-w-6xl mx-auto px-4 py-2.5 flex items-center justify-center gap-3 sm:gap-4 flex-wrap">
@@ -196,7 +200,7 @@ export default function RingInstallationPage() {
               </div>
 
               {/* Hero meta */}
-              <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs sm:text-sm text-gray-500">
+              <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs sm:text-sm text-gray-500 mb-5">
                 <span className="inline-flex items-center gap-1.5 before:content-[''] before:w-1.5 before:h-1.5 before:bg-emerald-500 before:rounded-full">
                   Same-day quotes
                 </span>
@@ -204,8 +208,14 @@ export default function RingInstallationPage() {
                   Insured installers
                 </span>
                 <span className="inline-flex items-center gap-1.5 before:content-[''] before:w-1.5 before:h-1.5 before:bg-emerald-500 before:rounded-full">
-                  All major brands
+                  Garda-vetted on request
                 </span>
+              </div>
+
+              {/* Award badge — strong trust signal */}
+              <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 px-3.5 py-1.5 rounded-full text-xs sm:text-[13px] font-semibold">
+                <Award className="w-4 h-4 text-amber-600" />
+                <span>Three Ireland SME Winner 2025</span>
               </div>
             </div>
 

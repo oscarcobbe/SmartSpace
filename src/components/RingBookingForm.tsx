@@ -17,8 +17,8 @@
  * event with hashed user_data for Enhanced Conversions match.
  */
 
-import { useState, FormEvent } from "react";
-import { Send, Check } from "lucide-react";
+import { useState, FormEvent, useRef } from "react";
+import { Send, Check, Loader2, ShieldCheck } from "lucide-react";
 import { getAttribution } from "@/lib/attribution";
 import BookingCalendar from "@/components/BookingCalendar";
 
@@ -61,6 +61,20 @@ function fireConversion(email: string, phone: string) {
 export default function RingBookingForm() {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [booking, setBooking] = useState<BookingSelection | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  function focusFirstInvalid() {
+    const form = formRef.current;
+    if (!form) return;
+    const fields = ["b-name", "b-phone", "b-email", "b-product"];
+    for (const id of fields) {
+      const el = form.querySelector<HTMLInputElement | HTMLSelectElement>(`#${id}`);
+      if (el && !el.value.trim()) {
+        el.focus();
+        return;
+      }
+    }
+  }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -88,6 +102,8 @@ export default function RingBookingForm() {
       !payload.timeSlot
     ) {
       setStatus({ kind: "error", message: "Please fill in all fields and pick a date + time." });
+      // After error renders, move focus to the first empty field for keyboard / screen reader users
+      requestAnimationFrame(focusFirstInvalid);
       return;
     }
 
@@ -166,13 +182,14 @@ export default function RingBookingForm() {
       {status.kind === "error" ? (
         <div
           role="alert"
+          aria-live="polite"
           className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 mb-4"
         >
           {status.message}
         </div>
       ) : null}
 
-      <form onSubmit={onSubmit} className="flex flex-col gap-4">
+      <form ref={formRef} onSubmit={onSubmit} className="flex flex-col gap-4">
         <div>
           <label htmlFor="b-name" className="block text-xs font-semibold text-gray-700 mb-1">
             Full name
@@ -199,6 +216,7 @@ export default function RingBookingForm() {
               type="tel"
               required
               autoComplete="tel"
+              inputMode="tel"
               placeholder="08x xxx xxxx"
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-gray-50"
             />
@@ -213,6 +231,7 @@ export default function RingBookingForm() {
               type="email"
               required
               autoComplete="email"
+              inputMode="email"
               placeholder="you@email.com"
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-gray-50"
             />
@@ -271,13 +290,24 @@ export default function RingBookingForm() {
         <button
           type="submit"
           disabled={!canSubmit}
+          aria-busy={submitting}
           className="btn-sheen pulse-glow group mt-2 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-600 text-white font-bold px-6 py-4 rounded-full transition-all shadow-[0_10px_40px_-5px_rgba(242,130,34,0.55)] hover:shadow-[0_20px_60px_-5px_rgba(242,130,34,0.7)] hover:-translate-y-0.5 text-base disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed"
         >
-          <Send className="w-4 h-4" />
-          {submitting ? "Sending…" : booking ? "Confirm My Install Slot" : "Pick a date to continue"}
+          {submitting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Sending…
+            </>
+          ) : (
+            <>
+              <Send className="w-4 h-4" />
+              {booking ? "Confirm My Install Slot" : "Pick a date to continue"}
+            </>
+          )}
         </button>
-        <p className="text-[11px] text-gray-400 text-center">
-          No payment required to book. We confirm pricing on the call.
+        <p className="inline-flex items-center justify-center gap-1.5 text-[11px] text-gray-400 text-center">
+          <ShieldCheck className="w-3 h-3" />
+          We&apos;ll only use your details to confirm — never spam, never shared.
         </p>
       </form>
     </div>

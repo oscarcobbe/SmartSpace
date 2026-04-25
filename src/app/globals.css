@@ -131,6 +131,24 @@ p {
     animation: glowPulse 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
+  /* Accessibility — disable decorative motion for users who request it.
+     Covers all custom animations defined in this file: fade-up, btn-sheen,
+     card-lift, pulse-glow. Critical per WCAG 2.1 AA. */
+  @media (prefers-reduced-motion: reduce) {
+    .fade-up,
+    .fade-up-delay-1,
+    .fade-up-delay-2,
+    .fade-up-delay-3 {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+    .btn-sheen::before { transition: none !important; }
+    .card-lift { transition: none !important; }
+    .card-lift:hover { transform: none !important; }
+    .pulse-glow { animation: none !important; }
+  }
+
   /* Blog article typography */
   .prose-ss h2 {
     font-size: 1.625rem;
