@@ -27,6 +27,10 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Hide global nav on dedicated paid landing pages — strips escape
+  // hatches that distract from the conversion goal.
+  if (pathname?.startsWith("/ring-installation")) return null;
+
   return (
     <>
       {/* Review strip */}

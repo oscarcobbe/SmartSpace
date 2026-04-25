@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
 import { CartProvider } from "@/context/CartContext";
 import GclidCapture from "@/components/GclidCapture";
+import CookieBanner from "@/components/CookieBanner";
 
 const SITE = "https://smart-space.ie";
 
@@ -154,6 +155,17 @@ export default function RootLayout({
               "window.dataLayer = window.dataLayer || [];",
               "function gtag(){dataLayer.push(arguments);}",
               "gtag('js', new Date());",
+              // ── Consent Mode v2 (REQUIRED for EEA/UK ad processing) ──
+              // Default everything to denied. CookieBanner.tsx fires
+              // gtag('consent','update',…) once the user makes a choice.
+              // This MUST run before any gtag('config',…) call.
+              "gtag('consent', 'default', {",
+              "  ad_storage: 'denied',",
+              "  ad_user_data: 'denied',",
+              "  ad_personalization: 'denied',",
+              "  analytics_storage: 'denied',",
+              "  wait_for_update: 500",
+              "});",
               // Google Ads
               "gtag('config', " + JSON.stringify(GTAG_ID) + ", { allow_enhanced_conversions: true });",
               // GA4 (only configured when the measurement ID env var is set)
@@ -186,6 +198,7 @@ export default function RootLayout({
           <main className="min-h-screen">{children}</main>
           <CartDrawer />
           <Footer />
+          <CookieBanner />
         </CartProvider>
       </body>
     </html>
