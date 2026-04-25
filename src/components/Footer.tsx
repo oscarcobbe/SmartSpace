@@ -1,7 +1,4 @@
-"use client";
-
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 const serviceLinks = [
   { href: "/services", label: "All Services" },
@@ -22,11 +19,6 @@ const companyLinks = [
 ];
 
 export default function Footer() {
-  const pathname = usePathname();
-  // Hide global footer on dedicated paid landing pages — replaces escape
-  // hatches with the page's own focused final CTA.
-  if (pathname?.startsWith("/ring-installation")) return null;
-
   return (
     <footer className="bg-[#1a1a1a] text-[#999]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">

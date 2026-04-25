@@ -3,13 +3,13 @@
 /**
  * Booking form for /ring-installation (paid landing page).
  *
- * Uses the same BookingCalendar component as the rest of the site so
- * users see the actual Calendly availability (Tue/Wed/Thu × 3 fixed
- * 2-hour slots) rather than a free-form date picker.
+ * Uses the same 2-column pattern as /services/free-consultation —
+ * customer details on the left, BookingCalendar on the right —
+ * so this page feels native to the rest of smart-space.ie.
  *
  * Posts to /api/ring-installation-booking which:
  *   1. Logs the lead to the leads sheet (always)
- *   2. Auto-creates a Calendly install event using the exact picked slot
+ *   2. Auto-creates a Calendly install event using the picked slot
  *   3. Sends the owner an email
  *
  * On success, fires the Google Ads conversion (SS- Onsite consultation
@@ -17,7 +17,7 @@
  * event with hashed user_data for Enhanced Conversions match.
  */
 
-import { useState, FormEvent, useRef } from "react";
+import { useState, useRef } from "react";
 import { Send, Check, Loader2, ShieldCheck } from "lucide-react";
 import { getAttribution } from "@/lib/attribution";
 import BookingCalendar from "@/components/BookingCalendar";
@@ -41,10 +41,7 @@ interface BookingSelection {
 function fireConversion(email: string, phone: string) {
   const w = window as unknown as { gtag?: (...args: unknown[]) => void };
   if (typeof w.gtag !== "function") return;
-  w.gtag("set", "user_data", {
-    email,
-    phone_number: phone,
-  });
+  w.gtag("set", "user_data", { email, phone_number: phone });
   w.gtag("event", "conversion", {
     send_to: GADS_BOOKING_TAG,
     value: BOOKING_VALUE,
@@ -61,51 +58,30 @@ function fireConversion(email: string, phone: string) {
 export default function RingBookingForm() {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [booking, setBooking] = useState<BookingSelection | null>(null);
-  const formRef = useRef<HTMLFormElement>(null);
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [eircode, setEircode] = useState("");
+  const [product, setProduct] = useState("");
+  const errorRef = useRef<HTMLDivElement>(null);
 
-  function focusFirstInvalid() {
-    const form = formRef.current;
-    if (!form) return;
-    const fields = ["b-name", "b-phone", "b-email", "b-product"];
-    for (const id of fields) {
-      const el = form.querySelector<HTMLInputElement | HTMLSelectElement>(`#${id}`);
-      if (el && !el.value.trim()) {
-        el.focus();
-        return;
-      }
-    }
-  }
+  const formValid = !!(name.trim() && phone.trim() && email.trim() && product && booking);
+  const submitting = status.kind === "submitting";
 
-  async function onSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function handleSubmit() {
+    if (!formValid || !booking || submitting) return;
     setStatus({ kind: "submitting" });
 
-    const form = e.currentTarget;
-    const fd = new FormData(form);
     const payload = {
-      name: String(fd.get("name") || "").trim(),
-      phone: String(fd.get("phone") || "").trim(),
-      email: String(fd.get("email") || "").trim(),
-      eircode: String(fd.get("eircode") || "").trim(),
-      product: String(fd.get("product") || "").trim(),
-      date: booking?.date ?? "",
-      timeSlot: booking?.timeSlot ?? "",
+      name: name.trim(),
+      phone: phone.trim(),
+      email: email.trim(),
+      eircode: eircode.trim(),
+      product,
+      date: booking.date,
+      timeSlot: booking.timeSlot,
       attribution: getAttribution() ?? undefined,
     };
-
-    if (
-      !payload.name ||
-      !payload.phone ||
-      !payload.email ||
-      !payload.product ||
-      !payload.date ||
-      !payload.timeSlot
-    ) {
-      setStatus({ kind: "error", message: "Please fill in all fields and pick a date + time." });
-      // After error renders, move focus to the first empty field for keyboard / screen reader users
-      requestAnimationFrame(focusFirstInvalid);
-      return;
-    }
 
     try {
       const res = await fetch("/api/ring-installation-booking", {
@@ -121,8 +97,9 @@ export default function RingBookingForm() {
       if (!res.ok || !data.ok) {
         setStatus({
           kind: "error",
-          message: data.error ?? "We couldn't submit your booking. Please call us instead.",
+          message: data.error ?? "We couldn't submit your booking. Please call 01 513 0424.",
         });
+        requestAnimationFrame(() => errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }));
         return;
       }
 
@@ -131,8 +108,8 @@ export default function RingBookingForm() {
       setStatus({
         kind: "success",
         calendlyBooked: !!data.calendlyBooked,
-        dateLabel: booking?.dateLabel ?? "",
-        slotLabel: booking?.slotLabel ?? "",
+        dateLabel: booking.dateLabel,
+        slotLabel: booking.slotLabel,
       });
     } catch {
       setStatus({
@@ -144,17 +121,17 @@ export default function RingBookingForm() {
 
   if (status.kind === "success") {
     return (
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-8 text-center">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-green-50 text-green-500 mb-4">
-          <Check className="w-7 h-7" />
+      <div className="max-w-2xl mx-auto bg-white border border-gray-200 rounded-2xl shadow-sm p-8 sm:p-10 text-center">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-50 text-green-500 mb-4">
+          <Check className="w-8 h-8" />
         </div>
-        <h3 className="text-xl font-extrabold text-gray-900 mb-2">Booking received</h3>
-        <p className="text-sm text-gray-600 leading-relaxed mb-1">
+        <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Booking received</h2>
+        <p className="text-gray-600 mb-1">
           {status.calendlyBooked
             ? `You're confirmed for ${status.dateLabel} at ${status.slotLabel}.`
             : `We have your preferred slot of ${status.dateLabel} at ${status.slotLabel}.`}
         </p>
-        <p className="text-sm text-gray-500 leading-relaxed mb-3">
+        <p className="text-gray-500 text-sm mb-5">
           {status.calendlyBooked
             ? "We'll call within 1 hour to confirm address details."
             : "We'll call within 1 hour to confirm everything."}
@@ -169,103 +146,94 @@ export default function RingBookingForm() {
     );
   }
 
-  const submitting = status.kind === "submitting";
-  const canSubmit = !!booking && !submitting;
-
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-6 sm:p-7">
-      <h3 className="text-xl font-extrabold text-gray-900 mb-1">Book Your Install Online</h3>
-      <p className="text-sm text-gray-500 mb-5">
-        Pick a date and time — we&apos;ll confirm by phone within 1 hour (Mon–Fri).
-      </p>
-
-      {status.kind === "error" ? (
-        <div
-          role="alert"
-          aria-live="polite"
-          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 mb-4"
-        >
-          {status.message}
-        </div>
-      ) : null}
-
-      <form ref={formRef} onSubmit={onSubmit} className="flex flex-col gap-4">
-        <div>
-          <label htmlFor="b-name" className="block text-xs font-semibold text-gray-700 mb-1">
-            Full name
-          </label>
-          <input
-            id="b-name"
-            name="name"
-            type="text"
-            required
-            autoComplete="name"
-            placeholder="Your name"
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-gray-50"
-          />
+    <div className="grid lg:grid-cols-2 gap-8">
+      {/* Left: price summary + customer details + submit */}
+      <div className="space-y-6">
+        {/* Price summary */}
+        <div className="bg-brand-50 rounded-2xl p-6">
+          <div className="text-sm text-gray-500 mb-1">Installation from</div>
+          <div className="text-3xl font-extrabold text-brand-600">€139</div>
+          <div className="text-xs text-gray-400 mt-1">Flat rate · No hidden costs</div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* Customer details */}
+        <div className="border border-gray-200 rounded-2xl p-5 space-y-4">
+          <h3 className="text-sm font-bold text-gray-900">Your Details</h3>
+
           <div>
-            <label htmlFor="b-phone" className="block text-xs font-semibold text-gray-700 mb-1">
-              Phone
+            <label htmlFor="ri-name" className="block text-xs font-medium text-gray-600 mb-1">
+              Full Name *
             </label>
             <input
-              id="b-phone"
-              name="phone"
+              id="ri-name"
+              type="text"
+              autoComplete="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="John Smith"
+              className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="ri-phone" className="block text-xs font-medium text-gray-600 mb-1">
+              Phone Number *
+            </label>
+            <input
+              id="ri-phone"
               type="tel"
-              required
-              autoComplete="tel"
               inputMode="tel"
-              placeholder="08x xxx xxxx"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-gray-50"
+              autoComplete="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="085 123 4567"
+              className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
             />
           </div>
+
           <div>
-            <label htmlFor="b-email" className="block text-xs font-semibold text-gray-700 mb-1">
-              Email
+            <label htmlFor="ri-email" className="block text-xs font-medium text-gray-600 mb-1">
+              Email *
             </label>
             <input
-              id="b-email"
-              name="email"
+              id="ri-email"
               type="email"
-              required
-              autoComplete="email"
               inputMode="email"
-              placeholder="you@email.com"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-gray-50"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="john@example.com"
+              className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
             />
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label htmlFor="b-eircode" className="block text-xs font-semibold text-gray-700 mb-1">
+            <label htmlFor="ri-eircode" className="block text-xs font-medium text-gray-600 mb-1">
               Eircode
             </label>
             <input
-              id="b-eircode"
-              name="eircode"
+              id="ri-eircode"
               type="text"
               autoComplete="postal-code"
-              placeholder="D02 AF30"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-gray-50"
+              value={eircode}
+              onChange={(e) => setEircode(e.target.value)}
+              placeholder="D02 AB30"
+              className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
             />
           </div>
+
           <div>
-            <label htmlFor="b-product" className="block text-xs font-semibold text-gray-700 mb-1">
-              What needs installed?
+            <label htmlFor="ri-product" className="block text-xs font-medium text-gray-600 mb-1">
+              What needs installed? *
             </label>
             <select
-              id="b-product"
-              name="product"
-              required
-              defaultValue=""
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-gray-50"
+              id="ri-product"
+              value={product}
+              onChange={(e) => setProduct(e.target.value)}
+              className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors bg-white"
             >
-              <option value="" disabled>
-                Select…
-              </option>
+              <option value="">Select…</option>
               <option value="ring-doorbell">Ring Doorbell (any model)</option>
               <option value="ring-camera">Ring Camera</option>
               <option value="eufy">Eufy doorbell / camera</option>
@@ -276,40 +244,56 @@ export default function RingBookingForm() {
           </div>
         </div>
 
-        {/* Real Calendly availability — Tue/Wed/Thu, 3 fixed 2-hour slots */}
-        <div className="mt-1">
-          <BookingCalendar
-            onSelectionChange={setBooking}
-            heading="Pick your install date"
-            confirmLabel="Install"
-            kind="installation"
-            compact
-          />
-        </div>
+        {status.kind === "error" ? (
+          <div
+            ref={errorRef}
+            role="alert"
+            aria-live="polite"
+            className="text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl px-4 py-3"
+          >
+            {status.message}
+          </div>
+        ) : null}
 
         <button
-          type="submit"
-          disabled={!canSubmit}
+          type="button"
+          onClick={handleSubmit}
+          disabled={!formValid || submitting}
           aria-busy={submitting}
-          className="btn-sheen pulse-glow group mt-2 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-600 text-white font-bold px-6 py-4 rounded-full transition-all shadow-[0_10px_40px_-5px_rgba(242,130,34,0.55)] hover:shadow-[0_20px_60px_-5px_rgba(242,130,34,0.7)] hover:-translate-y-0.5 text-base disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed"
+          className="w-full bg-brand-500 hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm py-4 rounded-full transition-colors flex items-center justify-center gap-2"
         >
           {submitting ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              Sending…
+              Booking…
             </>
+          ) : !booking ? (
+            "Choose a Date First"
+          ) : !formValid ? (
+            "Complete Your Details"
           ) : (
             <>
               <Send className="w-4 h-4" />
-              {booking ? "Confirm My Install Slot" : "Pick a date to continue"}
+              Confirm My Install Booking
             </>
           )}
         </button>
-        <p className="inline-flex items-center justify-center gap-1.5 text-[11px] text-gray-400 text-center">
+
+        <p className="inline-flex items-center justify-center gap-1.5 text-[11px] text-gray-400 w-full">
           <ShieldCheck className="w-3 h-3" />
           We&apos;ll only use your details to confirm — never spam, never shared.
         </p>
-      </form>
+      </div>
+
+      {/* Right: BookingCalendar — same component used across the site */}
+      <div>
+        <BookingCalendar
+          onSelectionChange={setBooking}
+          heading="Choose an Installation Date"
+          confirmLabel="Installation"
+          kind="installation"
+        />
+      </div>
     </div>
   );
 }

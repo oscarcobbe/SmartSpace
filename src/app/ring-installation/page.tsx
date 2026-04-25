@@ -1,74 +1,58 @@
 import Link from "next/link";
 import {
-  Home as HomeIcon,
+  Wrench,
   Cable,
   Smartphone,
   Bell,
-  ShieldCheck,
-  Camera,
   Star,
-  Phone,
-  ArrowRight,
+  Shield,
   Award,
+  CheckCircle2,
 } from "lucide-react";
 import RingBookingForm from "@/components/RingBookingForm";
-import MobileBookCTA from "@/components/MobileBookCTA";
 
 const PHONE_DISPLAY = "01 513 0424";
 const PHONE_TEL = "+35315130424";
 
-// Three real Google reviews lifted from /reviews. Swap for new ones any time.
+// Three real Google reviews lifted from /reviews
 const REVIEWS = [
   {
     text: "Fantastic service from start to finish. The lads arrived on time, installed the doorbell and two cameras in under two hours. Everything was set up on my phone before they left. Highly recommend!",
     author: "Sarah M.",
-    initials: "SM",
-    location: "Dublin",
+    date: "2 weeks ago",
   },
   {
     text: "Had the driveway bundle installed — doorbell and floodlight cam. Professional job, very tidy cabling, and they took the time to explain how everything works. Great value.",
     author: "James O'Brien",
-    initials: "JO",
-    location: "Leinster",
+    date: "1 month ago",
   },
   {
     text: "Couldn't be happier. We had a whole home setup done — doorbell, two floodlights. The team were friendly, professional, and left everything spotless. Already recommended to neighbours.",
     author: "Aoife D.",
-    initials: "AD",
-    location: "Dublin",
+    date: "2 months ago",
   },
 ];
 
 const INCLUDED = [
   {
-    icon: HomeIcon,
-    title: "Professional mounting",
+    icon: Wrench,
+    title: "Professional Mounting",
     body: "Drilled and fitted on any wall material — render, brick, timber, PVC. Cabling concealed where possible.",
   },
   {
     icon: Cable,
-    title: "Hardwired or battery",
+    title: "Hardwired or Battery",
     body: "If you want hardwired, we connect to your existing chime wiring. Battery models? Same flat fee.",
   },
   {
     icon: Smartphone,
-    title: "App setup & family training",
+    title: "App Setup & Training",
     body: "We pair the device, configure the app on your phone, add up to 4 family members, and demo every feature.",
   },
   {
     icon: Bell,
-    title: "Motion zones & alerts",
+    title: "Motion Zones & Alerts",
     body: "We tune motion detection so you get alerts when a real person walks up, not when a leaf moves.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "30-day support",
-    body: "Issue with the app or notifications in the first month? We'll come back free of charge.",
-  },
-  {
-    icon: Camera,
-    title: "Fully insured",
-    body: "All installers carry public liability cover and are background-checked. Documentation available on request.",
   },
 ];
 
@@ -81,17 +65,16 @@ const BRANDS = [
 ];
 
 const STEPS = [
-  { num: "1", title: "Book online", body: "Pick a date, tell us which doorbell you have." },
-  { num: "2", title: "We confirm by phone", body: "Quick call within an hour to confirm pricing & address." },
-  { num: "3", title: "Installer arrives", body: "Drilled, mounted, app-paired in 60–90 minutes." },
-  { num: "4", title: "Family trained", body: "We don't leave until you can use it confidently." },
+  { num: "1", title: "Book Online", body: "Pick a date, tell us which doorbell you have." },
+  { num: "2", title: "We Confirm by Phone", body: "Quick call within an hour to confirm pricing & address." },
+  { num: "3", title: "Installer Arrives", body: "Drilled, mounted, app-paired in 60–90 minutes." },
+  { num: "4", title: "Family Trained", body: "We don't leave until you can use it confidently." },
 ];
 
 const FAQ = [
   {
     q: "What's the €139 actually cover?",
     a: "Mounting your doorbell on any standard wall material, hardwiring into your existing chime if you want it wired, app setup on up to 4 family phones, motion-zone tuning, and a full demo before we leave. No surprise extras.",
-    open: true,
   },
   {
     q: "When would it cost more than €139?",
@@ -110,10 +93,6 @@ const FAQ = [
     a: "First 30 days are covered — we come back free of charge for any setup or app issue. After 30 days, we offer a paid call-out (€60) if there's a setup change you'd like.",
   },
   {
-    q: "Are you insured?",
-    a: "Yes — fully insured with public liability cover on every install. Documentation available on request — just ask on the booking call.",
-  },
-  {
     q: "Do you install other things — cameras, alarms, smart locks?",
     a: "Yes. CCTV, floodlight cameras, smart locks, network access, video intercoms — we do all of it. Pick \u201cSomething else\u201d in the booking form and we'll quote on the call.",
   },
@@ -121,186 +100,74 @@ const FAQ = [
 
 export default function RingInstallationPage() {
   return (
-    <div className="bg-white">
-      {/* Mobile-only sticky bottom CTA — appears after scrolling past the hero */}
-      <MobileBookCTA />
-      {/* ──────────── Sticky utility bar ──────────── */}
-      <div className="sticky top-0 z-40 bg-slate-900 text-white text-xs sm:text-sm font-semibold">
-        <div className="max-w-6xl mx-auto px-4 py-2.5 flex items-center justify-center gap-3 sm:gap-4 flex-wrap">
-          <span className="inline-block bg-brand-500 px-3 py-0.5 rounded-full text-[11px] sm:text-xs font-bold">
-            From €139
-          </span>
-          <span className="hidden sm:inline">Same-day quote</span>
-          <span className="hidden sm:inline text-white/40">·</span>
-          <a
-            href={`tel:${PHONE_TEL}`}
-            className="inline-flex items-center gap-1.5 hover:text-brand-400 transition-colors"
-          >
-            <Phone className="w-3.5 h-3.5" />
-            <span>{PHONE_DISPLAY}</span>
-          </a>
-        </div>
-      </div>
-
-      {/* ──────────── Hero ──────────── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-brand-50 via-white to-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 sm:pt-16 pb-10 sm:pb-14">
-          <div className="grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-14 items-center">
-            {/* Left: copy */}
-            <div>
-              <div className="inline-flex items-center gap-2 bg-brand-500/10 text-brand-700 px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wide mb-5">
-                <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-brand-500 text-white text-[10px]">
-                  ✓
-                </span>
-                <span>5,000+ installs · 5★ Google reviews</span>
-              </div>
-
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 leading-[1.08] tracking-tight mb-4">
-                Ring Doorbell Installation in Ireland —{" "}
-                <span className="text-brand-500">From €139</span>
-              </h1>
-
-              <p className="text-base sm:text-lg text-gray-600 leading-relaxed mb-7 max-w-xl">
-                Professional installation by certified Irish installers. Wired or battery, every
-                Ring model. Book online in 90 seconds — pick a date that works.
-              </p>
-
-              {/* Trust row */}
-              <div className="flex flex-wrap gap-x-6 gap-y-3 mb-7 text-sm font-semibold text-gray-700">
-                <div className="flex items-center gap-2">
-                  <span className="text-amber-400 tracking-wider">★★★★★</span>
-                  <span>5 Star on Google</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-brand-500 font-extrabold">5,000+</span>
-                  <span>installs done</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-brand-500 font-extrabold">€139</span>
-                  <span>flat-rate from</span>
-                </div>
-              </div>
-
-              {/* CTA row */}
-              <div className="flex flex-col sm:flex-row gap-3 mb-5">
-                <Link
-                  href="#book"
-                  className="btn-sheen pulse-glow group inline-flex items-center justify-center gap-2 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-600 text-white font-bold px-8 py-4 rounded-full transition-all shadow-[0_10px_40px_-5px_rgba(242,130,34,0.55)] hover:shadow-[0_20px_60px_-5px_rgba(242,130,34,0.7)] hover:-translate-y-0.5"
-                >
-                  Book Your Install
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-                <a
-                  href={`tel:${PHONE_TEL}`}
-                  className="inline-flex items-center justify-center gap-2 bg-white border-2 border-gray-200 hover:border-gray-900 text-gray-900 font-bold px-7 py-4 rounded-full transition-colors"
-                >
-                  <Phone className="w-4 h-4" />
-                  Call Now
-                </a>
-              </div>
-
-              {/* Hero meta */}
-              <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs sm:text-sm text-gray-500 mb-5">
-                <span className="inline-flex items-center gap-1.5 before:content-[''] before:w-1.5 before:h-1.5 before:bg-emerald-500 before:rounded-full">
-                  Same-day quotes
-                </span>
-                <span className="inline-flex items-center gap-1.5 before:content-[''] before:w-1.5 before:h-1.5 before:bg-emerald-500 before:rounded-full">
-                  Insured installers
-                </span>
-                <span className="inline-flex items-center gap-1.5 before:content-[''] before:w-1.5 before:h-1.5 before:bg-emerald-500 before:rounded-full">
-                  All major brands
-                </span>
-              </div>
-
-              {/* Award badge — strong trust signal */}
-              <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 px-3.5 py-1.5 rounded-full text-xs sm:text-[13px] font-semibold">
-                <Award className="w-4 h-4 text-amber-600" />
-                <span>Three Ireland SME Winner 2025</span>
-              </div>
-            </div>
-
-            {/* Right: booking form */}
-            <div id="book">
-              <RingBookingForm />
-            </div>
+    <div className="pt-32 lg:pt-36">
+      {/* ──────────── Hero / header ──────────── */}
+      <section className="py-10 sm:py-14">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center gap-2 bg-brand-50 text-brand-700 px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-[0.15em] mb-5">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-500" />
+            Dublin&apos;s #1 Ring Installer
           </div>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4 leading-[1.08] tracking-tight">
+            Ring Doorbell Installation in Ireland —{" "}
+            <span className="text-brand-500">From €139</span>
+          </h1>
+          <p className="text-gray-500 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
+            Professional installation by certified Irish installers. Wired or battery, every Ring
+            model. Book online in 90 seconds — pick a date that works.
+          </p>
         </div>
       </section>
 
-      {/* ──────────── Trust strip ──────────── */}
-      <div className="bg-gray-50 border-y border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
-            {[
-              { num: "5,000+", label: "Installs completed" },
-              { num: "5★", label: "Google rating" },
-              { num: "€139", label: "From price" },
-              { num: "48h", label: "Average install time" },
-            ].map((s) => (
-              <div key={s.label}>
-                <div className="text-2xl sm:text-3xl font-extrabold text-brand-500 leading-none mb-1">
-                  {s.num}
-                </div>
-                <div className="text-[11px] sm:text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  {s.label}
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* ──────────── Booking ──────────── */}
+      <section id="book" className="pb-12 lg:pb-20 scroll-mt-32">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <RingBookingForm />
         </div>
-      </div>
+      </section>
 
-      {/* ──────────── What's included ──────────── */}
-      <section className="py-14 sm:py-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-10 sm:mb-12">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight mb-3">
-              What&apos;s included with every install
+      {/* ──────────── What's Included ──────────── */}
+      <section className="py-16 lg:py-24 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">
+              What&apos;s Included
             </h2>
-            <p className="text-sm sm:text-base text-gray-500 max-w-xl mx-auto">
+            <p className="text-gray-500 text-lg max-w-xl mx-auto">
               Flat-rate, no hidden costs. Your install is complete when the doorbell is mounted,
               online, and you&apos;ve been shown how to use it.
             </p>
           </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {INCLUDED.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div
-                  key={item.title}
-                  className="bg-white border border-gray-200 rounded-2xl p-6 hover:border-brand-500 hover:-translate-y-0.5 hover:shadow-md transition-all"
-                >
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-brand-50 text-brand-500 mb-4">
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <h3 className="font-extrabold text-gray-900 mb-1.5">{item.title}</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">{item.body}</p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {INCLUDED.map((item) => (
+              <div key={item.title} className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-white text-brand-500 rounded-2xl mb-5 shadow-sm">
+                  <item.icon className="h-7 w-7" />
                 </div>
-              );
-            })}
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{item.body}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ──────────── Brands ──────────── */}
-      <section className="py-14 sm:py-20 bg-gray-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-10 sm:mb-12">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight mb-3">
-              Brands we install
+      {/* ──────────── Brands We Install ──────────── */}
+      <section className="py-16 lg:py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">
+              Brands We Install
             </h2>
-            <p className="text-sm sm:text-base text-gray-500 max-w-xl mx-auto">
-              Same flat €139 install fee whether you bought from Amazon, Currys, Harvey Norman, or
-              directly from the brand.
+            <p className="text-gray-500 text-lg max-w-xl mx-auto">
+              Same flat €139 install fee whatever brand you bought.
             </p>
           </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 max-w-4xl mx-auto">
             {BRANDS.map((b) => (
               <div
                 key={b.name}
-                className="bg-white border border-gray-200 rounded-xl p-5 text-center hover:border-brand-500 hover:-translate-y-0.5 transition-all"
+                className="bg-white border border-gray-200 rounded-xl p-5 text-center hover:border-brand-500 transition-colors"
               >
                 <div className="font-extrabold text-gray-900 text-base sm:text-lg mb-1">
                   {b.name}
@@ -312,25 +179,24 @@ export default function RingInstallationPage() {
         </div>
       </section>
 
-      {/* ──────────── How it works ──────────── */}
-      <section className="py-14 sm:py-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-10 sm:mb-12">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight mb-3">
-              How it works
+      {/* ──────────── How It Works ──────────── */}
+      <section className="py-16 lg:py-24 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">
+              How It Works
             </h2>
-            <p className="text-sm sm:text-base text-gray-500">
+            <p className="text-gray-500 text-lg">
               From booking to &ldquo;all done&rdquo; in under 48 hours, most weeks.
             </p>
           </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto">
             {STEPS.map((s) => (
               <div key={s.num} className="text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand-500 text-white font-extrabold text-lg shadow-lg shadow-brand-500/30 mb-4">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-brand-500 text-white font-extrabold text-lg shadow-lg shadow-brand-500/30 mb-4">
                   {s.num}
                 </div>
-                <h4 className="font-extrabold text-gray-900 mb-1.5">{s.title}</h4>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{s.title}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">{s.body}</p>
               </div>
             ))}
@@ -339,58 +205,57 @@ export default function RingInstallationPage() {
       </section>
 
       {/* ──────────── Reviews ──────────── */}
-      <section className="py-14 sm:py-20 bg-gray-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-10 sm:mb-12">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight mb-3">
-              What customers say
+      <section className="py-16 lg:py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">
+              What Customers Say
             </h2>
-            <p className="text-sm sm:text-base text-gray-500">
-              5★ on Google. Real reviews from across Dublin and Leinster.
-            </p>
+            <p className="text-gray-500 text-lg">5 Star on Google · Real reviews from Dublin and Leinster.</p>
           </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {REVIEWS.map((r) => (
               <div
                 key={r.author}
-                className="bg-white border border-gray-200 rounded-2xl p-6"
+                className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow"
               >
                 <div className="flex gap-0.5 mb-3">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                   ))}
                 </div>
-                <p className="text-sm text-gray-700 leading-relaxed mb-5">&ldquo;{r.text}&rdquo;</p>
-                <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
-                  <div className="w-9 h-9 rounded-full bg-brand-500 text-white flex items-center justify-center font-bold text-xs">
-                    {r.initials}
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-gray-900">{r.author}</div>
-                    <div className="text-[11px] text-gray-500">{r.location}</div>
-                  </div>
+                <p className="text-gray-600 text-sm leading-relaxed mb-5">&ldquo;{r.text}&rdquo;</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold text-gray-900">{r.author}</span>
+                  <span className="text-xs text-gray-400">{r.date}</span>
                 </div>
               </div>
             ))}
+          </div>
+          <div className="text-center mt-10">
+            <Link
+              href="/reviews"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-brand-500 hover:text-brand-600"
+            >
+              See all reviews →
+            </Link>
           </div>
         </div>
       </section>
 
       {/* ──────────── FAQ ──────────── */}
-      <section className="py-14 sm:py-20">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-10 sm:mb-12">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight">
-              Common questions
+      <section className="py-16 lg:py-24 bg-gray-50">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">
+              Common Questions
             </h2>
           </div>
-
           <div className="flex flex-col gap-3">
-            {FAQ.map((item) => (
+            {FAQ.map((item, i) => (
               <details
                 key={item.q}
-                open={item.open}
+                open={i === 0}
                 className="group bg-white border border-gray-200 rounded-xl overflow-hidden"
               >
                 <summary className="cursor-pointer list-none px-5 py-4 flex items-center justify-between gap-4 text-sm sm:text-base font-bold text-gray-900">
@@ -406,32 +271,61 @@ export default function RingInstallationPage() {
         </div>
       </section>
 
-      {/* ──────────── Final CTA ──────────── */}
-      <section className="relative bg-gradient-to-br from-slate-900 to-slate-800 text-white py-16 sm:py-20 overflow-hidden">
-        <div
-          aria-hidden
-          className="absolute inset-x-0 -top-24 h-72 bg-gradient-radial from-brand-500/30 to-transparent blur-3xl pointer-events-none"
-        />
-        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight mb-3">
-            Pick a date. Call you back in an hour.
+      {/* ──────────── Trust strip ──────────── */}
+      <section className="py-12 bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { icon: Shield, text: "Dublin's #1 Ring Installer" },
+              { icon: Star, text: "5 Star Google Rating" },
+              { icon: Wrench, text: "5,000+ Installations" },
+              { icon: Award, text: "SME Winner 2025" },
+            ].map(({ icon: Icon, text }) => (
+              <div key={text} className="flex flex-col items-center text-center gap-2">
+                <Icon className="h-6 w-6 text-brand-500" />
+                <span className="text-xs font-semibold text-gray-600">{text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ──────────── Bottom CTA — link out to other site sections ──────────── */}
+      <section className="py-16 lg:py-20 bg-gray-50">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-3">
+            Looking for something else?
           </h2>
-          <p className="text-sm sm:text-base text-white/70 mb-7 max-w-xl mx-auto">
-            Most installs are booked, confirmed, and finished within 48 hours of the first click.
+          <p className="text-gray-500 mb-7 max-w-xl mx-auto">
+            Browse our full range of installation packages, security camera bundles, and free home
+            consultations.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <div className="flex flex-wrap gap-3 justify-center">
             <Link
-              href="#book"
-              className="btn-sheen pulse-glow group inline-flex items-center justify-center gap-2 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-600 text-white font-bold px-8 py-4 rounded-full transition-all shadow-[0_10px_40px_-5px_rgba(242,130,34,0.65)] hover:shadow-[0_20px_60px_-5px_rgba(242,130,34,0.8)] hover:-translate-y-0.5"
+              href="/services"
+              className="inline-flex items-center gap-2 bg-white border border-gray-200 hover:border-brand-500 text-gray-900 font-semibold text-sm px-6 py-3 rounded-full transition-colors"
             >
-              Book Your Install
-              <ArrowRight className="w-4 h-4" />
+              <CheckCircle2 className="w-4 h-4 text-brand-500" />
+              All Services
+            </Link>
+            <Link
+              href="/services/bundles"
+              className="inline-flex items-center gap-2 bg-white border border-gray-200 hover:border-brand-500 text-gray-900 font-semibold text-sm px-6 py-3 rounded-full transition-colors"
+            >
+              <CheckCircle2 className="w-4 h-4 text-brand-500" />
+              View Bundles
+            </Link>
+            <Link
+              href="/services/free-consultation"
+              className="inline-flex items-center gap-2 bg-white border border-gray-200 hover:border-brand-500 text-gray-900 font-semibold text-sm px-6 py-3 rounded-full transition-colors"
+            >
+              <CheckCircle2 className="w-4 h-4 text-brand-500" />
+              Free Consultation
             </Link>
             <a
               href={`tel:${PHONE_TEL}`}
-              className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold px-7 py-4 rounded-full transition-colors"
+              className="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm px-6 py-3 rounded-full transition-colors"
             >
-              <Phone className="w-4 h-4" />
               Call {PHONE_DISPLAY}
             </a>
           </div>

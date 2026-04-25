@@ -88,14 +88,6 @@ const jsonLd = {
             text: "First 30 days are covered — we come back free of charge for any setup or app issue. After 30 days, we offer a paid call-out (€60) if there's a setup change you'd like.",
           },
         },
-        {
-          "@type": "Question",
-          name: "Are you insured?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Yes — fully insured with public liability cover on every install. Documentation available on request — just ask on the booking call.",
-          },
-        },
       ],
     },
   ],
