@@ -90,10 +90,10 @@ const jsonLd = {
         },
         {
           "@type": "Question",
-          name: "Are you insured? Garda-vetted?",
+          name: "Are you insured?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Yes — fully insured, public liability cover. All installers Garda-vetted on request. Just mention it on the booking call.",
+            text: "Yes — fully insured with public liability cover on every install. Documentation available on request — just ask on the booking call.",
           },
         },
       ],

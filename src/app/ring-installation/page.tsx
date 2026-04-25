@@ -67,8 +67,8 @@ const INCLUDED = [
   },
   {
     icon: Camera,
-    title: "Insured & vetted",
-    body: "All installers fully insured. Background-checked. Garda-vetted on request for sensitive installs.",
+    title: "Fully insured",
+    body: "All installers carry public liability cover and are background-checked. Documentation available on request.",
   },
 ];
 
@@ -110,8 +110,8 @@ const FAQ = [
     a: "First 30 days are covered — we come back free of charge for any setup or app issue. After 30 days, we offer a paid call-out (€60) if there's a setup change you'd like.",
   },
   {
-    q: "Are you insured? Garda-vetted?",
-    a: "Yes — fully insured, public liability cover. All installers Garda-vetted on request. Just mention it on the booking call.",
+    q: "Are you insured?",
+    a: "Yes — fully insured with public liability cover on every install. Documentation available on request — just ask on the booking call.",
   },
   {
     q: "Do you install other things — cameras, alarms, smart locks?",
@@ -208,7 +208,7 @@ export default function RingInstallationPage() {
                   Insured installers
                 </span>
                 <span className="inline-flex items-center gap-1.5 before:content-[''] before:w-1.5 before:h-1.5 before:bg-emerald-500 before:rounded-full">
-                  Garda-vetted on request
+                  All major brands
                 </span>
               </div>
 

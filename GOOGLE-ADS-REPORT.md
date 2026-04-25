@@ -385,7 +385,6 @@ The active RSA's 15 headlines include great hooks ("Ring Installation - Only €
 - "Three Ireland SME Winner 2025"
 - "Ring · Eufy · Nest · Tapo"
 - "Same-Week Installation"
-- "Garda-Vetted Installers"
 - "Insured & Certified Installers"
 
 ---
