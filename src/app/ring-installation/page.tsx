@@ -10,6 +10,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import RingBookingForm from "@/components/RingBookingForm";
+import FeaturedProducts from "@/components/FeaturedProducts";
 
 const PHONE_DISPLAY = "01 513 0424";
 const PHONE_TEL = "+35315130424";
@@ -242,6 +243,9 @@ export default function RingInstallationPage() {
           </div>
         </div>
       </section>
+
+      {/* ──────────── Featured Products / Bundles ──────────── */}
+      <FeaturedProducts />
 
       {/* ──────────── FAQ ──────────── */}
       <section className="py-16 lg:py-24 bg-gray-50">
