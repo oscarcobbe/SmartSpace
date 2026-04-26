@@ -16,6 +16,24 @@ export const TIME_SLOTS = [
 // Available days: Tuesday (2), Wednesday (3), Thursday (4)
 export const AVAILABLE_DAYS = [2, 3, 4];
 
+/**
+ * Hard earliest-booking date — overrides the default "today + buffer"
+ * lead-time when it sits in the future. After this date passes the
+ * constraint expires automatically and the calendar reverts to the
+ * normal lead-time logic. Set to limit bookings during periods when
+ * the install team is unavailable.
+ */
+export const EARLIEST_BOOKING_DATE = new Date("2026-05-07T00:00:00");
+
+/** Convenience: returns the later of (today + leadDays) or EARLIEST_BOOKING_DATE. */
+export function getEarliestBookableDate(leadDays = 5): Date {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const buffered = new Date(today);
+  buffered.setDate(today.getDate() + leadDays);
+  return buffered > EARLIEST_BOOKING_DATE ? buffered : new Date(EARLIEST_BOOKING_DATE);
+}
+
 type EventKind = "consultation" | "installation";
 
 function getEventTypeUri(kind: EventKind): string | undefined {

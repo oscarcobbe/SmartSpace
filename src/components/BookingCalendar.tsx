@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Calendar, Clock, ChevronLeft, ChevronRight, AlertCircle, Timer } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { getEarliestBookableDate } from "@/lib/calendly";
 
 const AVAILABLE_DAYS = [2, 3, 4]; // Tue, Wed, Thu
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -23,12 +24,13 @@ interface BookingCalendarProps {
 
 function getAvailableDates(): Date[] {
   const dates: Date[] = [];
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  for (let i = 5; i <= 49; i++) {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
+  // Earliest bookable date respects both the standard 5-day lead time
+  // AND the EARLIEST_BOOKING_DATE constant in lib/calendly.ts (whichever
+  // is later). Window length: ~6 weeks of available days.
+  const start = getEarliestBookableDate(5);
+  for (let i = 0; i <= 49; i++) {
+    const date = new Date(start);
+    date.setDate(start.getDate() + i);
     if (AVAILABLE_DAYS.includes(date.getDay())) {
       dates.push(date);
     }

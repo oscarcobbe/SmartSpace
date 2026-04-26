@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Calendar, Clock, CheckCircle, ArrowLeft, User, Mail } from "lucide-react";
+import { getEarliestBookableDate } from "@/lib/calendly";
 
 interface ContactData {
   name: string;
@@ -26,12 +27,12 @@ const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Se
 
 function getAvailableDates(): Date[] {
   const dates: Date[] = [];
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  for (let i = 1; i <= 28; i++) {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
+  // Respects EARLIEST_BOOKING_DATE in lib/calendly.ts — overrides the
+  // default 1-day lead time when the constant sits in the future.
+  const start = getEarliestBookableDate(1);
+  for (let i = 0; i <= 28; i++) {
+    const date = new Date(start);
+    date.setDate(start.getDate() + i);
     if (AVAILABLE_DAYS.includes(date.getDay())) {
       dates.push(date);
     }

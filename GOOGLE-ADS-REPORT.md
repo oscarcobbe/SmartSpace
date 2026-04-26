@@ -455,3 +455,91 @@ Real data: 33% of impressions are 55-64 age bracket, 24% are 35-44. **76% male.*
 4. Restructure into 4 campaigns next month → +5 pts
 
 That's the realistic ceiling. Most service-based local accounts cap around 75-85 because Display + YouTube + PMax aren't relevant — and that's fine.
+
+---
+
+# ADDENDUM 2 — Post-deploy update (2026-04-26)
+
+24 hours after the previous addendum. Major site-side changes have shipped that materially affect the score. Account-side changes (the owner's checklist) status unknown — assumed not-yet-done unless verified.
+
+## What shipped on the site (verified live)
+
+| Change | Status | Conv. tracking impact |
+|---|---|---|
+| Cookiebot-style cookie banner sitewide | ✅ Live | Required for EEA conversion processing |
+| Consent Mode v2 default-deny (`gtag('consent','default','denied',…)`) firing BEFORE first `gtag('config',…)` | ✅ Verified in HTML on `/`, `/services/pro-video-doorbell`, `/ring-installation` | Smart Bidding now receives modeled EEA conversions |
+| `prefers-reduced-motion` honored in CSS | ✅ Live (WCAG 2.1 AA fix) | Quality Score landing-page-experience boost |
+| Phone-call conversion label `HWS2CL2y4ZgcEJfU6PxC` confirmed in Vercel env | ✅ Live | "SS - Call (01 513 0424)" now firing from real numbers |
+| Enhanced Conversions confirmed ON for all 4 SS- actions | ✅ Owner verified | Recovers ~10% attribution from cookie-blocked traffic |
+| New paid LP at `/ring-installation` (noindex, mirrors `/services/installation-only` configurator + Stripe + Calendly) | ✅ Live | Active RSA Final URL pending owner update → +20-40% expected CVR on paid clicks |
+| Mobile UX: BookingCalendar component now shared with paid LP | ✅ Live | Single proven booking flow; no custom drift |
+| FeaturedProducts carousel + cross-sell links on `/ring-installation` | ✅ Live | Recovery path for visitors who don't book on first visit |
+
+## Updated section scores
+
+| Section | Was (24h ago) | Now | Why changed |
+|---|---|---|---|
+| **Conversion Tracking** | 76/100 | **92/100** | Consent Mode v2 deployed (was the single biggest fail); phone tracking confirmed wired; Enhanced Conversions confirmed ON; mobile UX honors reduced-motion |
+| Wasted Spend | 22/100 | 22/100 (unchanged) | Account-side fixes not yet confirmed (Display Network OFF, broad-match paused, neg-list installed) |
+| Account Structure | 45/100 | 45/100 (unchanged) | No restructuring done yet |
+| Keywords | 58/100 | 58/100 (unchanged) | Same |
+| Ads | 60/100 | 65/100 | New LP gives the active RSA the message-match it was missing — Quality Score landing-page-experience component improves |
+| Settings | 30/100 | 30/100 (unchanged) | Bid strategy + network settings still owner-pending |
+
+**New Health Score: 51/100 (Grade: F+)** — up from 38. The conversion-tracking jump alone moved us 8 points; the LP shipping moved another 5. The remaining 24 points to a B grade are entirely owner-side checklist items.
+
+## Critical owner actions this week (unchanged from previous addendum)
+
+1. **Update active RSA Final URL** in Ads UI: `/services/installation-only` → `/ring-installation`. Wait ~10 min for Google to re-review.
+2. **Disable Display Network + Search Partners** in the Installer April 2026 campaign (recovers €20+/month from junk Display traffic).
+3. **Pause remaining Broad-match keywords**.
+4. **Add the Shared Negative Keyword List** (refined version below — sourced from real Search Terms data).
+5. **Resubmit sitemap** in Search Console (helps Google reprocess the SSR'd product pages so Quality Score evaluation has the latest landing-page experience).
+
+## Refined negative keyword list (post-LP)
+
+**EXACT — competitor / brand bleed (priority):**
+```
+[ring]                  [amazon]
+[amazon ring]           [ring com]
+[ring.com]              [ring com ireland]
+[ring ireland]          [ring ie]
+[ring chime]            [ring doorbell subscription]
+[phone watch ireland]   [jec waterford]
+[ap systems kilkenny]   [hkc alarms dublin]
+[homesecure dublin]     [home secure dublin]
+[connectit ie]          [be at ease alarms]
+[feale security abbeyfeale]
+```
+
+**PHRASE — wrong intent (advice / DIY / cost-research / job-seekers):**
+```
+"how to"            "how to install"
+"how do i"          "setting up"
+"set up ring"       "diy"
+"yourself"          "tutorial"
+"troubleshoot"      "troubleshooting"
+"not working"       "won't connect"
+"offline"           "reset"
+"manual"            "subscription"
+"chime"             "second hand"
+"jobs"              "career"
+"salary"            "refund"
+"return"            "how much"
+"cost of"
+```
+
+**Add as a Shared Negative Keyword List** at the account level — propagates to all current + future campaigns. Tools → Shared library → Negative keyword lists → Create.
+
+## What changes the score next
+
+| If owner does | Score becomes |
+|---|---|
+| Updates RSA URL → `/ring-installation` (5 min) | 53/100 (+2 — Quality Score lift in 7-14 days) |
+| Disables Display + Search Partners (5 min) | 60/100 (+7 — Wasted Spend section jumps from 22 → 50) |
+| Adds Shared Negative List (10 min) | 67/100 (+7 — Wasted Spend → 70) |
+| Switches to Maximize Conversions after 14 days of conversion data (waits) | 75/100 (+8 — Settings section jumps to 70) |
+| Restructures into 4 themed campaigns (next month) | 80/100 (+5 — Account Structure → 75) |
+
+The site-side work is done. **The remaining lift is all in the Ads UI, mostly clicks not strategy.**
+
