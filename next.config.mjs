@@ -43,7 +43,7 @@ const nextConfig = {
       { source: "/products/:slug([^.]+)", destination: "/services", permanent: true },
       { source: "/collections/:slug([^.]+)", destination: "/services", permanent: true },
       { source: "/pages/:slug([^.]+)", destination: "/", permanent: true },
-      { source: "/blogs/:slug([^.]+)", destination: "https://www.smartcareliving.ie/blogs/news", permanent: true },
+      { source: "/blogs/:slug([^.]+)", destination: "https://www.smartcareliving.ie/", permanent: true },
 
       // Old pages -> home page
       { source: "/pages/how-it-works", destination: "/", permanent: true },
@@ -73,8 +73,8 @@ const nextConfig = {
       // smartcareliving.ie URLs; many of those destinations 404'd which was
       // flooding Search Console with "Page with redirect — Failed". Collapsed
       // to a single catch-all to a guaranteed-live destination.
-      { source: "/blogs/safe-ageing-powered-by-ai", destination: "https://www.smartcareliving.ie/blogs/news", permanent: true },
-      { source: "/blogs/safe-ageing-powered-by-ai/:slug*", destination: "https://www.smartcareliving.ie/blogs/news", permanent: true },
+      { source: "/blogs/safe-ageing-powered-by-ai", destination: "https://www.smartcareliving.ie/", permanent: true },
+      { source: "/blogs/safe-ageing-powered-by-ai/:slug*", destination: "https://www.smartcareliving.ie/", permanent: true },
     ];
   },
 };
