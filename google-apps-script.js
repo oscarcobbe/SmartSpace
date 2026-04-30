@@ -138,3 +138,86 @@ function doPost(e) {
     JSON.stringify({ success: true })
   ).setMimeType(ContentService.MimeType.JSON);
 }
+
+/**
+ * One-shot cleanup of test rows. Run from the Apps Script editor:
+ * 1. Open Extensions > Apps Script from the leads sheet.
+ * 2. Replace the file contents with this updated version (or paste this
+ *    function below the existing code).
+ * 3. Select `cleanTestRows` from the function dropdown at the top.
+ * 4. Click ▶ Run. Authorize if prompted.
+ * 5. Open View > Logs to see what was deleted.
+ *
+ * Deletes rows where ANY of the following is true:
+ *   - email exactly matches a known test address
+ *   - name starts with "Claude Test" or "Test "
+ *   - amount > 0 AND amount < 5 (€1 test orders)
+ *
+ * Real customer rows (Helen O'Reilly, Cecile Grand, etc.) are preserved.
+ * Safe to re-run — does nothing if no test rows are present.
+ */
+function cleanTestRows() {
+  var TEST_EMAILS = [
+    "oscarcobbe2017@icloud.com",
+    "oscarcobbe2017+claudetest@icloud.com",
+  ];
+  var TEST_NAME_PREFIXES = ["Claude Test", "Test "];
+
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Leads");
+  if (!sheet) {
+    Logger.log("ERROR: 'Leads' sheet not found");
+    return;
+  }
+
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    Logger.log("Sheet is empty (no data rows).");
+    return;
+  }
+
+  var headerRow = sheet.getRange(1, 1, 1, COLUMNS.length).getValues()[0];
+  var emailCol = headerRow.indexOf("Email") + 1;
+  var nameCol = headerRow.indexOf("Name") + 1;
+  var amountCol = headerRow.indexOf("Amount") + 1;
+  if (emailCol === 0 || nameCol === 0 || amountCol === 0) {
+    Logger.log("ERROR: Could not locate Email/Name/Amount columns. Re-run setupHeaders() first.");
+    return;
+  }
+
+  var data = sheet.getRange(2, 1, lastRow - 1, COLUMNS.length).getValues();
+  var rowsToDelete = []; // collect 1-indexed row numbers
+
+  for (var i = 0; i < data.length; i++) {
+    var rowNum = i + 2; // sheet rows are 1-indexed and we start at row 2
+    var email = String(data[i][emailCol - 1] || "").trim().toLowerCase();
+    var name = String(data[i][nameCol - 1] || "").trim();
+    var amountRaw = data[i][amountCol - 1];
+    var amount = typeof amountRaw === "number" ? amountRaw : parseFloat(amountRaw) || 0;
+
+    var matchEmail = TEST_EMAILS.indexOf(email) !== -1;
+    var matchName = TEST_NAME_PREFIXES.some(function (p) { return name.indexOf(p) === 0; });
+    var matchAmount = amount > 0 && amount < 5;
+
+    if (matchEmail || matchName || matchAmount) {
+      rowsToDelete.push({ row: rowNum, email: email, name: name, amount: amount });
+    }
+  }
+
+  if (rowsToDelete.length === 0) {
+    Logger.log("No test rows found. Nothing to delete.");
+    return;
+  }
+
+  Logger.log("Will delete " + rowsToDelete.length + " test row(s):");
+  rowsToDelete.forEach(function (r) {
+    Logger.log("  row " + r.row + ": " + r.name + " <" + r.email + "> €" + r.amount);
+  });
+
+  // Delete from bottom up so row numbers don't shift mid-deletion
+  rowsToDelete.sort(function (a, b) { return b.row - a.row; });
+  rowsToDelete.forEach(function (r) {
+    sheet.deleteRow(r.row);
+  });
+
+  Logger.log("Done. Deleted " + rowsToDelete.length + " test row(s).");
+}
