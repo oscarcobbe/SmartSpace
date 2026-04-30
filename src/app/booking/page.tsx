@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Calendar, Clock, CheckCircle, ArrowLeft, User, Mail } from "lucide-react";
-import { getEarliestBookableDate } from "@/lib/calendly";
+import { getEarliestBookableDate, AVAILABLE_DAYS, TIME_SLOTS } from "@/lib/calendly";
+import { getAttribution } from "@/lib/attribution";
 
 interface ContactData {
   name: string;
@@ -14,22 +15,16 @@ interface ContactData {
   message: string;
 }
 
-const TIME_SLOTS = [
-  { label: "10:30 – 12:30", value: "10:30-12:30" },
-  { label: "12:30 – 14:30", value: "12:30-14:30" },
-  { label: "14:30 – 16:30", value: "14:30-16:30" },
-];
-
-// Available days: Monday (1), Wednesday (3), Thursday (4)
-const AVAILABLE_DAYS = [1, 3, 4];
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 function getAvailableDates(): Date[] {
   const dates: Date[] = [];
   // Respects EARLIEST_BOOKING_DATE in lib/calendly.ts — overrides the
-  // default 1-day lead time when the constant sits in the future.
-  const start = getEarliestBookableDate(1);
+  // default lead time when the constant sits in the future. Uses the
+  // 5-day buffer matching the rest of the booking system so we don't
+  // surface dates Calendly rejects.
+  const start = getEarliestBookableDate(5);
   for (let i = 0; i <= 28; i++) {
     const date = new Date(start);
     date.setDate(start.getDate() + i);
@@ -55,6 +50,7 @@ export default function BookingPage() {
   const [selectedSlot, setSelectedSlot] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const availableDates = getAvailableDates();
 
@@ -70,20 +66,32 @@ export default function BookingPage() {
   const handleConfirm = async () => {
     if (!contact || !selectedDate || !selectedSlot) return;
     setSubmitting(true);
+    setError(null);
 
     try {
-      await fetch("/api/booking", {
+      const res = await fetch("/api/booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...contact,
           date: selectedDate,
           timeSlot: selectedSlot,
+          attribution: getAttribution() ?? undefined,
         }),
       });
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+
+      if (!res.ok) {
+        setError(
+          json.error ??
+            "We couldn't confirm that booking. Please try a different time or contact us directly."
+        );
+        return;
+      }
+
       sessionStorage.removeItem("bookingContact");
       setConfirmed(true);
-      // Google Ads conversion: Book appointment
+      // Google Ads conversion: Book appointment — only fires on confirmed booking
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (typeof window !== "undefined" && (window as any).gtag) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -92,9 +100,17 @@ export default function BookingPage() {
           value: 10.0,
           currency: 'EUR',
         });
+        // GA4 lead event mirroring the contact form pattern
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any).gtag('event', 'generate_lead', {
+          currency: 'EUR',
+          value: 10,
+          lead_source: 'booking_form',
+        });
       }
     } catch (err) {
       console.error("Booking failed:", err);
+      setError("Network error. Please check your connection and try again.");
     } finally {
       setSubmitting(false);
     }
@@ -237,6 +253,16 @@ export default function BookingPage() {
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* Error message */}
+        {error && (
+          <div
+            className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 mb-4"
+            role="alert"
+          >
+            {error}
           </div>
         )}
 

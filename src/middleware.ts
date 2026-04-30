@@ -24,7 +24,7 @@ export function middleware() {
     "img-src 'self' data: blob: https:",
     "media-src 'self' https:",
     "connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://www.googletagmanager.com https://region1.google-analytics.com https://api.calendly.com https://*.myshopify.com",
-    "frame-src https://js.stripe.com https://hooks.stripe.com https://calendly.com https://*.calendly.com",
+    "frame-src https://js.stripe.com https://hooks.stripe.com https://calendly.com https://*.calendly.com https://www.google.com https://maps.google.com",
     "base-uri 'self'",
     "form-action 'self' https://checkout.stripe.com",
     "object-src 'none'",

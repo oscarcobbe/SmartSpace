@@ -1,7 +1,26 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { RefreshCw, Search, Filter, Calendar, MapPin, Phone, Mail, User, ChevronDown, ChevronUp, ExternalLink, CreditCard, Clock, Package } from "lucide-react";
+import { RefreshCw, Search, Filter, Calendar, MapPin, Phone, Mail, User, ChevronDown, ChevronUp, ExternalLink, CreditCard, Clock, Package, Route } from "lucide-react";
+
+/**
+ * Build a Google Maps multi-stop directions URL.
+ * - 0 addresses → null (caller should hide button)
+ * - 1 address → simple destination
+ * - 2+ addresses → first n-1 as waypoints, last as destination
+ * Origin is left blank so Google Maps uses the device's current location.
+ */
+function buildRouteUrl(addresses: string[]): string | null {
+  const valid = addresses.filter((a) => a && a !== "—").map((a) => a.trim());
+  if (valid.length === 0) return null;
+  const enc = (s: string) => encodeURIComponent(s);
+  if (valid.length === 1) {
+    return `https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=${enc(valid[0])}`;
+  }
+  const destination = valid[valid.length - 1];
+  const waypoints = valid.slice(0, -1).map(enc).join("|");
+  return `https://www.google.com/maps/dir/?api=1&travelmode=driving&waypoints=${waypoints}&destination=${enc(destination)}`;
+}
 
 interface Lead {
   date: string;
@@ -204,17 +223,34 @@ export default function AdminLeadsPage() {
             .filter((l) =>
               !search || [l.name, l.email, l.phone, l.address, l.product].join(" ").toLowerCase().includes(search.toLowerCase())
             );
+          const routeUrl = buildRouteUrl(upcoming.map((l) => l.address));
+          const stopCount = upcoming.filter((l) => l.address && l.address !== "—").length;
           return (
             <>
-              <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search upcoming by name, email, address..."
-                  className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                />
+              <div className="flex flex-col sm:flex-row gap-3 mb-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search upcoming by name, email, address..."
+                    className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                  />
+                </div>
+                {routeUrl && stopCount > 0 && (
+                  <a
+                    href={routeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors whitespace-nowrap"
+                    title={`Open Google Maps with ${stopCount} stop${stopCount === 1 ? "" : "s"}`}
+                  >
+                    <Route className="w-4 h-4" />
+                    Plan route ({stopCount} stop{stopCount === 1 ? "" : "s"})
+                    <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                  </a>
+                )}
               </div>
 
               {upcoming.length === 0 ? (
@@ -300,6 +336,21 @@ export default function AdminLeadsPage() {
                                 </div>
                               )}
                             </div>
+
+                            {/* Embedded Google Maps preview */}
+                            {lead.address !== "—" && (
+                              <div className="rounded-xl overflow-hidden border border-gray-200">
+                                <iframe
+                                  title={`Map of ${lead.address}`}
+                                  src={`https://maps.google.com/maps?q=${encodeURIComponent(lead.address)}&output=embed`}
+                                  width="100%"
+                                  height="200"
+                                  loading="lazy"
+                                  referrerPolicy="no-referrer-when-downgrade"
+                                  style={{ border: 0, display: "block" }}
+                                />
+                              </div>
+                            )}
 
                             {/* Action buttons */}
                             <div className="flex flex-wrap gap-2 pt-1">
