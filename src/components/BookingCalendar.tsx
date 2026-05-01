@@ -5,7 +5,7 @@ import { Calendar, Clock, ChevronLeft, ChevronRight, AlertCircle, Timer } from "
 import { useCart } from "@/context/CartContext";
 import { getEarliestBookableDate } from "@/lib/calendly";
 
-const AVAILABLE_DAYS = [2, 3, 4]; // Tue, Wed, Thu
+const AVAILABLE_DAYS = [1, 2, 3, 4, 5]; // Mon-Fri
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 

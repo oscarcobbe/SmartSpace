@@ -7,7 +7,7 @@
  *   - Same Shopify product (installation-only) for live pricing
  *   - Same interactive variant selectors that update the price
  *   - Same AddToCartButton → Stripe checkout → Calendly auto-book
- *   - Same BookingCalendar (Tue/Wed/Thu × 3 slots)
+ *   - Same BookingCalendar (Mon-Fri × 3 slots)
  *
  * The Stripe success path already fires the SS- Any value stripe
  * Google Ads conversion (AW-17978501655/IofPCOiZuJkcEJfU6PxC) plus
@@ -118,7 +118,7 @@ const FAQ = [
   },
   {
     q: "How fast can you come?",
-    a: "We install Tuesdays, Wednesdays, and Thursdays in fixed 2-hour slots. Pick one in the calendar and you're booked. Outside Leinster usually within 5 working days.",
+    a: "We install Monday through Friday in fixed 2-hour slots. Pick one in the calendar and you're booked. Outside Leinster usually within 5 working days.",
   },
   {
     q: "What if it doesn't work after you leave?",

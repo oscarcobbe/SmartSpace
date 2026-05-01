@@ -13,8 +13,8 @@ export const TIME_SLOTS = [
   { label: "15:00 – 17:00", value: "15:00-17:00", startHour: 15, startMin: 0, endHour: 17, endMin: 0 },
 ];
 
-// Available days: Tuesday (2), Wednesday (3), Thursday (4)
-export const AVAILABLE_DAYS = [2, 3, 4];
+// Available days: Monday (1) through Friday (5) — full weekday coverage
+export const AVAILABLE_DAYS = [1, 2, 3, 4, 5];
 
 /**
  * Hard earliest-booking date — overrides the default "today + buffer"

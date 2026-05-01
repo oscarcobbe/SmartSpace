@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Invalid date format. Use YYYY-MM-DD" }, { status: 400 });
   }
 
-  // Check the date is a valid available day (Tue/Wed/Thu)
+  // Check the date is a valid available day (Mon-Fri)
   const dateObj = new Date(date + "T12:00:00");
   if (!AVAILABLE_DAYS.includes(dateObj.getDay())) {
     return NextResponse.json({ slots: [] });
