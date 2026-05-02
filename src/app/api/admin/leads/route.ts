@@ -34,7 +34,7 @@ function safeEqual(a: string, b: string): boolean {
 
 interface Lead {
   date: string;
-  type: "Paid Order" | "Installation" | "Consultation" | "Upcoming";
+  type: "Paid Order" | "Installation" | "Consultation" | "Contact Enquiry" | "Upcoming";
   name: string;
   email: string;
   phone: string;
@@ -190,6 +190,44 @@ export async function GET(request: Request) {
       }
     } catch (err) {
       console.error("[admin] Calendly fetch error:", err);
+    }
+  }
+
+  // 3. Fetch contact form submissions from the Google Sheet via Apps Script GET.
+  //    Requires GOOGLE_SHEET_WEBHOOK_URL + GOOGLE_SHEET_READ_TOKEN env vars,
+  //    AND the matching READ_TOKEN constant in google-apps-script.js.
+  const sheetUrl = process.env.GOOGLE_SHEET_WEBHOOK_URL;
+  const readToken = process.env.GOOGLE_SHEET_READ_TOKEN;
+  if (sheetUrl && readToken) {
+    try {
+      const url = `${sheetUrl}?token=${encodeURIComponent(readToken)}&type=${encodeURIComponent("Contact Enquiry")}&limit=200`;
+      const sheetRes = await fetch(url, { cache: "no-store", redirect: "follow" });
+      if (sheetRes.ok) {
+        const sheetData = await sheetRes.json();
+        for (const row of sheetData.rows || []) {
+          const r = row as Record<string, string | number>;
+          // Apps Script returns the Date column already formatted in Dublin
+          // time (dd/MM/yyyy HH:mm) — pass through as-is.
+          leads.push({
+            date: String(r.date || "—"),
+            type: "Contact Enquiry",
+            name: String(r.name || "—"),
+            email: String(r.email || "—"),
+            phone: String(r.phone || "—"),
+            address: String(r.address || "—"),
+            product: String(r.product || "Contact form"),
+            amount: r.amount ? `€${r.amount}` : "—",
+            bookingDate: "—",
+            bookingSlot: "—",
+            status: String(r.status || "New"),
+            orderId: String(r.notes || "—"),
+          });
+        }
+      } else {
+        console.error("[admin] Sheet doGet error:", sheetRes.status, await sheetRes.text());
+      }
+    } catch (err) {
+      console.error("[admin] Sheet fetch error:", err);
     }
   }
 

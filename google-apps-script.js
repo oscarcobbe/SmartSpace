@@ -221,3 +221,74 @@ function cleanTestRows() {
 
   Logger.log("Done. Deleted " + rowsToDelete.length + " test row(s).");
 }
+
+/**
+ * GET endpoint — returns recent rows as JSON, used by the admin dashboard
+ * at /admin/leads to display contact-form submissions alongside Stripe
+ * orders and Calendly events.
+ *
+ * Query params:
+ *   token=<READ_TOKEN>     required. Must match READ_TOKEN below.
+ *                          Set the SAME value in Vercel env vars as
+ *                          GOOGLE_SHEET_READ_TOKEN (Production + Preview).
+ *   type=Contact Enquiry   optional. Filter by exact Type column value
+ *                          (URL-encode the space). Omit or "All" returns
+ *                          every row.
+ *   limit=200              optional. Max rows returned, newest first.
+ *
+ * To deploy after editing:
+ *   Deploy > Manage deployments > pencil icon (Edit) >
+ *   Version: "New version" > Deploy.
+ *   The web-app URL stays the same; the redeploy is required for the
+ *   new doGet to take effect.
+ */
+var READ_TOKEN = "REPLACE_WITH_LONG_RANDOM_STRING"; // mirror in Vercel as GOOGLE_SHEET_READ_TOKEN
+
+function doGet(e) {
+  var params = (e && e.parameter) || {};
+  var token = params.token || "";
+
+  if (!token || token !== READ_TOKEN) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ error: "Unauthorized" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Leads");
+  if (!sheet || sheet.getLastRow() < 2) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ rows: [], count: 0 }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  var lastRow = sheet.getLastRow();
+  var data = sheet.getRange(2, 1, lastRow - 1, COLUMNS.length).getValues();
+
+  // Map each row array → object keyed by COLUMNS[i].key
+  var rows = data.map(function (rowArr) {
+    var obj = {};
+    for (var i = 0; i < COLUMNS.length; i++) {
+      var val = rowArr[i];
+      if (val instanceof Date) {
+        val = Utilities.formatDate(val, "Europe/Dublin", "yyyy-MM-dd HH:mm");
+      }
+      obj[COLUMNS[i].key] = (val === null || val === undefined) ? "" : val;
+    }
+    return obj;
+  });
+
+  // Type filter (exact match against the Type column)
+  var typeFilter = params.type || "";
+  if (typeFilter && typeFilter !== "All") {
+    rows = rows.filter(function (r) { return String(r.type) === typeFilter; });
+  }
+
+  // Newest first, capped
+  rows.reverse();
+  var limit = parseInt(params.limit, 10) || 200;
+  if (rows.length > limit) rows = rows.slice(0, limit);
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ rows: rows, count: rows.length }))
+    .setMimeType(ContentService.MimeType.JSON);
+}

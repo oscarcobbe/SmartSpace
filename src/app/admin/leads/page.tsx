@@ -43,6 +43,7 @@ const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   "Paid Order": { bg: "bg-blue-50", text: "text-blue-700" },
   Installation: { bg: "bg-indigo-50", text: "text-indigo-700" },
   Consultation: { bg: "bg-green-50", text: "text-green-700" },
+  "Contact Enquiry": { bg: "bg-amber-50", text: "text-amber-700" },
   Upcoming: { bg: "bg-amber-50", text: "text-amber-700" },
 };
 
@@ -50,6 +51,11 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   Paid: { bg: "bg-green-100", text: "text-green-800" },
   Upcoming: { bg: "bg-blue-100", text: "text-blue-800" },
   Complimentary: { bg: "bg-emerald-100", text: "text-emerald-800" },
+  New: { bg: "bg-amber-100", text: "text-amber-800" },
+  Contacted: { bg: "bg-blue-100", text: "text-blue-800" },
+  Quoted: { bg: "bg-yellow-100", text: "text-yellow-800" },
+  Sold: { bg: "bg-green-100", text: "text-green-800" },
+  Lost: { bg: "bg-red-100", text: "text-red-800" },
 };
 
 export default function AdminLeadsPage() {
@@ -186,18 +192,19 @@ export default function AdminLeadsPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
           {[
             { label: "Paid Orders", filterType: "Paid Order", count: leads.filter((l) => l.type === "Paid Order").length, color: "border-blue-500" },
             { label: "Installations", filterType: "Installation", count: leads.filter((l) => l.type === "Installation").length, color: "border-indigo-500" },
             { label: "Consultations", filterType: "Consultation", count: leads.filter((l) => l.type === "Consultation").length, color: "border-green-500" },
+            { label: "Contact Forms", filterType: "Contact Enquiry", count: leads.filter((l) => l.type === "Contact Enquiry").length, color: "border-amber-500" },
             {
               label: "Revenue",
               filterType: "Paid Order",
               count: leads
                 .filter((l) => l.type === "Paid Order")
                 .reduce((sum, l) => sum + parseFloat(l.amount.replace(/[^0-9.]/g, "") || "0"), 0),
-              color: "border-amber-500",
+              color: "border-emerald-500",
               isMoney: true,
             },
           ].map((s) => (

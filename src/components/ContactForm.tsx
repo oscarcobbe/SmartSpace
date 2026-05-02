@@ -2,14 +2,36 @@
 
 import { useState, FormEvent } from "react";
 import { Send, Check } from "lucide-react";
-import Script from "next/script";
 import { getAttribution } from "@/lib/attribution";
+
+// Mirrors the pattern in booking/page.tsx — direct window.gtag fire is
+// reliable; the prior <Script> + conditional render approach silently
+// dropped the call after page hydration had finished.
+function fireContactConversion(email: string, phone: string) {
+  if (typeof window === "undefined") return;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const gtag = (window as any).gtag;
+  if (typeof gtag !== "function") return;
+  // Enhanced conversions — Google hashes these client-side
+  gtag("set", "user_data", { email, phone_number: phone });
+  gtag("event", "conversion", {
+    send_to: "AW-17978501655/u8cHCNyipZocEJfU6PxC",
+    value: 10.0,
+    currency: "EUR",
+    user_data: { email_address: email, phone_number: phone },
+  });
+  gtag("event", "generate_lead", {
+    currency: "EUR",
+    value: 10,
+    lead_source: "contact_form",
+  });
+  console.log("[gtag] contact form conversion + lead fired");
+}
 
 export default function ContactForm() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [conversionData, setConversionData] = useState<{ email: string; phone: string } | null>(null);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -39,7 +61,7 @@ export default function ContactForm() {
         return;
       }
       setSubmitted(true);
-      setConversionData({ email: data.email, phone: data.phone });
+      fireContactConversion(data.email, data.phone);
     } catch {
       setError("Failed to send message. Please try again.");
     } finally {
@@ -48,46 +70,8 @@ export default function ContactForm() {
   };
 
   if (submitted) {
-    // Enhanced conversions — pass user data so Google can stitch identity
-    // even when cookies are blocked. Google hashes these client-side.
-    const enhancedPayload = conversionData
-      ? JSON.stringify({
-          send_to: "AW-17978501655/u8cHCNyipZocEJfU6PxC",
-          value: 10.0,
-          currency: "EUR",
-          user_data: {
-            email_address: conversionData.email,
-            phone_number: conversionData.phone,
-          },
-        })
-      : "null";
     return (
       <div className="text-center py-10">
-        {conversionData && (
-          <Script
-            id="gads-contact-conversion"
-            strategy="afterInteractive"
-            dangerouslySetInnerHTML={{
-              __html: `
-                if (typeof gtag === 'function') {
-                  gtag('set', 'user_data', {
-                    email: ${JSON.stringify(conversionData.email)},
-                    phone_number: ${JSON.stringify(conversionData.phone)}
-                  });
-                  // Google Ads conversion
-                  gtag('event', 'conversion', ${enhancedPayload});
-                  // GA4 recommended lead event
-                  gtag('event', 'generate_lead', {
-                    currency: 'EUR',
-                    value: 10,
-                    lead_source: 'contact_form'
-                  });
-                  console.log('[gtag] contact form conversion + lead fired');
-                }
-              `,
-            }}
-          />
-        )}
         <div className="inline-flex items-center justify-center w-16 h-16 bg-green-50 text-green-500 rounded-full mb-4">
           <Check className="w-8 h-8" />
         </div>
