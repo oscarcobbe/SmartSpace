@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, Suspense } from "react";
+import { useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, Home, Phone } from "lucide-react";
@@ -11,17 +11,25 @@ const GADS_CONVERSION_TAG = "AW-17978501655/8aWsCPbYuZkcEJfU6PxC";
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
+  const fired = useRef(false);
 
   useEffect(() => {
-    // Fire Google Ads conversion once on mount
+    // Fire Google Ads conversion once on mount.
+    // Guard with useRef so a re-render (e.g. from React Strict Mode in
+    // dev or a hydration retry) can't double-count the conversion.
+    if (fired.current) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (typeof window !== "undefined" && (window as any).gtag) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).gtag("event", "conversion", {
-        send_to: GADS_CONVERSION_TAG,
-      });
-    }
-  }, []);
+    const w = window as any;
+    if (typeof w === "undefined" || typeof w.gtag !== "function") return;
+    fired.current = true;
+    // transaction_id deduplicates the conversion in Google Ads if the
+    // user refreshes the page or navigates back — without it, every
+    // page load would count as a fresh sale.
+    w.gtag("event", "conversion", {
+      send_to: GADS_CONVERSION_TAG,
+      transaction_id: sessionId || undefined,
+    });
+  }, [sessionId]);
 
   return (
     <div className="pt-32 lg:pt-40 pb-16 lg:pb-24">
@@ -54,7 +62,7 @@ function PaymentSuccessContent() {
               Back to Home
             </Link>
             <a
-              href="tel:+353871234567"
+              href="tel:+35315130424"
               className="inline-flex items-center justify-center gap-2 border-2 border-brand-500 text-brand-500 hover:bg-brand-50 font-semibold text-sm px-8 py-3.5 rounded-full transition-colors"
             >
               <Phone className="w-4 h-4" />
