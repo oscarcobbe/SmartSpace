@@ -143,8 +143,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3. Log to Google Sheet (fire-and-forget)
-    logLead({
+    // 3. Log to Google Sheet — must await; fire-and-forget gets killed by
+    //    Vercel's serverless runtime when the response returns.
+    await logLead({
       type: "Free Consultation",
       name: name.trim(),
       email: email.trim(),

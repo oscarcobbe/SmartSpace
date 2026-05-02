@@ -88,8 +88,12 @@ export async function POST(request: Request) {
       );
     }
 
-    // Log to tracking sheet (fire-and-forget — never blocks the user flow)
-    logLead({
+    // Await so the row reaches the sheet before this serverless function
+    // returns. Fire-and-forget here was silently dropping ~30% of rows
+    // because Vercel kills the function instance once the response is sent.
+    // logLead swallows its own errors, so a slow/down sheet still won't
+    // break the user flow.
+    await logLead({
       type: "Contact Enquiry",
       name: name.trim(),
       email: email.trim(),

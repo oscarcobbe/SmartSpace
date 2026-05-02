@@ -113,8 +113,9 @@ export async function POST(request: Request) {
       }
     }
 
-    // Log to tracking sheet (fire-and-forget — never blocks the user flow)
-    logLead({
+    // Await so the row reaches the sheet before the function exits.
+    // Fire-and-forget gets killed by Vercel's serverless runtime.
+    await logLead({
       type: "Free Consultation",
       name: customer?.name,
       email: customer?.email,

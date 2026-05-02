@@ -180,8 +180,9 @@ export async function POST(req: NextRequest) {
       : "";
     const installationAddress = installationAddressField || billingAddressString;
 
-    // Log paid order to tracking sheet (fire-and-forget — never blocks the webhook)
-    logLead({
+    // Log paid order to tracking sheet — must await; fire-and-forget gets
+    // killed by Vercel's serverless runtime when the webhook returns.
+    await logLead({
       type: "Paid Order",
       name: customerName,
       email,

@@ -36,13 +36,25 @@ export interface LeadRecord {
   attribution?: AttributionRecord;
 }
 
-/** Log a lead/order via the Apps Script webhook. Fire-and-forget — never blocks the user flow. */
+/**
+ * Log a lead/order via the Apps Script webhook.
+ *
+ * Internally swallows all errors (logs to console) so callers can safely
+ * `await` it without a try/catch — the user flow will not break if the
+ * Apps Script is slow or down. Awaiting matters: in Vercel serverless
+ * functions, fire-and-forget fetches are abandoned when the response
+ * returns, which silently drops ~30% of contact-form rows.
+ */
 export async function logLead(record: LeadRecord): Promise<void> {
   const url = process.env.GOOGLE_SHEET_WEBHOOK_URL;
   if (!url) {
     console.warn("[leads] GOOGLE_SHEET_WEBHOOK_URL not set — skipping lead log");
     return;
   }
+
+  // Hard timeout so a slow Apps Script can't pin the API request for too long.
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
 
   try {
     // Flatten attribution fields onto the top-level payload so the Apps Script
@@ -67,6 +79,7 @@ export async function logLead(record: LeadRecord): Promise<void> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
       cache: "no-store",
+      signal: controller.signal,
     });
     if (!res.ok) {
       console.error(`[leads] webhook responded ${res.status} ${res.statusText}`);
@@ -74,5 +87,7 @@ export async function logLead(record: LeadRecord): Promise<void> {
   } catch (err) {
     // Never let tracking failures break the user flow
     console.error("[leads] Failed to log lead:", err);
+  } finally {
+    clearTimeout(timeoutId);
   }
 }

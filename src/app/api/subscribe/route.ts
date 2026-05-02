@@ -28,7 +28,9 @@ export async function POST(request: Request) {
       text: `New subscriber: ${email}\nSubscribed at: ${new Date().toISOString()}`,
     });
 
-    logLead({
+    // Await — fire-and-forget gets killed by Vercel's serverless runtime,
+    // silently dropping rows.
+    await logLead({
       type: "Newsletter Signup",
       email,
       source: "smart-space.ie",
