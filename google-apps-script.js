@@ -98,6 +98,24 @@ function doPost(e) {
 
   var data = JSON.parse(e.postData.contents);
 
+  // Idempotency: if this payload has a Stripe-style orderId and a row with
+  // the same orderId already exists, treat as a duplicate and skip. Stripe
+  // webhook retries (network blips, late deliveries, post-recovery retries)
+  // would otherwise append the same paid order multiple times.
+  if (data.orderId && /^cs_(live|test)_/.test(String(data.orderId)) && sheet.getLastRow() > 1) {
+    var orderIdColIdx = COLUMNS.findIndex(function (c) { return c.key === "orderId"; });
+    if (orderIdColIdx >= 0) {
+      var existing = sheet.getRange(2, orderIdColIdx + 1, sheet.getLastRow() - 1, 1).getValues();
+      for (var i = 0; i < existing.length; i++) {
+        if (String(existing[i][0]) === String(data.orderId)) {
+          return ContentService.createTextOutput(
+            JSON.stringify({ success: true, deduped: true, existingRow: i + 2 })
+          ).setMimeType(ContentService.MimeType.JSON);
+        }
+      }
+    }
+  }
+
   // Format timestamp to Dublin time
   var timestamp = data.timestamp || new Date().toISOString();
   var date = new Date(timestamp);
@@ -157,11 +175,21 @@ function doPost(e) {
  * Safe to re-run — does nothing if no test rows are present.
  */
 function cleanTestRows() {
-  var TEST_EMAILS = [
-    "oscarcobbe2017@icloud.com",
-    "oscarcobbe2017+claudetest@icloud.com",
+  var TEST_EMAIL_PATTERNS = [
+    /^oscarcobbe2017(\+[^@]*)?@icloud\.com$/i,
+    /@claude-tests\.invalid$/i,
+    /^test@example\.com$/i,
+    /\+audittest@/i,
+    /\+claudetest@/i,
+    /\+e2e@/i,
   ];
-  var TEST_NAME_PREFIXES = ["Claude Test", "Test "];
+  var TEST_NAME_PATTERNS = [
+    /^claude\s*test/i,
+    /^test\s/i,
+    /e2e/i,
+    /audit/i,
+    /^smart\s*space\s*test/i,
+  ];
 
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Leads");
   if (!sheet) {
@@ -179,38 +207,70 @@ function cleanTestRows() {
   var emailCol = headerRow.indexOf("Email") + 1;
   var nameCol = headerRow.indexOf("Name") + 1;
   var amountCol = headerRow.indexOf("Amount") + 1;
+  var orderIdCol = headerRow.indexOf("Order ID") + 1;
   if (emailCol === 0 || nameCol === 0 || amountCol === 0) {
     Logger.log("ERROR: Could not locate Email/Name/Amount columns. Re-run setupHeaders() first.");
     return;
   }
 
   var data = sheet.getRange(2, 1, lastRow - 1, COLUMNS.length).getValues();
-  var rowsToDelete = []; // collect 1-indexed row numbers
+  var rowsToDelete = []; // 1-indexed row numbers
 
+  // First pass: tag test rows
   for (var i = 0; i < data.length; i++) {
-    var rowNum = i + 2; // sheet rows are 1-indexed and we start at row 2
+    var rowNum = i + 2;
     var email = String(data[i][emailCol - 1] || "").trim().toLowerCase();
     var name = String(data[i][nameCol - 1] || "").trim();
     var amountRaw = data[i][amountCol - 1];
     var amount = typeof amountRaw === "number" ? amountRaw : parseFloat(amountRaw) || 0;
 
-    var matchEmail = TEST_EMAILS.indexOf(email) !== -1;
-    var matchName = TEST_NAME_PREFIXES.some(function (p) { return name.indexOf(p) === 0; });
+    var matchEmail = TEST_EMAIL_PATTERNS.some(function (re) { return re.test(email); });
+    var matchName = TEST_NAME_PATTERNS.some(function (re) { return re.test(name); });
     var matchAmount = amount > 0 && amount < 5;
 
     if (matchEmail || matchName || matchAmount) {
-      rowsToDelete.push({ row: rowNum, email: email, name: name, amount: amount });
+      rowsToDelete.push({ row: rowNum, email: email, name: name, amount: amount, reason: "test" });
+    }
+  }
+
+  // Second pass: deduplicate non-test rows that share an Order ID
+  // (Stripe webhook retries can create duplicates when the original
+  // delivery was missed and the order was manually recovered.)
+  if (orderIdCol > 0) {
+    var seenOrderIds = {};
+    for (var j = 0; j < data.length; j++) {
+      var rn = j + 2;
+      // Skip rows already flagged for deletion
+      if (rowsToDelete.some(function (r) { return r.row === rn; })) continue;
+
+      var oid = String(data[j][orderIdCol - 1] || "").trim();
+      if (!oid || oid === "—") continue;
+      // Only consider Stripe session IDs as canonical order keys
+      if (!/^cs_(live|test)_/.test(oid)) continue;
+
+      if (seenOrderIds[oid]) {
+        // Duplicate — delete this row, keep the one we saw first (lower row number)
+        rowsToDelete.push({
+          row: rn,
+          email: String(data[j][emailCol - 1] || ""),
+          name: String(data[j][nameCol - 1] || ""),
+          amount: data[j][amountCol - 1],
+          reason: "dup of row " + seenOrderIds[oid],
+        });
+      } else {
+        seenOrderIds[oid] = rn;
+      }
     }
   }
 
   if (rowsToDelete.length === 0) {
-    Logger.log("No test rows found. Nothing to delete.");
+    Logger.log("No test or duplicate rows found. Nothing to delete.");
     return;
   }
 
-  Logger.log("Will delete " + rowsToDelete.length + " test row(s):");
+  Logger.log("Will delete " + rowsToDelete.length + " row(s):");
   rowsToDelete.forEach(function (r) {
-    Logger.log("  row " + r.row + ": " + r.name + " <" + r.email + "> €" + r.amount);
+    Logger.log("  row " + r.row + " [" + r.reason + "]: " + r.name + " <" + r.email + "> €" + r.amount);
   });
 
   // Delete from bottom up so row numbers don't shift mid-deletion
@@ -219,7 +279,7 @@ function cleanTestRows() {
     sheet.deleteRow(r.row);
   });
 
-  Logger.log("Done. Deleted " + rowsToDelete.length + " test row(s).");
+  Logger.log("Done. Deleted " + rowsToDelete.length + " row(s).");
 }
 
 /**
@@ -242,7 +302,7 @@ function cleanTestRows() {
  *   The web-app URL stays the same; the redeploy is required for the
  *   new doGet to take effect.
  */
-var READ_TOKEN = "REPLACE_WITH_LONG_RANDOM_STRING"; // mirror in Vercel as GOOGLE_SHEET_READ_TOKEN
+var READ_TOKEN = "82f586bda2ebde763b0bb6371713f28f7fa31c423ffbed15d1e707c28bc6dbfe"; // mirror in Vercel as GOOGLE_SHEET_READ_TOKEN
 
 function doGet(e) {
   var params = (e && e.parameter) || {};
