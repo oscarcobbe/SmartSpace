@@ -8,7 +8,10 @@ export const metadata: Metadata = {
   description:
     "Answers to the most common questions about Ring doorbell and camera installation in Ireland. Pricing, install times, Wi-Fi, insurance, and more.",
   alternates: { canonical: "/faq" },
-  robots: { index: false, follow: true },
+  // Re-indexed 2026-05-04 after content refresh — long-tail intent page
+  // ("how does ring doorbell installation work", "what's needed for ring
+  // chime", etc.). Now in sitemap.
+  robots: { index: true, follow: true },
   openGraph: {
     title: "Ring Installation FAQ | Smart Space Dublin",
     description:

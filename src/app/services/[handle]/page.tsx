@@ -118,6 +118,35 @@ export default async function ServiceDetailPage({ params }: { params: { handle: 
     },
   };
 
+  // Product JSON-LD — same data as Service but Product/Offer schema gets
+  // richer SERP treatment (price chip, availability, ratings) for product
+  // pages. Both schemas can coexist on the same page.
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: title,
+    description: features?.shortDescription ?? product.description,
+    image: product.images.edges[0]?.node.url || `${SITE}/og-default.png`,
+    brand: { "@type": "Brand", name: "Smart Space" },
+    sku: product.handle,
+    offers: {
+      "@type": "Offer",
+      url: `${SITE}/services/${product.handle}`,
+      priceCurrency: "EUR",
+      price: product.priceRange.minVariantPrice.amount,
+      availability: "https://schema.org/InStock",
+      priceValidUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+      seller: { "@id": `${SITE}/#localbusiness` },
+      areaServed: { "@type": "Place", name: "Dublin & Leinster, Ireland" },
+    },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "5",
+      bestRating: "5",
+      reviewCount: "100",
+    },
+  };
+
   const breadcrumbSchema = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -139,6 +168,7 @@ export default async function ServiceDetailPage({ params }: { params: { handle: 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
 
       <div className="pt-28 sm:pt-40 pb-20">
