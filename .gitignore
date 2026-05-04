@@ -44,3 +44,4 @@ client_secret_*.json
 # customer PII — never commit
 customer-data/
 .claude/worktrees/
+.claude/scheduled_tasks.lock

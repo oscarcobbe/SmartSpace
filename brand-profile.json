@@ -1,0 +1,181 @@
+{
+  "brand": {
+    "name": "Smart Space",
+    "tagline": "Expertly Installed. Perfectly Secured.",
+    "positioning_statement": "Dublin's #1 Ring installer — flat-priced, no-contract, brand-agnostic professional installation across Leinster.",
+    "website": "https://smart-space.ie",
+    "founded": "Dublin, Ireland",
+    "category": "Local home-services / smart-home installation",
+    "industry": "Residential security camera + video doorbell installation"
+  },
+  "audience": {
+    "primary": {
+      "label": "The post-Amazon installer",
+      "description": "Dublin or Leinster homeowner aged 45-64 who has just bought (or is about to buy) a Ring, Eufy, Tapo or Nest smart doorbell from Amazon, Currys or Harvey Norman. Has the box. Doesn't have the time, ladder, drill bit or chime-wiring confidence to fit it themselves. Wants it done this week, by someone insured, for a known price.",
+      "demographics": {
+        "age_range": "45-64",
+        "gender_split": "70% male, 30% female",
+        "income": "mid-income+",
+        "geography": "Dublin city + suburbs + 12 Leinster counties (Wicklow, Kildare, Meath, Louth, Wexford, Carlow, Kilkenny, Laois, Offaly, Westmeath, Longford)",
+        "homeowner_status": "owner-occupier"
+      },
+      "pain_points": [
+        "Bought a doorbell weeks ago, still in the box",
+        "Chime wiring looks complicated; afraid to break it",
+        "Don't want to drill the wrong hole / damage the render",
+        "Don't trust DIY tutorials; want a real installer",
+        "Don't want a 12-month monitoring contract (Phonewatch / HomeSecure)",
+        "Want a known fixed price, not a quote form"
+      ],
+      "buying_stage": "decision (already owns or just bought the product)",
+      "channels_they_use": [
+        "Google Search ('ring installer dublin', 'smart doorbell installer near me')",
+        "Google Maps (looking for local trades)",
+        "Facebook (passively, age skew)",
+        "Word of mouth (neighbours, family)"
+      ]
+    },
+    "secondary": {
+      "label": "The eldercare adult child",
+      "description": "Adult child aged 35-50 of an elderly Dublin/Leinster parent. Worried about break-ins or falls. Researching whether to install a video doorbell + camera at the parent's home, or push them onto Phonewatch, or do nothing.",
+      "key_concern": "Parent safety + keeping family connected without a monitoring contract"
+    }
+  },
+  "voice": {
+    "personality_words": ["confident", "plain-spoken", "professional", "Irish", "no-nonsense", "trustworthy"],
+    "tone_dos": [
+      "Direct and transactional ('From €139, this week, no contract')",
+      "Specific over vague ('Fitted in 1 hour', '5,000+ installs')",
+      "Confident without arrogance ('Dublin's #1 Ring installer')",
+      "Use Hiberno-English ('the lads', 'tidy work', 'sorted')"
+    ],
+    "tone_donts": [
+      "Overstated claims (avoid 'best in Ireland', stick to 'Dublin's #1')",
+      "Generic hedge phrases ('quality service', 'satisfaction guaranteed')",
+      "Hard scarcity tactics ('only 3 slots left this week')",
+      "Aggressive emoji or all-caps shouting"
+    ],
+    "vocabulary_to_use": [
+      "Install / installation (not 'installation service')",
+      "Fitted / mounted (not 'integrated')",
+      "Dublin and Leinster (not 'Ireland-wide')",
+      "Home (not 'property')",
+      "Tidy (not 'clean and professional')"
+    ]
+  },
+  "visual_identity": {
+    "primary_color": "#f48222",
+    "primary_color_name": "brand-500 orange",
+    "secondary_colors": {
+      "slate-900": "#0f172a",
+      "white": "#ffffff",
+      "gray-50": "#f8fafc",
+      "amber-400": "#fbbf24"
+    },
+    "color_palette_full": {
+      "brand-50": "#fef4eb",
+      "brand-100": "#fde5d0",
+      "brand-200": "#facba1",
+      "brand-300": "#f8b172",
+      "brand-400": "#f69743",
+      "brand-500": "#f48222",
+      "brand-600": "#d96d15",
+      "brand-700": "#b55810",
+      "brand-800": "#91440c",
+      "brand-900": "#6d3009"
+    },
+    "typography": {
+      "primary_font": "Plus Jakarta Sans",
+      "fallback_font": "Inter",
+      "system_fallback": "system-ui, sans-serif",
+      "tone": "modern, clean, slightly rounded"
+    },
+    "imagery_style": "Real install photos: hands fitting devices, drilled-and-mounted doorbells on Irish red-brick / pebbledash render walls. Dublin / suburban Leinster context. Avoid stock photos of generic 'happy customers' or American suburban houses. Tidy work shots that show cabling discipline.",
+    "logo_treatment": "Wordmark on white or slate-900 backgrounds. Brand-500 orange accent. Avoid placing logo over busy install-photo backgrounds."
+  },
+  "products_services": [
+    {
+      "name": "Ring Doorbell Installation (€139 install-only)",
+      "category": "Installation labour only",
+      "price_eur": 139,
+      "description": "Mounts and configures any Ring video doorbell the customer has bought elsewhere. Wired or battery, all models."
+    },
+    {
+      "name": "Plus Video Doorbell (supplied + fitted)",
+      "category": "Doorbell + install bundle",
+      "price_eur_from": 299,
+      "description": "Plus-tier video doorbell supplied and professionally installed."
+    },
+    {
+      "name": "Pro Video Doorbell (supplied + fitted)",
+      "category": "Doorbell + install bundle",
+      "price_eur_from": 499,
+      "description": "Pro-tier video doorbell with Retinal 2K supplied and installed."
+    },
+    {
+      "name": "Plus / Pro Driveway Bundle",
+      "category": "Multi-device bundle",
+      "price_eur_from": 599,
+      "description": "Doorbell + floodlight cam covering driveway approach."
+    },
+    {
+      "name": "Plus / Pro Whole Home Bundle",
+      "category": "Whole-property bundle",
+      "price_eur_from": 999,
+      "description": "Doorbell + multiple cameras for full home coverage."
+    },
+    {
+      "name": "Eldercare Security Bundle",
+      "category": "Eldercare bundle",
+      "price_eur_from": 599,
+      "description": "Doorbell + lockbox combination for elderly parent's home; family peace of mind."
+    },
+    {
+      "name": "Free Home Consultation",
+      "category": "Lead gen / consultation",
+      "price_eur": 0,
+      "description": "Complimentary in-home consultation to assess Wi-Fi coverage, mounting options, and quote installation."
+    }
+  ],
+  "differentiators": [
+    "Flat-priced install starting at €139 — no quote forms, no surprises",
+    "Brand-agnostic: installs Ring, Eufy, Tapo, Nest, Arlo at the same fee",
+    "No contract, no monthly monitoring fee (vs Phonewatch / HomeSecure)",
+    "Local Dublin + Leinster trade installer (not a nationwide call-centre brand)",
+    "5,000+ Ring-specific installs",
+    "5★ Google Reviews (100+)",
+    "Three Ireland SME Business Winner 2025",
+    "Fitted in approx. 1 hour, app set up on family phones, motion zones tuned, family trained before we leave"
+  ],
+  "competitive_positioning": {
+    "main_competitors": [
+      {"name": "amazon.ie", "their_strength": "Hardware fulfilment", "their_weakness": "Doesn't install", "smart_space_angle": "Convert their post-purchase orphan customers into installs"},
+      {"name": "phonewatch.ie", "their_strength": "33-year brand, monitoring", "their_weakness": "12-month contract, monthly fees", "smart_space_angle": "No contract, no monitoring fees, one-off install"},
+      {"name": "homesecure.ie", "their_strength": "Cheap entry (€49)", "their_weakness": "€0.99/day monitoring locks ~€361/yr", "smart_space_angle": "€139 once vs €361/yr forever"},
+      {"name": "ring.com", "their_strength": "Manufacturer brand", "their_weakness": "No Irish installer storefront", "smart_space_angle": "Ring's de-facto local installer"}
+    ],
+    "category_we_own": "Install-only, brand-agnostic, no-contract local trade installer"
+  },
+  "trust_signals": [
+    "5,000+ installs completed",
+    "5★ Google rating (100+ reviews)",
+    "Three Ireland SME Business Winner 2025",
+    "Dublin's #1 Ring Installer",
+    "Approx. 1-hour installs, family-trained before we leave",
+    "Same-day quote, free in-home consultation"
+  ],
+  "geo": {
+    "primary_market": "Dublin",
+    "secondary_markets": ["Wicklow", "Kildare", "Meath", "Louth", "Wexford", "Carlow", "Kilkenny", "Laois", "Offaly", "Westmeath", "Longford"],
+    "country": "Ireland",
+    "currency": "EUR",
+    "language": "en-IE"
+  },
+  "current_marketing_state": {
+    "google_ads_health_score": 51,
+    "monthly_ad_spend_eur": 350,
+    "tracking_health": "good (Consent Mode v2 + Enhanced Conversions live)",
+    "active_campaign_url": "https://smart-space.ie/ring-installation",
+    "biggest_gap": "No Google Business Profile yet (single biggest local-SEO lever, action booked Tue 28 Apr)"
+  }
+}
