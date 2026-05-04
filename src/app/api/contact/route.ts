@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, email, phone, subject, message, attribution, gclid } = body as {
+    const { name, email, phone, subject, message, attribution, gclid, homepage_url } = body as {
       name?: string;
       email?: string;
       phone?: string;
@@ -45,7 +45,23 @@ export async function POST(request: Request) {
       message?: string;
       attribution?: AttributionRecord;
       gclid?: string; // legacy — accept but prefer attribution.gclid
+      homepage_url?: string; // honeypot — see ContactForm.tsx
     };
+
+    // Honeypot — bots fill every input on the page. Real users can't see or
+    // interact with `homepage_url` (it's off-screen + aria-hidden +
+    // tabindex=-1 + autocomplete=off). Non-empty value = bot. Return success
+    // so the bot doesn't retry, but skip every side effect: no email, no
+    // sheet write, no conversion fire, no Resend reply-to. Logged loudly so
+    // false positives are visible in Vercel logs.
+    if (homepage_url && homepage_url.trim() !== "") {
+      console.warn(
+        `[contact] honeypot triggered, dropping bot submission. ` +
+          `name=${(name ?? "").slice(0, 40)} email=${(email ?? "").slice(0, 60)} ` +
+          `honeypot=${homepage_url.slice(0, 60)}`
+      );
+      return NextResponse.json({ success: true, id: "honeypot" });
+    }
 
     if (!name?.trim() || !email?.trim() || !message?.trim()) {
       return NextResponse.json(
@@ -88,6 +104,61 @@ export async function POST(request: Request) {
         { error: "Could not send email. Please try again later." },
         { status: 502 }
       );
+    }
+
+    // Auto-reply to the customer — sets expectation, gives a reply-to
+    // address, and trains them to whitelist us in spam filters. Fire-and-
+    // forget: if it fails the customer flow has already succeeded (Nigel
+    // got the lead email + the row hit the Sheet), so we just log.
+    try {
+      await resend.emails.send({
+        from,
+        to: [email.trim()],
+        replyTo: to,
+        subject: "We've got your message — Smart Space",
+        text: [
+          `Hi ${name.trim().split(" ")[0]},`,
+          "",
+          `Thanks for getting in touch with Smart Space. We've received your enquiry about ${subjectLabel.toLowerCase()} and will be back to you within one business day — usually a lot sooner.`,
+          "",
+          `In the meantime if it's urgent you can reach us directly:`,
+          `  • Phone: 01 513 0424`,
+          `  • Email: info@smart-space.ie`,
+          "",
+          "We're Dublin's #1 Ring installer — flat-priced, no contracts, brand-agnostic across Ring, Eufy, Nest, and Tapo.",
+          "",
+          "Talk soon,",
+          "Nigel & the Smart Space team",
+          "smart-space.ie",
+        ].join("\n"),
+        html: `
+          <div style="font-family:system-ui,-apple-system,sans-serif;line-height:1.6;color:#1a1a1a;max-width:520px">
+            <p>Hi ${escapeHtml(name.trim().split(" ")[0])},</p>
+            <p>Thanks for getting in touch with Smart Space. We've received your enquiry about
+              <strong>${escapeHtml(subjectLabel.toLowerCase())}</strong> and will be back to you
+              within <strong>one business day</strong> &mdash; usually a lot sooner.</p>
+            <p>If it's urgent in the meantime, you can reach us directly:</p>
+            <ul>
+              <li>Phone: <a href="tel:+35315130424" style="color:#16a34a">01 513 0424</a></li>
+              <li>Email: <a href="mailto:info@smart-space.ie" style="color:#16a34a">info@smart-space.ie</a></li>
+            </ul>
+            <p>We're Dublin's #1 Ring installer &mdash; flat-priced, no contracts, brand-agnostic
+              across Ring, Eufy, Nest, and Tapo.</p>
+            <p style="margin-top:24px">Talk soon,<br/>
+              <strong>Nigel &amp; the Smart Space team</strong><br/>
+              <a href="https://smart-space.ie" style="color:#16a34a">smart-space.ie</a></p>
+            <hr style="border:none;border-top:1px solid #e5e5e5;margin:24px 0" />
+            <p style="font-size:12px;color:#999">
+              You're receiving this because you submitted the contact form on smart-space.ie.
+              If this wasn't you, just ignore this email.
+            </p>
+          </div>
+        `,
+      });
+    } catch (autoReplyErr) {
+      // Non-fatal — Nigel still got the lead, the customer just doesn't get
+      // an immediate confirmation. Logged for visibility.
+      console.error("[contact] auto-reply email failed (non-fatal):", autoReplyErr);
     }
 
     // Await so the row reaches the sheet before this serverless function
