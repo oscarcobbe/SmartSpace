@@ -40,3 +40,7 @@ next-env.d.ts
 # google ads
 google-ads.yaml
 client_secret_*.json
+
+# customer PII — never commit
+customer-data/
+.claude/worktrees/
