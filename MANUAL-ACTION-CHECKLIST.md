@@ -8,6 +8,24 @@ Last updated: 2026-05-04 (after the May 4 fix sprint)
 
 ## 🔴 Do this week (high impact)
 
+### 0. Verify smart-space.ie in Resend (unblocks customer auto-reply)
+
+The customer-facing auto-reply email shipped 2026-05-04 but is currently failing with HTTP 403 from Resend: `"You can only send testing emails to your own email address (nigel@smart-space.ie)"`. Your Resend account is still in dev/sandbox mode using `onboarding@resend.dev` as sender. Until you verify a real domain, every customer-facing auto-reply silently fails (Nigel-facing emails still work — they're allowed in sandbox).
+
+**10-minute fix:**
+
+1. Go to https://resend.com/domains → **Add Domain** → enter `smart-space.ie` (or `mail.smart-space.ie` if you'd rather not touch apex DNS).
+2. Resend shows 4 DNS records to add: 1 SPF (TXT), 2 DKIM (TXT), 1 DMARC (TXT). Copy each.
+3. In Vercel → Domains → smart-space.ie (or wherever DNS is hosted), add the 4 TXT records exactly as Resend specifies. Names will be things like `resend._domainkey`, `_dmarc`, and either `@` or empty for SPF (if you already have SPF, append Resend's mechanism to the existing record — don't create a duplicate).
+4. Back on resend.com/domains → click **Verify**. Usually clears in 2-5 minutes. Status goes **Pending → Verified**.
+5. Update the Vercel env var `RESEND_FROM_EMAIL`:
+   - From: `Smart Space <onboarding@resend.dev>`
+   - To: `Smart Space <hello@smart-space.ie>` (or any address `@smart-space.ie` — inbox doesn't need to exist for outbound).
+6. Redeploy Vercel (or push any commit).
+7. Test: submit a contact form using a non-Nigel email — auto-reply should land in their inbox within 3 seconds.
+
+**Verify it worked:** check Vercel runtime logs after the test. `[contact] auto-reply email failed` lines should disappear.
+
 ### 1. Phone call: Helen O'Reilly + John Caffrey + Cecile Grand
 
 The dashboard reverse-engineers their variant choices from amount paid, but two of them have ambiguous "Yes wired OR No doorbell at all" answers. Quick disambiguation:
