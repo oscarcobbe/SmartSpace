@@ -157,6 +157,11 @@ export async function GET(request: Request) {
   }
 
   const leads: Lead[] = [];
+  // Per-source error tracking — surfaced to the dashboard so admins know
+  // when a section is incomplete (e.g. Stripe API down, Calendly token
+  // expired, Apps Script quota exhausted). Without this, partial failures
+  // are silent and the admin makes decisions on incomplete data.
+  const sourceErrors: { source: string; message: string }[] = [];
 
   // 1. Fetch recent Stripe checkout sessions (paid orders)
   try {
@@ -167,6 +172,10 @@ export async function GET(request: Request) {
         cache: "no-store",
       }
     );
+    if (!stripeRes.ok) {
+      const errBody = await stripeRes.text().catch(() => "");
+      throw new Error(`Stripe API ${stripeRes.status}: ${errBody.slice(0, 200)}`);
+    }
     const stripeData = await stripeRes.json();
 
     for (const session of stripeData.data || []) {
@@ -234,11 +243,20 @@ export async function GET(request: Request) {
     }
   } catch (err) {
     console.error("[admin] Stripe fetch error:", err);
+    sourceErrors.push({
+      source: "Stripe (Paid Orders)",
+      message: err instanceof Error ? err.message : "Unknown error fetching Stripe sessions",
+    });
   }
 
   // 2. Fetch upcoming Calendly events
   const calendlyToken = process.env.CALENDLY_PERSONAL_TOKEN;
-  if (calendlyToken) {
+  if (!calendlyToken) {
+    sourceErrors.push({
+      source: "Calendly (Installations + Consultations)",
+      message: "CALENDLY_PERSONAL_TOKEN env var not set — bookings won't load until token is added in Vercel.",
+    });
+  } else {
     try {
       const now = new Date().toISOString();
       const future = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
@@ -249,6 +267,10 @@ export async function GET(request: Request) {
           cache: "no-store",
         }
       );
+      if (!calRes.ok) {
+        const errBody = await calRes.text().catch(() => "");
+        throw new Error(`Calendly API ${calRes.status}: ${errBody.slice(0, 200)}`);
+      }
       const calData = await calRes.json();
 
       for (const event of calData.collection || []) {
@@ -340,6 +362,10 @@ export async function GET(request: Request) {
       }
     } catch (err) {
       console.error("[admin] Calendly fetch error:", err);
+      sourceErrors.push({
+        source: "Calendly (Installations + Consultations)",
+        message: err instanceof Error ? err.message : "Unknown error fetching Calendly events",
+      });
     }
   }
 
@@ -348,12 +374,22 @@ export async function GET(request: Request) {
   //    AND the matching READ_TOKEN constant in google-apps-script.js.
   const sheetUrl = process.env.GOOGLE_SHEET_WEBHOOK_URL;
   const readToken = process.env.GOOGLE_SHEET_READ_TOKEN;
-  if (sheetUrl && readToken) {
+  if (!sheetUrl || !readToken) {
+    sourceErrors.push({
+      source: "Google Sheet (Contact Enquiries)",
+      message: !sheetUrl
+        ? "GOOGLE_SHEET_WEBHOOK_URL env var not set."
+        : "GOOGLE_SHEET_READ_TOKEN env var not set — Apps Script doGet() will reject the read.",
+    });
+  } else {
     try {
       const url = `${sheetUrl}?token=${encodeURIComponent(readToken)}&type=${encodeURIComponent("Contact Enquiry")}&limit=200`;
       const sheetRes = await fetch(url, { cache: "no-store", redirect: "follow" });
       if (sheetRes.ok) {
         const sheetData = await sheetRes.json();
+        if (sheetData.error) {
+          throw new Error(`Apps Script returned: ${sheetData.error}`);
+        }
         for (const row of sheetData.rows || []) {
           const r = row as Record<string, string | number>;
           // Apps Script returns the Date column already formatted in Dublin
@@ -394,15 +430,26 @@ export async function GET(request: Request) {
           });
         }
       } else {
-        console.error("[admin] Sheet doGet error:", sheetRes.status, await sheetRes.text());
+        const errBody = await sheetRes.text().catch(() => "");
+        console.error("[admin] Sheet doGet error:", sheetRes.status, errBody);
+        throw new Error(`Apps Script HTTP ${sheetRes.status}: ${errBody.slice(0, 200)}`);
       }
     } catch (err) {
       console.error("[admin] Sheet fetch error:", err);
+      sourceErrors.push({
+        source: "Google Sheet (Contact Enquiries)",
+        message: err instanceof Error ? err.message : "Unknown error fetching contact submissions",
+      });
     }
   }
 
   return NextResponse.json(
-    { leads, count: leads.length, generated: new Date().toISOString() },
+    {
+      leads,
+      count: leads.length,
+      generated: new Date().toISOString(),
+      sourceErrors: sourceErrors.length ? sourceErrors : undefined,
+    },
     { headers: { "Cache-Control": "no-store" } }
   );
 }

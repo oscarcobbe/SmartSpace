@@ -60,8 +60,14 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   Lost: { bg: "bg-red-100", text: "text-red-800" },
 };
 
+interface SourceError {
+  source: string;
+  message: string;
+}
+
 export default function AdminLeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [sourceErrors, setSourceErrors] = useState<SourceError[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [key, setKey] = useState("");
@@ -92,6 +98,7 @@ export default function AdminLeadsPage() {
       }
       const data = await res.json();
       setLeads(data.leads || []);
+      setSourceErrors(data.sourceErrors || []);
       setAuthed(true);
     } catch {
       setError("Failed to load");
@@ -171,6 +178,35 @@ export default function AdminLeadsPage() {
             Refresh
           </button>
         </div>
+
+        {/*
+          Per-source error banners. The /api/admin/leads endpoint runs three
+          fetches in parallel (Stripe, Calendly, Apps Script). If any fails,
+          its data is missing from the list — without surfacing this, a
+          partial outage looks like "we just have fewer leads today" and
+          decisions get made on incomplete data.
+        */}
+        {sourceErrors.length > 0 && (
+          <div className="mb-6 space-y-2">
+            {sourceErrors.map((e, i) => (
+              <div
+                key={i}
+                className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
+                role="alert"
+              >
+                <span className="mt-0.5 text-amber-600" aria-hidden="true">⚠️</span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold text-amber-900">
+                    Data source unavailable: {e.source}
+                  </div>
+                  <div className="text-xs text-amber-800 mt-0.5 break-words">
+                    {e.message} — records from this source aren&apos;t in the list below.
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* View tabs */}
         <div className="inline-flex bg-gray-100 rounded-full p-1 mb-6">
