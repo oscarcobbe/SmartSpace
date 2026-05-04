@@ -293,18 +293,48 @@ export async function POST(req: NextRequest) {
     // creation FAILED (Nigel needs to know immediately so he can book
     // manually before the customer gives up). No-op if TWILIO_* env vars
     // aren't set.
+    //
+    // Format prioritises legibility over byte-count — at €0.05/segment
+    // and ≤10 SMS/day, total cost is <€20/month even at maximum volume.
+    // iPhone Messages auto-detects the URL at the bottom and makes it
+    // tap-to-open the dashboard.
     if (amountTotal >= 100 || calendlyStatus === "failed") {
-      const calendlyHint =
-        calendlyStatus === "failed"
-          ? "⚠️ Calendly FAILED — book manually. "
-          : calendlyStatus === "skipped"
-          ? ""
-          : "";
-      await sendSms(
-        `Smart Space — new paid order ${currency} ${amountTotal.toFixed(2)}: ${customerName} ${phone || ""}. ${productName}${
-          bookingLabel || bookingDate ? ` for ${bookingLabel || bookingDate}` : ""
-        }. ${calendlyHint}Email + dashboard /admin/leads.`
-      );
+      const lines: string[] = [
+        "Smart Space — new paid order",
+        `${currency} ${amountTotal.toFixed(2)} — ${customerName}`,
+      ];
+      if (phone) lines.push(phone);
+      lines.push(""); // blank line
+
+      lines.push(productName);
+      if (bookingLabel || bookingDate) lines.push(bookingLabel || bookingDate || "");
+      lines.push("");
+
+      if (installationAddress) {
+        lines.push("Address:");
+        lines.push(installationAddress);
+        lines.push("");
+      }
+
+      // Spec from metadata.configuration — same data we just wrote to
+      // the Sheet, reformatted as a bullet list. Tells Nigel before he
+      // arrives whether new cabling is needed, how many devices, etc.
+      if (configNote) {
+        lines.push("Spec:");
+        for (const part of configNote.split(" | ")) {
+          lines.push(`• ${part}`);
+        }
+        lines.push("");
+      }
+
+      if (calendlyStatus === "failed") {
+        lines.push("⚠️ CALENDLY FAILED — book manually");
+        lines.push("");
+      }
+
+      lines.push("https://smart-space.ie/admin/leads");
+
+      await sendSms(lines.join("\n"));
     }
   }
 
