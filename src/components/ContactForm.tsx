@@ -46,12 +46,18 @@ export default function ContactForm() {
     setError(null);
 
     const form = e.target as HTMLFormElement;
+    // `homepage_url` is the honeypot field — hidden from real users via CSS,
+    // skipped by screen readers via aria-hidden, ignored by browser autofill
+    // via autocomplete=off + non-standard name. Bots that scrape every input
+    // and fill it indiscriminately will leave a non-empty value here, which
+    // the server uses as a "drop silently" signal.
     const data = {
       name: (form.elements.namedItem("name") as HTMLInputElement).value,
       email: (form.elements.namedItem("email") as HTMLInputElement).value,
       phone: (form.elements.namedItem("phone") as HTMLInputElement).value,
       subject: (form.elements.namedItem("subject") as HTMLSelectElement).value,
       message: (form.elements.namedItem("message") as HTMLTextAreaElement).value,
+      homepage_url: (form.elements.namedItem("homepage_url") as HTMLInputElement | null)?.value ?? "",
       attribution: getAttribution() ?? undefined,
     };
 
@@ -98,6 +104,23 @@ export default function ContactForm() {
           {error}
         </div>
       ) : null}
+
+      {/*
+        Honeypot — hidden anti-spam field. Real users never see or interact
+        with it (off-screen, tab-skip, screen-reader-skip, no autofill). Bots
+        that fill every input on the page will leave a non-empty value here,
+        which the /api/contact route treats as a drop signal.
+      */}
+      <input
+        type="text"
+        name="homepage_url"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        defaultValue=""
+        style={{ position: "absolute", left: "-9999px", top: "-9999px", width: 1, height: 1, opacity: 0 }}
+      />
+
       <div className="grid sm:grid-cols-2 gap-5">
         <div>
           <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">

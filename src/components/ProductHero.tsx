@@ -113,12 +113,15 @@ export default function ProductHero({ product, shortDescription }: Props) {
               <button
                 key={i}
                 onClick={() => setSelectedImage(i)}
+                aria-label={`View ${displayTitle(product.title)} image ${i + 1} of ${allImages.length}`}
+                aria-pressed={selectedImage === i}
                 className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-transparent p-1.5 border-2 transition-all ${
                   selectedImage === i
                     ? "border-brand-500 ring-1 ring-brand-500/30"
                     : "border-transparent hover:border-gray-200"
                 }`}
               >
+                {/* Decorative — parent button carries the accessible name */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={img} alt="" className="w-full h-full object-contain" />
               </button>

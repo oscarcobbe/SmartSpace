@@ -4,6 +4,7 @@ import { Resend } from "resend";
 import { createBookingEvent } from "@/lib/calendly";
 import { logLead } from "@/lib/leads";
 import { fireServerConversion } from "@/lib/server-conversions";
+import { sendSms } from "@/lib/sms";
 
 // In-memory idempotency cache — event IDs processed in the last hour.
 // For multi-instance deployments, swap for Redis/Upstash.
@@ -287,6 +288,24 @@ export async function POST(req: NextRequest) {
       sessionId,
       calendlyStatus,
     });
+
+    // SMS for high-value orders (≥ €100) OR for any order where Calendly
+    // creation FAILED (Nigel needs to know immediately so he can book
+    // manually before the customer gives up). No-op if TWILIO_* env vars
+    // aren't set.
+    if (amountTotal >= 100 || calendlyStatus === "failed") {
+      const calendlyHint =
+        calendlyStatus === "failed"
+          ? "⚠️ Calendly FAILED — book manually. "
+          : calendlyStatus === "skipped"
+          ? ""
+          : "";
+      await sendSms(
+        `Smart Space — new paid order ${currency} ${amountTotal.toFixed(2)}: ${customerName} ${phone || ""}. ${productName}${
+          bookingLabel || bookingDate ? ` for ${bookingLabel || bookingDate}` : ""
+        }. ${calendlyHint}Email + dashboard /admin/leads.`
+      );
+    }
   }
 
   return NextResponse.json({ received: true });
