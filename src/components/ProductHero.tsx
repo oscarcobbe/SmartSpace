@@ -285,6 +285,7 @@ export default function ProductHero({ product, shortDescription }: Props) {
             bookingDate={bookingSelection?.date}
             bookingSlot={bookingSelection?.timeSlot}
             bookingLabel={bookingSelection ? `${bookingSelection.dateLabel} ${bookingSelection.slotLabel}` : undefined}
+            configuration={effectiveOptions}
           />
         </div>
 

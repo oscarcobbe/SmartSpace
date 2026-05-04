@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
+import { PRODUCT_CATALOGUE } from "@/data/productCatalogue";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,72 @@ function rateLimitOk(ip: string): boolean {
   return true;
 }
 
+/**
+ * Reverse-engineer the variant a past customer chose from the amount they
+ * paid + the product they bought. Each Shopify variant is a unique
+ * combination of options (number of devices / doorbell wiring / cameras
+ * needing wiring) and has its own price, so the paid amount usually
+ * narrows to a single variant — sometimes two when prices coincide.
+ *
+ * Used only for orders that predate the metadata.configuration capture
+ * (anything from before 2026-05-04). Returns an empty array if no match.
+ */
+function recoverVariantFromPrice(productName: string, paidEuros: number): QA[] {
+  if (!productName || !Number.isFinite(paidEuros) || paidEuros < 5) return [];
+  const cents = Math.round(paidEuros * 100);
+
+  // Match Stripe metadata.product_name back to a Shopify product entry
+  const norm = productName.toLowerCase().trim();
+  const product =
+    PRODUCT_CATALOGUE.find((p) => p.handle === norm) ??
+    PRODUCT_CATALOGUE.find((p) => p.title.toLowerCase() === norm) ??
+    PRODUCT_CATALOGUE.find((p) => p.title.toLowerCase().includes(norm) || norm.includes(p.title.toLowerCase()));
+  if (!product) return [];
+
+  const candidates = (product.variants?.edges || [])
+    .map((e) => e.node)
+    .filter((v) => Math.round(parseFloat(v.price.amount) * 100) === cents);
+
+  if (candidates.length === 0) return [];
+
+  // Friendly relabel — keep dashboard tidy. Mirrors the FRIENDLY_LABELS
+  // map used on the product pages so post-fix and pre-fix orders read
+  // identically.
+  const FRIENDLY: Record<string, string> = {
+    "How Many Devices To Be Installed": "Number of devices",
+    "How Many Ring or Similar Products Are To Be Installed": "Number of devices",
+    "Video Doorbell - Existing Working Wired Doorbell": "Existing doorbell wiring",
+    "Video Doorbell To Be Installed": "Existing doorbell wiring",
+    "External Cameras - How Many Need New Power Cabling": "Cameras needing new wiring",
+    "External Video Camera(s) To Be Installed": "Cameras needing new wiring",
+    "Choose A Power Option": "Power option",
+  };
+  const friendlyName = (raw: string) => {
+    const cleaned = raw.replace(/\s*\?\s*$/, "").trim();
+    return FRIENDLY[cleaned] ?? cleaned;
+  };
+
+  // Fields that have a SINGLE consistent value across all candidates can be
+  // shown plainly. Fields where candidates disagree get listed as
+  // "either / or" so the dashboard reflects honest uncertainty.
+  const optionNames = candidates[0].selectedOptions.map((o) => o.name);
+  const out: QA[] = [];
+  for (const optName of optionNames) {
+    const distinctValues = Array.from(
+      new Set(candidates.map((v) => v.selectedOptions.find((o) => o.name === optName)?.value).filter(Boolean))
+    );
+    if (distinctValues.length === 1) {
+      out.push({ question: friendlyName(optName), answer: String(distinctValues[0]) });
+    } else {
+      out.push({
+        question: friendlyName(optName),
+        answer: distinctValues.join(" OR ") + " (price-derived; confirm with customer)",
+      });
+    }
+  }
+  return out;
+}
+
 function safeEqual(a: string, b: string): boolean {
   const ab = Buffer.from(a);
   const bb = Buffer.from(b);
@@ -30,6 +97,11 @@ function safeEqual(a: string, b: string): boolean {
   } catch {
     return false;
   }
+}
+
+interface QA {
+  question: string;
+  answer: string;
 }
 
 interface Lead {
@@ -45,6 +117,16 @@ interface Lead {
   bookingSlot: string;
   status: string;
   orderId: string;
+  /**
+   * Question/answer pairs the customer provided at conversion time.
+   * Sources:
+   *   - Paid orders: Stripe metadata.configuration (set in /api/checkout from
+   *     the product page's Shopify variant selectors), plus the
+   *     installation_address custom field if filled.
+   *   - Calendly events: invitee questions_and_answers from Calendly API.
+   *   - Contact enquiries: subject + free-form message from the contact form.
+   */
+  details?: QA[];
 }
 
 export async function GET(request: Request) {
@@ -95,6 +177,45 @@ export async function GET(request: Request) {
       const installAddr = session.custom_fields?.find((f: { key: string; text?: { value: string } }) => f.key === "installation_address")?.text?.value;
       const address = installAddr || addrParts.join(", ") || "—";
 
+      // Build details: Stripe custom-fields + parsed metadata.configuration
+      // (the JSON-encoded answers from the product page's variant selectors).
+      const details: QA[] = [];
+      const cfgRaw = session.metadata?.configuration as string | undefined;
+      if (cfgRaw) {
+        try {
+          const parsed = JSON.parse(cfgRaw) as Array<{ question: string; answer: string }> | Record<string, string>;
+          if (Array.isArray(parsed)) {
+            for (const p of parsed) {
+              if (p?.question && p.answer != null) details.push({ question: String(p.question), answer: String(p.answer) });
+            }
+          } else if (parsed && typeof parsed === "object") {
+            for (const [q, a] of Object.entries(parsed)) {
+              if (a != null && String(a).trim() !== "") details.push({ question: q, answer: String(a) });
+            }
+          }
+        } catch {
+          // metadata isn't JSON — surface the raw string so we don't lose info
+          details.push({ question: "Configuration", answer: cfgRaw });
+        }
+      } else {
+        // Fallback for orders that predate metadata.configuration capture
+        // (anything from before 2026-05-04): reverse-engineer the variant
+        // from the amount paid + the product. Most installation-only and
+        // accessory variants have unique prices so this recovers the
+        // customer's choices exactly. When two variants share a price
+        // both candidates are surfaced with an "OR" suffix.
+        const recovered = recoverVariantFromPrice(
+          (session.metadata?.product_name as string) || "",
+          (session.amount_total ?? 0) / 100
+        );
+        details.push(...recovered);
+      }
+      // Surface installation_address separately if it differs from the billing
+      // address — useful when the install site isn't where the bill goes.
+      if (installAddr && installAddr.trim() && installAddr !== addrParts.join(", ")) {
+        details.push({ question: "Installation address", answer: installAddr });
+      }
+
       leads.push({
         date: created.toLocaleString("en-GB", { timeZone: "Europe/Dublin", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false }),
         type: "Paid Order",
@@ -108,6 +229,7 @@ export async function GET(request: Request) {
         bookingSlot: session.metadata?.booking_slot || "—",
         status: session.payment_status === "paid" ? "Paid" : session.payment_status,
         orderId: session.id,
+        details: details.length ? details : undefined,
       });
     }
   } catch (err) {
@@ -136,6 +258,7 @@ export async function GET(request: Request) {
         let inviteePhone = "—";
         let inviteeAddress = "—";
         let notes = "";
+        const calendlyDetails: QA[] = [];
 
         try {
           const invRes = await fetch(`${event.uri}/invitees`, {
@@ -153,6 +276,32 @@ export async function GET(request: Request) {
             inviteePhone = inv.text_reminder_number || phoneFromQA || "—";
             const qas: { question: string; answer: string }[] = inv.questions_and_answers || [];
             notes = qas.map((q) => q.answer).join("; ");
+            // Surface every Q&A pair into details. Calendly often packs
+            // multiple sub-fields into a single answer (e.g. "Product: X |
+            // Address: Y | Phone: Z | [free-form note]"). Split on " | " and
+            // promote every "Label: value" sub-field to its own dashboard
+            // row; sub-fields that aren't in label-form fall through as a
+            // generic "Note" so we never lose information.
+            for (const qa of qas) {
+              const q = (qa.question || "").trim();
+              const a = (qa.answer || "").trim();
+              if (!a) continue;
+              const subFields = a.split(/\s*\|\s*/).map((s) => s.trim()).filter(Boolean);
+              const labeled = subFields.filter((s) => /^[\w\s]{2,30}:\s*\S/.test(s));
+              if (subFields.length > 1 && labeled.length >= 1) {
+                for (const sub of subFields) {
+                  const m = sub.match(/^([\w\s]{2,30}):\s*(.+)$/);
+                  if (m) {
+                    calendlyDetails.push({ question: m[1].trim(), answer: m[2].trim() });
+                  } else {
+                    // Free-form trailing notes — keep them but mark generically
+                    calendlyDetails.push({ question: "Note", answer: sub });
+                  }
+                }
+              } else {
+                calendlyDetails.push({ question: q || "Note", answer: a });
+              }
+            }
             // Extract address from Q&A — may be in question text OR embedded in answer as "Address: ..."
             for (const qa of qas) {
               if (/address|eircode|location/i.test(qa.question)) {
@@ -186,6 +335,7 @@ export async function GET(request: Request) {
           bookingSlot: `${start.toLocaleString("en-GB", { timeZone: "Europe/Dublin", hour: "2-digit", minute: "2-digit", hour12: false })} – ${new Date(event.end_time).toLocaleString("en-GB", { timeZone: "Europe/Dublin", hour: "2-digit", minute: "2-digit", hour12: false })}`,
           status: "Upcoming",
           orderId: notes || "—",
+          details: calendlyDetails.length ? calendlyDetails : undefined,
         });
       }
     } catch (err) {
@@ -208,6 +358,25 @@ export async function GET(request: Request) {
           const r = row as Record<string, string | number>;
           // Apps Script returns the Date column already formatted in Dublin
           // time (dd/MM/yyyy HH:mm) — pass through as-is.
+          // Sheet's "notes" column is typically "<Subject>: <Message>" from
+          // /api/contact (e.g. "Installation Enquiry: I have an old ..."). Split
+          // it back out so the dashboard shows topic + message as separate rows.
+          const rawNotes = String(r.notes || "").trim();
+          const contactDetails: QA[] = [];
+          if (rawNotes) {
+            const m = rawNotes.match(/^([^:]{2,40}):\s*([\s\S]+)$/);
+            if (m) {
+              contactDetails.push({ question: "Topic", answer: m[1].trim() });
+              contactDetails.push({ question: "Message", answer: m[2].trim() });
+            } else {
+              contactDetails.push({ question: "Message", answer: rawNotes });
+            }
+          }
+          // Surface UTM / source attribution if present
+          if (r.utmSource) contactDetails.push({ question: "Source", answer: String(r.utmSource) });
+          if (r.utmCampaign) contactDetails.push({ question: "Campaign", answer: String(r.utmCampaign) });
+          if (r.gclid) contactDetails.push({ question: "Google Ads click", answer: "Yes" });
+
           leads.push({
             date: String(r.date || "—"),
             type: "Contact Enquiry",
@@ -221,6 +390,7 @@ export async function GET(request: Request) {
             bookingSlot: "—",
             status: String(r.status || "New"),
             orderId: String(r.notes || "—"),
+            details: contactDetails.length ? contactDetails : undefined,
           });
         }
       } else {

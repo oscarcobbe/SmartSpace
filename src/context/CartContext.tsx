@@ -11,6 +11,13 @@ export interface CartItem {
   bookingDate?: string;
   bookingSlot?: string;
   bookingLabel?: string;
+  /**
+   * Customer answers to product-configuration questions captured on the
+   * product page (e.g. "Doorbell Wiring: Existing wired", "Cameras Needing
+   * New Wiring: 2"). Flows into Stripe metadata + the admin dashboard so
+   * Nigel knows what to expect on installation day.
+   */
+  configuration?: Record<string, string>;
 }
 
 interface CartContextType {

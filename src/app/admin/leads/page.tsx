@@ -35,6 +35,8 @@ interface Lead {
   bookingSlot: string;
   status: string;
   orderId: string;
+  /** Customer's answers to product/booking/contact-form questions. */
+  details?: { question: string; answer: string }[];
 }
 
 type DashView = "all" | "upcoming";
@@ -344,6 +346,21 @@ export default function AdminLeadsPage() {
                               )}
                             </div>
 
+                            {/* Customer's answers to product / booking / form questions */}
+                            {lead.details && lead.details.length > 0 && (
+                              <div className="bg-amber-50/50 border border-amber-100 rounded-xl p-3">
+                                <div className="text-xs font-semibold text-amber-900 mb-2 uppercase tracking-wider">Customer answers</div>
+                                <dl className="space-y-1.5">
+                                  {lead.details.map((qa, qi) => (
+                                    <div key={qi} className="grid grid-cols-[auto_1fr] gap-x-2 text-xs">
+                                      <dt className="font-semibold text-gray-700">{qa.question}:</dt>
+                                      <dd className="text-gray-900 break-words whitespace-pre-line">{qa.answer}</dd>
+                                    </div>
+                                  ))}
+                                </dl>
+                              </div>
+                            )}
+
                             {/* Embedded Google Maps preview */}
                             {lead.address !== "—" && (
                               <div className="rounded-xl overflow-hidden border border-gray-200">
@@ -441,6 +458,7 @@ export default function AdminLeadsPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50 border-b border-gray-100">
+                      <th className="w-8 px-2 py-3"></th>
                       <th className="text-left px-4 py-3 font-semibold text-gray-600">Date</th>
                       <th className="text-left px-4 py-3 font-semibold text-gray-600">Type</th>
                       <th className="text-left px-4 py-3 font-semibold text-gray-600">Customer</th>
@@ -454,7 +472,7 @@ export default function AdminLeadsPage() {
                   <tbody className="divide-y divide-gray-50">
                     {filtered.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="px-4 py-12 text-center text-gray-400">
+                        <td colSpan={9} className="px-4 py-12 text-center text-gray-400">
                           No records found
                         </td>
                       </tr>
@@ -462,36 +480,64 @@ export default function AdminLeadsPage() {
                       filtered.map((lead, i) => {
                         const typeColor = TYPE_COLORS[lead.type] || { bg: "bg-gray-50", text: "text-gray-700" };
                         const statusColor = STATUS_COLORS[lead.status] || { bg: "bg-gray-100", text: "text-gray-700" };
+                        const isExpanded = expandedCard === i;
+                        const hasDetails = lead.details && lead.details.length > 0;
                         return (
-                          <tr key={i} className="hover:bg-gray-50/50 transition-colors">
-                            <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-xs">{lead.date}</td>
-                            <td className="px-4 py-3">
-                              <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${typeColor.bg} ${typeColor.text}`}>
-                                {lead.type}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3">
-                              <div className="font-medium text-gray-900">{lead.name}</div>
-                              <div className="text-xs text-gray-400">{lead.email}</div>
-                              {lead.phone !== "—" && <div className="text-xs text-gray-400">{lead.phone}</div>}
-                            </td>
-                            <td className="px-4 py-3 text-gray-600 text-xs max-w-[180px]">{lead.address !== "—" ? lead.address : ""}</td>
-                            <td className="px-4 py-3 text-gray-700 max-w-[200px] truncate">{lead.product}</td>
-                            <td className="px-4 py-3 font-semibold text-gray-900">{lead.amount}</td>
-                            <td className="px-4 py-3 text-gray-600 text-xs">
-                              {lead.bookingDate !== "—" && (
-                                <>
-                                  <div>{lead.bookingDate}</div>
-                                  {lead.bookingSlot !== "—" && <div className="text-gray-400">{lead.bookingSlot}</div>}
-                                </>
-                              )}
-                            </td>
-                            <td className="px-4 py-3">
-                              <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${statusColor.bg} ${statusColor.text}`}>
-                                {lead.status}
-                              </span>
-                            </td>
-                          </tr>
+                          <>
+                            <tr
+                              key={i}
+                              className={`transition-colors cursor-pointer ${isExpanded ? "bg-amber-50/40" : "hover:bg-gray-50/50"}`}
+                              onClick={() => setExpandedCard(isExpanded ? null : i)}
+                            >
+                              <td className="px-2 py-3 text-gray-400">
+                                {hasDetails ? (
+                                  isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+                                ) : null}
+                              </td>
+                              <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-xs">{lead.date}</td>
+                              <td className="px-4 py-3">
+                                <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${typeColor.bg} ${typeColor.text}`}>
+                                  {lead.type}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="font-medium text-gray-900">{lead.name}</div>
+                                <div className="text-xs text-gray-400">{lead.email}</div>
+                                {lead.phone !== "—" && <div className="text-xs text-gray-400">{lead.phone}</div>}
+                              </td>
+                              <td className="px-4 py-3 text-gray-600 text-xs max-w-[180px]">{lead.address !== "—" ? lead.address : ""}</td>
+                              <td className="px-4 py-3 text-gray-700 max-w-[200px] truncate">{lead.product}</td>
+                              <td className="px-4 py-3 font-semibold text-gray-900">{lead.amount}</td>
+                              <td className="px-4 py-3 text-gray-600 text-xs">
+                                {lead.bookingDate !== "—" && (
+                                  <>
+                                    <div>{lead.bookingDate}</div>
+                                    {lead.bookingSlot !== "—" && <div className="text-gray-400">{lead.bookingSlot}</div>}
+                                  </>
+                                )}
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${statusColor.bg} ${statusColor.text}`}>
+                                  {lead.status}
+                                </span>
+                              </td>
+                            </tr>
+                            {isExpanded && hasDetails && (
+                              <tr className="bg-amber-50/30">
+                                <td colSpan={9} className="px-4 py-3">
+                                  <div className="text-xs font-semibold text-amber-900 mb-2 uppercase tracking-wider">Customer answers</div>
+                                  <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5">
+                                    {lead.details!.map((qa, qi) => (
+                                      <div key={qi} className="grid grid-cols-[auto_1fr] gap-x-2 text-xs">
+                                        <dt className="font-semibold text-gray-700 whitespace-nowrap">{qa.question}:</dt>
+                                        <dd className="text-gray-900 break-words whitespace-pre-line">{qa.answer}</dd>
+                                      </div>
+                                    ))}
+                                  </dl>
+                                </td>
+                              </tr>
+                            )}
+                          </>
                         );
                       })
                     )}

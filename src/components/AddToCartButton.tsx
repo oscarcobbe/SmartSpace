@@ -16,6 +16,8 @@ interface AddToCartButtonProps {
   bookingDate?: string;
   bookingSlot?: string;
   bookingLabel?: string;
+  /** Customer answers to product-page questions; flows to Stripe + dashboard. */
+  configuration?: Record<string, string>;
 }
 
 export default function AddToCartButton({
@@ -30,13 +32,14 @@ export default function AddToCartButton({
   bookingDate,
   bookingSlot,
   bookingLabel,
+  configuration,
 }: AddToCartButtonProps) {
   const { addItem } = useCart();
   const [status, setStatus] = useState<"idle" | "loading" | "added">("idle");
 
   const handleClick = async () => {
     setStatus("loading");
-    addItem({ productId, name, price, image, quantity: 1, bookingDate, bookingSlot, bookingLabel });
+    addItem({ productId, name, price, image, quantity: 1, bookingDate, bookingSlot, bookingLabel, configuration });
     setStatus("added");
     setTimeout(() => setStatus("idle"), 2000);
   };

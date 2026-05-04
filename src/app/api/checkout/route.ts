@@ -11,6 +11,8 @@ interface CartItem {
   bookingDate?: string;
   bookingSlot?: string;
   bookingLabel?: string;
+  /** Customer answers to product-page questions (Shopify variant selectors). */
+  configuration?: Record<string, string>;
 }
 
 interface CheckoutBody {
@@ -28,6 +30,7 @@ interface ResolvedItem {
   bookingDate?: string;
   bookingSlot?: string;
   bookingLabel?: string;
+  configuration?: Record<string, string>;
 }
 
 /**
@@ -66,15 +69,32 @@ async function resolveItems(items: CartItem[]): Promise<ResolvedItem[]> {
 
     const authoritativeCents = Math.round(item.price * 100);
 
+    // Resolve the matched variant from the customer's selectedOptions so we
+    // can record the variant title on the Stripe line item too. This makes
+    // the variant choice visible on the Stripe Dashboard + customer receipt
+    // even if metadata.configuration is ever stripped or unreadable.
+    let variantTitle: string | undefined;
+    if (item.configuration && product.variants?.edges) {
+      const matched = product.variants.edges.find((v) =>
+        v.node.selectedOptions?.every((so) => item.configuration?.[so.name] === so.value)
+      );
+      if (matched?.node?.title && matched.node.title !== "Default Title") {
+        variantTitle = matched.node.title;
+      }
+    }
+
+    const lineItemTitle = variantTitle ? `${product.title} — ${variantTitle}` : product.title;
+
     resolved.push({
       id: item.productId,
-      title: product.title, // server-side title, never client-submitted
+      title: lineItemTitle, // server-side title, never client-submitted
       unitAmountCents: authoritativeCents,
       quantity: item.quantity,
       image: item.image?.startsWith("https://") ? item.image : "",
       bookingDate: item.bookingDate,
       bookingSlot: item.bookingSlot,
       bookingLabel: item.bookingLabel,
+      configuration: item.configuration,
     });
   }
   return resolved;
@@ -132,6 +152,27 @@ export async function POST(request: Request) {
       params.append("metadata[booking_slot]", bookedItem.bookingSlot ?? "");
       params.append("metadata[booking_label]", bookedItem.bookingLabel ?? "");
       params.append("metadata[product_name]", bookedItem.title);
+    }
+
+    // Aggregate every item's product-page answers into a single JSON-encoded
+    // metadata field. Stripe metadata values cap at 500 chars so we trim
+    // long answers and prefix each entry with the product title for clarity
+    // when multiple items are in the cart.
+    const allConfigEntries: Array<{ question: string; answer: string }> = [];
+    for (const item of resolved) {
+      if (!item.configuration) continue;
+      for (const [q, a] of Object.entries(item.configuration)) {
+        if (a == null || String(a).trim() === "") continue;
+        allConfigEntries.push({
+          question: resolved.length > 1 ? `${item.title}: ${q}` : q,
+          answer: String(a).slice(0, 200),
+        });
+      }
+    }
+    if (allConfigEntries.length) {
+      const cfgJson = JSON.stringify(allConfigEntries);
+      // Stripe enforces 500 char max per metadata value
+      params.append("metadata[configuration]", cfgJson.slice(0, 490));
     }
 
     resolved.forEach((item, i) => {

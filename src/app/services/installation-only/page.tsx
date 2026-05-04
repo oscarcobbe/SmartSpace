@@ -69,6 +69,21 @@ export default function InstallationOnlyPage() {
   const productOptions = product?.options?.filter((o) => !(o.values.length === 1 && o.values[0] === "Default Title")) ?? [];
   const effectiveOptions = { ...Object.fromEntries(productOptions.map((o) => [o.name, o.values[0]])), ...selectedOptions };
 
+  // Friendly question labels for the dashboard / Stripe metadata. The raw
+  // Shopify option names are verbose ("How Many Ring or Similar Products
+  // Are To Be Installed") — remap to the same short labels used in the UI.
+  const FRIENDLY_LABELS: Record<string, string> = {
+    "How Many Ring or Similar Products Are To Be Installed": "Number of devices",
+    "Video Doorbell To Be Installed ? Is There An Existing Working Wired Doorbell At The Desired Location": "Existing doorbell wiring",
+    "External Video Camera(s) To Be Installed ? How Many Require New Mains Power Cabling": "Cameras needing new wiring",
+  };
+  const checkoutConfig: Record<string, string> = {};
+  for (const [k, v] of Object.entries(effectiveOptions)) {
+    const cleanKey = k.replace(/\s*\?\s*$/, "");
+    const friendly = FRIENDLY_LABELS[cleanKey] ?? cleanKey;
+    checkoutConfig[friendly] = v;
+  }
+
   const matchedVariant = product?.variants.edges.find((v) =>
     v.node.selectedOptions?.every((so) => effectiveOptions[so.name] === so.value)
   )?.node ?? product?.variants.edges[0]?.node;
@@ -196,6 +211,7 @@ export default function InstallationOnlyPage() {
                     bookingDate={bookingSelection?.date}
                     bookingSlot={bookingSelection?.timeSlot}
                     bookingLabel={bookingSelection ? `${bookingSelection.dateLabel} ${bookingSelection.slotLabel}` : undefined}
+                    configuration={checkoutConfig}
                   />
                 )}
               </div>
