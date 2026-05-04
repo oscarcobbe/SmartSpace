@@ -33,9 +33,13 @@ const nextConfig = {
       { source: "/pages/contact", destination: "/contact", permanent: true },
       { source: "/pages/reviews", destination: "/reviews", permanent: true },
       { source: "/pages/about", destination: "/about", permanent: true },
-      { source: "/pages/privacy-policy", destination: "/", permanent: true },
-      { source: "/pages/terms-and-conditions", destination: "/", permanent: true },
-      { source: "/pages/disclaimer", destination: "/", permanent: true },
+      // Legacy Shopify pages → real Next.js pages (added 2026-05-04 — were
+      // dead-redirecting to home, which left an accessible-privacy-policy
+      // gap under GDPR + ePrivacy now that the cookie banner fires
+      // ad_storage / ad_user_data signals).
+      { source: "/pages/privacy-policy", destination: "/privacy", permanent: true },
+      { source: "/pages/terms-and-conditions", destination: "/terms", permanent: true },
+      { source: "/pages/disclaimer", destination: "/terms", permanent: true },
 
       // Catch-all wildcards for old Shopify URL structures
       // IMPORTANT: use [^.]+ so we don't accidentally redirect static files like

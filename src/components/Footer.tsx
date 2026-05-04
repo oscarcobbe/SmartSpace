@@ -98,7 +98,15 @@ export default function Footer() {
       <div className="border-t border-[#333]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-center">
           <p>&copy; {new Date().getFullYear()} Smart Space. All rights reserved.</p>
-          <p>Dublin&apos;s #1 Ring Installer — Serving All of Leinster</p>
+          <div className="flex items-center gap-4">
+            <Link href="/privacy" className="hover:text-white transition-colors">
+              Privacy
+            </Link>
+            <Link href="/terms" className="hover:text-white transition-colors">
+              Terms
+            </Link>
+            <span className="hidden sm:inline">Dublin&apos;s #1 Ring Installer — Serving All of Leinster</span>
+          </div>
         </div>
       </div>
     </footer>

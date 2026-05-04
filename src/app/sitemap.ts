@@ -40,8 +40,26 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
 
-    // /faq and /blog/* intentionally omitted — pages still accessible by
-    // direct link but withheld from search until content is refreshed.
+    // /ring-installation deliberately omitted — it's a paid-only landing
+    // page kept out of organic search to avoid cannibalising
+    // /services/installation-only (same intent, same conversion path).
+
+    // FAQ — long-tail intent ("how does ring doorbell installation work",
+    // "what's needed for ring chime", etc.). Re-added after content
+    // refresh to capture these queries.
+    { url: `${BASE}/faq`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+
+    // Blog — informational top-of-funnel content. Each post targets a
+    // distinct buyer-research query so they don't cannibalise each other.
+    { url: `${BASE}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
+    { url: `${BASE}/blog/home-security-cameras-ireland-buyers-guide`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${BASE}/blog/ring-doorbell-installation-ireland-guide`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${BASE}/blog/smart-doorbell-vs-traditional-intercom-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+
+    // Legal — required by GDPR / ePrivacy now that the cookie banner fires
+    // ad_storage / ad_user_data signals. Low priority but indexable.
+    { url: `${BASE}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${BASE}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
   ];
 
   return staticRoutes;
