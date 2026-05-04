@@ -23,7 +23,11 @@ export function middleware() {
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob: https:",
     "media-src 'self' https:",
-    "connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://www.googletagmanager.com https://region1.google-analytics.com https://api.calendly.com https://*.myshopify.com",
+    // googleadservices.com + googleads.g.doubleclick.net are where gtag.js
+    // sendBeacons every conversion. Without them in connect-src the browser
+    // silently kills the beacon under CSP — tag "fires" in JS but nothing
+    // reaches Google Ads. This was the cause of 0 conversions for ~30 days.
+    "connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://www.googletagmanager.com https://region1.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://td.doubleclick.net https://api.calendly.com https://*.myshopify.com",
     "frame-src https://js.stripe.com https://hooks.stripe.com https://calendly.com https://*.calendly.com https://www.google.com https://maps.google.com",
     "base-uri 'self'",
     "form-action 'self' https://checkout.stripe.com",

@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { Resend } from "resend";
 import { createBookingEvent } from "@/lib/calendly";
 import { logLead } from "@/lib/leads";
+import { fireServerConversion } from "@/lib/server-conversions";
 
 // In-memory idempotency cache — event IDs processed in the last hour.
 // For multi-instance deployments, swap for Redis/Upstash.
@@ -180,6 +181,24 @@ export async function POST(req: NextRequest) {
       : "";
     const installationAddress = installationAddressField || billingAddressString;
 
+    // Pull product-page question/answer pairs out of metadata.configuration
+    // (set in /api/checkout) and format as a readable note string. The Sheet
+    // only has a single "notes" column, so we collapse Q&A pairs into
+    // "Q: A | Q: A" format. The dashboard re-parses this back into rows.
+    let configNote = "";
+    const cfgRaw = session.metadata?.configuration as string | undefined;
+    if (cfgRaw) {
+      try {
+        const parsed = JSON.parse(cfgRaw) as Array<{ question: string; answer: string }>;
+        if (Array.isArray(parsed)) {
+          configNote = parsed
+            .filter((p) => p?.question && p.answer)
+            .map((p) => `${p.question}: ${p.answer}`)
+            .join(" | ");
+        }
+      } catch { /* leave empty */ }
+    }
+
     // Log paid order to tracking sheet — must await; fire-and-forget gets
     // killed by Vercel's serverless runtime when the webhook returns.
     await logLead({
@@ -194,6 +213,7 @@ export async function POST(req: NextRequest) {
       bookingDate: bookingLabel || bookingDate || undefined,
       bookingSlot: bookingSlot || undefined,
       orderId: sessionId,
+      notes: configNote || undefined,
       attribution: {
         gclid: gclid || undefined,
         landingPage: (session.metadata?.landing_page as string) || undefined,
@@ -229,6 +249,27 @@ export async function POST(req: NextRequest) {
     } else {
       console.warn(`[stripe] no booking_date/booking_slot in session=${sessionId} metadata — Calendly skipped`);
     }
+
+    // Server-side conversion fire to Google Ads + GA4. Backstops the
+    // client-side gtag fire on /smartspace-payment-success — that fire is
+    // unreliable due to adblockers, consent denials, and SPA navigation
+    // killing JS before the pixel completes. transaction_id=sessionId
+    // dedupes when both client + server fire.
+    const [firstName, ...rest] = (customerName || "").trim().split(/\s+/);
+    const lastName = rest.join(" ") || undefined;
+    await fireServerConversion({
+      gadsLabel: "IofPCOiZuJkcEJfU6PxC", // SmartSpace Paid Order
+      ga4EventName: "purchase",
+      value: amountTotal,
+      currency,
+      transactionId: sessionId,
+      gclid: gclid || undefined,
+      email: email || undefined,
+      phone: phone || undefined,
+      firstName: firstName || undefined,
+      lastName,
+      extraParams: { product: productName, source: "stripe_webhook" },
+    });
 
     // Notify Nigel — runs after Calendly so we can include the outcome in
     // the email body (e.g. "Calendly failed, book manually").

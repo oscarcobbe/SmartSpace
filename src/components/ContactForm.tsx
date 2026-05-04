@@ -7,25 +7,32 @@ import { getAttribution } from "@/lib/attribution";
 // Mirrors the pattern in booking/page.tsx — direct window.gtag fire is
 // reliable; the prior <Script> + conditional render approach silently
 // dropped the call after page hydration had finished.
-function fireContactConversion(email: string, phone: string) {
+//
+// `conversionId` comes from the API response (server-generated UUID).
+// Sending it as `transaction_id` lets Google Ads dedupe this client-side
+// fire against the matching server-side fire — same id → counted once.
+function fireContactConversion(email: string, phone: string, conversionId?: string) {
   if (typeof window === "undefined") return;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const gtag = (window as any).gtag;
   if (typeof gtag !== "function") return;
-  // Enhanced conversions — Google hashes these client-side
-  gtag("set", "user_data", { email, phone_number: phone });
+  // Enhanced Conversions — Google hashes these client-side. Use
+  // `email_address` (not bare `email`) per Google's user_data schema.
+  gtag("set", "user_data", { email_address: email, phone_number: phone });
   gtag("event", "conversion", {
     send_to: "AW-17978501655/u8cHCNyipZocEJfU6PxC",
     value: 10.0,
     currency: "EUR",
+    transaction_id: conversionId,
     user_data: { email_address: email, phone_number: phone },
   });
   gtag("event", "generate_lead", {
     currency: "EUR",
     value: 10,
     lead_source: "contact_form",
+    transaction_id: conversionId,
   });
-  console.log("[gtag] contact form conversion + lead fired");
+  console.log("[gtag] contact form conversion + lead fired", { conversionId });
 }
 
 export default function ContactForm() {
@@ -54,14 +61,14 @@ export default function ContactForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      const json = (await res.json().catch(() => ({}))) as { error?: string; conversionId?: string };
 
       if (!res.ok) {
         setError(json.error ?? "Failed to send message. Please try again.");
         return;
       }
       setSubmitted(true);
-      fireContactConversion(data.email, data.phone);
+      fireContactConversion(data.email, data.phone, json.conversionId);
     } catch {
       setError("Failed to send message. Please try again.");
     } finally {

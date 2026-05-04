@@ -79,7 +79,7 @@ export default function BookingPage() {
           attribution: getAttribution() ?? undefined,
         }),
       });
-      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      const json = (await res.json().catch(() => ({}))) as { error?: string; conversionId?: string };
 
       if (!res.ok) {
         setError(
@@ -91,22 +91,32 @@ export default function BookingPage() {
 
       sessionStorage.removeItem("bookingContact");
       setConfirmed(true);
-      // Google Ads conversion: Book appointment — only fires on confirmed booking
+      // Google Ads conversion: Book appointment — only fires on confirmed booking.
+      // `transaction_id: json.conversionId` matches the server-side fire so
+      // Google Ads dedupes the two pings into a single conversion. Enhanced
+      // Conversions data (email/phone) is set up so this fire matches a
+      // click even when gclid auto-tagging didn't reach this page.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (typeof window !== "undefined" && (window as any).gtag) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window as any).gtag('event', 'conversion', {
-          send_to: 'AW-17978501655/u8cHCNyipZocEJfU6PxC',
+      const w = window as any;
+      if (typeof window !== "undefined" && typeof w.gtag === "function") {
+        w.gtag("set", "user_data", {
+          email_address: contact.email,
+          phone_number: contact.phone,
+        });
+        w.gtag("event", "conversion", {
+          send_to: "AW-17978501655/u8cHCNyipZocEJfU6PxC",
           value: 10.0,
-          currency: 'EUR',
+          currency: "EUR",
+          transaction_id: json.conversionId,
+          user_data: { email_address: contact.email, phone_number: contact.phone },
         });
-        // GA4 lead event mirroring the contact form pattern
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window as any).gtag('event', 'generate_lead', {
-          currency: 'EUR',
+        w.gtag("event", "generate_lead", {
+          currency: "EUR",
           value: 10,
-          lead_source: 'booking_form',
+          lead_source: "booking_form",
+          transaction_id: json.conversionId,
         });
+        console.log("[gtag] booking conversion + lead fired", { conversionId: json.conversionId });
       }
     } catch (err) {
       console.error("Booking failed:", err);

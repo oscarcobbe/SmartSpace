@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { randomUUID } from "crypto";
 import { createBookingEvent, TIME_SLOTS } from "@/lib/calendly";
 import { logLead, type AttributionRecord } from "@/lib/leads";
+import { fireServerConversion } from "@/lib/server-conversions";
 
 const SUBJECT_LABELS: Record<string, string> = {
   general: "General Enquiry",
@@ -160,7 +162,28 @@ export async function POST(request: Request) {
       source: "smart-space.ie/booking",
     });
 
-    return NextResponse.json({ success: true });
+    // Server-side conversion fire — backstops booking/page.tsx's client-side
+    // gtag. Same reliability story as the contact form. Shared
+    // `conversionId` (UUID) returned to the client → used as transaction_id
+    // → Google Ads dedupes both fires into a single conversion.
+    const conversionId = randomUUID();
+    const [firstName, ...rest] = name.trim().split(/\s+/);
+    const lastName = rest.join(" ") || undefined;
+    await fireServerConversion({
+      gadsLabel: "u8cHCNyipZocEJfU6PxC", // Smart Space Lead (booking → lead)
+      ga4EventName: "book_appointment",
+      value: 10,
+      currency: "EUR",
+      transactionId: conversionId,
+      gclid: attribution?.gclid || undefined,
+      email: email.trim(),
+      phone: phone?.trim() || undefined,
+      firstName: firstName || undefined,
+      lastName,
+      extraParams: { lead_source: "site_visit_booking", topic: subjectLabel },
+    });
+
+    return NextResponse.json({ success: true, conversionId });
   } catch (err) {
     console.error("[booking] Failed to process booking:", err);
     return NextResponse.json(

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import { Resend } from "resend";
 import { logLead, type AttributionRecord } from "@/lib/leads";
+import { fireServerConversion } from "@/lib/server-conversions";
 
 const SUBJECT_LABELS: Record<string, string> = {
   general: "General Enquiry",
@@ -103,8 +105,34 @@ export async function POST(request: Request) {
       source: "smart-space.ie",
     });
 
-    // Conversion tracking is handled client-side via gtag in ContactForm.tsx
-    return NextResponse.json({ success: true, id: data?.id });
+    // Server-side conversion fire — backstops ContactForm.tsx's client-side
+    // gtag. Client fire misses ~20-40% of submissions due to adblockers,
+    // consent denials, or the user closing the tab before the pixel completes.
+    // Server-side has the email/phone we just received and (when present)
+    // the gclid carried via attribution.
+    //
+    // Both fires share `conversionId` (UUID generated here) → returned to
+    // the client → used as `transaction_id` in the client-side gtag fire
+    // too → Google Ads de-duplicates by transaction_id, so we count one
+    // conversion even though two pings arrive.
+    const conversionId = randomUUID();
+    const [firstName, ...rest] = (name?.trim() || "").split(/\s+/);
+    const lastName = rest.join(" ") || undefined;
+    await fireServerConversion({
+      gadsLabel: "u8cHCNyipZocEJfU6PxC", // Smart Space Lead — same label as ContactForm
+      ga4EventName: "generate_lead",
+      value: 10,
+      currency: "EUR",
+      transactionId: conversionId,
+      gclid: attribution?.gclid || gclid || undefined,
+      email: email?.trim() || undefined,
+      phone: phone?.trim() || undefined,
+      firstName: firstName || undefined,
+      lastName,
+      extraParams: { lead_source: "contact_form", topic: subjectLabel },
+    });
+
+    return NextResponse.json({ success: true, id: data?.id, conversionId });
   } catch (e) {
     console.error("Contact API error:", e);
     return NextResponse.json({ error: "Failed to process message" }, { status: 500 });
