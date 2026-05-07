@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { Resend } from "resend";
 import { logLead, type AttributionRecord } from "@/lib/leads";
 import { fireServerConversion } from "@/lib/server-conversions";
+import { sendToCrm } from "@/lib/crm";
 
 const SUBJECT_LABELS: Record<string, string> = {
   general: "General Enquiry",
@@ -201,6 +202,27 @@ export async function POST(request: Request) {
       firstName: firstName || undefined,
       lastName,
       extraParams: { lead_source: "contact_form", topic: subjectLabel },
+    });
+
+    // Mirror to SmartCRM (fire-and-forget; errors are swallowed inside sendToCrm).
+    // Runs in parallel with the response — Vercel keeps the function alive long
+    // enough for the 5s timeout above.
+    void sendToCrm({
+      source: "contact_form",
+      source_detail: subjectLabel,
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone?.trim() || null,
+      message: message.trim(),
+      utm_source: attribution?.utmSource ?? null,
+      utm_medium: attribution?.utmMedium ?? null,
+      utm_campaign: attribution?.utmCampaign ?? null,
+      utm_term: attribution?.utmTerm ?? null,
+      utm_content: attribution?.utmContent ?? null,
+      gclid: attribution?.gclid ?? gclid ?? null,
+      referrer: attribution?.referrer ?? null,
+      tags: ["contact-form"],
+      custom: { conversion_id: conversionId, subject_key: subjectKey },
     });
 
     return NextResponse.json({ success: true, id: data?.id, conversionId });

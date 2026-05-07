@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import { createBookingEvent, TIME_SLOTS } from "@/lib/calendly";
 import { logLead, type AttributionRecord } from "@/lib/leads";
 import { fireServerConversion } from "@/lib/server-conversions";
+import { sendToCrm } from "@/lib/crm";
 
 const SUBJECT_LABELS: Record<string, string> = {
   general: "General Enquiry",
@@ -181,6 +182,30 @@ export async function POST(request: Request) {
       firstName: firstName || undefined,
       lastName,
       extraParams: { lead_source: "site_visit_booking", topic: subjectLabel },
+    });
+
+    // Mirror to SmartCRM (fire-and-forget; never blocks the user response).
+    void sendToCrm({
+      source: "booking",
+      source_detail: `${subjectLabel} — ${dateLabel} ${slotLabel}`,
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone?.trim() || null,
+      message: message?.trim() || null,
+      utm_source: attribution?.utmSource ?? null,
+      utm_medium: attribution?.utmMedium ?? null,
+      utm_campaign: attribution?.utmCampaign ?? null,
+      utm_term: attribution?.utmTerm ?? null,
+      utm_content: attribution?.utmContent ?? null,
+      gclid: attribution?.gclid ?? null,
+      referrer: attribution?.referrer ?? null,
+      tags: ["site-visit-booking"],
+      custom: {
+        conversion_id: conversionId,
+        booking_date: date,
+        booking_slot: timeSlot,
+        booking_kind: "consultation",
+      },
     });
 
     return NextResponse.json({ success: true, conversionId });
