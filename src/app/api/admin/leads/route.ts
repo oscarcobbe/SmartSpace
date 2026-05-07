@@ -383,15 +383,72 @@ export async function GET(request: Request) {
     });
   } else {
     try {
-      const url = `${sheetUrl}?token=${encodeURIComponent(readToken)}&type=${encodeURIComponent("Contact Enquiry")}&limit=200`;
+      // Fetch ALL types from the Sheet so the dashboard can surface manual
+      // entries (phone orders Nigel takes by phone and writes directly into
+      // the Sheet, recovery rows, etc.) — not just contact form enquiries.
+      // Stripe-paid orders (orderId starts cs_*) are skipped here because
+      // they're already loaded from the Stripe API above; including them
+      // would double-count revenue.
+      const url = `${sheetUrl}?token=${encodeURIComponent(readToken)}&type=All&limit=500`;
       const sheetRes = await fetch(url, { cache: "no-store", redirect: "follow" });
       if (sheetRes.ok) {
         const sheetData = await sheetRes.json();
         if (sheetData.error) {
           throw new Error(`Apps Script returned: ${sheetData.error}`);
         }
+
+        // Build a Set of Stripe-fetched orderIds so we can skip Sheet rows
+        // that are already in the leads array via the Stripe API path.
+        const stripeOrderIds = new Set(
+          leads.filter((l) => l.type === "Paid Order" && l.orderId).map((l) => l.orderId)
+        );
+
+        // Dedupe manual Paid Order rows by name+amount+bookingDate. Manual
+        // writes can produce multiple rows with different timestamp-based
+        // orderIds (e.g. "manual-helen-miley-1778173923",
+        // "manual-helen-miley-1778174010") for the same booking. We keep
+        // the first row seen and drop the rest.
+        const seenManualPaid = new Set<string>();
+
         for (const row of sheetData.rows || []) {
           const r = row as Record<string, string | number>;
+          const rowType = String(r.type || "");
+          const orderId = String(r.orderId || "");
+
+          if (rowType === "Paid Order") {
+            // Skip if Stripe API already gave us this order
+            if (orderId && /^cs_(live|test)_/.test(orderId) && stripeOrderIds.has(orderId)) continue;
+            // If it's a Stripe-style ID that ISN'T in the Stripe set, the
+            // Stripe fetch likely errored — let the Sheet row stand in.
+
+            // Dedupe manual entries by composite key
+            const dedupeKey = `${String(r.name || "").trim().toLowerCase()}|${r.amount}|${r.bookingDate}`;
+            if (seenManualPaid.has(dedupeKey)) continue;
+            seenManualPaid.add(dedupeKey);
+
+            const manualDetails: QA[] = [];
+            if (r.notes) manualDetails.push({ question: "Notes", answer: String(r.notes) });
+
+            leads.push({
+              date: String(r.date || "—"),
+              type: "Paid Order",
+              name: String(r.name || "—"),
+              email: String(r.email || "—"),
+              phone: String(r.phone || "—"),
+              address: String(r.address || "—"),
+              product: String(r.product || "—"),
+              amount: r.amount ? `€${Number(r.amount).toFixed(2)}` : "—",
+              bookingDate: String(r.bookingDate || "—"),
+              bookingSlot: String(r.bookingSlot || "—"),
+              status: String(r.status || "New"),
+              orderId: orderId || "—",
+              details: manualDetails.length ? manualDetails : undefined,
+            });
+            continue;
+          }
+
+          if (rowType !== "Contact Enquiry") continue;
+
           // Apps Script returns the Date column already formatted in Dublin
           // time (dd/MM/yyyy HH:mm) — pass through as-is.
           // Sheet's "notes" column is typically "<Subject>: <Message>" from
