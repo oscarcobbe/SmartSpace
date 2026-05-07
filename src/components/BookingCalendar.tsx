@@ -22,10 +22,13 @@ interface BookingCalendarProps {
   kind?: "consultation" | "installation";
   /**
    * Working-day lead time before the earliest selectable date. Defaults to
-   * 5 (the site-wide standard). Driveway-bundle product pages override to 7
-   * because driveway installs need extra prep time (cabling survey, larger
-   * tool kit, etc.). Whatever value is passed here is then floor-clamped
-   * against EARLIEST_BOOKING_DATE in lib/calendly.ts.
+   * 7 (the site-wide standard for product installs as of 2026-05-05 — the
+   * crew needs a week of prep + materials sourcing for camera/doorbell/
+   * bundle jobs). Two flows override down to 5: customer-supplied
+   * "Installation Only" (no sourcing needed, just labour) and the free
+   * consultation / site visit (just a 30-min visit). Whatever value is
+   * passed here is then floor-clamped against EARLIEST_BOOKING_DATE in
+   * lib/calendly.ts.
    */
   leadDays?: number;
 }
@@ -53,7 +56,7 @@ function formatDateISO(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-export default function BookingCalendar({ onSelectionChange, compact, heading = "Choose an Installation Date", confirmLabel = "Installation", kind = "installation", leadDays = 5 }: BookingCalendarProps) {
+export default function BookingCalendar({ onSelectionChange, compact, heading = "Choose an Installation Date", confirmLabel = "Installation", kind = "installation", leadDays = 7 }: BookingCalendarProps) {
   const { totalQuantity } = useCart();
   const [availableDates] = useState(() => getAvailableDates(leadDays));
   const [selectedDate, setSelectedDate] = useState<string>("");

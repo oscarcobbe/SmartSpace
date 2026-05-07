@@ -264,17 +264,15 @@ export default function ProductHero({ product, shortDescription }: Props) {
           </div>
         )}
 
-        {/* Booking Calendar */}
+        {/* Booking Calendar — uses BookingCalendar's 7-day default for every
+            product (camera, doorbell, bundles). Customer-supplied
+            installation-only and consultation flows pass leadDays={5}
+            explicitly because they don't need product sourcing time. */}
         {!isService && (
           <div className="mb-6">
             <BookingCalendar
               compact
               onSelectionChange={setBookingSelection}
-              // Driveway bundles need extra prep — bigger cabling survey,
-              // larger tool kit, sometimes a second installer. 7-working-day
-              // lead instead of the site-wide 5-day default. Matches handles
-              // `plus-driveway-bundle` and `pro-driveway-bundle`.
-              leadDays={/driveway-bundle$/.test(handle) ? 7 : 5}
             />
           </div>
         )}
