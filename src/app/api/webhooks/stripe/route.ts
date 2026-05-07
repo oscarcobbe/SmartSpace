@@ -113,6 +113,173 @@ async function sendOrderNotification(params: {
   }
 }
 
+/**
+ * Alert email for purchase ATTEMPTS that didn't complete — declined cards,
+ * abandoned checkouts, async payment failures. Without this, a customer
+ * whose card declines is invisible: the order never lands, so Nigel has
+ * no idea they tried. The May 2026 incident (customer's card declined,
+ * we only spotted it because Nigel happened to log into the Stripe
+ * dashboard manually) is exactly what this guards against.
+ *
+ * Failure to send is logged but never thrown — webhook still returns 200.
+ */
+async function sendPurchaseAttemptAlert(params: {
+  kind: "failed" | "expired" | "async_failed";
+  customerName: string;
+  email: string;
+  phone: string;
+  productName: string;
+  amount: number;
+  currency: string;
+  bookingDate?: string;
+  bookingLabel?: string;
+  bookingSlot?: string;
+  installationAddress?: string;
+  sessionId?: string;
+  paymentIntentId?: string;
+  declineReason?: string;
+  declineCode?: string;
+}) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.RESEND_FROM_EMAIL;
+  const to = process.env.CONTACT_TO_EMAIL ?? "nigel@smart-space.ie";
+  if (!apiKey || !from) {
+    console.warn("[stripe webhook] RESEND_API_KEY or RESEND_FROM_EMAIL missing — skipping purchase-attempt alert");
+    return;
+  }
+
+  const formattedAmount = `${params.currency} ${params.amount.toFixed(2)}`;
+  const dateLabel = params.bookingLabel || params.bookingDate || "—";
+  const slotLabel = params.bookingSlot || "—";
+
+  let subject: string;
+  let kindLabel: string;
+  let urgencyLine: string;
+  if (params.kind === "failed") {
+    const reason = params.declineCode ? ` (${params.declineCode})` : "";
+    subject = `⚠️ FAILED PAYMENT — ${params.customerName} — ${formattedAmount}${reason}`;
+    kindLabel = "Payment FAILED";
+    urgencyLine =
+      "URGENT: Customer's card was declined. Call them now to suggest a different card before they give up on the booking.";
+  } else if (params.kind === "expired") {
+    subject = `⏰ Abandoned Checkout — ${params.customerName} — ${formattedAmount}`;
+    kindLabel = "Checkout abandoned (24h timeout)";
+    urgencyLine =
+      "Customer reached the Stripe checkout page but never completed payment. Worth a follow-up call.";
+  } else {
+    subject = `⚠️ ASYNC PAYMENT FAILED — ${params.customerName} — ${formattedAmount}`;
+    kindLabel = "Async payment FAILED";
+    urgencyLine =
+      "Customer's bank-transfer or delayed payment failed after checkout. They may not realise — call them.";
+  }
+
+  const declineText = params.declineReason ? `Decline reason: ${params.declineReason}` : "";
+
+  const stripeUrl = params.paymentIntentId
+    ? `https://dashboard.stripe.com/payments/${params.paymentIntentId}`
+    : params.sessionId
+    ? `https://dashboard.stripe.com/checkout/sessions/${params.sessionId}`
+    : "https://dashboard.stripe.com/payments";
+
+  try {
+    const resend = new Resend(apiKey);
+    await resend.emails.send({
+      from,
+      to: [to],
+      replyTo: params.email || undefined,
+      subject,
+      text: [
+        kindLabel,
+        urgencyLine,
+        "",
+        `Customer: ${params.customerName}`,
+        `Email: ${params.email || "—"}`,
+        `Phone: ${params.phone || "—"}`,
+        `Address: ${params.installationAddress || "—"}`,
+        "",
+        `Product: ${params.productName}`,
+        `Amount: ${formattedAmount}`,
+        "",
+        `Booking Date: ${dateLabel}`,
+        `Time Slot: ${slotLabel}`,
+        "",
+        ...(declineText ? [declineText, ""] : []),
+        `Stripe: ${stripeUrl}`,
+      ].join("\n"),
+      html: `
+        <h2 style="color:#b91c1c;margin-bottom:4px">${escapeHtml(kindLabel)}</h2>
+        <p style="color:#b91c1c;font-weight:bold;margin-top:0">${escapeHtml(urgencyLine)}</p>
+        <hr/>
+        <p><strong>Customer:</strong> ${escapeHtml(params.customerName)}</p>
+        <p><strong>Email:</strong> ${escapeHtml(params.email || "—")}</p>
+        <p><strong>Phone:</strong> ${escapeHtml(params.phone || "—")}</p>
+        <p><strong>Address:</strong> ${escapeHtml(params.installationAddress || "—")}</p>
+        <hr/>
+        <p><strong>Product:</strong> ${escapeHtml(params.productName)}</p>
+        <p><strong>Amount:</strong> ${escapeHtml(formattedAmount)}</p>
+        <p><strong>Booking Date:</strong> ${escapeHtml(dateLabel)}</p>
+        <p><strong>Time Slot:</strong> ${escapeHtml(slotLabel)}</p>
+        ${declineText ? `<p style="color:#b91c1c"><strong>${escapeHtml(declineText)}</strong></p>` : ""}
+        <hr/>
+        <p><a href="${stripeUrl}">Open in Stripe dashboard →</a></p>
+      `,
+    });
+    console.log(
+      `[stripe webhook] purchase-attempt alert sent kind=${params.kind} session=${params.sessionId ?? "-"} pi=${params.paymentIntentId ?? "-"}`
+    );
+  } catch (err) {
+    console.error(`[stripe webhook] purchase-attempt alert FAILED kind=${params.kind}:`, err);
+  }
+}
+
+/**
+ * Common extractor — same field set the completed-checkout handler uses
+ * to build customer/booking details out of a Checkout Session. Shared
+ * with the new failure/abandonment handlers below.
+ */
+function extractSessionDetails(session: Stripe.Checkout.Session) {
+  const email: string =
+    session.customer_details?.email ?? (session.customer_email as string) ?? "";
+  const amountTotal: number = (session.amount_total ?? 0) / 100;
+  const currency: string = (session.currency ?? "eur").toUpperCase();
+  const customerName: string =
+    session.customer_details?.name ?? (email ? email.split("@")[0] : "(unknown)");
+  const phone: string = session.customer_details?.phone ?? "";
+  const bookingDate = session.metadata?.booking_date as string | undefined;
+  const bookingSlot = session.metadata?.booking_slot as string | undefined;
+  const bookingLabel = session.metadata?.booking_label as string | undefined;
+  const productName: string =
+    (session.metadata?.product_name as string) ?? "Installation";
+  const installationAddressField = session.custom_fields?.find(
+    (f) => f.key === "installation_address"
+  )?.text?.value;
+  const billingAddress = session.customer_details?.address;
+  const billingAddressString = billingAddress
+    ? [
+        billingAddress.line1,
+        billingAddress.line2,
+        billingAddress.city,
+        billingAddress.postal_code,
+        billingAddress.country,
+      ]
+        .filter(Boolean)
+        .join(", ")
+    : "";
+  const installationAddress = installationAddressField || billingAddressString;
+  return {
+    email,
+    amountTotal,
+    currency,
+    customerName,
+    phone,
+    bookingDate,
+    bookingSlot,
+    bookingLabel,
+    productName,
+    installationAddress,
+  };
+}
+
 export async function POST(req: NextRequest) {
   const secretKey = process.env.STRIPE_SECRET_KEY;
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -336,6 +503,112 @@ export async function POST(req: NextRequest) {
 
       await sendSms(lines.join("\n"));
     }
+  } else if (event.type === "payment_intent.payment_failed") {
+    // Card declined / 3DS failed / fraud rule blocked / etc. The customer
+    // is most likely still on the Stripe checkout page and CAN retry with
+    // a different card — but they often don't bother. This alert is the
+    // single most important "save the booking" signal: if Nigel calls
+    // them inside 5 minutes, conversion typically rescues. Beyond an hour
+    // they've usually moved on.
+    const pi = event.data.object as Stripe.PaymentIntent;
+    // The PI doesn't carry our metadata — we attach metadata to the
+    // Checkout Session, not the PI. Look up the owning session so we
+    // have customer name, phone, address, booking date/slot, product.
+    let session: Stripe.Checkout.Session | undefined;
+    try {
+      const sessions = await stripe.checkout.sessions.list({
+        payment_intent: pi.id,
+        limit: 1,
+      });
+      session = sessions.data[0];
+    } catch (err) {
+      console.error(`[stripe webhook] failed to look up Checkout Session for PI ${pi.id}:`, err);
+    }
+
+    if (!session) {
+      // Direct PaymentIntent API calls (no Checkout) won't have a session.
+      // We don't currently use those — but log so we know if this changes.
+      console.warn(
+        `[stripe webhook] payment_intent.payment_failed ${pi.id} — no Checkout session, skipping alert`
+      );
+    } else {
+      const d = extractSessionDetails(session);
+      // Prefer details from the PI itself if the session didn't capture
+      // customer info (sometimes the case if the customer typed nothing
+      // before the card declined).
+      const piEmail = (pi.receipt_email as string | null) ?? "";
+      const piPhone = pi.shipping?.phone ?? "";
+      await sendPurchaseAttemptAlert({
+        kind: "failed",
+        customerName: d.customerName,
+        email: d.email || piEmail,
+        phone: d.phone || piPhone,
+        productName: d.productName,
+        // Use PI amount as source of truth — session.amount_total can be
+        // stale if Stripe updated the PI separately.
+        amount: (pi.amount ?? 0) / 100,
+        currency: (pi.currency ?? d.currency).toUpperCase(),
+        bookingDate: d.bookingDate,
+        bookingLabel: d.bookingLabel,
+        bookingSlot: d.bookingSlot,
+        installationAddress: d.installationAddress,
+        sessionId: session.id,
+        paymentIntentId: pi.id,
+        declineReason: pi.last_payment_error?.message,
+        declineCode:
+          pi.last_payment_error?.decline_code ?? pi.last_payment_error?.code,
+      });
+    }
+  } else if (event.type === "checkout.session.expired") {
+    // Customer reached Stripe Checkout but never paid. Fires after Stripe's
+    // 24h timeout. Less time-critical than payment_failed (the customer
+    // is long gone) but still useful as a "leads to chase" signal.
+    const session = event.data.object as Stripe.Checkout.Session;
+    const d = extractSessionDetails(session);
+    if (!d.email && !d.phone) {
+      // No way to contact them — Stripe didn't capture any details before
+      // they bounced. Alert is pointless.
+      console.log(
+        `[stripe webhook] checkout.session.expired ${session.id} — no contact info captured, skipping alert`
+      );
+    } else {
+      await sendPurchaseAttemptAlert({
+        kind: "expired",
+        customerName: d.customerName,
+        email: d.email,
+        phone: d.phone,
+        productName: d.productName,
+        amount: d.amountTotal,
+        currency: d.currency,
+        bookingDate: d.bookingDate,
+        bookingLabel: d.bookingLabel,
+        bookingSlot: d.bookingSlot,
+        installationAddress: d.installationAddress,
+        sessionId: session.id,
+      });
+    }
+  } else if (event.type === "checkout.session.async_payment_failed") {
+    // Async payment methods (SEPA debit, bank redirects, BACS, etc.) can
+    // succeed at checkout time and then fail days later when the bank
+    // actually settles. We don't currently accept any of those — Stripe
+    // Checkout is card-only by default — but handle it for completeness
+    // so adding a payment method later doesn't silently swallow failures.
+    const session = event.data.object as Stripe.Checkout.Session;
+    const d = extractSessionDetails(session);
+    await sendPurchaseAttemptAlert({
+      kind: "async_failed",
+      customerName: d.customerName,
+      email: d.email,
+      phone: d.phone,
+      productName: d.productName,
+      amount: d.amountTotal,
+      currency: d.currency,
+      bookingDate: d.bookingDate,
+      bookingLabel: d.bookingLabel,
+      bookingSlot: d.bookingSlot,
+      installationAddress: d.installationAddress,
+      sessionId: session.id,
+    });
   }
 
   return NextResponse.json({ received: true });
