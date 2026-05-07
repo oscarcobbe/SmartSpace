@@ -20,14 +20,22 @@ interface BookingCalendarProps {
   heading?: string;
   confirmLabel?: string;
   kind?: "consultation" | "installation";
+  /**
+   * Working-day lead time before the earliest selectable date. Defaults to
+   * 5 (the site-wide standard). Driveway-bundle product pages override to 7
+   * because driveway installs need extra prep time (cabling survey, larger
+   * tool kit, etc.). Whatever value is passed here is then floor-clamped
+   * against EARLIEST_BOOKING_DATE in lib/calendly.ts.
+   */
+  leadDays?: number;
 }
 
-function getAvailableDates(): Date[] {
+function getAvailableDates(leadDays: number): Date[] {
   const dates: Date[] = [];
-  // Earliest bookable date respects both the standard 5-day lead time
-  // AND the EARLIEST_BOOKING_DATE constant in lib/calendly.ts (whichever
-  // is later). Window length: ~6 weeks of available days.
-  const start = getEarliestBookableDate(5);
+  // Earliest bookable date respects both the requested lead time AND the
+  // EARLIEST_BOOKING_DATE constant in lib/calendly.ts (whichever is later).
+  // Window length: ~6 weeks of available days.
+  const start = getEarliestBookableDate(leadDays);
   for (let i = 0; i <= 49; i++) {
     const date = new Date(start);
     date.setDate(start.getDate() + i);
@@ -45,9 +53,9 @@ function formatDateISO(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-export default function BookingCalendar({ onSelectionChange, compact, heading = "Choose an Installation Date", confirmLabel = "Installation", kind = "installation" }: BookingCalendarProps) {
+export default function BookingCalendar({ onSelectionChange, compact, heading = "Choose an Installation Date", confirmLabel = "Installation", kind = "installation", leadDays = 5 }: BookingCalendarProps) {
   const { totalQuantity } = useCart();
-  const [availableDates] = useState(getAvailableDates);
+  const [availableDates] = useState(() => getAvailableDates(leadDays));
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedSlot, setSelectedSlot] = useState<string>("");
   const [slots, setSlots] = useState<TimeSlot[]>([]);

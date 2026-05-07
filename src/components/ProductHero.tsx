@@ -270,6 +270,11 @@ export default function ProductHero({ product, shortDescription }: Props) {
             <BookingCalendar
               compact
               onSelectionChange={setBookingSelection}
+              // Driveway bundles need extra prep — bigger cabling survey,
+              // larger tool kit, sometimes a second installer. 7-working-day
+              // lead instead of the site-wide 5-day default. Matches handles
+              // `plus-driveway-bundle` and `pro-driveway-bundle`.
+              leadDays={/driveway-bundle$/.test(handle) ? 7 : 5}
             />
           </div>
         )}
