@@ -142,6 +142,60 @@ export default function AdminLeadsPage() {
 
   const types = ["All", ...Array.from(new Set(leads.map((l) => l.type)))];
 
+  // Cross-referenced "Upcoming work value":
+  // Same customer often appears in two upcoming rows (a Stripe Paid Order
+  // with a real € amount AND a Calendly Installation row with amount "—").
+  // Naive sum either double-counts or shows €0 for the Calendly row.
+  //
+  // Approach: build a name → max-amount lookup across ALL leads (Stripe
+  // paid orders, manual Sheet rows). Then walk upcoming, dedupe by name,
+  // and use either the row's own amount or the looked-up one. Email is a
+  // secondary key in case the name was typed slightly differently across
+  // sources.
+  const parseEur = (s: string): number =>
+    parseFloat(String(s || "").replace(/[^0-9.]/g, "") || "0");
+  const norm = (s: string): string =>
+    String(s || "").trim().toLowerCase().replace(/\s+/g, " ");
+
+  // Build name+email → highest-known-amount map from every lead with a
+  // real € amount. We take the max in case the same person has multiple
+  // rows with different totals (e.g. an upsell add-on).
+  const amountByKey = new Map<string, number>();
+  const recordAmount = (key: string, amt: number) => {
+    if (!key || amt <= 0) return;
+    const existing = amountByKey.get(key) ?? 0;
+    if (amt > existing) amountByKey.set(key, amt);
+  };
+  for (const lead of leads) {
+    const amt = parseEur(lead.amount);
+    if (amt <= 0) continue;
+    recordAmount(`name:${norm(lead.name)}`, amt);
+    if (lead.email && lead.email !== "—") recordAmount(`email:${norm(lead.email)}`, amt);
+  }
+
+  // Walk upcoming leads, dedupe by name (or email if no usable name),
+  // and use either the row's own amount or the cross-referenced one.
+  const upcomingValueSeen = new Set<string>();
+  let upcomingWorkValue = 0;
+  for (const lead of leads) {
+    if (lead.status !== "Upcoming") continue;
+    const nameKey = norm(lead.name);
+    const emailKey = norm(lead.email);
+    const dedupeKey = nameKey && nameKey !== "—" ? `n:${nameKey}` : emailKey ? `e:${emailKey}` : "";
+    if (!dedupeKey || upcomingValueSeen.has(dedupeKey)) continue;
+    upcomingValueSeen.add(dedupeKey);
+
+    const own = parseEur(lead.amount);
+    if (own > 0) {
+      upcomingWorkValue += own;
+      continue;
+    }
+    // Cross-reference: try name, then email
+    const matched =
+      amountByKey.get(`name:${nameKey}`) ?? amountByKey.get(`email:${emailKey}`) ?? 0;
+    upcomingWorkValue += matched;
+  }
+
   if (!authed) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -275,11 +329,13 @@ export default function AdminLeadsPage() {
             <div className="text-[10px] text-gray-400 mt-1">From Stripe (held, not yet in bank)</div>
           </a>
 
-          {/* Upcoming work value \u2014 sum of every "Upcoming" lead's
-              amount, regardless of whether Stripe has been paid yet.
-              Click switches to the Upcoming view so the underlying
-              jobs are visible. Derived client-side from the leads
-              array, not from Stripe. */}
+          {/* Upcoming work value \u2014 for each unique customer in the
+              Upcoming view, take their amount if the row has one, else
+              cross-reference their name (and email) against every other
+              lead with a real \u20AC amount (Stripe Paid Orders, manual Sheet
+              rows). Dedupes by name so a customer with both a Stripe
+              order AND a Calendly row counts once. Computed above the
+              return; see `upcomingWorkValue`. */}
           <button
             onClick={() => setView("upcoming")}
             className={`bg-white rounded-xl border-l-4 border-emerald-500 p-4 shadow-sm text-left hover:shadow-md transition-shadow cursor-pointer ${
@@ -288,10 +344,7 @@ export default function AdminLeadsPage() {
           >
             <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">Upcoming work value</div>
             <div className="text-2xl font-bold text-gray-900 mt-1">
-              {`\u20AC${leads
-                .filter((l) => l.status === "Upcoming")
-                .reduce((sum, l) => sum + parseFloat(l.amount.replace(/[^0-9.]/g, "") || "0"), 0)
-                .toFixed(2)}`}
+              {`\u20AC${upcomingWorkValue.toFixed(2)}`}
             </div>
             <div className="text-[10px] text-gray-400 mt-1">Booked jobs, paid or not</div>
           </button>
