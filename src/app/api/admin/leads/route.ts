@@ -500,11 +500,85 @@ export async function GET(request: Request) {
     }
   }
 
+  // 4. Fetch Stripe balance + payouts for the revenue split.
+  //    "Upcoming" = currently held by Stripe (pending settlement OR settled
+  //                 but not yet swept to bank). Sum of balance.available +
+  //                 balance.pending, EUR only.
+  //    "Paid out" = lifetime sum of payouts.status=paid in EUR. Paginated
+  //                 up to 10 pages × 100 payouts; covers anything realistic
+  //                 for a small business.
+  //
+  //    Both fail-soft: any error pushes a sourceError row but doesn't break
+  //    the leads response.
+  let stripeUpcomingPayout = 0;
+  let stripePaidOut = 0;
+  try {
+    const balanceRes = await fetch("https://api.stripe.com/v1/balance", {
+      headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}` },
+      cache: "no-store",
+    });
+    if (!balanceRes.ok) {
+      const errBody = await balanceRes.text().catch(() => "");
+      throw new Error(`Stripe balance ${balanceRes.status}: ${errBody.slice(0, 200)}`);
+    }
+    const balance = await balanceRes.json();
+    const sumEur = (arr: { amount: number; currency: string }[] | undefined) =>
+      (arr || [])
+        .filter((b) => b.currency === "eur")
+        .reduce((s, b) => s + b.amount / 100, 0);
+    // Both `available` and `pending` are funds Stripe is holding for us
+    // that haven't reached the bank yet — treat them as one "upcoming"
+    // bucket from Nigel's perspective.
+    stripeUpcomingPayout = sumEur(balance.available) + sumEur(balance.pending);
+  } catch (err) {
+    console.error("[admin] Stripe balance fetch error:", err);
+    sourceErrors.push({
+      source: "Stripe Balance (Upcoming Payout)",
+      message: err instanceof Error ? err.message : "Unknown error fetching balance",
+    });
+  }
+
+  try {
+    let startingAfter: string | undefined;
+    let pages = 0;
+    const MAX_PAGES = 10; // safety cap — 1,000 payouts max
+    while (pages < MAX_PAGES) {
+      const url = new URL("https://api.stripe.com/v1/payouts");
+      url.searchParams.set("limit", "100");
+      url.searchParams.set("status", "paid");
+      if (startingAfter) url.searchParams.set("starting_after", startingAfter);
+      const poRes = await fetch(url.toString(), {
+        headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}` },
+        cache: "no-store",
+      });
+      if (!poRes.ok) {
+        const errBody = await poRes.text().catch(() => "");
+        throw new Error(`Stripe payouts ${poRes.status}: ${errBody.slice(0, 200)}`);
+      }
+      const poData = await poRes.json();
+      const items: { amount: number; currency: string; id: string }[] = poData.data || [];
+      for (const po of items) {
+        if (po.currency === "eur") stripePaidOut += po.amount / 100;
+      }
+      if (!poData.has_more || items.length === 0) break;
+      startingAfter = items[items.length - 1].id;
+      pages++;
+    }
+  } catch (err) {
+    console.error("[admin] Stripe payouts fetch error:", err);
+    sourceErrors.push({
+      source: "Stripe Payouts (Already Paid Out)",
+      message: err instanceof Error ? err.message : "Unknown error fetching payouts",
+    });
+  }
+
   return NextResponse.json(
     {
       leads,
       count: leads.length,
       generated: new Date().toISOString(),
+      stripeUpcomingPayout,
+      stripePaidOut,
       sourceErrors: sourceErrors.length ? sourceErrors : undefined,
     },
     { headers: { "Cache-Control": "no-store" } }

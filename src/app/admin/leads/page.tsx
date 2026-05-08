@@ -68,6 +68,11 @@ interface SourceError {
 export default function AdminLeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [sourceErrors, setSourceErrors] = useState<SourceError[]>([]);
+  // Revenue split — both come straight from the Stripe API server-side.
+  // upcoming = balance.available + balance.pending (held by Stripe, not
+  // yet in the bank). paidOut = lifetime sum of payouts where status=paid.
+  const [stripeUpcoming, setStripeUpcoming] = useState(0);
+  const [stripePaidOut, setStripePaidOut] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [key, setKey] = useState("");
@@ -92,13 +97,15 @@ export default function AdminLeadsPage() {
         return;
       }
       if (res.status === 429) {
-        setError("Too many attempts — try again in a minute");
+        setError("Too many attempts, try again in a minute");
         setLoading(false);
         return;
       }
       const data = await res.json();
       setLeads(data.leads || []);
       setSourceErrors(data.sourceErrors || []);
+      setStripeUpcoming(typeof data.stripeUpcomingPayout === "number" ? data.stripeUpcomingPayout : 0);
+      setStripePaidOut(typeof data.stripePaidOut === "number" ? data.stripePaidOut : 0);
       setAuthed(true);
     } catch {
       setError("Failed to load");
@@ -229,22 +236,17 @@ export default function AdminLeadsPage() {
           </button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        {/* Stats \u2014 4 lead-type counts that filter the leads table when
+            clicked, plus 2 Stripe-sourced revenue cards (upcoming /
+            paid out). The Stripe cards open Stripe's payouts dashboard
+            in a new tab instead of filtering the leads table \u2014 they're
+            informational, not filterable. */}
+        <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
           {[
             { label: "Paid Orders", filterType: "Paid Order", count: leads.filter((l) => l.type === "Paid Order").length, color: "border-blue-500" },
             { label: "Installations", filterType: "Installation", count: leads.filter((l) => l.type === "Installation").length, color: "border-indigo-500" },
             { label: "Consultations", filterType: "Consultation", count: leads.filter((l) => l.type === "Consultation").length, color: "border-green-500" },
             { label: "Contact Forms", filterType: "Contact Enquiry", count: leads.filter((l) => l.type === "Contact Enquiry").length, color: "border-amber-500" },
-            {
-              label: "Revenue",
-              filterType: "Paid Order",
-              count: leads
-                .filter((l) => l.type === "Paid Order")
-                .reduce((sum, l) => sum + parseFloat(l.amount.replace(/[^0-9.]/g, "") || "0"), 0),
-              color: "border-emerald-500",
-              isMoney: true,
-            },
           ].map((s) => (
             <button
               key={s.label}
@@ -254,11 +256,40 @@ export default function AdminLeadsPage() {
               }`}
             >
               <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">{s.label}</div>
-              <div className="text-2xl font-bold text-gray-900 mt-1">
-                {"isMoney" in s && s.isMoney ? `\u20AC${(s.count as number).toFixed(2)}` : s.count}
-              </div>
+              <div className="text-2xl font-bold text-gray-900 mt-1">{s.count}</div>
             </button>
           ))}
+
+          {/* Upcoming payout \u2014 funds Stripe is holding (settled or
+              pending settlement) that haven't yet been transferred to
+              the bank. Click opens the Stripe Payouts page in a new tab. */}
+          <a
+            href="https://dashboard.stripe.com/payouts"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-white rounded-xl border-l-4 border-amber-400 p-4 shadow-sm text-left hover:shadow-md transition-shadow cursor-pointer block"
+          >
+            <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">Upcoming payout</div>
+            <div className="text-2xl font-bold text-gray-900 mt-1">
+              {`\u20AC${stripeUpcoming.toFixed(2)}`}
+            </div>
+            <div className="text-[10px] text-gray-400 mt-1">From Stripe (held, not yet in bank)</div>
+          </a>
+
+          {/* Already paid out \u2014 lifetime sum of completed Stripe
+              payouts in EUR. Click opens the same Stripe Payouts page. */}
+          <a
+            href="https://dashboard.stripe.com/payouts"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-white rounded-xl border-l-4 border-emerald-500 p-4 shadow-sm text-left hover:shadow-md transition-shadow cursor-pointer block"
+          >
+            <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">Paid out</div>
+            <div className="text-2xl font-bold text-gray-900 mt-1">
+              {`\u20AC${stripePaidOut.toFixed(2)}`}
+            </div>
+            <div className="text-[10px] text-gray-400 mt-1">From Stripe (settled to bank)</div>
+          </a>
         </div>
 
         {/* ── Upcoming View ── */}
