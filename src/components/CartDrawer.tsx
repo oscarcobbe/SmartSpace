@@ -13,7 +13,14 @@ export default function CartDrawer() {
   if (!isOpen) return null;
 
   const formatPrice = (amount: number) => {
-    return new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" }).format(amount);
+    // Drop `.00` on whole-euro prices sitewide; keep cents otherwise.
+    const isWhole = Math.round(amount * 100) % 100 === 0;
+    return new Intl.NumberFormat("en-IE", {
+      style: "currency",
+      currency: "EUR",
+      minimumFractionDigits: isWhole ? 0 : 2,
+      maximumFractionDigits: isWhole ? 0 : 2,
+    }).format(amount);
   };
 
   const handleCheckout = async () => {

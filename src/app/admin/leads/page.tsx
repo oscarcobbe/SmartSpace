@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { formatEuro } from "@/lib/format";
 import { RefreshCw, Search, Filter, Calendar, MapPin, Phone, Mail, User, ChevronDown, ChevronUp, ExternalLink, CreditCard, Clock, Package, Route } from "lucide-react";
 
 /**
@@ -324,7 +325,7 @@ export default function AdminLeadsPage() {
           >
             <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">Upcoming payout</div>
             <div className="text-2xl font-bold text-gray-900 mt-1">
-              {`\u20AC${stripeUpcoming.toFixed(2)}`}
+              {formatEuro(stripeUpcoming)}
             </div>
             <div className="text-[10px] text-gray-400 mt-1">From Stripe (held, not yet in bank)</div>
           </a>
@@ -344,7 +345,7 @@ export default function AdminLeadsPage() {
           >
             <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">Upcoming work value</div>
             <div className="text-2xl font-bold text-gray-900 mt-1">
-              {`\u20AC${upcomingWorkValue.toFixed(2)}`}
+              {formatEuro(upcomingWorkValue)}
             </div>
             <div className="text-[10px] text-gray-400 mt-1">Booked jobs, paid or not</div>
           </button>

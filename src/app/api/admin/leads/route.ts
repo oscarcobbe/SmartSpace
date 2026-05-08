@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { PRODUCT_CATALOGUE } from "@/data/productCatalogue";
+import { formatEuro } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -233,7 +234,7 @@ export async function GET(request: Request) {
         phone: session.customer_details?.phone || "—",
         address,
         product: session.metadata?.product_name || "Order",
-        amount: `€${(session.amount_total / 100).toFixed(2)}`,
+        amount: formatEuro(session.amount_total / 100),
         bookingDate: session.metadata?.booking_label || session.metadata?.booking_date || "—",
         bookingSlot: session.metadata?.booking_slot || "—",
         status: session.payment_status === "paid" ? "Paid" : session.payment_status,
@@ -437,7 +438,7 @@ export async function GET(request: Request) {
               phone: String(r.phone || "—"),
               address: String(r.address || "—"),
               product: String(r.product || "—"),
-              amount: r.amount ? `€${Number(r.amount).toFixed(2)}` : "—",
+              amount: r.amount ? formatEuro(Number(r.amount)) : "—",
               bookingDate: String(r.bookingDate || "—"),
               bookingSlot: String(r.bookingSlot || "—"),
               status: String(r.status || "New"),
@@ -478,7 +479,7 @@ export async function GET(request: Request) {
             phone: String(r.phone || "—"),
             address: String(r.address || "—"),
             product: String(r.product || "Contact form"),
-            amount: r.amount ? `€${r.amount}` : "—",
+            amount: r.amount ? formatEuro(Number(r.amount)) : "—",
             bookingDate: "—",
             bookingSlot: "—",
             status: String(r.status || "New"),

@@ -37,7 +37,15 @@ const brands = [
 ];
 
 function formatPrice(amount: string, currencyCode: string) {
-  return new Intl.NumberFormat("en-IE", { style: "currency", currency: currencyCode }).format(parseFloat(amount));
+  // Drop `.00` on whole-euro prices sitewide; keep cents otherwise.
+  const n = parseFloat(amount);
+  const isWhole = Math.round(n * 100) % 100 === 0;
+  return new Intl.NumberFormat("en-IE", {
+    style: "currency",
+    currency: currencyCode,
+    minimumFractionDigits: isWhole ? 0 : 2,
+    maximumFractionDigits: isWhole ? 0 : 2,
+  }).format(n);
 }
 
 export default function InstallationOnlyPage() {

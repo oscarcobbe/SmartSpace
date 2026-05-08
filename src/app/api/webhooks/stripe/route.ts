@@ -5,6 +5,7 @@ import { createBookingEvent } from "@/lib/calendly";
 import { logLead } from "@/lib/leads";
 import { fireServerConversion } from "@/lib/server-conversions";
 import { sendSms } from "@/lib/sms";
+import { formatEuro } from "@/lib/format";
 
 // In-memory idempotency cache — event IDs processed in the last hour.
 // For multi-instance deployments, swap for Redis/Upstash.
@@ -63,7 +64,11 @@ async function sendOrderNotification(params: {
 
   const dateLabel = params.bookingLabel || params.bookingDate || "—";
   const slotLabel = params.bookingSlot || "—";
-  const formattedAmount = `${params.currency} ${params.amount.toFixed(2)}`;
+  // Use formatEuro for consistency with the site's price display rules
+  // (drop `.00` on whole-euro amounts). `params.currency` is unused here
+  // because the site is EUR-only; if that ever changes, swap formatEuro
+  // for an explicit currency-aware formatter.
+  const formattedAmount = formatEuro(params.amount);
 
   try {
     const resend = new Resend(apiKey);
@@ -148,7 +153,11 @@ async function sendPurchaseAttemptAlert(params: {
     return;
   }
 
-  const formattedAmount = `${params.currency} ${params.amount.toFixed(2)}`;
+  // Use formatEuro for consistency with the site's price display rules
+  // (drop `.00` on whole-euro amounts). `params.currency` is unused here
+  // because the site is EUR-only; if that ever changes, swap formatEuro
+  // for an explicit currency-aware formatter.
+  const formattedAmount = formatEuro(params.amount);
   const dateLabel = params.bookingLabel || params.bookingDate || "—";
   const slotLabel = params.bookingSlot || "—";
 
@@ -468,7 +477,7 @@ export async function POST(req: NextRequest) {
     if (amountTotal >= 100 || calendlyStatus === "failed") {
       const lines: string[] = [
         "Smart Space — new paid order",
-        `${currency} ${amountTotal.toFixed(2)} — ${customerName}`,
+        `${formatEuro(amountTotal)} — ${customerName}`,
       ];
       if (phone) lines.push(phone);
       lines.push(""); // blank line

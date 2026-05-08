@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ShopifyProduct } from "@/lib/shopify";
 import { getProductImage } from "@/data/productImages";
+import { formatEuro } from "@/lib/format";
 
 function displayTitle(title: string): string {
   return title.replace(/\(Premium\)/gi, "(Pro)");
@@ -46,11 +47,11 @@ export default function ProductCard({ product }: { product: ShopifyProduct }) {
       </h3>
       <div className="flex items-baseline gap-2 justify-center">
         <span className="text-lg font-extrabold text-[#1a1a1a]">
-          &euro;{price.toFixed(2)}
+          {formatEuro(price)}
         </span>
         {hasDiscount && (
           <span className="text-xs text-[#999] line-through">
-            &euro;{comparePrice.toFixed(2)}
+            {formatEuro(comparePrice)}
           </span>
         )}
       </div>
