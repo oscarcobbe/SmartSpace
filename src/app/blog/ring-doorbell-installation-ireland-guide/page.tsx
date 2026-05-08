@@ -204,16 +204,16 @@ export default function Post() {
             <tr>
               <td>Battery doorbell, direct mount to timber frame</td>
               <td>Yes</td>
-              <td>Not needed</td>
+              <td>—</td>
             </tr>
             <tr>
               <td>Swapping an existing wired bell for a Ring Wired</td>
-              <td>Maybe, if you understand AC circuits</td>
+              <td>Maybe — if you understand AC circuits</td>
               <td>Pro recommended</td>
             </tr>
             <tr>
               <td>No existing doorbell wiring, mains power needed</td>
-              <td>No. Mains work should be done by a qualified installer</td>
+              <td>No — mains work should be done by a qualified installer</td>
               <td>Yes</td>
             </tr>
             <tr>
@@ -236,15 +236,15 @@ export default function Post() {
         </p>
         <ul>
           <li>
-            <strong>Ring Video Doorbell + installation. From €299.</strong> Includes
+            <strong>Ring Video Doorbell + installation — from €299.</strong> Includes
             Ring Chime, app setup, motion zones, and a walkthrough.
           </li>
           <li>
-            <strong>Ring Video Doorbell Pro + installation. From €399.</strong> Adds
+            <strong>Ring Video Doorbell Pro + installation — from €399.</strong> Adds
             pre-roll recording and head-to-toe view.
           </li>
           <li>
-            <strong>Driveway Bundle (Doorbell + Floodlight Cam). From €658.</strong>{" "}
+            <strong>Driveway Bundle (Doorbell + Floodlight Cam) — from €658.</strong>{" "}
             <Link href="/services/bundles/driveway">See the driveway bundle</Link>.
           </li>
           <li>

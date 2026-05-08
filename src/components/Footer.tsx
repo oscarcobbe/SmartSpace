@@ -20,12 +20,12 @@ const companyLinks = [
 
 export default function Footer() {
   return (
-    <footer className="bg-surface-dark text-ink-on-dark">
+    <footer className="bg-[#1a1a1a] text-[#999]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 text-center lg:text-left">
           {/* Brand */}
           <div className="col-span-2 lg:col-span-1 flex flex-col items-center lg:items-start">
-            <Link href="/" className="focus-ring-light mb-4 block rounded-md" aria-label="Smart Space, home">
+            <Link href="/" className="mb-4 block" aria-label="Smart Space — home">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/Logo1.png" alt="Smart Space" className="h-10 w-auto brightness-0 invert" />
             </Link>
@@ -95,17 +95,17 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-white/10">
+      <div className="border-t border-[#333]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-center">
           <p>&copy; {new Date().getFullYear()} Smart Space. All rights reserved.</p>
           <div className="flex items-center gap-4">
-            <Link href="/privacy" className="focus-ring-light hover:text-white transition-colors">
+            <Link href="/privacy" className="hover:text-white transition-colors">
               Privacy
             </Link>
-            <Link href="/terms" className="focus-ring-light hover:text-white transition-colors">
+            <Link href="/terms" className="hover:text-white transition-colors">
               Terms
             </Link>
-            <span className="hidden sm:inline">Dublin&apos;s #1 Ring Installer. Serving All of Leinster.</span>
+            <span className="hidden sm:inline">Dublin&apos;s #1 Ring Installer — Serving All of Leinster</span>
           </div>
         </div>
       </div>

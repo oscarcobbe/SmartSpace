@@ -20,14 +20,14 @@ const serviceCategories = [
   },
   {
     title: "Driveway Bundle",
-    description: "Video Doorbell and Floodlight Cam. Protect your front entrance.",
+    description: "Video Doorbell + Floodlight Cam — protect your front entrance.",
     href: "/services/bundles/driveway",
     filter: (p: ShopifyProduct) => p.handle === "pro-driveway-bundle",
     staticImage: "/products/pro-driveway-black.png",
   },
   {
     title: "Whole Home Bundle",
-    description: "Video Doorbell and two Floodlights. Complete home coverage.",
+    description: "Video Doorbell + 2x Floodlights — complete home coverage.",
     href: "/services/bundles/whole-home",
     filter: (p: ShopifyProduct) => p.handle === "pro-whole-home-bundle",
     staticImage: "/products/pro-wholehome-black-black.png",

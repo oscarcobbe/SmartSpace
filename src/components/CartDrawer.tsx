@@ -69,7 +69,7 @@ export default function CartDrawer() {
       <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white z-[80] shadow-2xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="text-lg font-bold text-ink-1 flex items-center gap-2">
+          <h2 className="text-lg font-bold text-[#1a1a1a] flex items-center gap-2">
             <ShoppingBag className="w-5 h-5" />
             Your Cart {totalQuantity ? `(${totalQuantity})` : ""}
           </h2>
@@ -106,10 +106,10 @@ export default function CartDrawer() {
                   )}
 
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold text-ink-1 truncate">
+                    <h3 className="text-sm font-semibold text-[#1a1a1a] truncate">
                       {item.name}
                     </h3>
-                    <p className="text-sm font-bold text-ink-1 mt-1">
+                    <p className="text-sm font-bold text-[#1a1a1a] mt-1">
                       {formatPrice(item.price)}
                     </p>
                     {item.bookingLabel && (
@@ -156,7 +156,7 @@ export default function CartDrawer() {
           <div className="border-t px-6 py-4 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Subtotal</span>
-              <span className="text-lg font-bold text-ink-1">{formatPrice(totalAmount)}</span>
+              <span className="text-lg font-bold text-[#1a1a1a]">{formatPrice(totalAmount)}</span>
             </div>
             <p className="text-xs text-gray-400">Shipping and taxes calculated at checkout</p>
             {checkoutError && (
@@ -171,7 +171,7 @@ export default function CartDrawer() {
             </button>
             <button
               onClick={closeCart}
-              className="block w-full text-center text-sm text-gray-500 hover:text-ink-1 transition-colors"
+              className="block w-full text-center text-sm text-gray-500 hover:text-[#1a1a1a] transition-colors"
             >
               Continue Shopping
             </button>

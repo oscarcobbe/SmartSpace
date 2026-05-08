@@ -2,29 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ──────────────────────────────────────────────────────────────────
-   Design tokens — single source of truth for ink (text) and surface
-   (background) shades. Tailwind config exposes these as `text-ink-1`,
-   `bg-surface-2`, etc. Keep all hex values in this block; never reach
-   for `[#xxxxxx]` overrides in component classes.
-   ────────────────────────────────────────────────────────────────── */
-:root {
-  /* Ink — warm-cool blacks, not pure #000. Used for text. */
-  --ink-1: #1C1A18; /* headlines + dark surfaces */
-  --ink-2: #26221E; /* body text */
-  --ink-3: #5A524C; /* secondary text */
-  --ink-4: #8A817A; /* muted text */
-  /* Slightly lighter mute for use on dark surfaces (was #999, only 2.85:1
-     contrast on #1a1a1a — WCAG fail). #B8AEA5 hits 5.2:1. */
-  --ink-on-dark: #B8AEA5;
-
-  /* Surface — cream-tinted neutrals. Used for backgrounds. */
-  --surface-1: #FBFAF7; /* page background */
-  --surface-2: #F5F3EE; /* raised */
-  --surface-3: #EDEAE3; /* deeper raised */
-  --surface-dark: #1C1A18; /* dark sections — same as ink-1 */
-}
-
 html {
   scroll-behavior: smooth;
   scrollbar-width: none;
@@ -36,8 +13,8 @@ html::-webkit-scrollbar {
 }
 
 body {
-  color: var(--ink-2);
-  background: var(--surface-1);
+  color: #26221E;
+  background: #FBFAF7;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -84,25 +61,6 @@ p {
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* Universal focus-visible style for CTAs. Applied via `.focus-ring`
-     utility; gives keyboard users a 2px outline in brand-700 with 2px
-     offset. WCAG 2.4.7 compliant. Use on every <button> and CTA <Link>
-     across the site — Tailwind's focus utilities aren't enough on
-     buttons that already use `transition-all`, which can wipe outlines
-     in some browsers. */
-  .focus-ring:focus-visible {
-    outline: 2px solid var(--ink-1);
-    outline-offset: 2px;
-    border-radius: inherit;
-  }
-  /* Variant for buttons on dark surfaces — use brand-300 instead so the
-     outline is visible against #1C1A18 backgrounds. */
-  .focus-ring-light:focus-visible {
-    outline: 2px solid #f8b172; /* brand-300 */
-    outline-offset: 2px;
-    border-radius: inherit;
-  }
-
   /* Subtle sheen animation for premium buttons */
   .btn-sheen {
     position: relative;
@@ -134,9 +92,12 @@ p {
     transform: translateY(-6px);
   }
 
-  /* Solid brand-tinted highlight — replaces former gradient-clip text. */
-  .text-brand-accent {
-    color: #b55810;
+  /* Soft noise-free gradient text */
+  .gradient-text-brand {
+    background: linear-gradient(135deg, #FF7A1A 0%, #F26419 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   /* Layered premium shadow — diffuse like studio lighting */
@@ -153,15 +114,13 @@ p {
       0 40px 80px -20px rgba(38, 34, 30, 0.12);
   }
 
-  /* Legacy semantic utilities — preserved for components that haven't
-     migrated to the Tailwind ink-N / surface-N tokens yet. New code
-     should use `text-ink-2` / `bg-surface-1` etc. directly. */
-  .bg-cream { background-color: var(--surface-1); }
-  .bg-cream-100 { background-color: var(--surface-2); }
-  .bg-cream-200 { background-color: var(--surface-3); }
-  .text-ink { color: var(--ink-2); }
-  .text-ink-soft { color: var(--ink-3); }
-  .text-ink-muted { color: var(--ink-4); }
+  /* Warmer neutrals */
+  .bg-cream { background-color: #FBFAF7; }
+  .bg-cream-100 { background-color: #F5F3EE; }
+  .bg-cream-200 { background-color: #EDEAE3; }
+  .text-ink { color: #26221E; }
+  .text-ink-soft { color: #5A524C; }
+  .text-ink-muted { color: #8A817A; }
 
   /* Glow pulse for premium badges */
   @keyframes glowPulse {
@@ -212,13 +171,13 @@ p {
     line-height: 1.75;
   }
   .prose-ss a {
-    color: #b55810;
+    color: #f48222;
     font-weight: 500;
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 2px;
   }
-  .prose-ss a:hover { color: #91440c; }
+  .prose-ss a:hover { color: #d96d15; }
   .prose-ss ul, .prose-ss ol {
     margin: 1rem 0;
     padding-left: 1.5rem;
