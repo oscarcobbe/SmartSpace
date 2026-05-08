@@ -68,11 +68,11 @@ interface SourceError {
 export default function AdminLeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [sourceErrors, setSourceErrors] = useState<SourceError[]>([]);
-  // Revenue split — both come straight from the Stripe API server-side.
-  // upcoming = balance.available + balance.pending (held by Stripe, not
-  // yet in the bank). paidOut = lifetime sum of payouts where status=paid.
+  // Stripe balance — funds held by Stripe (available + pending) that
+  // haven't yet swept to the bank. Comes straight from the Stripe API
+  // server-side. The OTHER revenue card ("Upcoming work value") is
+  // computed below from the leads array, not from Stripe.
   const [stripeUpcoming, setStripeUpcoming] = useState(0);
-  const [stripePaidOut, setStripePaidOut] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [key, setKey] = useState("");
@@ -105,7 +105,6 @@ export default function AdminLeadsPage() {
       setLeads(data.leads || []);
       setSourceErrors(data.sourceErrors || []);
       setStripeUpcoming(typeof data.stripeUpcomingPayout === "number" ? data.stripeUpcomingPayout : 0);
-      setStripePaidOut(typeof data.stripePaidOut === "number" ? data.stripePaidOut : 0);
       setAuthed(true);
     } catch {
       setError("Failed to load");
@@ -276,20 +275,26 @@ export default function AdminLeadsPage() {
             <div className="text-[10px] text-gray-400 mt-1">From Stripe (held, not yet in bank)</div>
           </a>
 
-          {/* Already paid out \u2014 lifetime sum of completed Stripe
-              payouts in EUR. Click opens the same Stripe Payouts page. */}
-          <a
-            href="https://dashboard.stripe.com/payouts"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-white rounded-xl border-l-4 border-emerald-500 p-4 shadow-sm text-left hover:shadow-md transition-shadow cursor-pointer block"
+          {/* Upcoming work value \u2014 sum of every "Upcoming" lead's
+              amount, regardless of whether Stripe has been paid yet.
+              Click switches to the Upcoming view so the underlying
+              jobs are visible. Derived client-side from the leads
+              array, not from Stripe. */}
+          <button
+            onClick={() => setView("upcoming")}
+            className={`bg-white rounded-xl border-l-4 border-emerald-500 p-4 shadow-sm text-left hover:shadow-md transition-shadow cursor-pointer ${
+              view === "upcoming" ? "ring-2 ring-gray-300" : ""
+            }`}
           >
-            <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">Paid out</div>
+            <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">Upcoming work value</div>
             <div className="text-2xl font-bold text-gray-900 mt-1">
-              {`\u20AC${stripePaidOut.toFixed(2)}`}
+              {`\u20AC${leads
+                .filter((l) => l.status === "Upcoming")
+                .reduce((sum, l) => sum + parseFloat(l.amount.replace(/[^0-9.]/g, "") || "0"), 0)
+                .toFixed(2)}`}
             </div>
-            <div className="text-[10px] text-gray-400 mt-1">From Stripe (settled to bank)</div>
-          </a>
+            <div className="text-[10px] text-gray-400 mt-1">Booked jobs, paid or not</div>
+          </button>
         </div>
 
         {/* ── Upcoming View ── */}

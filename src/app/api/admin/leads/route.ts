@@ -500,18 +500,17 @@ export async function GET(request: Request) {
     }
   }
 
-  // 4. Fetch Stripe balance + payouts for the revenue split.
-  //    "Upcoming" = currently held by Stripe (pending settlement OR settled
-  //                 but not yet swept to bank). Sum of balance.available +
-  //                 balance.pending, EUR only.
-  //    "Paid out" = lifetime sum of payouts.status=paid in EUR. Paginated
-  //                 up to 10 pages × 100 payouts; covers anything realistic
-  //                 for a small business.
+  // 4. Fetch Stripe balance for the "upcoming payout" card.
+  //    Sum of balance.available + balance.pending in EUR — funds Stripe
+  //    is holding that haven't yet swept to the bank. Fails soft: an
+  //    error pushes a sourceError row but doesn't break leads.
   //
-  //    Both fail-soft: any error pushes a sourceError row but doesn't break
-  //    the leads response.
+  //    NOTE: the second revenue card on the dashboard ("Upcoming work
+  //    value") is computed client-side from the leads array — it sums
+  //    amounts for every lead with status="Upcoming" regardless of
+  //    whether Stripe has been paid yet. So we don't fetch payouts
+  //    here anymore.
   let stripeUpcomingPayout = 0;
-  let stripePaidOut = 0;
   try {
     const balanceRes = await fetch("https://api.stripe.com/v1/balance", {
       headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}` },
@@ -538,47 +537,12 @@ export async function GET(request: Request) {
     });
   }
 
-  try {
-    let startingAfter: string | undefined;
-    let pages = 0;
-    const MAX_PAGES = 10; // safety cap — 1,000 payouts max
-    while (pages < MAX_PAGES) {
-      const url = new URL("https://api.stripe.com/v1/payouts");
-      url.searchParams.set("limit", "100");
-      url.searchParams.set("status", "paid");
-      if (startingAfter) url.searchParams.set("starting_after", startingAfter);
-      const poRes = await fetch(url.toString(), {
-        headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}` },
-        cache: "no-store",
-      });
-      if (!poRes.ok) {
-        const errBody = await poRes.text().catch(() => "");
-        throw new Error(`Stripe payouts ${poRes.status}: ${errBody.slice(0, 200)}`);
-      }
-      const poData = await poRes.json();
-      const items: { amount: number; currency: string; id: string }[] = poData.data || [];
-      for (const po of items) {
-        if (po.currency === "eur") stripePaidOut += po.amount / 100;
-      }
-      if (!poData.has_more || items.length === 0) break;
-      startingAfter = items[items.length - 1].id;
-      pages++;
-    }
-  } catch (err) {
-    console.error("[admin] Stripe payouts fetch error:", err);
-    sourceErrors.push({
-      source: "Stripe Payouts (Already Paid Out)",
-      message: err instanceof Error ? err.message : "Unknown error fetching payouts",
-    });
-  }
-
   return NextResponse.json(
     {
       leads,
       count: leads.length,
       generated: new Date().toISOString(),
       stripeUpcomingPayout,
-      stripePaidOut,
       sourceErrors: sourceErrors.length ? sourceErrors : undefined,
     },
     { headers: { "Cache-Control": "no-store" } }
