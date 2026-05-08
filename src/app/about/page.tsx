@@ -121,7 +121,7 @@ export default function AboutPage() {
               {
                 title: "Professional Installation",
                 description:
-                  "We handle everything — from mounting and wiring to Wi-Fi setup and app configuration. Your Ring system, installed right the first time.",
+                  "We handle everything: mounting, wiring, Wi-Fi setup, app configuration. Your Ring system, installed right the first time.",
               },
               {
                 title: "Ongoing Support",

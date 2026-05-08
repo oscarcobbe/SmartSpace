@@ -19,7 +19,7 @@ export default function BlogLayout({ post, toc, children }: Props) {
           <span>/</span>
           <Link href="/blog" className="hover:text-brand-500 transition-colors">Guides</Link>
           <span>/</span>
-          <span className="text-[#1a1a1a] font-medium truncate max-w-[200px]">{post.title}</span>
+          <span className="text-ink-1 font-medium truncate max-w-[200px]">{post.title}</span>
         </nav>
 
         {/* Meta row */}
@@ -69,7 +69,7 @@ export default function BlogLayout({ post, toc, children }: Props) {
         <article className="prose-ss">{children}</article>
 
         {/* Final CTA */}
-        <section className="mt-16 bg-gradient-to-br from-[#1a1a1a] to-[#2a2a2a] text-white rounded-2xl p-8 sm:p-12">
+        <section className="mt-16 bg-surface-dark text-white rounded-2xl p-8 sm:p-12">
           <h2 className="text-2xl sm:text-3xl font-extrabold mb-3">
             Want Smart Space to handle it for you?
           </h2>

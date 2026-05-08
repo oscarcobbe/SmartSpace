@@ -144,7 +144,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&display=swap"
           rel="stylesheet"
         />
         {/* Google Ads + GA4 global tag (both use gtag.js) */}
@@ -188,10 +188,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body
-        className="antialiased bg-white text-gray-900"
-        style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}
-      >
+      <body className="antialiased font-sans">
         <CartProvider>
           <GclidCapture />
           <Navbar />

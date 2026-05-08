@@ -16,12 +16,12 @@ export default function ProductCard({ product }: { product: ShopifyProduct }) {
   return (
     <Link
       href={`/services/${product.handle}`}
-      className="group block bg-transparent rounded-2xl p-6 hover:shadow-lg transition-all duration-300 text-center"
+      className="focus-ring group block bg-transparent rounded-2xl p-6 hover:shadow-lg transition-all duration-300 text-center"
     >
       {/* Image */}
       <div className="relative aspect-square flex items-center justify-center mb-4">
         {hasDiscount && (
-          <span className="absolute top-0 left-0 bg-brand-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-full">
+          <span className="absolute top-0 left-0 bg-brand-700 text-white text-[11px] font-bold px-2.5 py-1 rounded-full">
             Save &euro;{(comparePrice - price).toFixed(0)}
           </span>
         )}
@@ -41,15 +41,15 @@ export default function ProductCard({ product }: { product: ShopifyProduct }) {
       </div>
 
       {/* Info */}
-      <h3 className="font-bold text-[#1a1a1a] text-sm mb-1.5 group-hover:text-brand-500 transition-colors">
+      <h3 className="font-bold text-ink-1 text-sm mb-1.5 group-hover:text-brand-700 transition-colors">
         {displayTitle(product.title)}
       </h3>
       <div className="flex items-baseline gap-2 justify-center">
-        <span className="text-lg font-extrabold text-[#1a1a1a]">
+        <span className="text-lg font-extrabold text-ink-1">
           &euro;{price.toFixed(2)}
         </span>
         {hasDiscount && (
-          <span className="text-xs text-[#999] line-through">
+          <span className="text-xs text-ink-4 line-through">
             &euro;{comparePrice.toFixed(2)}
           </span>
         )}

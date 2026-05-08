@@ -56,7 +56,7 @@ export default function FeaturedProducts() {
     return (
       <section className="py-16 lg:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1a1a1a] mb-8">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-1 mb-8">
             Featured Products
           </h2>
           <div className="py-12 text-center">
@@ -76,16 +76,16 @@ export default function FeaturedProducts() {
         {/* Header with toggle */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
           <div className="text-center sm:text-left">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1a1a1a] mb-4">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-1 mb-4">
               Featured Products
             </h2>
             {/* Toggle */}
             <div className="inline-flex bg-gray-100 rounded-full p-1">
               <button
                 onClick={() => setActiveTab("singles")}
-                className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
+                className={`focus-ring px-5 py-2 rounded-full text-sm font-semibold transition-all ${
                   activeTab === "singles"
-                    ? "bg-white text-[#1a1a1a] shadow-sm"
+                    ? "bg-white text-ink-1 shadow-sm"
                     : "text-gray-500 hover:text-gray-700"
                 }`}
               >
@@ -93,9 +93,9 @@ export default function FeaturedProducts() {
               </button>
               <button
                 onClick={() => setActiveTab("bundles")}
-                className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
+                className={`focus-ring px-5 py-2 rounded-full text-sm font-semibold transition-all ${
                   activeTab === "bundles"
-                    ? "bg-white text-[#1a1a1a] shadow-sm"
+                    ? "bg-white text-ink-1 shadow-sm"
                     : "text-gray-500 hover:text-gray-700"
                 }`}
               >
@@ -107,21 +107,21 @@ export default function FeaturedProducts() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => scroll("left")}
-              className="p-2 rounded-full border border-gray-200 hover:border-gray-400 transition-colors hidden sm:block"
+              className="focus-ring p-2 rounded-full border border-gray-200 hover:border-gray-400 transition-colors hidden sm:block"
               aria-label="Scroll left"
             >
               <ChevronLeft className="w-5 h-5 text-gray-600" />
             </button>
             <button
               onClick={() => scroll("right")}
-              className="p-2 rounded-full border border-gray-200 hover:border-gray-400 transition-colors hidden sm:block"
+              className="focus-ring p-2 rounded-full border border-gray-200 hover:border-gray-400 transition-colors hidden sm:block"
               aria-label="Scroll right"
             >
               <ChevronRight className="w-5 h-5 text-gray-600" />
             </button>
             <Link
               href={activeTab === "singles" ? "/services" : "/services/bundles"}
-              className="text-sm font-semibold text-brand-500 hover:text-brand-600 transition-colors hidden sm:block ml-2"
+              className="focus-ring text-sm font-semibold text-brand-700 hover:text-brand-800 transition-colors hidden sm:block ml-2"
             >
               View All
             </Link>
@@ -150,7 +150,7 @@ export default function FeaturedProducts() {
         <div className="text-center mt-6 sm:hidden">
           <Link
             href={activeTab === "singles" ? "/services" : "/services/bundles"}
-            className="text-sm font-semibold text-brand-500"
+            className="text-sm font-semibold text-brand-700"
           >
             View All {activeTab === "singles" ? "Products" : "Bundles"}
           </Link>

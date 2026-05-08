@@ -5,7 +5,7 @@ import ContactForm from "@/components/ContactForm";
 const SITE = "https://smart-space.ie";
 
 export const metadata: Metadata = {
-  title: "Contact Us | Smart Space — Dublin's #1 Ring Installer",
+  title: "Contact Us | Smart Space, Dublin's #1 Ring Installer",
   description:
     "Contact Smart Space for Ring installation in Dublin and Leinster. Call 01 513 0424 or email info@smart-space.ie.",
   alternates: { canonical: "/contact" },
