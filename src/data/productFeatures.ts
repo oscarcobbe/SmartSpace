@@ -16,14 +16,14 @@ const featuresByHandle: Record<string, ProductFeatureSet> = {
     shortDescription:
       "Get 2K image clarity and 6x zoom with our reimagined wired doorbell. Features include real-time Live View, Two-Way Talk, and instant motion alerts to your phone. Hardwired into your home's power for constant, reliable security, it is the perfect, affordable solution for families seeking doorstep oversight and total peace of mind.",
     highlights: [
-      "Retinal 2K with 6x Enhanced Zoom",
+      "Sharp HDR with 6x Enhanced Zoom",
       "Head-to-Toe Video",
       "Live View & Two-Way Talk",
       "Motion Detection",
       "Always-on Power",
     ],
     specs: {
-      "Video Resolution": "Retinal 2K",
+      "Video Resolution": "Sharp HDR",
       "Zoom": "6x Enhanced",
       "Field of View": "Head-to-Toe (150° horizontal)",
       "Audio": "Two-way talk with noise cancellation",
@@ -37,7 +37,7 @@ const featuresByHandle: Record<string, ProductFeatureSet> = {
     shortDescription:
       "Our most advanced wired doorbell features breakthrough 4K clarity and 10x zoom. This reimagined design includes radar-powered 3D motion alerts, enhanced two-way audio, and full-color night vision. Secure your home with crystal-clear video and real-time communication, ensuring you never miss a detail, day or night.",
     highlights: [
-      "Retinal 4K",
+      "Pro HDR",
       "Low-Light Sight & Adaptive Night Vision",
       "Wide Field of View",
       "10x Enhanced Zoom",
@@ -45,7 +45,7 @@ const featuresByHandle: Record<string, ProductFeatureSet> = {
       "Head-to-Toe Video",
     ],
     specs: {
-      "Video Resolution": "Retinal 4K",
+      "Video Resolution": "Pro HDR",
       "Zoom": "10x Enhanced",
       "Field of View": "Wide, head-to-toe",
       "Night Vision": "Low-Light Sight with adaptive night vision & colour",
@@ -84,7 +84,7 @@ const featuresByHandle: Record<string, ProductFeatureSet> = {
     shortDescription:
       "Our most advanced floodlight camera with breakthrough 4K clarity and 10x zoom. Radar-powered 3D Motion Detection identifies exactly where someone moved on an aerial map. 2000-lumen floodlights plus an 85dB siren light up and deter intruders — day or night, driveway or back garden.",
     highlights: [
-      "Retinal 4K",
+      "Pro HDR",
       "Low-Light Sight",
       "Wide Field of View",
       "10x Enhanced Zoom",
@@ -92,7 +92,7 @@ const featuresByHandle: Record<string, ProductFeatureSet> = {
       "3D Motion Detection",
     ],
     specs: {
-      "Video Resolution": "Retinal 4K",
+      "Video Resolution": "Pro HDR",
       "Zoom": "10x Enhanced",
       "Field of View": "Wide-angle",
       "Floodlights": "2,000 lumens (dual LED)",
@@ -122,7 +122,7 @@ const featuresByHandle: Record<string, ProductFeatureSet> = {
     shortDescription:
       "Our top-tier driveway bundle combines the 4K Video Doorbell Pro with the 4K Floodlight Cam Pro for uncompromising security at your front door and driveway. Radar-powered 3D Motion Detection, 10x zoom on both devices, and a powerful 85dB siren protect what matters most. Hardwired, always-on, and professionally installed. Bundle saves €50.",
     highlights: [
-      "All Retinal 4K image quality",
+      "Pro-tier HDR image quality",
       "Ring Video Doorbell Pro + Floodlight Cam Pro",
       "3D Motion Detection on both devices",
       "10x zoom on both cameras",
@@ -133,7 +133,7 @@ const featuresByHandle: Record<string, ProductFeatureSet> = {
   },
   "plus-whole-home-bundle": {
     shortDescription:
-      "Our most popular full perimeter solution for 360-degree property awareness. This bundle features the crisp Retinal 2K Video Doorbell Wired for your entrance, paired with two Floodlight Cam Wired Plus units to provide high-intensity, motion-activated light to both your driveway and back garden. With 4000 total lumens of floodlighting and two 105dB sirens, this setup eliminates blind spots and deters intruders from every angle. Includes a Ring Chime. Bundle saves €100.",
+      "Our most popular full perimeter solution for 360-degree property awareness. This bundle features the crisp Sharp HDR Video Doorbell Wired for your entrance, paired with two Floodlight Cam Wired Plus units to provide high-intensity, motion-activated light to both your driveway and back garden. With 4000 total lumens of floodlighting and two 105dB sirens, this setup eliminates blind spots and deters intruders from every angle. Includes a Ring Chime. Bundle saves €100.",
     highlights: [
       "2K & 1080p image quality",
       "Video Doorbell Plus + 2x Floodlight Cam Plus",
@@ -146,9 +146,9 @@ const featuresByHandle: Record<string, ProductFeatureSet> = {
   },
   "pro-whole-home-bundle": {
     shortDescription:
-      "The ultimate whole-home security setup. The Ring Video Doorbell Pro at your entrance paired with two Floodlight Cam Pro units gives you all-Retinal-4K coverage of the front door, driveway, and back garden. 3D Motion Detection pinpoints activity on an aerial map. 4,000 lumens of floodlighting and 85dB sirens deter intruders day and night. Includes a Ring Chime. Bundle saves €100.",
+      "The ultimate whole-home security setup. The Ring Video Doorbell Pro at your entrance paired with two Floodlight Cam Pro units gives you all-pro-tier-HDR coverage of the front door, driveway, and back garden. 3D Motion Detection pinpoints activity on an aerial map. 4,000 lumens of floodlighting and 85dB sirens deter intruders day and night. Includes a Ring Chime. Bundle saves €100.",
     highlights: [
-      "All Retinal 4K image quality",
+      "Pro-tier HDR image quality",
       "Video Doorbell Pro + 2x Floodlight Cam Pro",
       "3D Motion Detection on every device",
       "4,000 total lumens of floodlighting",

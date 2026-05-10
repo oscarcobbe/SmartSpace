@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   title: `${post.title} | Smart Space`,
   description: post.description,
   alternates: { canonical: `/blog/${post.slug}` },
-  robots: { index: false, follow: true },
+  robots: { index: true, follow: true },
   openGraph: {
     title: `${post.title} | Smart Space`,
     description: post.description,

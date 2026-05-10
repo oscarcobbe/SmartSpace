@@ -1,13 +1,10 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 
 const SITE = "https://smart-space.ie";
 
-export const metadata: Metadata = {
-  title: "Single Device Installation | Smart Space",
-  description: "Choose a Ring Video Doorbell or External Camera — professionally supplied and installed across Leinster.",
-  alternates: { canonical: "/services/single" },
-};
+// metadata (title/description/canonical) lives in layout.tsx — duplicate
+// declaration here was being silently overridden anyway and risked
+// future drift. See src/app/services/single/layout.tsx.
 
 const SERVICE_SCHEMA = {
   "@context": "https://schema.org",

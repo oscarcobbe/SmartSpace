@@ -182,26 +182,34 @@ export default function ContactForm() {
           type="tel"
           id="phone"
           name="phone"
+          required
+          inputMode="tel"
+          autoComplete="tel"
           className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-gray-50"
-          placeholder="01 5130424"
+          placeholder="01 513 0424"
         />
+        <p className="mt-1.5 text-xs text-gray-400">We&apos;ll call you back within one business day.</p>
       </div>
 
       <div>
         <label htmlFor="subject" className="block text-sm font-semibold text-gray-700 mb-2">
           Subject
         </label>
+        {/* Reordered to put Installation Enquiry first — that's what
+            the majority of paid clicks are. "Support Request" removed:
+            paid leads aren't existing customers needing help, and
+            existing customers should call directly (the option was
+            steering real leads into the wrong bucket). */}
         <select
           id="subject"
           name="subject"
           required
+          defaultValue="installation"
           className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-gray-50"
         >
-          <option value="">Select a topic...</option>
-          <option value="general">General Enquiry</option>
           <option value="installation">Installation Enquiry</option>
           <option value="product">Product Question</option>
-          <option value="support">Support Request</option>
+          <option value="general">General Enquiry</option>
           <option value="other">Other</option>
         </select>
       </div>

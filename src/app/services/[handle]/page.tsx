@@ -139,12 +139,12 @@ export default async function ServiceDetailPage({ params }: { params: { handle: 
       seller: { "@id": `${SITE}/#localbusiness` },
       areaServed: { "@type": "Place", name: "Dublin & Leinster, Ireland" },
     },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "5",
-      bestRating: "5",
-      reviewCount: "100",
-    },
+    // aggregateRating intentionally omitted on per-product schema. The
+    // site has 100+ Google reviews of the BUSINESS, not 100 reviews per
+    // product. Claiming 100 reviews per individual product was a Google
+    // Ads policy violation (misleading structured data) and risked a
+    // manual action. Site-wide rating lives on LocalBusiness schema in
+    // src/app/layout.tsx — the supported pattern.
   };
 
   const breadcrumbSchema = {

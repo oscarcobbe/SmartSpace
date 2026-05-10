@@ -40,7 +40,7 @@ const serviceCategories = [
     description: "Doorbell + smart keybox for elderly relatives and carer access.",
     href: "/services/bundles/eldercare",
     filter: (p: ShopifyProduct) => p.handle === "eldercare-security-bundle",
-    staticImage: "/products/Eldercare bundle.png",
+    staticImage: "/products/eldercare-bundle.png",
   },
   {
     title: "Installation Only",

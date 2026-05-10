@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "Ring Home Bundles | Smart Space",
   description:
     "Save more with Ring bundles. Driveway, Whole Home, and Eldercare packages — all professionally supplied and installed across Leinster.",
+  alternates: { canonical: "/services/bundles" },
 };
 
 const bundles = [
@@ -44,7 +45,7 @@ const bundles = [
     name: "Eldercare Security Bundle",
     description: "Video Doorbell + Smart Wi-Fi Keybox",
     price: "From €509",
-    image: "/products/Eldercare bundle.png",
+    image: "/products/eldercare-bundle.png",
     features: [
       "Ring Video Doorbell supplied & installed",
       "Smart Wi-Fi Keybox for carer access",

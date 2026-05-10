@@ -23,19 +23,19 @@ const counties = [
     name: "Dublin",
     slug: "dublin",
     towns: "Dublin city, Dún Laoghaire, Tallaght, Swords, Blanchardstown, Clontarf, Howth, Malahide, Dundrum, Rathmines",
-    copy: "Dublin is our home turf — it's where Smart Space was founded and where we&apos;ve completed the vast majority of our 5,000+ installations. Whether you&apos;re in a Georgian terrace in Rathmines, a semi-D in Tallaght, or a new-build in Swords, we know Dublin properties inside and out. Our Ring installers work across every postcode from Dublin 1 to Dublin 24, plus Dún Laoghaire–Rathdown, Fingal and South Dublin. Most Dublin appointments are booked within the week. If you need a Ring Video Doorbell, Floodlight Cam, or a full whole-home bundle installed in Dublin, we offer free consultations, honest written quotes, and professional installation — usually in under three hours.",
+    copy: "Dublin is our home turf — it's where Smart Space was founded and where we've completed the vast majority of our 5,000+ installations. Whether you're in a Georgian terrace in Rathmines, a semi-D in Tallaght, or a new-build in Swords, we know Dublin properties inside and out. Our Ring installers work across every postcode from Dublin 1 to Dublin 24, plus Dún Laoghaire–Rathdown, Fingal and South Dublin. Most Dublin appointments are booked within the week. If you need a Ring Video Doorbell, Floodlight Cam, or a full whole-home bundle installed in Dublin, we offer free consultations, honest written quotes, and professional installation — usually in under three hours.",
   },
   {
     name: "Wicklow",
     slug: "wicklow",
     towns: "Bray, Greystones, Wicklow town, Arklow, Rathdrum, Newtownmountkennedy, Enniskerry, Blessington",
-    copy: "We cover all of County Wicklow from Bray and Greystones in the north down to Arklow in the south, with regular appointments in Rathdrum, Newtownmountkennedy, Enniskerry and Blessington. Wicklow homes often have longer driveways and more rural Wi-Fi coverage challenges, which is exactly the sort of install we specialise in. Our Ring installers carry network extenders and long-run power cabling as standard, so we can get cameras and doorbells online even when your existing Wi-Fi doesn&apos;t reach. Free consultations available throughout the county — we&apos;ll survey the property, identify blind spots, and send a written quote the same day.",
+    copy: "We cover all of County Wicklow from Bray and Greystones in the north down to Arklow in the south, with regular appointments in Rathdrum, Newtownmountkennedy, Enniskerry and Blessington. Wicklow homes often have longer driveways and more rural Wi-Fi coverage challenges, which is exactly the sort of install we specialise in. Our Ring installers carry network extenders and long-run power cabling as standard, so we can get cameras and doorbells online even when your existing Wi-Fi doesn't reach. Free consultations available throughout the county — we'll survey the property, identify blind spots, and send a written quote the same day.",
   },
   {
     name: "Kildare",
     slug: "kildare",
     towns: "Naas, Newbridge, Maynooth, Celbridge, Leixlip, Kildare town, Athy, Clane, Kilcock",
-    copy: "Smart Space covers all of County Kildare — Naas, Newbridge, Maynooth, Celbridge, Leixlip, Kildare town, Athy, Clane and Kilcock. Kildare is one of our most active counties outside Dublin, particularly around the M4 and M7 commuter belt. We install the full Ring range on Kildare homes: Video Doorbells (including the Pro models with pre-buffering), Floodlight Cams for driveways and rear gardens, and smart lock keyboxes for Airbnb hosts and eldercare setups. If you&apos;re building or renovating in Kildare, book a pre-install consultation so we can run cables before the walls close up.",
+    copy: "Smart Space covers all of County Kildare — Naas, Newbridge, Maynooth, Celbridge, Leixlip, Kildare town, Athy, Clane and Kilcock. Kildare is one of our most active counties outside Dublin, particularly around the M4 and M7 commuter belt. We install the full Ring range on Kildare homes: Video Doorbells (including the Pro models with pre-buffering), Floodlight Cams for driveways and rear gardens, and smart lock keyboxes for Airbnb hosts and eldercare setups. If you're building or renovating in Kildare, book a pre-install consultation so we can run cables before the walls close up.",
   },
   {
     name: "Meath",
@@ -47,13 +47,13 @@ const counties = [
     name: "Louth",
     slug: "louth",
     towns: "Drogheda, Dundalk, Ardee, Dunleer, Carlingford, Omeath",
-    copy: "We cover County Louth — Drogheda, Dundalk, Ardee, Dunleer, Carlingford and Omeath — with the same 5-star Ring installation service we&apos;re known for in Dublin. Louth sits at the northern edge of Leinster, and we regularly install Ring systems in border-area homes where mobile signal is patchy and Wi-Fi reliability matters even more. We bring Ring Chime Pro signal extenders as standard, so every camera and doorbell stays online. Louth customers get the full Smart Space service: on-site consultation, professional mounting and wiring, app setup, and a 30-day follow-up call.",
+    copy: "We cover County Louth — Drogheda, Dundalk, Ardee, Dunleer, Carlingford and Omeath — with the same 5-star Ring installation service we're known for in Dublin. Louth sits at the northern edge of Leinster, and we regularly install Ring systems in border-area homes where mobile signal is patchy and Wi-Fi reliability matters even more. We bring Ring Chime Pro signal extenders as standard, so every camera and doorbell stays online. Louth customers get the full Smart Space service: on-site consultation, professional mounting and wiring, app setup, and a 30-day follow-up call.",
   },
   {
     name: "Wexford",
     slug: "wexford",
     towns: "Wexford town, Enniscorthy, Gorey, New Ross, Rosslare",
-    copy: "Smart Space covers County Wexford for Ring doorbell and camera installations — Wexford town, Enniscorthy, Gorey, New Ross and Rosslare. Wexford tends to be a slightly longer drive from our Dublin base, so we often batch appointments in the county and offer a small scheduling window. That means if you&apos;re ready to book a Ring install in Wexford, drop us a line and we&apos;ll let you know the next available date. All our standard services apply: Video Doorbells, Floodlight Cams, Driveway and Whole Home bundles, and installation-only for Ring devices you&apos;ve already bought.",
+    copy: "Smart Space covers County Wexford for Ring doorbell and camera installations — Wexford town, Enniscorthy, Gorey, New Ross and Rosslare. Wexford tends to be a slightly longer drive from our Dublin base, so we often batch appointments in the county and offer a small scheduling window. That means if you're ready to book a Ring install in Wexford, drop us a line and we'll let you know the next available date. All our standard services apply: Video Doorbells, Floodlight Cams, Driveway and Whole Home bundles, and installation-only for Ring devices you've already bought.",
   },
   {
     name: "Carlow",
@@ -65,31 +65,31 @@ const counties = [
     name: "Kilkenny",
     slug: "kilkenny",
     towns: "Kilkenny city, Thomastown, Callan, Castlecomer, Graiguenamanagh",
-    copy: "We install Ring doorbells and security cameras across County Kilkenny — Kilkenny city, Thomastown, Callan, Castlecomer and Graiguenamanagh. Kilkenny has a mix of older period properties and newer developments, and we&apos;re comfortable working with both. Older homes often have existing wired doorbell systems that we can retrofit with a Ring Video Doorbell Pro (mains-powered, pre-buffered recording). Newer builds usually just need clean mounting and a Wi-Fi coverage check. Either way, we&apos;ll walk your property, identify the best camera positions, and deliver a professional install.",
+    copy: "We install Ring doorbells and security cameras across County Kilkenny — Kilkenny city, Thomastown, Callan, Castlecomer and Graiguenamanagh. Kilkenny has a mix of older period properties and newer developments, and we're comfortable working with both. Older homes often have existing wired doorbell systems that we can retrofit with a Ring Video Doorbell Pro (mains-powered, pre-buffered recording). Newer builds usually just need clean mounting and a Wi-Fi coverage check. Either way, we'll walk your property, identify the best camera positions, and deliver a professional install.",
   },
   {
     name: "Laois",
     slug: "laois",
     towns: "Portlaoise, Portarlington, Mountmellick, Mountrath, Abbeyleix",
-    copy: "County Laois is within our Leinster service area. We cover Portlaoise, Portarlington, Mountmellick, Mountrath and Abbeyleix for Ring doorbell and camera installations. Many Laois homes are on larger plots with longer driveways, so we often recommend a Floodlight Cam at the entrance paired with a Video Doorbell at the main door. This gives you a full view of anyone arriving, plus motion alerts the moment a car pulls in. Free consultation available — we&apos;ll survey the property and send a written quote the same day.",
+    copy: "County Laois is within our Leinster service area. We cover Portlaoise, Portarlington, Mountmellick, Mountrath and Abbeyleix for Ring doorbell and camera installations. Many Laois homes are on larger plots with longer driveways, so we often recommend a Floodlight Cam at the entrance paired with a Video Doorbell at the main door. This gives you a full view of anyone arriving, plus motion alerts the moment a car pulls in. Free consultation available — we'll survey the property and send a written quote the same day.",
   },
   {
     name: "Offaly",
     slug: "offaly",
     towns: "Tullamore, Birr, Edenderry, Clara, Banagher",
-    copy: "Smart Space installs Ring doorbells and cameras across County Offaly — Tullamore, Birr, Edenderry, Clara and Banagher. Offaly is one of the counties where we batch appointments, so get in touch and we&apos;ll let you know the next available date we&apos;re in the area. Installation includes everything you&apos;d expect: professional mounting, weatherproofing, wiring, Wi-Fi coverage check, Ring app setup, and a full walkthrough before we leave. We also offer installation-only service for customers who&apos;ve already bought a Ring, Eufy, Nest or Tapo device.",
+    copy: "Smart Space installs Ring doorbells and cameras across County Offaly — Tullamore, Birr, Edenderry, Clara and Banagher. Offaly is one of the counties where we batch appointments, so get in touch and we'll let you know the next available date we're in the area. Installation includes everything you'd expect: professional mounting, weatherproofing, wiring, Wi-Fi coverage check, Ring app setup, and a full walkthrough before we leave. We also offer installation-only service for customers who've already bought a Ring, Eufy, Nest or Tapo device.",
   },
   {
     name: "Westmeath",
     slug: "westmeath",
     towns: "Athlone, Mullingar, Moate, Kinnegad, Castlepollard",
-    copy: "We cover County Westmeath for Ring installations — Athlone, Mullingar, Moate, Kinnegad and Castlepollard. Westmeath&apos;s commuter towns (particularly Mullingar and Kinnegad) are within easy reach, and Athlone we treat as a regular scheduled visit. Whether you want a single Ring Video Doorbell installed on a semi-D in Mullingar, or a Whole Home Bundle with doorbell plus two Floodlight Cams on a detached property outside Athlone, we&apos;ll scope it on a complimentary consultation and deliver a written quote the same day.",
+    copy: "We cover County Westmeath for Ring installations — Athlone, Mullingar, Moate, Kinnegad and Castlepollard. Westmeath's commuter towns (particularly Mullingar and Kinnegad) are within easy reach, and Athlone we treat as a regular scheduled visit. Whether you want a single Ring Video Doorbell installed on a semi-D in Mullingar, or a Whole Home Bundle with doorbell plus two Floodlight Cams on a detached property outside Athlone, we'll scope it on a complimentary consultation and deliver a written quote the same day.",
   },
   {
     name: "Longford",
     slug: "longford",
     towns: "Longford town, Granard, Edgeworthstown, Ballymahon",
-    copy: "County Longford is the furthest corner of our Leinster service area — we install Ring doorbells and cameras in Longford town, Granard, Edgeworthstown and Ballymahon. Like Offaly and Wexford, we batch Longford appointments, so please get in touch and we&apos;ll schedule your install on our next trip to the area. The full Smart Space service applies: on-site consultation, professional installation, network setup, app configuration, and a 30-day follow-up call. Longford customers receive the same 5-star service our Dublin customers do.",
+    copy: "County Longford is the furthest corner of our Leinster service area — we install Ring doorbells and cameras in Longford town, Granard, Edgeworthstown and Ballymahon. Like Offaly and Wexford, we batch Longford appointments, so please get in touch and we'll schedule your install on our next trip to the area. The full Smart Space service applies: on-site consultation, professional installation, network setup, app configuration, and a 30-day follow-up call. Longford customers receive the same 5-star service our Dublin customers do.",
   },
 ];
 
@@ -138,10 +138,13 @@ export default function AreasPage() {
               <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">
                 Towns: {c.towns}
               </p>
-              <p
-                className="text-gray-600 leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: c.copy }}
-              />
+              {/* Plain JSX text (no dangerouslySetInnerHTML) — the copy
+                  strings used to contain `&apos;` HTML entities, which
+                  render as the literal text "&apos;" when injected via
+                  innerHTML instead of being decoded to apostrophes.
+                  Visible bug for every visitor. Now using regular text
+                  with real apostrophes throughout the data above. */}
+              <p className="text-gray-600 leading-relaxed">{c.copy}</p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <Link
                   href="/services/free-consultation"

@@ -130,8 +130,8 @@ export default async function DoorbellServicePage() {
                     <ul className="space-y-1.5 mb-4">
                       {[
                         product.handle === "pro-video-doorbell"
-                          ? "Retinal 4K image quality"
-                          : "Retinal 2K image quality",
+                          ? "Pro HDR image quality"
+                          : "Sharp HDR image quality",
                         "Professional installation",
                         "Ring Chime included",
                         "App setup & config",
@@ -181,7 +181,7 @@ export default async function DoorbellServicePage() {
               We supply two tiers. The Plus model gives you 1080p video with
               colour night vision and is the right choice for most Dublin
               terraced and semi-D properties where the doorbell is well-lit.
-              The Pro model adds Retinal 2K video, 3D motion detection (so it
+              The Pro model adds Sharp HDR video, 3D motion detection (so it
               ignores cars on the street and only alerts on people approaching
               the door), and pre-roll buffering — meaning the four seconds
               before a motion event are also captured, so you don&apos;t miss

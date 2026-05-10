@@ -76,6 +76,16 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
+// JSON-LD limited to LocalBusiness aggregateRating only. The per-review
+// `Review` array used to ship to Google with author + reviewBody +
+// datePublished — Google's review-snippet policy explicitly forbids
+// merchant-written reviews in structured data, and the published list
+// here is a curated set, not pulled live from Google. Keeping the
+// reviews on-page for users (still rendered visually below) but NOT
+// claiming them in structured markup avoids a manual-action risk.
+// LocalBusiness aggregateRating ALSO lives in src/app/layout.tsx — this
+// is a duplicate; both are valid (Google de-dupes by @id) but consider
+// removing this block entirely once we confirm it.
 const reviewsSchema = {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
@@ -88,13 +98,6 @@ const reviewsSchema = {
     bestRating: "5",
     reviewCount: "100",
   },
-  review: googleReviews.map((r) => ({
-    "@type": "Review",
-    reviewRating: { "@type": "Rating", ratingValue: r.rating, bestRating: 5 },
-    author: { "@type": "Person", name: r.author },
-    reviewBody: r.text,
-    datePublished: r.datePublished,
-  })),
 };
 
 export default function ReviewsPage() {

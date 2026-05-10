@@ -119,7 +119,7 @@ export default async function CameraServicePage() {
                     <ul className="space-y-1.5 mb-4">
                       {[
                         product.handle === "pro-floodlight-cam"
-                          ? "Retinal 4K image quality"
+                          ? "Pro HDR image quality"
                           : "1080p image quality",
                         "Professional installation",
                         "Optimal positioning",
@@ -169,7 +169,7 @@ export default async function CameraServicePage() {
               We install two tiers. The Plus model gives you 1080p video with
               two-way audio and a 110-decibel siren, which is the right choice
               for standard Dublin gardens and shorter driveways. The Pro model
-              adds Retinal 2K video, audio plus video pre-roll, and Bird&apos;s
+              adds Sharp HDR video, audio plus video pre-roll, and Bird&apos;s
               Eye View — a top-down map of where motion was detected on your
               property. For longer driveways with parked cars, the Pro&apos;s
               wider field of view is the difference between catching a plate

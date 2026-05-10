@@ -28,17 +28,35 @@ function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const isFree = searchParams.get("free") === "true";
-  // Optional identity data passed by the free-consultation form for enhanced conversions
-  const passedEmail = searchParams.get("e") ?? undefined;
-  const passedPhone = searchParams.get("p") ?? undefined;
   const fired = useRef(false);
   const [state, setState] = useState<VerifyState>({ status: "loading" });
 
-  // Verify the session server-side before rendering a receipt or firing gtag.
-  // A crafted URL with ?session_id=fake will fail this check.
+  // Verify the session server-side before rendering a receipt or firing
+  // gtag. A crafted URL with ?session_id=fake will fail this check.
+  //
+  // For the free-consultation path the customer's email + phone is
+  // pulled from sessionStorage["ss_pending_identity"] (set by the form
+  // before the redirect). Previously these were passed in the URL as
+  // ?e=…&p=…, which exposed PII in browser history, Vercel access logs,
+  // and Referer headers. sessionStorage is per-tab and read-once.
   useEffect(() => {
     if (isFree) {
-      setState({ status: "free", email: passedEmail, phone: passedPhone });
+      let email: string | undefined;
+      let phone: string | undefined;
+      try {
+        const raw = sessionStorage.getItem("ss_pending_identity");
+        if (raw) {
+          const parsed = JSON.parse(raw) as { email?: string; phone?: string };
+          email = parsed.email;
+          phone = parsed.phone;
+          // Single-use — clear immediately so a refresh doesn't re-fire
+          // the conversion against an old identity.
+          sessionStorage.removeItem("ss_pending_identity");
+        }
+      } catch {
+        /* corrupt storage — fire without enhanced data */
+      }
+      setState({ status: "free", email, phone });
       return;
     }
     if (!sessionId) {
@@ -62,7 +80,7 @@ function PaymentSuccessContent() {
         }
       })
       .catch(() => setState({ status: "invalid" }));
-  }, [isFree, sessionId, passedEmail, passedPhone]);
+  }, [isFree, sessionId]);
 
   // Only fire conversion after server-verified payment or confirmed free booking.
   // Include enhanced-conversion user_data so Google can match the lead even

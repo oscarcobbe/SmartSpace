@@ -26,7 +26,12 @@ export default async function DrivewayBundlePage() {
   const prices = products
     .map((p) => parseFloat(p.priceRange.minVariantPrice.amount))
     .filter((n) => Number.isFinite(n) && n > 0);
-  const lowPrice = prices.length ? Math.min(...prices).toString() : "509";
+  // Fallbacks must match the user-facing "From €X" on /services/bundles
+  // (currently "From €658"). Schema saying "lowPrice: 509" while the
+  // bundles index shows "From €658" is exactly the kind of contradiction
+  // Google flags as misleading + that erodes trust when a customer
+  // refreshes and sees a different price each time.
+  const lowPrice = prices.length ? Math.min(...prices).toString() : "658";
   const highPrice = prices.length ? Math.max(...prices).toString() : "989";
 
   // Service schema describes the bundle as a Local Service offering with a
@@ -151,7 +156,7 @@ export default async function DrivewayBundlePage() {
                     <ul className="space-y-1.5 mb-4">
                       {[
                         product.handle === "pro-driveway-bundle"
-                          ? "All Retinal 4K image quality"
+                          ? "Pro-tier HDR image quality"
                           : "2K & 1080p image quality",
                         "Doorbell + Floodlight Cam",
                         "Professional installation",

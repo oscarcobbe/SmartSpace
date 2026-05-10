@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description:
     "Practical guides on Ring doorbell installation, home security cameras, and smart home setup for Irish homes, written by Dublin's #1 Ring installer.",
   alternates: { canonical: "/blog" },
-  robots: { index: false, follow: true },
+  robots: { index: true, follow: true },
   openGraph: {
     title: "Guides | Ring Installation & Home Security in Ireland",
     description:

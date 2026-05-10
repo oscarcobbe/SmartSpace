@@ -24,8 +24,11 @@ export default async function EldercareBundlePage() {
   const prices = products
     .map((p) => parseFloat(p.priceRange.minVariantPrice.amount))
     .filter((n) => Number.isFinite(n) && n > 0);
-  const lowPrice = prices.length ? Math.min(...prices).toString() : "499";
-  const highPrice = prices.length ? Math.max(...prices).toString() : "499";
+  // Fallback price aligned to the displayed "From €509" on
+  // /services/bundles (was 499 — schema lying about a €10 cheaper
+  // price than the index page advertised).
+  const lowPrice = prices.length ? Math.min(...prices).toString() : "509";
+  const highPrice = prices.length ? Math.max(...prices).toString() : "509";
 
   const serviceSchema = {
     "@context": "https://schema.org",

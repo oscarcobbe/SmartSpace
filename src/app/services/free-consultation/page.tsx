@@ -112,13 +112,21 @@ export default function FreeConsultationPage() {
       });
       const data = await res.json();
       if (data.success) {
-        // Pass identity data to the success page for enhanced conversions
-        const params = new URLSearchParams({
-          free: "true",
-          e: email.trim(),
-          p: phone.trim(),
-        });
-        window.location.href = `/smartspace-payment-success?${params.toString()}`;
+        // Stash identity data in sessionStorage for the success page's
+        // Enhanced Conversions hash. Previously these were on the URL
+        // (?e=…&p=…) — that exposed PII in browser history, Vercel
+        // access logs, and any Referer header on outbound clicks from
+        // the success page. sessionStorage is per-tab and cleared on
+        // close. The success page reads it once and clears it.
+        try {
+          sessionStorage.setItem(
+            "ss_pending_identity",
+            JSON.stringify({ email: email.trim(), phone: phone.trim() })
+          );
+        } catch {
+          /* private mode / blocked storage — non-fatal */
+        }
+        window.location.href = `/smartspace-payment-success?free=true`;
       } else {
         setError(data.error ?? "Booking failed. Please try again.");
         setSubmitting(false);

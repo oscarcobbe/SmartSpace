@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -7,6 +8,19 @@ import { CartProvider } from "@/context/CartContext";
 import GclidCapture from "@/components/GclidCapture";
 import CookieBanner from "@/components/CookieBanner";
 import PhoneClickTracker from "@/components/PhoneClickTracker";
+
+// next/font self-hosts the font, eliminates the render-blocking
+// `<link href="fonts.googleapis.com/...">` request, removes the need for
+// preconnect tags, and ships ONLY the weights actually used. Single
+// biggest LCP improvement available — Google PSI was waiting 300-500ms
+// on mobile for the external font CSS to download before first paint.
+// The font and its visual character are identical to the previous setup.
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "700", "800"],
+  display: "swap",
+  variable: "--font-jakarta",
+});
 
 const SITE = "https://smart-space.ie";
 
@@ -145,12 +159,8 @@ export default function RootLayout({
   return (
     <html lang="en-IE">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet"
-        />
+        {/* Font is now loaded via next/font (self-hosted, no render-blocking
+            external CSS, no preconnect needed). See `jakarta` constant. */}
         {/* Google Ads + GA4 global tag (both use gtag.js) */}
         <script async src={`https://www.googletagmanager.com/gtag/js?id=${GTAG_ID}`} />
         <script
@@ -208,10 +218,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body
-        className="antialiased bg-white text-gray-900"
-        style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}
-      >
+      <body className={`${jakarta.className} antialiased bg-white text-gray-900`}>
         <CartProvider>
           <GclidCapture />
           <PhoneClickTracker />
