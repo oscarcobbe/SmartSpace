@@ -30,12 +30,7 @@ const SERVICE_SCHEMA = {
     availability: "https://schema.org/InStock",
     url: `${SITE}/services/single`,
   },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "5",
-    bestRating: "5",
-    reviewCount: "100",
-  },
+  // aggregateRating intentionally omitted: see bundles/driveway/page.tsx.
 };
 
 const BREADCRUMB_SCHEMA = {

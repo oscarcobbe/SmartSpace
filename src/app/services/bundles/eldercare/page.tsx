@@ -52,12 +52,7 @@ export default async function EldercareBundlePage() {
       availability: "https://schema.org/InStock",
       url: `${SITE}/services/bundles/eldercare`,
     },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "5",
-      bestRating: "5",
-      reviewCount: "100",
-    },
+    // aggregateRating intentionally omitted: see driveway/page.tsx.
   };
 
   const breadcrumbSchema = {

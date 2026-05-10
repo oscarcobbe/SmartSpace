@@ -56,12 +56,11 @@ export default async function DrivewayBundlePage() {
       availability: "https://schema.org/InStock",
       url: `${SITE}/services/bundles/driveway`,
     },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "5",
-      bestRating: "5",
-      reviewCount: "100",
-    },
+    // aggregateRating intentionally omitted: Google's review-snippet
+    // policy flags AggregateRating on a generic Service page without
+    // per-review markup as self-serving. The site-wide rating lives on
+    // the LocalBusiness schema in src/app/layout.tsx, which IS the
+    // supported pattern.
   };
 
   const breadcrumbSchema = {

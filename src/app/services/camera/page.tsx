@@ -34,12 +34,7 @@ export default async function CameraServicePage() {
       { "@type": "AdministrativeArea", name: "Dublin" },
       { "@type": "AdministrativeArea", name: "Leinster" },
     ],
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "5",
-      bestRating: "5",
-      reviewCount: "100",
-    },
+    // aggregateRating intentionally omitted: see bundles/driveway/page.tsx.
   };
   const breadcrumbSchema = {
     "@context": "https://schema.org",

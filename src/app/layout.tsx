@@ -82,7 +82,10 @@ const jsonLd = {
         areaServed: "IE",
         availableLanguage: "en",
       },
-      sameAs: [],
+      // sameAs intentionally omitted (empty array triggers a non-critical
+      // "missing field" warning in Google's Rich Results Test). Re-add
+      // when you have at least one canonical social profile to link to,
+      // e.g. ["https://www.google.com/maps/...", "https://www.facebook.com/..."].
     },
     {
       "@type": "LocalBusiness",

@@ -50,12 +50,8 @@ export default async function WholeHomeBundlePage() {
       availability: "https://schema.org/InStock",
       url: `${SITE}/services/bundles/whole-home`,
     },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "5",
-      bestRating: "5",
-      reviewCount: "100",
-    },
+    // aggregateRating intentionally omitted: see driveway/page.tsx
+    // for the rationale. Site-wide rating lives on LocalBusiness.
   };
 
   const breadcrumbSchema = {
