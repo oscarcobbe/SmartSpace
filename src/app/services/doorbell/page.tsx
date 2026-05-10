@@ -166,6 +166,47 @@ export default async function DoorbellServicePage() {
             Don&apos;t see what you need? Click here to contact us
           </Link>
         </div>
+
+        {/* Long-form content for SEO + decision support */}
+        <section className="mt-20 max-w-3xl">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4">
+            Why a Ring Video Doorbell for Dublin homes
+          </h2>
+          <div className="space-y-4 text-gray-700 leading-relaxed">
+            <p>
+              The Ring Video Doorbell is the single most-installed smart device
+              in Irish homes, and we install several every working day across
+              Dublin and Leinster. The reason it sticks is practical: An Post,
+              DPD, FedEx and the major couriers all leave packages at the front
+              door, so being able to see and speak to a delivery driver from the
+              kitchen, the back garden, or away from the house solves an
+              everyday inconvenience as much as a security concern.
+            </p>
+            <p>
+              We supply two tiers. The Plus model gives you 1080p video with
+              colour night vision and is the right choice for most Dublin
+              terraced and semi-D properties where the doorbell is well-lit.
+              The Pro model adds Retinal 2K video, 3D motion detection (so it
+              ignores cars on the street and only alerts on people approaching
+              the door), and pre-roll buffering — meaning the four seconds
+              before a motion event are also captured, so you don&apos;t miss
+              the start of an incident.
+            </p>
+            <p>
+              Every doorbell installation we do includes a Ring Chime so you
+              hear the bell anywhere in the house without needing to be tied
+              to your phone. We also re-use your existing wired doorbell
+              transformer where one exists, which usually saves about €60 vs.
+              running new mains. Installation typically takes under an hour
+              and we walk through the Ring app with you before we leave.
+            </p>
+            <p className="text-sm text-gray-500">
+              Related: <Link href="/services/camera" className="text-brand-700 underline hover:text-brand-800">Floodlight Cameras</Link>{" "}for areas the doorbell doesn&apos;t cover,{" "}
+              <Link href="/services/bundles/driveway" className="text-brand-700 underline hover:text-brand-800">Driveway Bundle</Link>{" "}to add a driveway camera at a discount, or{" "}
+              <Link href="/services/free-consultation" className="text-brand-700 underline hover:text-brand-800">Book a free home survey</Link>.
+            </p>
+          </div>
+        </section>
       </div>
     </div>
     </>

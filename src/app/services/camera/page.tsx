@@ -155,6 +155,48 @@ export default async function CameraServicePage() {
             Don&apos;t see what you need? Click here to contact us
           </Link>
         </div>
+
+        {/* Long-form content for SEO + decision support */}
+        <section className="mt-20 max-w-3xl">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4">
+            Why a Ring Floodlight Camera for Dublin and Leinster homes
+          </h2>
+          <div className="space-y-4 text-gray-700 leading-relaxed">
+            <p>
+              The Ring Floodlight Cam is the device we install when a customer
+              wants to cover an area the doorbell can&apos;t see — typically a
+              driveway, side passage, rear garden, or detached shed or garage.
+              Because it doubles as a security floodlight, most installs replace
+              an existing PIR floodlight rather than add to your fittings, so
+              the wiring is usually already where it needs to be.
+            </p>
+            <p>
+              We install two tiers. The Plus model gives you 1080p video with
+              two-way audio and a 110-decibel siren, which is the right choice
+              for standard Dublin gardens and shorter driveways. The Pro model
+              adds Retinal 2K video, audio plus video pre-roll, and Bird&apos;s
+              Eye View — a top-down map of where motion was detected on your
+              property. For longer driveways with parked cars, the Pro&apos;s
+              wider field of view is the difference between catching a plate
+              and not.
+            </p>
+            <p>
+              Installation typically takes between an hour and two hours
+              depending on whether new mains cabling is needed. We position the
+              camera at a height and angle that captures usable footage in low
+              light, and we configure the motion zones so the camera ignores
+              the road and the next-door driveway and only alerts on motion
+              within your boundary. Every install includes a walkthrough of the
+              Ring app and the Smart Lighting integration if you have other
+              Ring lights on the property.
+            </p>
+            <p className="text-sm text-gray-500">
+              Related: <Link href="/services/doorbell" className="text-brand-700 underline hover:text-brand-800">Video Doorbells</Link>{" "}for the front door,{" "}
+              <Link href="/services/bundles/whole-home" className="text-brand-700 underline hover:text-brand-800">Whole Home Bundle</Link>{" "}for full perimeter coverage at a discount, or{" "}
+              <Link href="/services/free-consultation" className="text-brand-700 underline hover:text-brand-800">Book a free home survey</Link>.
+            </p>
+          </div>
+        </section>
       </div>
     </div>
     </>
