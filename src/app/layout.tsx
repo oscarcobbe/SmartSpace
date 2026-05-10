@@ -6,6 +6,7 @@ import CartDrawer from "@/components/CartDrawer";
 import { CartProvider } from "@/context/CartContext";
 import GclidCapture from "@/components/GclidCapture";
 import CookieBanner from "@/components/CookieBanner";
+import PhoneClickTracker from "@/components/PhoneClickTracker";
 
 const SITE = "https://smart-space.ie";
 
@@ -213,6 +214,7 @@ export default function RootLayout({
       >
         <CartProvider>
           <GclidCapture />
+          <PhoneClickTracker />
           <Navbar />
           <main className="min-h-screen">{children}</main>
           <CartDrawer />

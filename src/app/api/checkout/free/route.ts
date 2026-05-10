@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import { Resend } from "resend";
 import { createBookingEvent } from "@/lib/calendly";
 import { logLead, type AttributionRecord } from "@/lib/leads";
+import { fireServerConversion } from "@/lib/server-conversions";
 
 interface CartItem {
   productId: string;
@@ -130,8 +132,32 @@ export async function POST(request: Request) {
       source: "smart-space.ie",
     });
 
-    // Conversion tracking is handled client-side via gtag on the success page
-    return NextResponse.json({ success: true });
+    // Server-side conversion fire for the Free Consultation. Mirrors the
+    // contact + booking + Stripe-paid paths: the client-side gtag fire on
+    // the success page is unreliable (adblockers, consent denials, tab
+    // close) so we double-fire from the server. Same pattern: shared
+    // conversionId acts as transaction_id so Google Ads dedupes.
+    const conversionId = randomUUID();
+    const freeConsultLabel =
+      (process.env.NEXT_PUBLIC_GADS_FREE_CONSULT_SEND_TO || "")
+        .replace(/^AW-\d+\//, "") || "fH4ZCMHv7ZocEJfU6PxC";
+    const [firstName, ...rest] = (customer?.name?.trim() || "").split(/\s+/);
+    const lastName = rest.join(" ") || undefined;
+    await fireServerConversion({
+      gadsLabel: freeConsultLabel,
+      ga4EventName: "generate_lead",
+      value: 50, // matches FREE_CONSULTATION_VALUE on the success page
+      currency: "EUR",
+      transactionId: conversionId,
+      gclid: finalAttribution?.gclid || undefined,
+      email: customer?.email || undefined,
+      phone: customer?.phone || undefined,
+      firstName: firstName || undefined,
+      lastName,
+      extraParams: { lead_source: "free_consultation" },
+    });
+
+    return NextResponse.json({ success: true, conversionId });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
     console.error("Free checkout error:", message);

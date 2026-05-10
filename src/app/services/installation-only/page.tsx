@@ -242,7 +242,9 @@ export default function InstallationOnlyPage() {
                   );
                 })}
 
-                {/* Add to Cart */}
+                {/* Direct-to-Stripe — single-product page, no need to
+                    route through the cart drawer. Cuts the funnel from
+                    3 clicks (Add → drawer → Checkout) to 1 (Book Now). */}
                 {product && (
                   <AddToCartButton
                     productId="installation-only"
@@ -257,6 +259,8 @@ export default function InstallationOnlyPage() {
                     bookingSlot={bookingSelection?.timeSlot}
                     bookingLabel={bookingSelection ? `${bookingSelection.dateLabel} ${bookingSelection.slotLabel}` : undefined}
                     configuration={checkoutConfig}
+                    directCheckout
+                    directLabel="Book Installation Now"
                   />
                 )}
               </div>

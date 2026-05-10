@@ -221,6 +221,28 @@ export default function RingInstallationPage() {
             Professional installation by certified Irish installers. Wired or battery, every Ring,
             Eufy, Tapo, or Nest model. Configure your install and pick a date below.
           </p>
+
+          {/* Above-fold CTAs. Paid traffic on this LP needs an immediate
+              call-to-action: scrolling to the configure section is real
+              friction on mobile. Phone CTA on the left for users who
+              prefer to talk; "Book online" on the right for users who
+              want to self-serve. */}
+          <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 max-w-md mx-auto">
+            <a
+              href={`tel:${PHONE_TEL}`}
+              className="inline-flex items-center justify-center gap-2 bg-white border-2 border-gray-200 hover:border-brand-500 text-gray-900 hover:text-brand-700 font-semibold text-sm px-6 py-3.5 rounded-full transition-colors"
+            >
+              <Smartphone className="w-4 h-4" />
+              Call {PHONE_DISPLAY}
+            </a>
+            <a
+              href="#book"
+              className="inline-flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm px-6 py-3.5 rounded-full transition-colors shadow-md shadow-brand-500/20"
+            >
+              Book online
+              <CheckCircle2 className="w-4 h-4" />
+            </a>
+          </div>
         </div>
       </section>
 
@@ -321,7 +343,11 @@ export default function RingInstallationPage() {
                   );
                 })}
 
-                {/* Add to Cart */}
+                {/* Direct-to-Stripe checkout. Paid LP flow: 1 click,
+                    skips the cart drawer (which on a single-product LP
+                    is pure friction). The Stripe webhook on success
+                    fires the server-side conversion + creates the
+                    Calendly booking. */}
                 {product && (
                   <AddToCartButton
                     productId="installation-only"
@@ -336,6 +362,8 @@ export default function RingInstallationPage() {
                     bookingSlot={bookingSelection?.timeSlot}
                     bookingLabel={bookingSelection ? `${bookingSelection.dateLabel} ${bookingSelection.slotLabel}` : undefined}
                     configuration={checkoutConfig}
+                    directCheckout
+                    directLabel="Book Installation Now"
                   />
                 )}
               </div>
@@ -564,6 +592,30 @@ export default function RingInstallationPage() {
           </div>
         </div>
       </section>
+
+      {/* Mobile sticky bottom bar — visible only on small screens, only
+          on this paid LP. Tap-to-call on the left, anchor-to-form on
+          the right. The phone-call link triggers PhoneClickTracker
+          which fires both the Google Ads phone-call conversion AND a
+          GA4 generate_lead event. */}
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-200 px-3 py-2.5 flex items-center gap-2 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
+        <a
+          href={`tel:${PHONE_TEL}`}
+          className="flex-1 inline-flex items-center justify-center gap-2 bg-white border-2 border-gray-200 text-gray-900 font-semibold text-sm py-3 rounded-full"
+        >
+          <Smartphone className="w-4 h-4" />
+          Call
+        </a>
+        <a
+          href="#book"
+          className="flex-[1.2] inline-flex items-center justify-center gap-2 bg-brand-500 text-white font-semibold text-sm py-3 rounded-full"
+        >
+          Book online
+          <CheckCircle2 className="w-4 h-4" />
+        </a>
+      </div>
+      {/* Spacer so the sticky bar doesn't cover the last section content */}
+      <div className="lg:hidden h-16" aria-hidden="true" />
     </div>
   );
 }

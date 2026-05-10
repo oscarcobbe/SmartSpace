@@ -109,13 +109,13 @@ export default function CookieBanner() {
       <p className="text-xs sm:text-sm text-gray-600 leading-relaxed mb-4">
         We use cookies to measure ad performance and understand how visitors use the site. You can
         accept all, or only essential cookies. You can change your choice anytime. See our{" "}
-        <a href="/privacy" className="text-brand-500 hover:underline">privacy policy</a> for details.
+        <a href="/privacy" className="text-brand-700 hover:underline">privacy policy</a> for details.
       </p>
       <div className="flex flex-col sm:flex-row gap-2">
         <button
           type="button"
           onClick={() => decide("granted")}
-          className="flex-1 bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold px-4 py-2.5 rounded-full transition-colors"
+          className="flex-1 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold px-4 py-2.5 rounded-full transition-colors"
         >
           Accept all
         </button>
