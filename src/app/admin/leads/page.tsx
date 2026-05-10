@@ -77,7 +77,6 @@ export default function AdminLeadsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [key, setKey] = useState("");
-  const [authed, setAuthed] = useState(false);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
   const [view, setView] = useState<DashView>("upcoming");
@@ -92,9 +91,10 @@ export default function AdminLeadsPage() {
         cache: "no-store",
       });
       if (res.status === 401) {
-        setError("Invalid key");
-        setAuthed(false);
-        setLoading(false);
+        // Key is stale or wrong. Clear it and reload so the layout's
+        // password gate kicks back in.
+        sessionStorage.removeItem("admin_key");
+        window.location.reload();
         return;
       }
       if (res.status === 429) {
@@ -106,7 +106,6 @@ export default function AdminLeadsPage() {
       setLeads(data.leads || []);
       setSourceErrors(data.sourceErrors || []);
       setStripeUpcoming(typeof data.stripeUpcomingPayout === "number" ? data.stripeUpcomingPayout : 0);
-      setAuthed(true);
     } catch {
       setError("Failed to load");
     } finally {
@@ -115,20 +114,13 @@ export default function AdminLeadsPage() {
   }, []);
 
   useEffect(() => {
-    const stored = sessionStorage.getItem("admin_key");
-    if (stored) {
-      setKey(stored);
-      fetchLeads(stored);
-    } else {
-      setLoading(false);
-    }
+    // Key is guaranteed populated by the time this runs because
+    // src/app/admin/layout.tsx blocks rendering until auth succeeds.
+    const stored = sessionStorage.getItem("admin_key") || "";
+    setKey(stored);
+    if (stored) fetchLeads(stored);
+    else setLoading(false);
   }, [fetchLeads]);
-
-  const handleAuth = (e: React.FormEvent) => {
-    e.preventDefault();
-    sessionStorage.setItem("admin_key", key);
-    fetchLeads(key);
-  };
 
   const filtered = leads.filter((l) => {
     const matchesSearch =
@@ -197,29 +189,10 @@ export default function AdminLeadsPage() {
     upcomingWorkValue += matched;
   }
 
-  if (!authed) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <form onSubmit={handleAuth} className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm">
-          <h1 className="text-xl font-bold text-gray-900 mb-4">Admin Access</h1>
-          {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
-          <input
-            type="password"
-            value={key}
-            onChange={(e) => setKey(e.target.value)}
-            placeholder="Enter admin key"
-            className="w-full border rounded-xl px-4 py-3 mb-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-          />
-          <button
-            type="submit"
-            className="w-full bg-gray-900 text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition-colors"
-          >
-            {loading ? "Loading..." : "View Dashboard"}
-          </button>
-        </form>
-      </div>
-    );
-  }
+  // Auth is enforced by src/app/admin/layout.tsx — by the time this
+  // page renders, sessionStorage["admin_key"] is guaranteed populated.
+  // If the API returns 401 mid-session, the layout's password gate kicks
+  // back in on next reload.
 
   return (
     <div className="min-h-screen bg-gray-50 pt-6 pb-12">
@@ -239,6 +212,14 @@ export default function AdminLeadsPage() {
             Refresh
           </button>
         </div>
+
+        {/* Fetch-level error (network failure, rate-limit, etc). 401 is
+            handled separately by reloading to the layout's auth gate. */}
+        {error && (
+          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
 
         {/*
           Per-source error banners. The /api/admin/leads endpoint runs three

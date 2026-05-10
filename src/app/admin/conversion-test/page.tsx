@@ -22,13 +22,10 @@
  * does NOT appear, the wiring is wrong and the page tells you what to
  * check.
  *
- * URL: /admin/conversion-test  (gated via the /admin hub — same admin
- * key. If no key is in sessionStorage we send the user to /admin to
- * authenticate, then they come back here.)
+ * URL: /admin/conversion-test  (auth enforced by src/app/admin/layout.tsx)
  */
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { getAttribution } from "@/lib/attribution";
 
 type FireResult = {
@@ -76,8 +73,6 @@ function readConsent(): ConsentSnapshot | null {
 }
 
 export default function ConversionTestPage() {
-  const router = useRouter();
-  const [authed, setAuthed] = useState<boolean | null>(null);
   const [gtagLoaded, setGtagLoaded] = useState(false);
   const [consent, setConsent] = useState<ConsentSnapshot | null>(null);
   const [attribution, setAttribution] = useState<ReturnType<typeof getAttribution> | null>(null);
@@ -85,20 +80,9 @@ export default function ConversionTestPage() {
   const [testEmail, setTestEmail] = useState("test+conversion@smart-space.ie");
   const [testPhone, setTestPhone] = useState("+353871234567");
 
-  // Gate the page behind the admin hub's key. If missing, bounce to
-  // /admin which will prompt for the key and let the user navigate back.
+  // Auth is enforced by src/app/admin/layout.tsx. By the time this
+  // component renders, the user is already authenticated.
   useEffect(() => {
-    const stored = sessionStorage.getItem("admin_key");
-    if (!stored) {
-      setAuthed(false);
-      router.replace("/admin");
-      return;
-    }
-    setAuthed(true);
-  }, [router]);
-
-  useEffect(() => {
-    if (!authed) return;
     const tick = () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const w = window as any;
@@ -109,15 +93,7 @@ export default function ConversionTestPage() {
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [authed]);
-
-  if (authed === null || authed === false) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-900 rounded-full animate-spin" />
-      </div>
-    );
-  }
+  }, []);
 
   function fire(type: "lead" | "booking" | "purchase" | "free_consult") {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
