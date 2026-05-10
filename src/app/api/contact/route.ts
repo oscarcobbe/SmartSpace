@@ -71,6 +71,19 @@ export async function POST(request: Request) {
       );
     }
 
+    // Reject malformed emails server-side. The browser's `type="email"`
+    // catches obvious typos but accepts e.g. `a@b` (no TLD). Tightening
+    // here saves us paying Resend to attempt invalid sends and stops
+    // bots that bypass the client validation.
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      return NextResponse.json({ error: "Please enter a valid email address" }, { status: 400 });
+    }
+
+    // Cap message length so a 10MB POST doesn't cost us Resend bandwidth.
+    if (message.trim().length > 4000) {
+      return NextResponse.json({ error: "Message is too long (max 4000 characters)" }, { status: 400 });
+    }
+
     const subjectKey = typeof subject === "string" ? subject : "";
     const subjectLabel = SUBJECT_LABELS[subjectKey] ?? (subjectKey ? subjectKey : "Website enquiry");
 

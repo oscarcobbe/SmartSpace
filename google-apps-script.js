@@ -302,13 +302,28 @@ function cleanTestRows() {
  *   The web-app URL stays the same; the redeploy is required for the
  *   new doGet to take effect.
  */
-var READ_TOKEN = "82f586bda2ebde763b0bb6371713f28f7fa31c423ffbed15d1e707c28bc6dbfe"; // mirror in Vercel as GOOGLE_SHEET_READ_TOKEN
+// READ_TOKEN MUST live in PropertiesService — NOT in this file. Anyone
+// with read access to this committed source code (anyone with repo
+// access) would otherwise have a complete read-handle to every lead
+// row in the Sheet. Set it once in the Apps Script editor:
+//
+//   File > Project Properties > Script Properties > +
+//     Property: READ_TOKEN
+//     Value:    <long random hex from `openssl rand -hex 32`>
+//
+// Then mirror that value into Vercel as GOOGLE_SHEET_READ_TOKEN. The
+// admin/leads route on the Next.js side reads through this token; both
+// sides must hold the same value.
+function getReadToken() {
+  return PropertiesService.getScriptProperties().getProperty("READ_TOKEN") || "";
+}
 
 function doGet(e) {
   var params = (e && e.parameter) || {};
   var token = params.token || "";
+  var expected = getReadToken();
 
-  if (!token || token !== READ_TOKEN) {
+  if (!token || !expected || token !== expected) {
     return ContentService
       .createTextOutput(JSON.stringify({ error: "Unauthorized" }))
       .setMimeType(ContentService.MimeType.JSON);

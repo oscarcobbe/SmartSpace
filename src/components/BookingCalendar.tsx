@@ -92,19 +92,36 @@ export default function BookingCalendar({ onSelectionChange, compact, heading = 
     };
   }, [reservationExpiry > 0]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Track which date the IN-FLIGHT availability fetch is for. If the
+  // user clicks date A, then quickly clicks date B before A's response
+  // arrives, A's slots would otherwise overwrite B's correct slots —
+  // showing stale availability to a paying customer. With a ref we
+  // discard any response whose date no longer matches the user's
+  // current selection.
+  const inFlightDateRef = useRef<string>("");
+
   const fetchSlots = useCallback(async (date: string) => {
+    inFlightDateRef.current = date;
     setLoadingSlots(true);
     setReservationError("");
     try {
-      const res = await fetch(`/api/calendar/availability?date=${date}&kind=${kind}`);
+      const res = await fetch(
+        `/api/calendar/availability?date=${date}&kind=${kind}`,
+        { signal: AbortSignal.timeout(8000) }
+      );
       const data = await res.json();
+      // Discard stale responses (user has clicked a different date
+      // since this fetch started).
+      if (inFlightDateRef.current !== date) return;
       setSlots(data.slots || []);
     } catch {
+      if (inFlightDateRef.current !== date) return;
       setSlots([]);
+      setReservationError("Couldn't load times for this date. Try another date or refresh.");
     } finally {
-      setLoadingSlots(false);
+      if (inFlightDateRef.current === date) setLoadingSlots(false);
     }
-  }, []);
+  }, [kind]);
 
   const reserveSelectedSlot = useCallback(async (date: string, slot: string) => {
     const cartId = totalQuantity > 0 ? "cart" : "anonymous";
@@ -146,11 +163,22 @@ export default function BookingCalendar({ onSelectionChange, compact, heading = 
     }
   }, [selectedDate, fetchSlots]);
 
-  // When slot is selected, try to reserve it
+  // Hard-guard against double-click race. `disabled={reserving}` on the
+  // button isn't enough: React batches setState, so two rapid clicks
+  // within the same animation frame both fire handleSlotSelect before
+  // the re-render disables the buttons. The ref check is synchronous —
+  // the second call sees `reservingRef.current === true` and bails.
+  const reservingRef = useRef(false);
+
   const handleSlotSelect = async (slotValue: string) => {
+    if (reservingRef.current) return;
+    reservingRef.current = true;
     setSelectedSlot(slotValue);
-    const success = await reserveSelectedSlot(selectedDate, slotValue);
-    if (!success) return;
+    try {
+      await reserveSelectedSlot(selectedDate, slotValue);
+    } finally {
+      reservingRef.current = false;
+    }
   };
 
   useEffect(() => {

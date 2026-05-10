@@ -49,14 +49,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No items provided" }, { status: 400 });
     }
 
+    // Anti-abuse: this route writes to Calendly (consuming real slots
+    // in Nigel's calendar) and triggers Resend emails (real cost). All
+    // three of these were previously bypass-able via curl:
+    //
+    //   - items wasn't validated against the catalogue, so an attacker
+    //     could put any productName string in (which then ends up in
+    //     Calendly Q&A, Sheet, and Nigel's email subject)
+    //   - customer was optional, falling back to nigel@smart-space.ie,
+    //     which meant an attacker could book Nigel a calendar slot
+    //     against himself silently
+    //   - no email format validation
+    //
+    // Now: products are restricted to a known free-consultation set,
+    // customer.email is required and format-validated.
+    const ALLOWED_FREE_PRODUCTS = new Set(["free-consultation"]);
+    const allItemsAreFree = items.every((i) => i.price === 0 && ALLOWED_FREE_PRODUCTS.has(i.productId));
+    if (!allItemsAreFree) {
+      console.warn("[free-checkout] rejected non-free or non-allow-listed product", { items });
+      return NextResponse.json({ error: "Invalid product for free checkout" }, { status: 400 });
+    }
+
+    if (!customer?.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email.trim())) {
+      return NextResponse.json({ error: "Valid customer email is required" }, { status: 400 });
+    }
+
     // Find the item with booking info
     const bookedItem = items.find((i) => i.bookingDate && i.bookingSlot);
 
     if (bookedItem?.bookingDate && bookedItem?.bookingSlot) {
-      const customerName = customer?.name || "Free Consultation";
-      const customerEmail = customer?.email || "nigel@smart-space.ie";
-      const customerPhone = customer?.phone;
-      const customerAddress = customer?.address;
+      const customerName = customer.name || "Free Consultation";
+      const customerEmail = customer.email.trim();
+      const customerPhone = customer.phone;
+      const customerAddress = customer.address;
 
       // Create Calendly booking for consultation with real customer details
       const result = await createBookingEvent({

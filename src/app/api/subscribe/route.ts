@@ -2,12 +2,25 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { logLead } from "@/lib/leads";
 
+// Single-source email regex used by every public-facing route.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export async function POST(request: Request) {
   try {
-    const { email } = await request.json();
+    const { email, consent } = (await request.json()) as { email?: string; consent?: boolean };
 
-    if (!email || !email.includes("@")) {
+    // Tightened from `.includes("@")` which accepted "a@" / "@b" / "@@" —
+    // every malformed string was costing Resend bandwidth and writing
+    // junk rows to the Sheet.
+    if (!email || typeof email !== "string" || !EMAIL_RE.test(email.trim())) {
       return NextResponse.json({ error: "Valid email required" }, { status: 400 });
+    }
+    // GDPR / ePrivacy: explicit consent must be captured for marketing.
+    if (consent !== true) {
+      return NextResponse.json(
+        { error: "Please confirm you'd like to receive marketing emails." },
+        { status: 400 }
+      );
     }
 
     const apiKey = process.env.RESEND_API_KEY;

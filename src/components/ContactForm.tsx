@@ -155,6 +155,7 @@ export default function ContactForm() {
             id="name"
             name="name"
             required
+            autoComplete="name"
             className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-gray-50"
             placeholder="John Murphy"
           />
@@ -168,6 +169,8 @@ export default function ContactForm() {
             id="email"
             name="email"
             required
+            autoComplete="email"
+            inputMode="email"
             className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-gray-50"
             placeholder="john@example.com"
           />

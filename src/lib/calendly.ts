@@ -65,6 +65,11 @@ export async function getAvailableSlots(dateStr: string, kind: EventKind = "inst
           "Content-Type": "application/json",
         },
         cache: "no-store",
+        // 6s ceiling — Calendly's API normally responds under 1s. Without
+        // this, a stalled API call would block the Vercel serverless
+        // function up to its 10s timeout, after which the user would see
+        // "couldn't lock in that slot" and bounce.
+        signal: AbortSignal.timeout(6000),
       }
     );
 
@@ -173,21 +178,37 @@ export async function createBookingEvent(params: {
     const firstName = nameParts[0] || "Customer";
     const lastName = nameParts.slice(1).join(" ") || undefined;
 
-    // Format phone to E.164 for Calendly (convert Irish local to +353)
+    // Format phone to E.164 for Calendly (convert Irish local to +353).
+    // Bug fix: previously a number that already started with "353" (no
+    // plus, e.g. "353871234567" — the way iOS sometimes returns
+    // contacts) was being prefixed AGAIN, producing "+353353871234567"
+    // which Calendly rejects for SMS reminders.
     let formattedPhone: string | undefined;
     if (params.phone) {
       const digits = params.phone.replace(/[\s\-()]/g, "");
       if (digits.startsWith("+")) {
         formattedPhone = digits;
+      } else if (digits.startsWith("00")) {
+        formattedPhone = "+" + digits.slice(2);
+      } else if (digits.startsWith("353")) {
+        formattedPhone = "+" + digits;
       } else if (digits.startsWith("0")) {
         formattedPhone = "+353" + digits.slice(1);
-      } else {
+      } else if (/^\d+$/.test(digits)) {
         formattedPhone = "+353" + digits;
+      } else {
+        // Unknown format — drop rather than send a malformed E.164.
+        formattedPhone = undefined;
       }
     }
 
     const res = await fetch("https://api.calendly.com/invitees", {
       method: "POST",
+      // 8s ceiling — bookings need a slightly longer budget than slot
+      // lookups since Calendly creates calendar events + sends emails.
+      // If exceeded, the Stripe webhook caller surfaces "calendlyStatus
+      // = failed" and SMS-alerts Nigel to book manually.
+      signal: AbortSignal.timeout(8000),
       headers: {
         Authorization: `Bearer ${CALENDLY_TOKEN}`,
         "Content-Type": "application/json",

@@ -176,6 +176,8 @@ export default function FreeConsultationPage() {
                   <input
                     id="consult-name"
                     type="text"
+                    required
+                    autoComplete="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="John Smith"
@@ -190,6 +192,9 @@ export default function FreeConsultationPage() {
                   <input
                     id="consult-phone"
                     type="tel"
+                    required
+                    inputMode="tel"
+                    autoComplete="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="085 123 4567"
@@ -204,6 +209,9 @@ export default function FreeConsultationPage() {
                   <input
                     id="consult-email"
                     type="email"
+                    required
+                    inputMode="email"
+                    autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="john@example.com"
@@ -218,6 +226,8 @@ export default function FreeConsultationPage() {
                   <input
                     id="consult-address"
                     type="text"
+                    required
+                    autoComplete="street-address"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                     placeholder="123 Main St, Dublin 12 or D12 AB34"

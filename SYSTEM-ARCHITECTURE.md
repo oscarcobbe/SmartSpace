@@ -200,13 +200,21 @@ Status column has data validation: New / Contacted / Quoted / Sold / Lost / No S
 
 ### Deployment URL
 
-`https://script.google.com/macros/s/AKfycbw9kznLPj3k9IkDzTLgZYKpOrbwqe3niv8gjREzlIRSm4dx5tjOeZXAZcvqID-Gw2-C1g/exec`
+The live deployment URL is stored in Vercel as `GOOGLE_SHEET_WEBHOOK_URL`
+(Production + Preview). Don't paste the URL into committed docs — it
+combined with the read token gives full Sheet read access from the
+public internet. Look it up in Vercel when needed.
 
 This URL changes if you do a "New deployment" instead of "Manage → New version". **Stick to "New version" on edits** — the URL stays the same and the Vercel env var doesn't need updating.
 
 ### Auth
 
-`READ_TOKEN` constant inside the Apps Script — must match `GOOGLE_SHEET_READ_TOKEN` env var in Vercel. Writes (`doPost`) are unauthenticated; reads (`doGet`) are token-gated.
+`READ_TOKEN` lives in the Apps Script project's Script Properties (NOT
+in the source file). Must match `GOOGLE_SHEET_READ_TOKEN` env var in
+Vercel. Writes (`doPost`) are unauthenticated; reads (`doGet`) are
+token-gated. To rotate: generate a new value with `openssl rand -hex 32`,
+update the Script Property in the Apps Script editor, update the env
+var in Vercel, redeploy the Apps Script (Manage → New version).
 
 ### Code path on the Vercel side
 

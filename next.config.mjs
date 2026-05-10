@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Default in Next 14 is FALSE. Strict mode catches a class of bugs
+  // (double-invocation reveals impure effects, missing useCallback
+  // deps, race conditions) BEFORE they hit production. No runtime cost
+  // in production builds — strict mode only double-invokes in dev.
+  reactStrictMode: true,
   images: {
     remotePatterns: [
       {
