@@ -4,6 +4,14 @@ import { useState, FormEvent } from "react";
 import { Send, Check } from "lucide-react";
 import { getAttribution } from "@/lib/attribution";
 
+// Google Ads conversion send_to value. Pulled from env so the user can
+// fix in Vercel without a code redeploy if the label changes (e.g. the
+// conversion is recreated in Google Ads). Falls back to the historic
+// label so prior behaviour is preserved when the env var isn't set.
+const GADS_LEAD_SEND_TO =
+  process.env.NEXT_PUBLIC_GADS_LEAD_SEND_TO ||
+  "AW-17978501655/u8cHCNyipZocEJfU6PxC";
+
 // Mirrors the pattern in booking/page.tsx — direct window.gtag fire is
 // reliable; the prior <Script> + conditional render approach silently
 // dropped the call after page hydration had finished.
@@ -15,24 +23,40 @@ function fireContactConversion(email: string, phone: string, conversionId?: stri
   if (typeof window === "undefined") return;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const gtag = (window as any).gtag;
-  if (typeof gtag !== "function") return;
+  if (typeof gtag !== "function") {
+    console.warn("[gtag] window.gtag not available — conversion NOT fired");
+    return;
+  }
   // Enhanced Conversions — Google hashes these client-side. Use
   // `email_address` (not bare `email`) per Google's user_data schema.
   gtag("set", "user_data", { email_address: email, phone_number: phone });
   gtag("event", "conversion", {
-    send_to: "AW-17978501655/u8cHCNyipZocEJfU6PxC",
+    send_to: GADS_LEAD_SEND_TO,
     value: 10.0,
     currency: "EUR",
     transaction_id: conversionId,
     user_data: { email_address: email, phone_number: phone },
+    // transport_type: 'beacon' uses navigator.sendBeacon under the hood,
+    // which the browser guarantees to deliver even if the page navigates
+    // immediately after the call. Without this the fire can be aborted
+    // mid-flight when the user closes the tab or hits Back.
+    transport_type: "beacon",
+    // event_callback fires after Google acks the conversion ping. Logged
+    // to the console so we can verify in Network/Console that the fire
+    // round-tripped successfully.
+    event_callback: () => console.log("[gtag] AW conversion ack:", conversionId),
   });
   gtag("event", "generate_lead", {
     currency: "EUR",
     value: 10,
     lead_source: "contact_form",
     transaction_id: conversionId,
+    transport_type: "beacon",
   });
-  console.log("[gtag] contact form conversion + lead fired", { conversionId });
+  console.log("[gtag] contact form conversion + lead fired", {
+    conversionId,
+    sendTo: GADS_LEAD_SEND_TO,
+  });
 }
 
 export default function ContactForm() {

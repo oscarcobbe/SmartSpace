@@ -158,7 +158,23 @@ export default function RootLayout({
               "window.dataLayer = window.dataLayer || [];",
               "function gtag(){dataLayer.push(arguments);}",
               "gtag('js', new Date());",
-              // ── Consent Mode v2 (REQUIRED for EEA/UK ad processing) ──
+              // ── Consent Mode v2 ADVANCED — the lever that brings denied-
+              // consent conversions back from /dev/null. ──
+              //   url_passthrough: true   → preserves the gclid query param
+              //     across internal navigation even when ad_storage='denied',
+              //     so the sequence "ad click → /ring-installation → /contact
+              //     → submit" still has the gclid attached on the final fire.
+              //     Without this, every Irish/EU paid click that doesn't
+              //     accept cookies loses its attribution after the first nav.
+              //   ads_data_redaction: true → when ad_storage='denied', send
+              //     anonymised conversion pings (no IP, no cookie id) instead
+              //     of dropping the ping entirely. Google then statistically
+              //     MODELS the conversion in Ads. Without this setting, ALL
+              //     denied-consent conversions are silently lost.
+              // These two MUST be set BEFORE the consent default below.
+              "gtag('set', 'url_passthrough', true);",
+              "gtag('set', 'ads_data_redaction', true);",
+              // ── Consent Mode v2 default (REQUIRED for EEA/UK ad processing) ──
               // Default everything to denied. CookieBanner.tsx fires
               // gtag('consent','update',…) once the user makes a choice.
               // This MUST run before any gtag('config',…) call.

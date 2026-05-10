@@ -5,8 +5,15 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, Home, Phone } from "lucide-react";
 
-const GADS_PAYMENT_TAG = "AW-17978501655/IofPCOiZuJkcEJfU6PxC";
-const GADS_FREE_CONSULTATION_TAG = "AW-17978501655/fH4ZCMHv7ZocEJfU6PxC";
+// Conversion send_to values. Pulled from env so the user can fix in
+// Vercel without a code redeploy if a label changes (e.g. the conversion
+// is recreated in Google Ads). Falls back to the historic labels.
+const GADS_PAYMENT_TAG =
+  process.env.NEXT_PUBLIC_GADS_PAYMENT_SEND_TO ||
+  "AW-17978501655/IofPCOiZuJkcEJfU6PxC";
+const GADS_FREE_CONSULTATION_TAG =
+  process.env.NEXT_PUBLIC_GADS_FREE_CONSULT_SEND_TO ||
+  "AW-17978501655/fH4ZCMHv7ZocEJfU6PxC";
 // Lead value for a booked complimentary consultation — calibrated for Google
 // Ads smart bidding. Too high = over-bidding on unqualified leads.
 const FREE_CONSULTATION_VALUE = 50;
@@ -81,14 +88,17 @@ function PaymentSuccessContent() {
         send_to: GADS_FREE_CONSULTATION_TAG,
         value: FREE_CONSULTATION_VALUE,
         currency: "EUR",
+        transport_type: "beacon",
+        event_callback: () => console.log("[gtag] AW free-consult ack"),
       });
       // GA4 recommended lead event — so GA4 reports this as a conversion too
       w.gtag("event", "generate_lead", {
         currency: "EUR",
         value: FREE_CONSULTATION_VALUE,
         lead_source: "free_consultation",
+        transport_type: "beacon",
       });
-      console.log("[gtag] free consultation conversion + lead fired");
+      console.log("[gtag] free consultation conversion + lead fired", { sendTo: GADS_FREE_CONSULTATION_TAG });
     } else if (state.status === "paid") {
       fired.current = true;
       const ud = userData(state.email, state.phone);
@@ -99,14 +109,17 @@ function PaymentSuccessContent() {
         value: state.amount,
         currency: state.currency,
         transaction_id: state.sessionId,
+        transport_type: "beacon",
+        event_callback: () => console.log("[gtag] AW paid-order ack:", state.sessionId),
       });
       // GA4 recommended ecommerce purchase event
       w.gtag("event", "purchase", {
         currency: state.currency,
         value: state.amount,
         transaction_id: state.sessionId,
+        transport_type: "beacon",
       });
-      console.log("[gtag] paid order conversion + purchase fired");
+      console.log("[gtag] paid order conversion + purchase fired", { sendTo: GADS_PAYMENT_TAG, sessionId: state.sessionId });
     }
   }, [state]);
 

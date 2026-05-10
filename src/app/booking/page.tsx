@@ -99,24 +99,35 @@ export default function BookingPage() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const w = window as any;
       if (typeof window !== "undefined" && typeof w.gtag === "function") {
+        const sendTo =
+          process.env.NEXT_PUBLIC_GADS_LEAD_SEND_TO ||
+          "AW-17978501655/u8cHCNyipZocEJfU6PxC";
         w.gtag("set", "user_data", {
           email_address: contact.email,
           phone_number: contact.phone,
         });
         w.gtag("event", "conversion", {
-          send_to: "AW-17978501655/u8cHCNyipZocEJfU6PxC",
+          send_to: sendTo,
           value: 10.0,
           currency: "EUR",
           transaction_id: json.conversionId,
           user_data: { email_address: contact.email, phone_number: contact.phone },
+          transport_type: "beacon",
+          event_callback: () => console.log("[gtag] AW conversion ack:", json.conversionId),
         });
         w.gtag("event", "generate_lead", {
           currency: "EUR",
           value: 10,
           lead_source: "booking_form",
           transaction_id: json.conversionId,
+          transport_type: "beacon",
         });
-        console.log("[gtag] booking conversion + lead fired", { conversionId: json.conversionId });
+        console.log("[gtag] booking conversion + lead fired", {
+          conversionId: json.conversionId,
+          sendTo,
+        });
+      } else {
+        console.warn("[gtag] window.gtag not available — booking conversion NOT fired");
       }
     } catch (err) {
       console.error("Booking failed:", err);

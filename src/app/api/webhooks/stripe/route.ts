@@ -434,8 +434,11 @@ export async function POST(req: NextRequest) {
     // dedupes when both client + server fire.
     const [firstName, ...rest] = (customerName || "").trim().split(/\s+/);
     const lastName = rest.join(" ") || undefined;
+    const paidLabel =
+      (process.env.NEXT_PUBLIC_GADS_PAYMENT_SEND_TO || "")
+        .replace(/^AW-\d+\//, "") || "IofPCOiZuJkcEJfU6PxC";
     await fireServerConversion({
-      gadsLabel: "IofPCOiZuJkcEJfU6PxC", // SmartSpace Paid Order
+      gadsLabel: paidLabel, // SmartSpace Paid Order
       ga4EventName: "purchase",
       value: amountTotal,
       currency,

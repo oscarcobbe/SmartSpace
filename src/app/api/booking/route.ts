@@ -170,8 +170,11 @@ export async function POST(request: Request) {
     const conversionId = randomUUID();
     const [firstName, ...rest] = name.trim().split(/\s+/);
     const lastName = rest.join(" ") || undefined;
+    const leadLabel =
+      (process.env.NEXT_PUBLIC_GADS_LEAD_SEND_TO || "")
+        .replace(/^AW-\d+\//, "") || "u8cHCNyipZocEJfU6PxC";
     await fireServerConversion({
-      gadsLabel: "u8cHCNyipZocEJfU6PxC", // Smart Space Lead (booking → lead)
+      gadsLabel: leadLabel, // Smart Space Lead (booking → lead)
       ga4EventName: "book_appointment",
       value: 10,
       currency: "EUR",

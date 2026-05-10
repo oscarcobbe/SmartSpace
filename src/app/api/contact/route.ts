@@ -190,8 +190,13 @@ export async function POST(request: Request) {
     const conversionId = randomUUID();
     const [firstName, ...rest] = (name?.trim() || "").split(/\s+/);
     const lastName = rest.join(" ") || undefined;
+    // Conversion label pulled from env so the user can fix it in Vercel
+    // without a code redeploy if it ever changes in Google Ads.
+    const leadLabel =
+      (process.env.NEXT_PUBLIC_GADS_LEAD_SEND_TO || "")
+        .replace(/^AW-\d+\//, "") || "u8cHCNyipZocEJfU6PxC";
     await fireServerConversion({
-      gadsLabel: "u8cHCNyipZocEJfU6PxC", // Smart Space Lead — same label as ContactForm
+      gadsLabel: leadLabel, // Smart Space Lead — same label as ContactForm
       ga4EventName: "generate_lead",
       value: 10,
       currency: "EUR",
