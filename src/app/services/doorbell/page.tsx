@@ -3,6 +3,8 @@ import { Check, Info } from "lucide-react";
 import { getAllProducts } from "@/lib/shopify";
 import { getProductImage } from "@/data/productImages";
 
+const SITE = "https://smart-space.ie";
+
 function formatPrice(amount: string, currencyCode: string) {
   // Drop `.00` on whole-euro prices sitewide; keep cents otherwise.
   const n = parseFloat(amount);
@@ -20,7 +22,42 @@ export default async function DoorbellServicePage() {
   const newHandles = ["plus-video-doorbell", "pro-video-doorbell"];
   const products = all.filter((p) => newHandles.includes(p.handle));
 
+  // Schema.org Service describing this category page so Google indexes
+  // it as a distinct commercial service offering, not a near-duplicate
+  // of /services/camera or the homepage.
+  const serviceSchema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: "Ring Video Doorbell Installation Dublin & Leinster",
+    serviceType: "Home Security Installation",
+    description:
+      "Professional installation of Ring Video Doorbells across Dublin and all of Leinster. Supplied, fitted, app-configured and walked-through with the homeowner. Ring Chime included with every install.",
+    provider: { "@id": `${SITE}/#localbusiness` },
+    areaServed: [
+      { "@type": "AdministrativeArea", name: "Dublin" },
+      { "@type": "AdministrativeArea", name: "Leinster" },
+    ],
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "5",
+      bestRating: "5",
+      reviewCount: "100",
+    },
+  };
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE },
+      { "@type": "ListItem", position: 2, name: "Services", item: `${SITE}/services` },
+      { "@type": "ListItem", position: 3, name: "Video Doorbells", item: `${SITE}/services/doorbell` },
+    ],
+  };
+
   return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
     <div className="pt-32 lg:pt-36 pb-16 lg:pb-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumbs */}
@@ -131,5 +168,6 @@ export default async function DoorbellServicePage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

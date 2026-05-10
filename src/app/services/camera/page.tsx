@@ -3,6 +3,8 @@ import { Check } from "lucide-react";
 import { getAllProducts } from "@/lib/shopify";
 import { getProductImage } from "@/data/productImages";
 
+const SITE = "https://smart-space.ie";
+
 function formatPrice(amount: string, currencyCode: string) {
   // Drop `.00` on whole-euro prices sitewide; keep cents otherwise.
   const n = parseFloat(amount);
@@ -20,7 +22,39 @@ export default async function CameraServicePage() {
   const newHandles = ["plus-floodlight-cam", "pro-floodlight-cam"];
   const products = all.filter((p) => newHandles.includes(p.handle));
 
+  const serviceSchema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: "Ring Floodlight Camera Installation Dublin & Leinster",
+    serviceType: "Home Security Installation",
+    description:
+      "Professional installation of Ring Floodlight Cams across Dublin and all of Leinster. We mount, wire, configure and walk through motion zones with the homeowner. Suitable for driveways, gardens, side passages and rear entrances.",
+    provider: { "@id": `${SITE}/#localbusiness` },
+    areaServed: [
+      { "@type": "AdministrativeArea", name: "Dublin" },
+      { "@type": "AdministrativeArea", name: "Leinster" },
+    ],
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "5",
+      bestRating: "5",
+      reviewCount: "100",
+    },
+  };
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE },
+      { "@type": "ListItem", position: 2, name: "Services", item: `${SITE}/services` },
+      { "@type": "ListItem", position: 3, name: "Floodlight Cameras", item: `${SITE}/services/camera` },
+    ],
+  };
+
   return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
     <div className="pt-32 lg:pt-36 pb-16 lg:pb-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumbs */}
@@ -123,5 +157,6 @@ export default async function CameraServicePage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

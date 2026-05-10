@@ -5,6 +5,45 @@ import { ClipboardCheck, Home, MessageCircle, Lightbulb, Shield, Star, Wrench, A
 import BookingCalendar from "@/components/BookingCalendar";
 import { getAttribution } from "@/lib/attribution";
 
+const SITE = "https://smart-space.ie";
+
+const SERVICE_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  name: "Free Home Security Consultation Dublin & Leinster",
+  serviceType: "Home Security Consultation",
+  description:
+    "Complimentary on-site home security consultation: we walk your property, check Wi-Fi coverage and existing wiring, identify blind spots, and send a written quote the same day. No card required, no obligation. Available across Dublin and all of Leinster.",
+  provider: { "@id": `${SITE}/#localbusiness` },
+  areaServed: [
+    { "@type": "AdministrativeArea", name: "Dublin" },
+    { "@type": "AdministrativeArea", name: "Leinster" },
+  ],
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "EUR",
+    availability: "https://schema.org/InStock",
+    url: `${SITE}/services/free-consultation`,
+  },
+  aggregateRating: {
+    "@type": "AggregateRating",
+    ratingValue: "5",
+    bestRating: "5",
+    reviewCount: "100",
+  },
+};
+
+const BREADCRUMB_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: SITE },
+    { "@type": "ListItem", position: 2, name: "Services", item: `${SITE}/services` },
+    { "@type": "ListItem", position: 3, name: "Free Consultation", item: `${SITE}/services/free-consultation` },
+  ],
+};
+
 const benefits = [
   {
     icon: Home,
@@ -96,6 +135,9 @@ export default function FreeConsultationPage() {
   };
 
   return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SERVICE_SCHEMA) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(BREADCRUMB_SCHEMA) }} />
     <div className="pt-32 lg:pt-36">
       {/* Book */}
       <section className="py-12 lg:py-20">
@@ -264,5 +306,6 @@ export default function FreeConsultationPage() {
         </div>
       </section>
     </div>
+    </>
   );
 }

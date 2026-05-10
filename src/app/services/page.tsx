@@ -4,6 +4,8 @@ import { getAllProducts, type ShopifyProduct } from "@/lib/shopify";
 import { getProductImage } from "@/data/productImages";
 import FreeConsultationCTA from "@/components/FreeConsultationCTA";
 
+const SITE = "https://smart-space.ie";
+
 const serviceCategories = [
   {
     title: "Video Doorbells",
@@ -49,10 +51,49 @@ const serviceCategories = [
   },
 ];
 
+// Each child page Google should know about, in priority order. Powers
+// the ItemList schema below — gives Google a clear hierarchy of services
+// to consider for indexing + sitelinks treatment.
+const SERVICE_INDEX = [
+  { name: "Video Doorbell Installation", url: `${SITE}/services/doorbell` },
+  { name: "Floodlight Camera Installation", url: `${SITE}/services/camera` },
+  { name: "Driveway Bundle", url: `${SITE}/services/bundles/driveway` },
+  { name: "Whole Home Bundle", url: `${SITE}/services/bundles/whole-home` },
+  { name: "Eldercare Bundle", url: `${SITE}/services/bundles/eldercare` },
+  { name: "Single Device Installation", url: `${SITE}/services/single` },
+  { name: "Installation Only (Customer Device)", url: `${SITE}/services/installation-only` },
+  { name: "Free Home Consultation", url: `${SITE}/services/free-consultation` },
+];
+
+const ITEM_LIST_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  name: "Smart Space Ring Installation Services",
+  description: "Service offerings from Smart Space, Dublin's #1 Ring installer.",
+  itemListElement: SERVICE_INDEX.map((s, i) => ({
+    "@type": "ListItem",
+    position: i + 1,
+    name: s.name,
+    url: s.url,
+  })),
+};
+
+const BREADCRUMB_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: SITE },
+    { "@type": "ListItem", position: 2, name: "Services", item: `${SITE}/services` },
+  ],
+};
+
 export default async function ServicesPage() {
   const products = await getAllProducts();
 
   return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ITEM_LIST_SCHEMA) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(BREADCRUMB_SCHEMA) }} />
     <div className="pt-32 lg:pt-36 pb-16 lg:pb-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
@@ -112,5 +153,6 @@ export default async function ServicesPage() {
         <FreeConsultationCTA />
       </div>
     </div>
+    </>
   );
 }

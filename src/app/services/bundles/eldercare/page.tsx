@@ -3,6 +3,8 @@ import { Check, Shield, Star, Wrench, Award, Info } from "lucide-react";
 import { getAllProducts } from "@/lib/shopify";
 import { getProductImage } from "@/data/productImages";
 
+const SITE = "https://smart-space.ie";
+
 function formatPrice(amount: string, currencyCode: string) {
   // Drop `.00` on whole-euro prices sitewide; keep cents otherwise.
   const n = parseFloat(amount);
@@ -19,8 +21,62 @@ export default async function EldercareBundlePage() {
   const all = await getAllProducts();
   const products = all.filter((p) => p.handle === "eldercare-security-bundle");
 
+  const prices = products
+    .map((p) => parseFloat(p.priceRange.minVariantPrice.amount))
+    .filter((n) => Number.isFinite(n) && n > 0);
+  const lowPrice = prices.length ? Math.min(...prices).toString() : "499";
+  const highPrice = prices.length ? Math.max(...prices).toString() : "499";
+
+  const serviceSchema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: "Ring Eldercare Bundle Installation Dublin & Leinster",
+    serviceType: "Home Security Installation",
+    description:
+      "Ring Video Doorbell plus a digital lockbox: built for elderly relatives who want to stay independent at home and the family members or carers who help look after them. Professionally installed across Dublin and all of Leinster.",
+    provider: { "@id": `${SITE}/#localbusiness` },
+    areaServed: [
+      { "@type": "AdministrativeArea", name: "Dublin" },
+      { "@type": "AdministrativeArea", name: "Leinster" },
+    ],
+    audience: {
+      "@type": "PeopleAudience",
+      audienceType: "Elderly homeowners and their families",
+    },
+    offers: {
+      "@type": "AggregateOffer",
+      lowPrice,
+      highPrice,
+      priceCurrency: "EUR",
+      offerCount: products.length || 1,
+      availability: "https://schema.org/InStock",
+      url: `${SITE}/services/bundles/eldercare`,
+    },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "5",
+      bestRating: "5",
+      reviewCount: "100",
+    },
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE },
+      { "@type": "ListItem", position: 2, name: "Services", item: `${SITE}/services` },
+      { "@type": "ListItem", position: 3, name: "Bundles", item: `${SITE}/services/bundles` },
+      { "@type": "ListItem", position: 4, name: "Eldercare Bundle", item: `${SITE}/services/bundles/eldercare` },
+    ],
+  };
+
   return (
-    <div className="pt-32 lg:pt-36 pb-16 lg:pb-24">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+
+      <div className="pt-32 lg:pt-36 pb-16 lg:pb-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumbs */}
         <nav className="flex items-center gap-2 text-sm text-gray-400 mb-8">
@@ -131,6 +187,48 @@ export default async function EldercareBundlePage() {
           </>
         )}
 
+        {/* Why this bundle for Dublin homes — unique long-form content
+            block; this is the most-different-from-the-others bundle so
+            the audience-specific framing matters most here. */}
+        <section className="mt-16 lg:mt-20 max-w-3xl">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4">
+            Built for elderly relatives and their families
+          </h2>
+          <div className="space-y-4 text-gray-700 leading-relaxed">
+            <p>
+              This bundle is for older parents who want to stay independent at
+              home, and the family members or carers who help look after them. A
+              Ring Video Doorbell with two-way audio means your parent can see
+              who&apos;s at the door without having to get up, and a digital
+              lockbox by the front door gives carers, district nurses or a trusted
+              neighbour secure key access without you leaving a key under a
+              flowerpot.
+            </p>
+            <p>
+              We&apos;ve installed this exact setup for over four hundred Dublin
+              and Leinster households where an elderly relative wanted to stay in
+              their own home. Installation usually takes an hour. We walk through
+              the Ring app with the family member who&apos;ll be the primary
+              contact, not the elderly homeowner: most parents won&apos;t use the
+              app themselves, but they appreciate that someone in the family can
+              see who&apos;s calling and check in on them.
+            </p>
+            <p>
+              The lockbox is fitted in a discreet but accessible spot, with a
+              four-digit code you can change anytime. The bundle pairs well with
+              an HSE home-care package or a private carer rota: you can change
+              the lockbox code when staff change without anyone needing to be at
+              the property. We can also add a Ring Chime upstairs so your parent
+              hears the doorbell from their bedroom or living room.
+            </p>
+            <p className="text-sm text-gray-500">
+              Related: <Link href="/services/bundles/driveway" className="text-brand-700 underline hover:text-brand-800">Driveway Bundle</Link>{" "}for full security coverage,{" "}
+              <Link href="/services/doorbell" className="text-brand-700 underline hover:text-brand-800">Single Video Doorbell</Link>{" "}without the lockbox, or{" "}
+              <Link href="/services/free-consultation" className="text-brand-700 underline hover:text-brand-800">Book a free home survey</Link>{" "}so we can assess the property with you.
+            </p>
+          </div>
+        </section>
+
         {/* Supplied & Fitted */}
         <section className="mt-16 lg:mt-24">
           <div className="bg-gradient-to-br from-[#1a1a1a] to-[#333] rounded-2xl p-8 sm:p-12 text-white text-center">
@@ -179,5 +277,6 @@ export default async function EldercareBundlePage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

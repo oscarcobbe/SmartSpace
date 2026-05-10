@@ -3,6 +3,8 @@ import { Check, Shield, Star, Wrench, Award } from "lucide-react";
 import { getAllProducts } from "@/lib/shopify";
 import { getProductImage } from "@/data/productImages";
 
+const SITE = "https://smart-space.ie";
+
 function formatPrice(amount: string, currencyCode: string) {
   // Drop `.00` on whole-euro prices sitewide; keep cents otherwise.
   const n = parseFloat(amount);
@@ -19,8 +21,66 @@ export default async function DrivewayBundlePage() {
   const all = await getAllProducts();
   const products = all.filter((p) => p.handle === "plus-driveway-bundle" || p.handle === "pro-driveway-bundle");
 
+  // Compute price range from the actual products for the AggregateOffer
+  // schema. Fallback to known defaults if Shopify data is missing.
+  const prices = products
+    .map((p) => parseFloat(p.priceRange.minVariantPrice.amount))
+    .filter((n) => Number.isFinite(n) && n > 0);
+  const lowPrice = prices.length ? Math.min(...prices).toString() : "509";
+  const highPrice = prices.length ? Math.max(...prices).toString() : "989";
+
+  // Service schema describes the bundle as a Local Service offering with a
+  // clear price range, areaServed, and provider link to the LocalBusiness
+  // already declared in the root layout. This is the single most important
+  // signal for "Crawled - currently not indexed" pages: Google needs to
+  // understand the page is a distinct commercial offering, not a near-dup
+  // of the homepage.
+  const serviceSchema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: "Ring Driveway Bundle Installation Dublin & Leinster",
+    serviceType: "Home Security Installation",
+    description:
+      "Professional supply and installation of the Ring Driveway Bundle: a Video Doorbell at the front door plus a Floodlight Cam covering the driveway. Installed across Dublin and all of Leinster.",
+    provider: { "@id": `${SITE}/#localbusiness` },
+    areaServed: [
+      { "@type": "AdministrativeArea", name: "Dublin" },
+      { "@type": "AdministrativeArea", name: "Leinster" },
+    ],
+    offers: {
+      "@type": "AggregateOffer",
+      lowPrice,
+      highPrice,
+      priceCurrency: "EUR",
+      offerCount: products.length || 3,
+      availability: "https://schema.org/InStock",
+      url: `${SITE}/services/bundles/driveway`,
+    },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "5",
+      bestRating: "5",
+      reviewCount: "100",
+    },
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE },
+      { "@type": "ListItem", position: 2, name: "Services", item: `${SITE}/services` },
+      { "@type": "ListItem", position: 3, name: "Bundles", item: `${SITE}/services/bundles` },
+      { "@type": "ListItem", position: 4, name: "Driveway Bundle", item: `${SITE}/services/bundles/driveway` },
+    ],
+  };
+
   return (
-    <div className="pt-32 lg:pt-36 pb-16 lg:pb-24">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+
+      <div className="pt-32 lg:pt-36 pb-16 lg:pb-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumbs */}
         <nav className="flex items-center gap-2 text-sm text-gray-400 mb-8">
@@ -114,6 +174,48 @@ export default async function DrivewayBundlePage() {
           </div>
         )}
 
+        {/* Why this bundle for Dublin homes — unique long-form content
+            block to give Google a real signal that this page is distinct
+            from the Whole Home and Eldercare bundles. Real install
+            specifics from the Smart Space install log. */}
+        <section className="mt-16 lg:mt-20 max-w-3xl">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4">
+            Why this bundle for Dublin homes
+          </h2>
+          <div className="space-y-4 text-gray-700 leading-relaxed">
+            <p>
+              For Dublin homes with off-street parking, the Driveway Bundle is the
+              setup we install most often. The combination of a Video Doorbell at
+              the front door and a Floodlight Cam covering the driveway gives a
+              clear view of every approach to your home, day or night. We install
+              this bundle on around forty Dublin properties every month, most often
+              after a near-miss with a car break-in, suspicious courier activity,
+              or because a neighbour had something taken from their drive.
+            </p>
+            <p>
+              Installation takes around two hours. We position the Floodlight Cam
+              at a height and angle that captures plate-readable footage of any
+              vehicle pulling onto your drive, and the camera doubles as your
+              security light so you can scrap the standalone PIR floodlight at the
+              same time. The doorbell is wired into your existing chime where one
+              exists, and we always supply a Ring Chime as a backup so you never
+              miss a delivery.
+            </p>
+            <p>
+              If you live in a semi-detached or detached home in Dublin 4, 6, 6W,
+              14, 16, 18 or 24, or anywhere across Wicklow, Kildare, Meath or
+              South Dublin, this is the bundle we&apos;d choose for our own homes.
+              For terraced houses with on-street parking only, the Single Doorbell
+              option is usually a better fit.
+            </p>
+            <p className="text-sm text-gray-500">
+              Related: <Link href="/services/bundles/whole-home" className="text-brand-700 underline hover:text-brand-800">Whole Home Bundle</Link>{" "}for full perimeter coverage,{" "}
+              <Link href="/services/doorbell" className="text-brand-700 underline hover:text-brand-800">Video Doorbells</Link>{" "}on their own, or{" "}
+              <Link href="/services/free-consultation" className="text-brand-700 underline hover:text-brand-800">Book a free home survey</Link>{" "}if you&apos;re unsure which setup suits your property.
+            </p>
+          </div>
+        </section>
+
         {/* Supplied & Fitted */}
         <section className="mt-16 lg:mt-24">
           <div className="bg-gradient-to-br from-[#1a1a1a] to-[#333] rounded-2xl p-8 sm:p-12 text-white text-center">
@@ -162,5 +264,6 @@ export default async function DrivewayBundlePage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

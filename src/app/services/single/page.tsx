@@ -1,9 +1,51 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+const SITE = "https://smart-space.ie";
+
 export const metadata: Metadata = {
   title: "Single Device Installation | Smart Space",
   description: "Choose a Ring Video Doorbell or External Camera — professionally supplied and installed across Leinster.",
+  alternates: { canonical: "/services/single" },
+};
+
+const SERVICE_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  name: "Single Ring Device Installation Dublin & Leinster",
+  serviceType: "Home Security Installation",
+  description:
+    "Single-device installation of either a Ring Video Doorbell or a Ring Floodlight Camera, supplied and fitted across Dublin and all of Leinster. Includes mounting, wiring, app setup and walkthrough.",
+  provider: { "@id": `${SITE}/#localbusiness` },
+  areaServed: [
+    { "@type": "AdministrativeArea", name: "Dublin" },
+    { "@type": "AdministrativeArea", name: "Leinster" },
+  ],
+  offers: {
+    "@type": "AggregateOffer",
+    lowPrice: "299",
+    highPrice: "599",
+    priceCurrency: "EUR",
+    offerCount: 4,
+    availability: "https://schema.org/InStock",
+    url: `${SITE}/services/single`,
+  },
+  aggregateRating: {
+    "@type": "AggregateRating",
+    ratingValue: "5",
+    bestRating: "5",
+    reviewCount: "100",
+  },
+};
+
+const BREADCRUMB_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: SITE },
+    { "@type": "ListItem", position: 2, name: "Services", item: `${SITE}/services` },
+    { "@type": "ListItem", position: 3, name: "Single Device", item: `${SITE}/services/single` },
+  ],
 };
 
 const choices = [
@@ -23,6 +65,9 @@ const choices = [
 
 export default function SingleDevicePage() {
   return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SERVICE_SCHEMA) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(BREADCRUMB_SCHEMA) }} />
     <div className="pt-32 lg:pt-36 pb-16 lg:pb-24">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumbs */}
@@ -79,7 +124,53 @@ export default function SingleDevicePage() {
             Don&apos;t see what you need? Click here to contact us
           </Link>
         </div>
+
+        {/* Long-form content for SEO + decision support */}
+        <section className="mt-20 max-w-3xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4">
+            Choosing between a doorbell and a camera
+          </h2>
+          <div className="space-y-4 text-gray-700 leading-relaxed">
+            <p>
+              Most Dublin homeowners book a Video Doorbell first. It&apos;s the
+              single most-installed Ring device in Ireland, partly because An
+              Post and the major couriers all leave packages at the front door,
+              and partly because seeing who&apos;s ringing the bell from the
+              kitchen or the back garden solves an everyday inconvenience as much
+              as a security concern. We supply a Ring Chime with every doorbell
+              installation, so you don&apos;t need to be tied to your phone to
+              hear it.
+            </p>
+            <p>
+              An External Floodlight Camera is the right choice when the area you
+              want covered isn&apos;t the front door — typically a driveway,
+              side passage, rear garden, or shed. The Floodlight Cam doubles as
+              your security light, so it usually replaces a separate PIR
+              floodlight rather than adding to your fittings. Cameras also have
+              a wider field of view than doorbells, so for a long driveway with
+              parked cars you&apos;ll cover more ground with one Floodlight Cam
+              than with multiple doorbells.
+            </p>
+            <p>
+              If you&apos;re unsure which fits your property best, the{" "}
+              <Link href="/services/free-consultation" className="text-brand-700 underline hover:text-brand-800">
+                free home survey
+              </Link>{" "}
+              is the right next step. We walk the property with you, identify the
+              blind spots, check Wi-Fi coverage, and send a written quote the
+              same day. If you want to compare full bundles, see the{" "}
+              <Link href="/services/bundles/driveway" className="text-brand-700 underline hover:text-brand-800">
+                Driveway Bundle
+              </Link>{" "}
+              and{" "}
+              <Link href="/services/bundles/whole-home" className="text-brand-700 underline hover:text-brand-800">
+                Whole Home Bundle
+              </Link>.
+            </p>
+          </div>
+        </section>
       </div>
     </div>
+    </>
   );
 }

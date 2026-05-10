@@ -6,6 +6,45 @@ import { getProductByHandle, ShopifyProduct } from "@/lib/shopify";
 import AddToCartButton from "@/components/AddToCartButton";
 import BookingCalendar from "@/components/BookingCalendar";
 
+const SITE = "https://smart-space.ie";
+
+const SERVICE_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  name: "Smart Doorbell & Camera Installation Dublin (Customer-Supplied Device)",
+  serviceType: "Home Security Installation",
+  description:
+    "Professional installation of Ring, Eufy, Nest and Tapo smart doorbells and cameras you've already bought. Mounting, wiring, app configuration and walkthrough included. Available across Dublin and all of Leinster.",
+  provider: { "@id": `${SITE}/#localbusiness` },
+  areaServed: [
+    { "@type": "AdministrativeArea", name: "Dublin" },
+    { "@type": "AdministrativeArea", name: "Leinster" },
+  ],
+  offers: {
+    "@type": "Offer",
+    price: "139",
+    priceCurrency: "EUR",
+    availability: "https://schema.org/InStock",
+    url: `${SITE}/services/installation-only`,
+  },
+  aggregateRating: {
+    "@type": "AggregateRating",
+    ratingValue: "5",
+    bestRating: "5",
+    reviewCount: "100",
+  },
+};
+
+const BREADCRUMB_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: SITE },
+    { "@type": "ListItem", position: 2, name: "Services", item: `${SITE}/services` },
+    { "@type": "ListItem", position: 3, name: "Installation Only", item: `${SITE}/services/installation-only` },
+  ],
+};
+
 const services = [
   {
     icon: Wrench,
@@ -103,6 +142,9 @@ export default function InstallationOnlyPage() {
   const productImage = product?.images.edges[0]?.node.url ?? "";
 
   return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SERVICE_SCHEMA) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(BREADCRUMB_SCHEMA) }} />
     <div className="pt-32 lg:pt-36">
       {/* Supported Brands */}
       <section className="py-12 bg-white border-b border-gray-100">
@@ -268,5 +310,6 @@ export default function InstallationOnlyPage() {
       </section>
 
     </div>
+    </>
   );
 }

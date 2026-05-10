@@ -3,6 +3,8 @@ import { Check, Shield, Star, Wrench, Award } from "lucide-react";
 import { getAllProducts } from "@/lib/shopify";
 import { getProductImage } from "@/data/productImages";
 
+const SITE = "https://smart-space.ie";
+
 function formatPrice(amount: string, currencyCode: string) {
   // Drop `.00` on whole-euro prices sitewide; keep cents otherwise.
   const n = parseFloat(amount);
@@ -21,8 +23,58 @@ export default async function WholeHomeBundlePage() {
     (p) => p.handle === "plus-whole-home-bundle" || p.handle === "pro-whole-home-bundle"
   );
 
+  const prices = products
+    .map((p) => parseFloat(p.priceRange.minVariantPrice.amount))
+    .filter((n) => Number.isFinite(n) && n > 0);
+  const lowPrice = prices.length ? Math.min(...prices).toString() : "987";
+  const highPrice = prices.length ? Math.max(...prices).toString() : "1499";
+
+  const serviceSchema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: "Ring Whole Home Bundle Installation Dublin & Leinster",
+    serviceType: "Home Security Installation",
+    description:
+      "Professional supply and installation of the Ring Whole Home Bundle: a Video Doorbell at the front, plus Floodlight Cams covering both the driveway and the rear of the property. Full perimeter coverage installed across Dublin and all of Leinster.",
+    provider: { "@id": `${SITE}/#localbusiness` },
+    areaServed: [
+      { "@type": "AdministrativeArea", name: "Dublin" },
+      { "@type": "AdministrativeArea", name: "Leinster" },
+    ],
+    offers: {
+      "@type": "AggregateOffer",
+      lowPrice,
+      highPrice,
+      priceCurrency: "EUR",
+      offerCount: products.length || 2,
+      availability: "https://schema.org/InStock",
+      url: `${SITE}/services/bundles/whole-home`,
+    },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "5",
+      bestRating: "5",
+      reviewCount: "100",
+    },
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE },
+      { "@type": "ListItem", position: 2, name: "Services", item: `${SITE}/services` },
+      { "@type": "ListItem", position: 3, name: "Bundles", item: `${SITE}/services/bundles` },
+      { "@type": "ListItem", position: 4, name: "Whole Home Bundle", item: `${SITE}/services/bundles/whole-home` },
+    ],
+  };
+
   return (
-    <div className="pt-32 lg:pt-36 pb-16 lg:pb-24">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+
+      <div className="pt-32 lg:pt-36 pb-16 lg:pb-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumbs */}
         <nav className="flex items-center gap-2 text-sm text-gray-400 mb-8">
@@ -116,6 +168,45 @@ export default async function WholeHomeBundlePage() {
           </div>
         )}
 
+        {/* Why this bundle for Dublin homes — unique long-form content
+            block to differentiate from Driveway and Eldercare. */}
+        <section className="mt-16 lg:mt-20 max-w-3xl">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4">
+            Why this bundle for Dublin homes
+          </h2>
+          <div className="space-y-4 text-gray-700 leading-relaxed">
+            <p>
+              The Whole Home Bundle is what we install when a customer wants their
+              entire property covered, not just the front door. A Video Doorbell
+              out front, a Floodlight Cam on the driveway, and a second Floodlight
+              Cam at the rear of the house gives full perimeter coverage with no
+              blind spots. This is the most common upgrade for larger Dublin
+              homes: four-bed semis in Castleknock, Sandyford and Stillorgan, and
+              detached properties out in Wicklow, Meath and Kildare.
+            </p>
+            <p>
+              Installation typically takes a half day. We run all the cabling
+              discreetly behind external trim or through the roof space so the
+              system looks built-in rather than retrofitted. We&apos;ll also set
+              up linked notifications across the cameras, so a person spotted at
+              the back triggers the doorbell to record at the same time. That&apos;s
+              the bit most DIY installs miss.
+            </p>
+            <p>
+              If you&apos;ve already got one Ring device and want to expand to full
+              coverage, we can usually upgrade you to this bundle at a discount
+              over starting from scratch. We&apos;ll match your existing camera
+              tier where possible (so all your devices use the same image
+              quality and app behaviour).
+            </p>
+            <p className="text-sm text-gray-500">
+              Related: <Link href="/services/bundles/driveway" className="text-brand-700 underline hover:text-brand-800">Driveway Bundle</Link>{" "}for front-only coverage,{" "}
+              <Link href="/services/installation-only" className="text-brand-700 underline hover:text-brand-800">Installation Only</Link>{" "}if you already own the gear, or{" "}
+              <Link href="/services/free-consultation" className="text-brand-700 underline hover:text-brand-800">Book a free home survey</Link>{" "}for a tailored quote.
+            </p>
+          </div>
+        </section>
+
         {/* Supplied & Fitted */}
         <section className="mt-16 lg:mt-24">
           <div className="bg-gradient-to-br from-[#1a1a1a] to-[#333] rounded-2xl p-8 sm:p-12 text-white text-center">
@@ -164,5 +255,6 @@ export default async function WholeHomeBundlePage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
