@@ -6,6 +6,11 @@ import { logLead, type AttributionRecord } from "@/lib/leads";
 import { fireServerConversion } from "@/lib/server-conversions";
 import { sendToCrm } from "@/lib/crm";
 
+
+// POST routes are inherently dynamic but explicit is better — without
+// this, Next.js may try static optimization on a future major.
+export const dynamic = "force-dynamic";
+
 const SUBJECT_LABELS: Record<string, string> = {
   general: "General Enquiry",
   installation: "Installation Enquiry",

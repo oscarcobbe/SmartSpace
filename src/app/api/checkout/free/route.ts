@@ -5,6 +5,10 @@ import { createBookingEvent } from "@/lib/calendly";
 import { logLead, type AttributionRecord } from "@/lib/leads";
 import { fireServerConversion } from "@/lib/server-conversions";
 
+// POST routes are inherently dynamic but explicit is better — without
+// this, Next.js may try static optimization on a future major.
+export const dynamic = "force-dynamic";
+
 interface CartItem {
   productId: string;
   name: string;

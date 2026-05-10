@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CalendarCheck } from "lucide-react";
 
 export default function Hero() {
   return (
@@ -34,15 +34,31 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Button — lower area */}
-      <div className="fade-up-delay-3 absolute z-10 bottom-16 sm:bottom-32 lg:bottom-36 left-0 right-0 px-4 text-center">
-        <Link
-          href="/services/bundles"
-          className="btn-sheen group inline-flex items-center gap-2 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-600 text-white font-semibold text-sm px-9 py-3.5 rounded-full transition-all shadow-[0_10px_40px_-5px_rgba(242,130,34,0.55)] hover:shadow-[0_20px_60px_-5px_rgba(242,130,34,0.7)] hover:-translate-y-0.5 pulse-glow"
-        >
-          <span className="relative z-10">View Popular Bundles</span>
-          <ArrowRight className="relative z-10 w-4 h-4 transition-transform duration-500 group-hover:translate-x-1" />
-        </Link>
+      {/* Buttons — lower area. Two side-by-side CTAs:
+          - Primary (orange): Book Free Consultation → real conversion
+            page with Calendly + form. The previous single CTA pointed
+            to /services/bundles which is a relay tab with no conversion
+            mechanism — every paid click hitting the homepage was being
+            sent one click further from converting.
+          - Secondary (white): Popular Bundles → kept for users who want
+            to browse first. */}
+      <div className="fade-up-delay-3 absolute z-10 bottom-16 sm:bottom-32 lg:bottom-36 left-0 right-0 px-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 max-w-md sm:max-w-none mx-auto">
+          <Link
+            href="/services/free-consultation"
+            className="btn-sheen group inline-flex items-center justify-center gap-2 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-600 text-white font-semibold text-sm px-7 sm:px-9 py-3.5 rounded-full transition-all shadow-[0_10px_40px_-5px_rgba(242,130,34,0.55)] hover:shadow-[0_20px_60px_-5px_rgba(242,130,34,0.7)] hover:-translate-y-0.5 pulse-glow whitespace-nowrap"
+          >
+            <CalendarCheck className="relative z-10 w-4 h-4" />
+            <span className="relative z-10">Book Free Consultation</span>
+          </Link>
+          <Link
+            href="/services/bundles"
+            className="group inline-flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm hover:bg-white text-[#1C1A18] font-semibold text-sm px-7 sm:px-9 py-3.5 rounded-full border border-white/60 transition-all hover:-translate-y-0.5 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.25)] whitespace-nowrap"
+          >
+            <span>View Popular Bundles</span>
+            <ArrowRight className="w-4 h-4 transition-transform duration-500 group-hover:translate-x-1" />
+          </Link>
+        </div>
       </div>
     </section>
   );

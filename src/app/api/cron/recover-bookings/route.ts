@@ -1,7 +1,25 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { timingSafeEqual } from "crypto";
 
 export const dynamic = "force-dynamic";
+
+function safeBearerEqual(actual: string, expected: string): boolean {
+  // timingSafeEqual requires same length; pad/truncate both before
+  // comparison so we don't leak the secret length via timing.
+  const a = Buffer.from(actual);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length) return false;
+  try {
+    return timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] || c));
+}
 
 /**
  * Daily safety net — diagnoses paid Stripe orders that are missing a
@@ -76,10 +94,11 @@ async function fetchCalendlyInviteeEmails(calendlyToken: string): Promise<Set<st
 }
 
 export async function GET(request: Request) {
-  // Vercel cron auth — reject anything else.
+  // Vercel cron auth — reject anything else. Timing-safe to prevent the
+  // secret being recovered byte-by-byte via response-time differences.
   const auth = request.headers.get("authorization") ?? "";
   const expected = `Bearer ${process.env.CRON_SECRET ?? ""}`;
-  if (!process.env.CRON_SECRET || auth !== expected) {
+  if (!process.env.CRON_SECRET || !safeBearerEqual(auth, expected)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -113,7 +132,17 @@ export async function GET(request: Request) {
     const bookingLabel = String(md.booking_label ?? "");
     const amountTotal = (session.amount_total as number) ?? 0;
     const amount = (amountTotal / 100).toFixed(2);
-    const isTestOrder = parseFloat(amount) < 5 || /smart-space|smartspace|test/i.test(email);
+    // Test-row filter. Tightened from `/smart-space|smartspace|test/i`
+    // (which incorrectly matched real customers like
+    // `firstname@smartspace-design.com`) to: literal Smart Space staff
+    // mailbox emails, OR an explicit `+test` plus addressing tag, OR
+    // the Stripe test-orders sent by the team. Real customer emails
+    // are never excluded.
+    const isStaffEmail =
+      /@smart-space\.ie$/i.test(email) ||
+      /\+test\d*@/i.test(email) ||
+      /^oscarcobbe2017\+/i.test(email);
+    const isTestOrder = parseFloat(amount) < 5 || isStaffEmail;
 
     if (isTestOrder) continue;
     if (!bookingDate || !bookingSlot) continue; // some products legitimately have no install date
@@ -163,10 +192,14 @@ export async function GET(request: Request) {
   if (resendKey && resendFrom) {
     const futureCount = missed.filter((m) => !m.isPast).length;
     const pastCount = missed.filter((m) => m.isPast).length;
+    // Escape every Stripe-supplied field. Stripe sanitizes their own
+    // fields but we don't trust upstream data into our HTML — a custom
+    // product_name with `<script>` would otherwise inject into Nigel's
+    // inbox.
     const rows = missed
       .map(
         (m) =>
-          `<tr><td>${m.name}</td><td>${m.email}</td><td>${m.product}</td><td>${m.bookingLabel || m.bookingSlot}</td><td>${m.isPast ? "⚠️ PAST" : "🔧 future"}</td><td>€${m.amount}</td></tr>`
+          `<tr><td>${escapeHtml(m.name)}</td><td>${escapeHtml(m.email)}</td><td>${escapeHtml(m.product)}</td><td>${escapeHtml(m.bookingLabel || m.bookingSlot)}</td><td>${m.isPast ? "⚠️ PAST" : "🔧 future"}</td><td>€${escapeHtml(m.amount)}</td></tr>`
       )
       .join("");
     try {

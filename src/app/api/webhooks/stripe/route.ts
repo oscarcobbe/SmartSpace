@@ -7,6 +7,16 @@ import { fireServerConversion } from "@/lib/server-conversions";
 import { sendSms } from "@/lib/sms";
 import { formatEuro } from "@/lib/format";
 
+// EXPLICIT runtime + dynamic flags. The webhook calls req.text() to get
+// the raw body for Stripe signature verification (which uses Node's
+// crypto via Stripe SDK). On the edge runtime, req.text() can return an
+// empty body if the request has been parsed elsewhere, and crypto isn't
+// available. If Next ever defaults to edge for route handlers, signature
+// verification would silently fail and every webhook would 400. Locking
+// to nodejs prevents the mystery outage.
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 // In-memory idempotency cache — event IDs processed in the last hour.
 // For multi-instance deployments, swap for Redis/Upstash.
 const processedEvents = new Map<string, number>();

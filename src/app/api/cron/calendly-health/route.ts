@@ -1,8 +1,20 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { timingSafeEqual } from "crypto";
 import { getAvailableSlots, AVAILABLE_DAYS } from "@/lib/calendly";
 
 export const dynamic = "force-dynamic";
+
+function safeBearerEqual(actual: string, expected: string): boolean {
+  const a = Buffer.from(actual);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length) return false;
+  try {
+    return timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Daily Calendly availability sanity check.
@@ -40,7 +52,7 @@ function fmtDate(d: Date): string {
 export async function GET(request: Request) {
   const auth = request.headers.get("authorization") ?? "";
   const expected = `Bearer ${process.env.CRON_SECRET ?? ""}`;
-  if (!process.env.CRON_SECRET || auth !== expected) {
+  if (!process.env.CRON_SECRET || !safeBearerEqual(auth, expected)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

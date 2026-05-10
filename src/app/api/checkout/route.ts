@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { getProductByHandle } from "@/lib/shopify";
 import type { AttributionRecord } from "@/lib/leads";
 
+// POST routes are inherently dynamic but explicit is better — without
+// this, Next.js may try static optimization on a future major.
+export const dynamic = "force-dynamic";
+
 interface CartItem {
   productId: string;
   name: string;
@@ -55,33 +59,56 @@ async function resolveItems(items: CartItem[]): Promise<ResolvedItem[]> {
       throw new Error(`Unknown product: ${item.productId}`);
     }
 
-    // Verify the submitted price is within the product's variant range
-    // (prevents a manipulated client from sending e.g. €1 for a €500 bundle).
-    // Allow a 5% tolerance either side to absorb rounding / price updates
-    // mid-session.
-    const minPrice = parseFloat(product.priceRange.minVariantPrice.amount);
-    const maxPrice = parseFloat(product.priceRange.maxVariantPrice.amount);
-    if (item.price < minPrice * 0.95 || item.price > maxPrice * 1.05) {
-      throw new Error(
-        `Price out of range for ${item.productId}: submitted €${item.price}, expected €${minPrice}–€${maxPrice}`
-      );
-    }
-
-    const authoritativeCents = Math.round(item.price * 100);
-
-    // Resolve the matched variant from the customer's selectedOptions so we
-    // can record the variant title on the Stripe line item too. This makes
-    // the variant choice visible on the Stripe Dashboard + customer receipt
-    // even if metadata.configuration is ever stripped or unreadable.
+    // Resolve the matched variant from the customer's selectedOptions
+    // first — both for variant title AND for an authoritative price.
+    // The previous validation accepted any price within ±5% of the
+    // ENTIRE PRODUCT min/max range, which meant a Plus-tier (€299)
+    // submission for a product whose Pro tier is €499 would still be
+    // accepted at €474 (within 5% of €499). Now: validate against the
+    // SPECIFIC variant's price.
     let variantTitle: string | undefined;
+    let matchedVariantPrice: number | undefined;
     if (item.configuration && product.variants?.edges) {
       const matched = product.variants.edges.find((v) =>
         v.node.selectedOptions?.every((so) => item.configuration?.[so.name] === so.value)
       );
-      if (matched?.node?.title && matched.node.title !== "Default Title") {
-        variantTitle = matched.node.title;
+      if (matched?.node) {
+        if (matched.node.title && matched.node.title !== "Default Title") {
+          variantTitle = matched.node.title;
+        }
+        const p = parseFloat(matched.node.price?.amount ?? "");
+        if (Number.isFinite(p) && p > 0) matchedVariantPrice = p;
       }
     }
+
+    // Verify the submitted price is within range (prevents a manipulated
+    // client from sending e.g. €1 for a €500 bundle). 5% tolerance
+    // absorbs rounding / mid-session price updates. We anchor on the
+    // matched variant when we found one; otherwise fall back to the
+    // product range.
+    if (matchedVariantPrice !== undefined) {
+      if (item.price < matchedVariantPrice * 0.95 || item.price > matchedVariantPrice * 1.05) {
+        throw new Error(
+          `Price out of range for ${item.productId}: submitted €${item.price}, expected ~€${matchedVariantPrice}`
+        );
+      }
+    } else {
+      const minPrice = parseFloat(product.priceRange.minVariantPrice.amount);
+      const maxPrice = parseFloat(product.priceRange.maxVariantPrice.amount);
+      if (item.price < minPrice * 0.95 || item.price > maxPrice * 1.05) {
+        throw new Error(
+          `Price out of range for ${item.productId}: submitted €${item.price}, expected €${minPrice}–€${maxPrice}`
+        );
+      }
+    }
+
+    // Use the SERVER-resolved variant price as the source of truth
+    // when available (zero-trust on client). Falls back to the
+    // submitted-then-validated price for products with no variants
+    // (e.g. installation-only's Default Title).
+    const authoritativeCents = Math.round(
+      (matchedVariantPrice !== undefined ? matchedVariantPrice : item.price) * 100
+    );
 
     const lineItemTitle = variantTitle ? `${product.title} — ${variantTitle}` : product.title;
 

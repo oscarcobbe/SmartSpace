@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { logLead } from "@/lib/leads";
 
+
+// POST routes are inherently dynamic but explicit is better — without
+// this, Next.js may try static optimization on a future major.
+export const dynamic = "force-dynamic";
+
 // Single-source email regex used by every public-facing route.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

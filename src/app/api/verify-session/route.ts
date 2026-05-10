@@ -35,10 +35,18 @@ export async function GET(request: Request) {
     const paid = session.payment_status === "paid";
     const amount = typeof session.amount_total === "number" ? session.amount_total / 100 : 0;
     const currency = (session.currency ?? "eur").toUpperCase();
-    // Email / phone for enhanced conversions on the success page
-    const email = session.customer_details?.email ?? undefined;
-    const phone = session.customer_details?.phone ?? undefined;
-    return NextResponse.json({ paid, amount, currency, email, phone });
+    // PII REMOVED. Previously this endpoint returned the customer's
+    // email + phone in the response — convenient for Enhanced
+    // Conversions on the success page, but it also meant anyone with
+    // a session ID (which appears in the redirect URL, browser history,
+    // any Referer header, screenshots of the success page) could fetch
+    // the customer's email and phone.
+    //
+    // Enhanced Conversions still work without server-returned PII: the
+    // page already has the user's gclid (from localStorage) and Google
+    // Ads' built-in cookie matching for granted-consent users. Loss of
+    // match rate ≈ 5–10% in exchange for closing a real PII leak.
+    return NextResponse.json({ paid, amount, currency });
   } catch (err) {
     console.error("[verify-session] error:", err);
     return NextResponse.json({ error: "Verification failed" }, { status: 500 });
