@@ -130,8 +130,8 @@ export default async function DoorbellServicePage() {
                     <ul className="space-y-1.5 mb-4">
                       {[
                         product.handle === "pro-video-doorbell"
-                          ? "Pro HDR image quality"
-                          : "Sharp HDR image quality",
+                          ? "4K (2880×2880) video"
+                          : "2K (1920×1920) video",
                         "Professional installation",
                         "Ring Chime included",
                         "App setup & config",
@@ -178,14 +178,13 @@ export default async function DoorbellServicePage() {
               everyday inconvenience as much as a security concern.
             </p>
             <p>
-              We supply two tiers. The Plus model gives you 1080p video with
-              colour night vision and is the right choice for most Dublin
-              terraced and semi-D properties where the doorbell is well-lit.
-              The Pro model adds Sharp HDR video, 3D motion detection (so it
-              ignores cars on the street and only alerts on people approaching
-              the door), and pre-roll buffering — meaning the four seconds
-              before a motion event are also captured, so you don&apos;t miss
-              the start of an incident.
+              We supply two tiers. The Wired Doorbell Plus gives you 2K
+              (1920×1920) Head-to-Toe video with Low-Light Sight and is the
+              right choice for most Dublin terraced and semi-D properties.
+              The Wired Doorbell Pro steps up to 4K (2880×2880) with Audio+
+              two-way talk, plus 3D radar motion detection — so it ignores
+              cars on the street and only alerts when someone actually
+              approaches the door.
             </p>
             <p>
               Every doorbell installation we do includes a Ring Chime so you

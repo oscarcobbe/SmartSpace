@@ -156,8 +156,8 @@ export default async function DrivewayBundlePage() {
                     <ul className="space-y-1.5 mb-4">
                       {[
                         product.handle === "pro-driveway-bundle"
-                          ? "Pro-tier HDR image quality"
-                          : "HDR & HD image quality",
+                          ? "All-4K image quality (both)"
+                          : "2K Doorbell + 1080p Cam",
                         "Doorbell + Floodlight Cam",
                         "Professional installation",
                         "Ring Chime included",

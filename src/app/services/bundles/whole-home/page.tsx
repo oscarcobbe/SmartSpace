@@ -142,8 +142,8 @@ export default async function WholeHomeBundlePage() {
                     <ul className="space-y-1.5 mb-4">
                       {[
                         product.handle === "pro-whole-home-bundle"
-                          ? "Pro-tier HDR image quality"
-                          : "HDR & HD image quality",
+                          ? "All-4K image quality"
+                          : "2K Doorbell + 1080p Cams",
                         "Doorbell + 2x Floodlights",
                         "Full professional installation",
                         "Network optimisation",

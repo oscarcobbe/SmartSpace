@@ -119,8 +119,8 @@ export default async function CameraServicePage() {
                     <ul className="space-y-1.5 mb-4">
                       {[
                         product.handle === "pro-floodlight-cam"
-                          ? "Pro HDR image quality"
-                          : "1080p image quality",
+                          ? "4K (3840×2160) video"
+                          : "1080p HD video",
                         "Professional installation",
                         "Optimal positioning",
                         "App setup & config",
@@ -166,14 +166,15 @@ export default async function CameraServicePage() {
               the wiring is usually already where it needs to be.
             </p>
             <p>
-              We install two tiers. The Plus model gives you 1080p video with
-              two-way audio and a 110-decibel siren, which is the right choice
-              for standard Dublin gardens and shorter driveways. The Pro model
-              adds Sharp HDR video, audio plus video pre-roll, and Bird&apos;s
-              Eye View — a top-down map of where motion was detected on your
-              property. For longer driveways with parked cars, the Pro&apos;s
-              wider field of view is the difference between catching a plate
-              and not.
+              We install two tiers. The Floodlight Cam Wired Plus gives you
+              1080p HD video with Colour Night Vision, Two-Way Talk, a 105dB
+              siren, and 2,000 lumens of floodlighting. Right choice for
+              standard Dublin gardens and shorter driveways. The Floodlight
+              Cam Pro steps up to 4K (3840×2160) with Audio+ two-way talk,
+              radar-powered 3D Motion Detection, and an aerial-view map of
+              exactly where motion was detected. For longer driveways with
+              parked cars, the Pro&apos;s 4K resolution is the difference
+              between catching a number plate and not.
             </p>
             <p>
               Installation typically takes between an hour and two hours

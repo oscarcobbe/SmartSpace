@@ -13,46 +13,51 @@ export interface ProductFeatureSet {
 const featuresByHandle: Record<string, ProductFeatureSet> = {
   // ── New lineup: Video Doorbells ──
   "plus-video-doorbell": {
+    // All specs below match Ring's official product page (Wired Video
+    // Doorbell Plus, 2nd Gen) — verified against ring.com/eu/en, not
+    // inferred from product name.
     shortDescription:
-      "Get HDR image clarity and 6x zoom with our reimagined wired doorbell. Features include real-time Live View, Two-Way Talk, and instant motion alerts to your phone. Hardwired into your home's power for constant, reliable security, it is the perfect, affordable solution for families seeking doorstep oversight and total peace of mind.",
+      "Get 2K (1920×1920) image clarity with our reimagined wired doorbell. Features include 3D Motion Detection, real-time Live View, Two-Way Talk, and Low-Light Sight with Adaptive Night Vision. Hardwired into your home's power for constant, reliable security.",
     highlights: [
-      "Sharp HDR with 6x Enhanced Zoom",
-      "Head-to-Toe Video",
+      "2K HD video (1920×1920)",
+      "Head-to-Toe Video (140°×140°, 1:1)",
+      "3D Motion Detection with custom zones",
+      "Low-Light Sight with Adaptive Night Vision",
       "Live View & Two-Way Talk",
-      "Motion Detection",
-      "Always-on Power",
     ],
     specs: {
-      "Video Resolution": "Sharp HDR",
-      "Zoom": "6x Enhanced",
-      "Field of View": "Head-to-Toe (150° horizontal)",
-      "Audio": "Two-way talk with noise cancellation",
-      "Motion Detection": "Advanced motion zones",
-      "Power": "Hardwired (8-24V AC)",
-      "Connectivity": "Wi-Fi 802.11 b/g/n (2.4 GHz)",
-      "Weather Rating": "IPX5",
+      "Video Resolution": "2K (1920×1920)",
+      "Field of View": "140° Horizontal × 140° Vertical (1:1)",
+      "Night Vision": "Low-Light Sight with Adaptive Night Vision",
+      "Audio": "Two-Way Talk",
+      "Motion Detection": "3D Motion Detection with customisable zones",
+      "Power": "Hardwired (16–24 VAC, included transformer 24VDC 12W)",
+      "Connectivity": "Wi-Fi 6 (802.11ax), dual-band 2.4 / 5 GHz",
+      "Weather Rating": "Weather Resistant",
     },
   },
   "pro-video-doorbell": {
+    // Specs match Ring's Wired Video Doorbell Pro (3rd Gen) on
+    // ring.com/eu/en. The 4K claim is verified — Ring lists this model
+    // as 4K (2880×2880).
     shortDescription:
-      "Our most advanced wired doorbell features breakthrough HDR clarity and 10x zoom. This reimagined design includes radar-powered 3D motion alerts, enhanced two-way audio, and full-color night vision. Secure your home with crystal-clear video and real-time communication, ensuring you never miss a detail, day or night.",
+      "Our most advanced wired doorbell features 4K (2880×2880) video, 3D Motion Detection (radar-powered), and Audio+ two-way talk. Low-Light Sight with Adaptive Night Vision keeps every visitor visible day or night.",
     highlights: [
-      "Pro HDR",
-      "Low-Light Sight & Adaptive Night Vision",
-      "Wide Field of View",
-      "10x Enhanced Zoom",
-      "3D Motion Detection",
-      "Head-to-Toe Video",
+      "4K HD video (2880×2880)",
+      "Head-to-Toe Video (140°×140°, 1:1)",
+      "3D Motion Detection (radar-powered)",
+      "Low-Light Sight with Adaptive Night Vision",
+      "Two-Way Talk with Audio+",
     ],
     specs: {
-      "Video Resolution": "Pro HDR",
-      "Zoom": "10x Enhanced",
-      "Field of View": "Wide, head-to-toe",
-      "Night Vision": "Low-Light Sight with adaptive night vision & colour",
-      "Audio": "Enhanced two-way talk",
-      "Motion Detection": "3D Motion Detection (radar-powered)",
-      "Power": "Hardwired (16-24V AC)",
-      "Connectivity": "Dual-band Wi-Fi (2.4 / 5 GHz)",
+      "Video Resolution": "4K (2880×2880)",
+      "Field of View": "140° Horizontal × 140° Vertical (1:1)",
+      "Night Vision": "Low-Light Sight with Adaptive Night Vision",
+      "Audio": "Two-Way Talk with Audio+",
+      "Motion Detection": "3D Motion Detection with customisable zones",
+      "Power": "Hardwired (16–24 VAC, included transformer 24VDC 12W)",
+      "Connectivity": "Wi-Fi 6 (802.11ax), dual-band 2.4 / 5 GHz",
+      "Weather Rating": "−20°C to 48.5°C, Weather Resistant",
     },
   },
 
@@ -81,78 +86,92 @@ const featuresByHandle: Record<string, ProductFeatureSet> = {
     },
   },
   "pro-floodlight-cam": {
+    // Specs match Ring's Floodlight Cam Pro (2nd Gen) on ring.com/eu/en.
+    // 4K claim is verified — Ring lists this model as 4K (3840×2160).
     shortDescription:
-      "Our most advanced floodlight camera with breakthrough HDR clarity and 10x zoom. Radar-powered 3D Motion Detection identifies exactly where someone moved on an aerial map. 2000-lumen floodlights plus an 85dB siren light up and deter intruders — day or night, driveway or back garden.",
+      "Our most advanced floodlight camera with 4K (3840×2160) video, radar-powered 3D Motion Detection on an aerial map, and Audio+ two-way talk. 2000-lumen floodlights plus an 85dB siren light up and deter intruders — day or night, driveway or back garden.",
     highlights: [
-      "Pro HDR",
+      "4K HD video (3840×2160)",
+      "Wide Field of View (140°×85°)",
+      "3D Motion Detection (radar-powered)",
       "Low-Light Sight",
-      "Wide Field of View",
-      "10x Enhanced Zoom",
-      "85dB Siren & 2000 Lumen Floodlights",
-      "3D Motion Detection",
+      "85dB Siren & 2,000-lumen Floodlights",
+      "Two-Way Talk with Audio+",
     ],
     specs: {
-      "Video Resolution": "Pro HDR",
-      "Zoom": "10x Enhanced",
-      "Field of View": "Wide-angle",
-      "Floodlights": "2,000 lumens (dual LED)",
+      "Video Resolution": "4K (3840×2160)",
+      "Field of View": "140° Horizontal × 85° Vertical",
+      "Floodlights": "2,000 lumens (3000K warm white, adjustable)",
       "Siren": "85dB built-in",
       "Night Vision": "Low-Light Sight",
-      "Motion Detection": "3D Motion Detection (radar-powered)",
-      "Power": "Hardwired (110-240V AC)",
-      "Weather Rating": "IP55",
+      "Audio": "Two-Way Talk with Audio+ and noise cancellation",
+      "Motion Detection": "3D Motion Detection with customisable zones",
+      "Power": "Hardwired (100–240V AC)",
+      "Connectivity": "Wi-Fi 6 (802.11ax), dual-band 2.4 / 5 GHz",
+      "Weather Rating": "IP65",
     },
   },
 
   // ── New lineup: Bundles ──
   "plus-driveway-bundle": {
+    // Bundles a Wired Video Doorbell Plus (2K, 1920×1920) with a
+    // Floodlight Cam Wired Plus (1080p). Resolutions verified against
+    // ring.com/eu/en product pages.
     shortDescription:
-      "Secure your home with our driveway bundle, combining HDR video clarity and powerful floodlight protection. Use the Video Doorbell Plus for sharp doorstep oversight and Two-Way Talk, while the Floodlight Cam illuminates large areas with LED lights and a remote-activated siren. This hardwired system provides non-stop power, customisable motion zones, and instant phone alerts, ensuring the family stays connected and every visitor is seen, day or night. Bundle saves €50.",
+      "Secure your home with our driveway bundle, pairing the 2K Wired Video Doorbell Plus with the Floodlight Cam Wired Plus. Two-Way Talk on both devices, 2,000 lumens of motion-activated floodlighting, and a 105dB siren protect your front door and driveway day or night. Hardwired, professionally installed. Bundle saves €50.",
     highlights: [
-      "HDR & HD image quality",
-      "Ring Video Doorbell Plus + Floodlight Cam",
+      "2K Doorbell + 1080p Floodlight Cam",
+      "Ring Video Doorbell Plus + Floodlight Cam Plus",
       "Two-Way Talk on both devices",
       "2,000-lumen motion-activated floodlights",
-      "Customisable motion zones",
+      "3D Motion Detection on the doorbell",
       "Ring Chime included",
     ],
     specs: {},
   },
   "pro-driveway-bundle": {
+    // Bundles a Wired Video Doorbell Pro (4K, 2880×2880) with a
+    // Floodlight Cam Pro (4K, 3840×2160). Both 4K claims verified
+    // against Ring's official product pages.
     shortDescription:
-      "Our top-tier driveway bundle combines the Pro Video Doorbell with the Pro Floodlight Cam for uncompromising security at your front door and driveway. Radar-powered 3D Motion Detection, 10x zoom on both devices, and a powerful 85dB siren protect what matters most. Hardwired, always-on, and professionally installed. Bundle saves €50.",
+      "Our top-tier driveway bundle combines the 4K Pro Video Doorbell with the 4K Pro Floodlight Cam for the highest-resolution security at your front door and driveway. Radar-powered 3D Motion Detection, Audio+ on both devices, and a powerful 85dB siren protect what matters most. Hardwired, always-on, professionally installed. Bundle saves €50.",
     highlights: [
-      "Pro-tier HDR image quality",
+      "All-4K image quality (both devices)",
       "Ring Video Doorbell Pro + Floodlight Cam Pro",
       "3D Motion Detection on both devices",
-      "10x zoom on both cameras",
+      "Audio+ two-way talk on both cameras",
       "85dB siren + 2,000-lumen floodlights",
       "Ring Chime included",
     ],
     specs: {},
   },
   "plus-whole-home-bundle": {
+    // Bundles a Wired Video Doorbell Plus (2K) with TWO Floodlight Cam
+    // Plus units (1080p each). Siren on Floodlight Plus is 105dB per
+    // Ring's spec.
     shortDescription:
-      "Our most popular full perimeter solution for 360-degree property awareness. This bundle features the crisp Sharp HDR Video Doorbell Wired for your entrance, paired with two Floodlight Cam Wired Plus units to provide high-intensity, motion-activated light to both your driveway and back garden. With 4000 total lumens of floodlighting and two 105dB sirens, this setup eliminates blind spots and deters intruders from every angle. Includes a Ring Chime. Bundle saves €100.",
+      "Our most popular full perimeter solution. The 2K Wired Video Doorbell Plus for your entrance, paired with two Floodlight Cam Wired Plus units to cover both the driveway and back garden. 4,000 total lumens of floodlighting and two 105dB sirens eliminate blind spots from every angle. Includes a Ring Chime. Bundle saves €100.",
     highlights: [
-      "HDR & HD image quality",
-      "Video Doorbell Plus + 2x Floodlight Cam Plus",
+      "2K Doorbell + 2× 1080p Floodlight Cams",
+      "Doorbell Plus + 2× Floodlight Cam Plus",
       "4,000 total lumens of floodlighting",
-      "Two 105dB sirens for intruder deterrence",
+      "Two 105dB sirens",
       "Eliminates blind spots front and rear",
       "Ring Chime included",
     ],
     specs: {},
   },
   "pro-whole-home-bundle": {
+    // Bundles a Wired Video Doorbell Pro (4K) with TWO Floodlight Cam
+    // Pro units (4K each). All three devices 4K — Ring's highest tier.
     shortDescription:
-      "The ultimate whole-home security setup. The Ring Video Doorbell Pro at your entrance paired with two Floodlight Cam Pro units gives you all-pro-tier-HDR coverage of the front door, driveway, and back garden. 3D Motion Detection pinpoints activity on an aerial map. 4,000 lumens of floodlighting and 85dB sirens deter intruders day and night. Includes a Ring Chime. Bundle saves €100.",
+      "The ultimate whole-home setup. The 4K Pro Video Doorbell at your entrance paired with two 4K Pro Floodlight Cams gives you the highest-resolution coverage of the front door, driveway, and back garden. 3D Motion Detection pinpoints activity on an aerial map. 4,000 total lumens and two 85dB sirens. Includes a Ring Chime. Bundle saves €100.",
     highlights: [
-      "Pro-tier HDR image quality",
-      "Video Doorbell Pro + 2x Floodlight Cam Pro",
+      "All-4K image quality (every device)",
+      "Doorbell Pro + 2× Floodlight Cam Pro",
       "3D Motion Detection on every device",
-      "4,000 total lumens of floodlighting",
-      "Two 85dB built-in sirens",
+      "Audio+ two-way talk on every device",
+      "4,000 total lumens + two 85dB sirens",
       "Ring Chime included",
     ],
     specs: {},
