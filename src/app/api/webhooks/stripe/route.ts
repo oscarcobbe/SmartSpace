@@ -6,6 +6,7 @@ import { logLead } from "@/lib/leads";
 import { fireServerConversion } from "@/lib/server-conversions";
 import { sendSms } from "@/lib/sms";
 import { formatEuro } from "@/lib/format";
+import { sendSiteAlert } from "@/lib/site-alerts";
 
 // EXPLICIT runtime + dynamic flags. The webhook calls req.text() to get
 // the raw body for Stripe signature verification (which uses Node's
@@ -330,6 +331,13 @@ export async function POST(req: NextRequest) {
   }
   processedEvents.set(event.id, Date.now());
 
+  // Wrap the entire post-signature event-handling block so any unexpected
+  // throw fires a site-alert AND returns 500 (so Stripe retries with
+  // exponential backoff). Without this, a transient logLead/Calendly/
+  // Resend failure inside an event handler would surface as a generic 500
+  // in Stripe's webhook dashboard and Nigel would never see it.
+  try {
+
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
 
@@ -634,4 +642,37 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ received: true });
+  } catch (handlerErr) {
+    console.error(
+      `[stripe webhook] handler threw for event ${event.id} type=${event.type}:`,
+      handlerErr
+    );
+    // Remove from idempotency cache so Stripe's retry actually re-attempts
+    // this event ID instead of being de-duped as "already processed".
+    processedEvents.delete(event.id);
+    await sendSiteAlert({
+      category: "stripe-webhook",
+      severity: "critical",
+      summary: `Stripe webhook handler threw on ${event.type}`,
+      details: [
+        `Stripe event ID:    ${event.id}`,
+        `Event type:         ${event.type}`,
+        `Event created:      ${new Date((event.created ?? 0) * 1000).toISOString()}`,
+        "",
+        "The webhook returned 500 so Stripe will retry with exponential backoff —",
+        "but if every retry hits the same throw, the customer's order won't be",
+        "logged to the dashboard and Nigel won't get the order email until this is fixed.",
+        "",
+        "Check Vercel logs for the stack trace, then check the Stripe webhook",
+        "deliveries page to manually replay the event once the bug is fixed:",
+        `https://dashboard.stripe.com/webhooks`,
+        "",
+        handlerErr instanceof Error
+          ? `${handlerErr.name}: ${handlerErr.message}\n\n${handlerErr.stack ?? ""}`
+          : String(handlerErr),
+      ].join("\n"),
+      dedupeKey: `stripe-webhook:handler-throw:${event.type}:${handlerErr instanceof Error ? handlerErr.name : "unknown"}`,
+    });
+    return NextResponse.json({ error: "Webhook handler error" }, { status: 500 });
+  }
 }

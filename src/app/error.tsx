@@ -39,6 +39,31 @@ export default function GlobalError({
         digest: error.digest,
       });
     }
+    // Forward to server-side alert sink. The sink filters known-noisy
+    // patterns (chunk-load races, extension noise, gtag-blocked) and
+    // rate-limits, so this isn't a spam vector. keepalive so the POST
+    // still completes if the user navigates away mid-fire.
+    try {
+      const payload = JSON.stringify({
+        message: error.message || "Unknown client error",
+        stack: error.stack || "",
+        url: typeof window !== "undefined" ? window.location.href : "",
+        userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "",
+        digest: error.digest,
+      });
+      fetch("/api/alerts/client-error", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+        keepalive: true,
+      }).catch(() => {
+        // Swallow — the alert is best-effort and the user already sees
+        // the fallback UI. The console.error above is the durable record.
+      });
+    } catch {
+      // JSON.stringify can throw on circular refs in obscure cases.
+      // Ignore — the GA4 'exception' event above is the backup signal.
+    }
   }, [error]);
 
   return (

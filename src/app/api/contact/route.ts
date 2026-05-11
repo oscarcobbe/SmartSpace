@@ -4,6 +4,7 @@ import { Resend } from "resend";
 import { logLead, type AttributionRecord } from "@/lib/leads";
 import { fireServerConversion } from "@/lib/server-conversions";
 import { sendToCrm } from "@/lib/crm";
+import { sendSiteAlert } from "@/lib/site-alerts";
 
 
 // POST routes are inherently dynamic but explicit is better — without
@@ -36,6 +37,11 @@ export async function POST(request: Request) {
       console.error(
         "Contact API: missing RESEND_API_KEY or RESEND_FROM_EMAIL (set them in Vercel / .env.local)"
       );
+      // This bypasses sendSiteAlert (no API key to send WITH) but the
+      // console.error above will surface in Vercel logs. Cron health-check
+      // would also catch this within 24h via the page sentinel checks,
+      // though strictly speaking it'd only fire if the contact page
+      // *renders* broken — not if /api/contact returns 503.
       return NextResponse.json(
         { error: "Email is not configured on the server." },
         { status: 503 }
@@ -119,6 +125,27 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error("Resend error:", error);
+      // Alert Nigel immediately — every contact-form submission is now
+      // failing. Without this, customers fill in the form, see a generic
+      // error, and bounce without leaving a trace.
+      await sendSiteAlert({
+        category: "contact-form",
+        severity: "error",
+        summary: "Contact form Resend send failed",
+        details: [
+          `The customer's submission was REJECTED by Resend.`,
+          `They saw a generic "Could not send email" error — and unless they retry,`,
+          `their enquiry is lost. Worth following up on a fresh Resend incident page:`,
+          `https://status.resend.com`,
+          "",
+          `Customer name:  ${name?.trim() || "(unknown)"}`,
+          `Customer email: ${email?.trim() || "(unknown)"}`,
+          "",
+          `Resend error:`,
+          JSON.stringify(error, null, 2),
+        ].join("\n"),
+        dedupeKey: `contact-form:resend-send-failed:${(error as { name?: string }).name ?? "unknown"}`,
+      });
       return NextResponse.json(
         { error: "Could not send email. Please try again later." },
         { status: 502 }
@@ -251,6 +278,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, id: data?.id, conversionId });
   } catch (e) {
     console.error("Contact API error:", e);
+    // Unexpected exception — alert Nigel. This is the catch-all for anything
+    // Resend, Sheets, CRM, or attribution that throws unexpectedly.
+    await sendSiteAlert({
+      category: "contact-form",
+      severity: "error",
+      summary: "Contact form handler threw unexpectedly",
+      details: [
+        "The /api/contact route threw an uncaught exception.",
+        "The user saw a generic 500 error and likely abandoned the form.",
+        "",
+        e instanceof Error ? `${e.name}: ${e.message}\n\n${e.stack ?? ""}` : String(e),
+      ].join("\n"),
+      dedupeKey: `contact-form:handler-throw:${e instanceof Error ? e.name : "unknown"}`,
+    });
     return NextResponse.json({ error: "Failed to process message" }, { status: 500 });
   }
 }

@@ -5,6 +5,7 @@ import { createBookingEvent, TIME_SLOTS } from "@/lib/calendly";
 import { logLead, type AttributionRecord } from "@/lib/leads";
 import { fireServerConversion } from "@/lib/server-conversions";
 import { sendToCrm } from "@/lib/crm";
+import { sendSiteAlert } from "@/lib/site-alerts";
 
 
 // POST routes are inherently dynamic but explicit is better — without
@@ -88,6 +89,35 @@ export async function POST(request: Request) {
       console.error(
         `[booking] Calendly booking failed for ${email} on ${date} ${timeSlot}`
       );
+      // Alert Nigel — every booking attempt is now dead-on-arrival. The
+      // daily calendly-health cron will eventually catch a fully broken
+      // token, but this fires the moment a real customer hits it.
+      await sendSiteAlert({
+        category: "booking",
+        severity: "critical",
+        summary: "Booking submission FAILED — Calendly rejected the slot",
+        details: [
+          "A real customer just tried to book a site visit and got a 500.",
+          "They saw 'We couldn't lock in that time slot' and probably bounced.",
+          "",
+          `Customer:  ${name?.trim() || "(unknown)"}`,
+          `Email:     ${email?.trim() || "(unknown)"}`,
+          `Phone:     ${phone?.trim() || "(none)"}`,
+          `Date:      ${date}`,
+          `Time slot: ${timeSlot}`,
+          "",
+          "Most likely causes:",
+          "  1. CALENDLY_PERSONAL_TOKEN revoked or expired.",
+          "  2. The event type URI in CALENDLY_CONSULTATION_EVENT_TYPE_URI was deleted.",
+          "  3. The slot was already booked between the page load and the submit (race).",
+          "  4. Calendly API outage — check https://status.calendly.com",
+          "",
+          "Call the customer back manually: tap the phone number above.",
+        ].join("\n"),
+        // Dedupe by date+slot so a genuine race condition doesn't fire 20× —
+        // but a different customer on a different slot will fire fresh.
+        dedupeKey: `booking:calendly-failed:${date}:${timeSlot}`,
+      });
       return NextResponse.json(
         {
           error:
@@ -219,6 +249,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, conversionId });
   } catch (err) {
     console.error("[booking] Failed to process booking:", err);
+    // Catch-all for any unexpected throw inside the booking flow — Calendly,
+    // Resend, Sheets, or one of the conversion fires.
+    await sendSiteAlert({
+      category: "booking",
+      severity: "error",
+      summary: "Booking handler threw unexpectedly",
+      details: [
+        "The /api/booking route threw an uncaught exception.",
+        "The user saw a generic 500 error and may have lost their booking.",
+        "",
+        err instanceof Error ? `${err.name}: ${err.message}\n\n${err.stack ?? ""}` : String(err),
+      ].join("\n"),
+      dedupeKey: `booking:handler-throw:${err instanceof Error ? err.name : "unknown"}`,
+    });
     return NextResponse.json(
       { error: "Failed to process booking" },
       { status: 500 }
