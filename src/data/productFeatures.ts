@@ -14,7 +14,7 @@ const featuresByHandle: Record<string, ProductFeatureSet> = {
   // ── New lineup: Video Doorbells ──
   "plus-video-doorbell": {
     shortDescription:
-      "Get 2K image clarity and 6x zoom with our reimagined wired doorbell. Features include real-time Live View, Two-Way Talk, and instant motion alerts to your phone. Hardwired into your home's power for constant, reliable security, it is the perfect, affordable solution for families seeking doorstep oversight and total peace of mind.",
+      "Get HDR image clarity and 6x zoom with our reimagined wired doorbell. Features include real-time Live View, Two-Way Talk, and instant motion alerts to your phone. Hardwired into your home's power for constant, reliable security, it is the perfect, affordable solution for families seeking doorstep oversight and total peace of mind.",
     highlights: [
       "Sharp HDR with 6x Enhanced Zoom",
       "Head-to-Toe Video",
@@ -35,7 +35,7 @@ const featuresByHandle: Record<string, ProductFeatureSet> = {
   },
   "pro-video-doorbell": {
     shortDescription:
-      "Our most advanced wired doorbell features breakthrough 4K clarity and 10x zoom. This reimagined design includes radar-powered 3D motion alerts, enhanced two-way audio, and full-color night vision. Secure your home with crystal-clear video and real-time communication, ensuring you never miss a detail, day or night.",
+      "Our most advanced wired doorbell features breakthrough HDR clarity and 10x zoom. This reimagined design includes radar-powered 3D motion alerts, enhanced two-way audio, and full-color night vision. Secure your home with crystal-clear video and real-time communication, ensuring you never miss a detail, day or night.",
     highlights: [
       "Pro HDR",
       "Low-Light Sight & Adaptive Night Vision",
@@ -82,7 +82,7 @@ const featuresByHandle: Record<string, ProductFeatureSet> = {
   },
   "pro-floodlight-cam": {
     shortDescription:
-      "Our most advanced floodlight camera with breakthrough 4K clarity and 10x zoom. Radar-powered 3D Motion Detection identifies exactly where someone moved on an aerial map. 2000-lumen floodlights plus an 85dB siren light up and deter intruders — day or night, driveway or back garden.",
+      "Our most advanced floodlight camera with breakthrough HDR clarity and 10x zoom. Radar-powered 3D Motion Detection identifies exactly where someone moved on an aerial map. 2000-lumen floodlights plus an 85dB siren light up and deter intruders — day or night, driveway or back garden.",
     highlights: [
       "Pro HDR",
       "Low-Light Sight",
@@ -107,9 +107,9 @@ const featuresByHandle: Record<string, ProductFeatureSet> = {
   // ── New lineup: Bundles ──
   "plus-driveway-bundle": {
     shortDescription:
-      "Secure your home with our driveway bundle, combining 2K video clarity and powerful floodlight protection. Use the Video Doorbell Plus for sharp doorstep oversight and Two-Way Talk, while the Floodlight Cam illuminates large areas with LED lights and a remote-activated siren. This hardwired system provides non-stop power, customisable motion zones, and instant phone alerts, ensuring the family stays connected and every visitor is seen, day or night. Bundle saves €50.",
+      "Secure your home with our driveway bundle, combining HDR video clarity and powerful floodlight protection. Use the Video Doorbell Plus for sharp doorstep oversight and Two-Way Talk, while the Floodlight Cam illuminates large areas with LED lights and a remote-activated siren. This hardwired system provides non-stop power, customisable motion zones, and instant phone alerts, ensuring the family stays connected and every visitor is seen, day or night. Bundle saves €50.",
     highlights: [
-      "2K & 1080p image quality",
+      "HDR & HD image quality",
       "Ring Video Doorbell Plus + Floodlight Cam",
       "Two-Way Talk on both devices",
       "2,000-lumen motion-activated floodlights",
@@ -120,7 +120,7 @@ const featuresByHandle: Record<string, ProductFeatureSet> = {
   },
   "pro-driveway-bundle": {
     shortDescription:
-      "Our top-tier driveway bundle combines the 4K Video Doorbell Pro with the 4K Floodlight Cam Pro for uncompromising security at your front door and driveway. Radar-powered 3D Motion Detection, 10x zoom on both devices, and a powerful 85dB siren protect what matters most. Hardwired, always-on, and professionally installed. Bundle saves €50.",
+      "Our top-tier driveway bundle combines the Pro Video Doorbell with the Pro Floodlight Cam for uncompromising security at your front door and driveway. Radar-powered 3D Motion Detection, 10x zoom on both devices, and a powerful 85dB siren protect what matters most. Hardwired, always-on, and professionally installed. Bundle saves €50.",
     highlights: [
       "Pro-tier HDR image quality",
       "Ring Video Doorbell Pro + Floodlight Cam Pro",
@@ -135,7 +135,7 @@ const featuresByHandle: Record<string, ProductFeatureSet> = {
     shortDescription:
       "Our most popular full perimeter solution for 360-degree property awareness. This bundle features the crisp Sharp HDR Video Doorbell Wired for your entrance, paired with two Floodlight Cam Wired Plus units to provide high-intensity, motion-activated light to both your driveway and back garden. With 4000 total lumens of floodlighting and two 105dB sirens, this setup eliminates blind spots and deters intruders from every angle. Includes a Ring Chime. Bundle saves €100.",
     highlights: [
-      "2K & 1080p image quality",
+      "HDR & HD image quality",
       "Video Doorbell Plus + 2x Floodlight Cam Plus",
       "4,000 total lumens of floodlighting",
       "Two 105dB sirens for intruder deterrence",

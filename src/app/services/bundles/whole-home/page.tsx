@@ -143,7 +143,7 @@ export default async function WholeHomeBundlePage() {
                       {[
                         product.handle === "pro-whole-home-bundle"
                           ? "Pro-tier HDR image quality"
-                          : "2K & 1080p image quality",
+                          : "HDR & HD image quality",
                         "Doorbell + 2x Floodlights",
                         "Full professional installation",
                         "Network optimisation",
