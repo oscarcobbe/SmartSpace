@@ -260,8 +260,9 @@ export default function FreeConsultationPage() {
 
             {/* Right: Booking Calendar */}
             <div>
-              {/* Free 30-min consultation — no product sourcing, so 5-day
-                  lead (vs the 7-day site-wide default for product installs). */}
+              {/* Free 30-min consultation — 5-day lead, matches the site-wide
+                  default. Kept explicit as a safety net in case the default
+                  is ever bumped (this flow never needs sourcing time). */}
               <BookingCalendar
                 onSelectionChange={setBookingSelection}
                 heading="Choose a Consultation Date"

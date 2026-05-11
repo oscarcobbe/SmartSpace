@@ -272,10 +272,11 @@ export default function ProductHero({ product, shortDescription }: Props) {
           </div>
         )}
 
-        {/* Booking Calendar — uses BookingCalendar's 7-day default for every
+        {/* Booking Calendar — uses BookingCalendar's 5-day default for every
             product (camera, doorbell, bundles). Customer-supplied
-            installation-only and consultation flows pass leadDays={5}
-            explicitly because they don't need product sourcing time. */}
+            installation-only and consultation flows also pass leadDays={5}
+            explicitly; the explicit pass is kept as a safety net in case
+            the default is ever bumped again. */}
         {!isService && (
           <div className="mb-6">
             <BookingCalendar

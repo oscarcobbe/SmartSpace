@@ -298,9 +298,9 @@ export default function InstallationOnlyPage() {
 
               {/* Right: Booking Calendar */}
               <div>
-                {/* Customer-supplied install — no product sourcing time
-                    needed, so 5-working-day lead instead of the site-wide
-                    7-day default. */}
+                {/* Customer-supplied install — 5-working-day lead, matches
+                    the site-wide default. Kept explicit as a safety net in
+                    case the default is ever bumped (no sourcing time here). */}
                 <BookingCalendar
                   onSelectionChange={setBookingSelection}
                   leadDays={5}
