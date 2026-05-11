@@ -14,6 +14,9 @@ export default function robots(): MetadataRoute.Robots {
           "/smartspace-payment-success",
           "/smartcareliving-payment-success",
           "/test123-checkout",
+          // /booking is now a 308 redirect (see next.config.mjs) — no
+          // page to crawl, but kept disallowed so legacy bookmarks
+          // bouncing through the redirect aren't double-crawled.
           "/booking",
           "/backlink-outreach",
           "/gbp-setup",

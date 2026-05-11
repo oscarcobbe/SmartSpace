@@ -33,7 +33,7 @@ export default function BlogLayout({ post, toc, children }: Props) {
           </span>
           <span>·</span>
           <time dateTime={post.datePublished}>
-            {new Date(post.datePublished).toLocaleDateString("en-IE", { year: "numeric", month: "short", day: "numeric" })}
+            {new Date(post.datePublished).toLocaleDateString("en-IE", { year: "numeric", month: "short", day: "numeric", timeZone: "Europe/Dublin" })}
           </time>
         </div>
 

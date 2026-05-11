@@ -31,6 +31,11 @@ const nextConfig = {
       { source: "/services/driveway-bundle", destination: "/services/bundles/driveway", permanent: true },
       { source: "/services/whole-home-bundle", destination: "/services/bundles/whole-home", permanent: true },
 
+      // /booking was a separate page that required sessionStorage from
+      // a flow that no longer exists. It now redirects to the real
+      // booking flow (free consultation has the BookingCalendar inline).
+      { source: "/booking", destination: "/services/free-consultation", permanent: true },
+
       // Old /survey page → new /faq
       { source: "/survey", destination: "/faq", permanent: true },
 

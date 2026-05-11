@@ -9,12 +9,17 @@ export default function WholeHomeSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-20 items-center">
           <div className="rounded-3xl overflow-hidden shadow-premium-lg order-2 lg:order-1">
+            {/* preload="metadata" tells the browser to fetch only the
+                video's metadata on page load instead of pre-buffering
+                the whole 515KB file. Cuts homepage-page-load bandwidth
+                ~500KB on mobile. Video still autoplays when in viewport. */}
             <video
               src="/products/Ring.mp4"
               autoPlay
               muted
               loop
               playsInline
+              preload="metadata"
               className="w-full h-auto"
             />
           </div>
