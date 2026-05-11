@@ -2180,7 +2180,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
         "currencyCode": "EUR"
       },
       "maxVariantPrice": {
-        "amount": "776.0",
+        "amount": "1119.0",
         "currencyCode": "EUR"
       }
     },
@@ -2368,7 +2368,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "2 / Yes / 1",
             "availableForSale": true,
             "price": {
-              "amount": "321.0",
+              "amount": "349.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -2394,7 +2394,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "2 / No - New Cabling & Power Required / None",
             "availableForSale": true,
             "price": {
-              "amount": "321.0",
+              "amount": "349.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -2420,7 +2420,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "2 / No - New Cabling & Power Required / 1",
             "availableForSale": true,
             "price": {
-              "amount": "378.0",
+              "amount": "434.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -2472,7 +2472,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "2 / No Doorbell Required / 1",
             "availableForSale": true,
             "price": {
-              "amount": "321.0",
+              "amount": "349.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -2498,7 +2498,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "2 / No Doorbell Required / 2",
             "availableForSale": true,
             "price": {
-              "amount": "378.0",
+              "amount": "434.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -2524,7 +2524,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "3 / Yes / None",
             "availableForSale": true,
             "price": {
-              "amount": "375.0",
+              "amount": "379.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -2550,7 +2550,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "3 / Yes / 1",
             "availableForSale": true,
             "price": {
-              "amount": "429.0",
+              "amount": "454.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -2576,7 +2576,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "3 / Yes / 2",
             "availableForSale": true,
             "price": {
-              "amount": "483.0",
+              "amount": "529.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -2602,7 +2602,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "3 / No - New Cabling & Power Required / None",
             "availableForSale": true,
             "price": {
-              "amount": "429.0",
+              "amount": "459.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -2628,7 +2628,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "3 / No - New Cabling & Power Required / 1",
             "availableForSale": true,
             "price": {
-              "amount": "483.0",
+              "amount": "534.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -2654,7 +2654,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "3 / No - New Cabling & Power Required / 2",
             "availableForSale": true,
             "price": {
-              "amount": "537.0",
+              "amount": "609.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -2680,7 +2680,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "3 / No Doorbell Required / None",
             "availableForSale": true,
             "price": {
-              "amount": "375.0",
+              "amount": "379.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -2706,7 +2706,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "3 / No Doorbell Required / 1",
             "availableForSale": true,
             "price": {
-              "amount": "429.0",
+              "amount": "454.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -2732,7 +2732,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "3 / No Doorbell Required / 2",
             "availableForSale": true,
             "price": {
-              "amount": "483.0",
+              "amount": "529.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -2758,7 +2758,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "3 / No Doorbell Required / 3",
             "availableForSale": true,
             "price": {
-              "amount": "537.0",
+              "amount": "604.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -2784,7 +2784,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "4 / Yes / None",
             "availableForSale": true,
             "price": {
-              "amount": "473.0",
+              "amount": "484.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -2810,7 +2810,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "4 / Yes / 1",
             "availableForSale": true,
             "price": {
-              "amount": "524.0",
+              "amount": "559.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -2836,7 +2836,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "4 / Yes / 2",
             "availableForSale": true,
             "price": {
-              "amount": "575.0",
+              "amount": "634.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -2862,7 +2862,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "4 / Yes / 3",
             "availableForSale": true,
             "price": {
-              "amount": "626.0",
+              "amount": "709.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -2888,7 +2888,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "4 / No - New Cabling & Power Required / None",
             "availableForSale": true,
             "price": {
-              "amount": "524.0",
+              "amount": "564.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -2914,7 +2914,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "4 / No - New Cabling & Power Required / 1",
             "availableForSale": true,
             "price": {
-              "amount": "575.0",
+              "amount": "639.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -2940,7 +2940,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "4 / No - New Cabling & Power Required / 2",
             "availableForSale": true,
             "price": {
-              "amount": "626.0",
+              "amount": "714.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -2966,7 +2966,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "4 / No - New Cabling & Power Required / 3",
             "availableForSale": true,
             "price": {
-              "amount": "677.0",
+              "amount": "789.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -2992,7 +2992,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "4 / No Doorbell Required / None",
             "availableForSale": true,
             "price": {
-              "amount": "473.0",
+              "amount": "484.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3018,7 +3018,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "4 / No Doorbell Required / 1",
             "availableForSale": true,
             "price": {
-              "amount": "524.0",
+              "amount": "559.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3044,7 +3044,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "4 / No Doorbell Required / 2",
             "availableForSale": true,
             "price": {
-              "amount": "575.0",
+              "amount": "634.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3070,7 +3070,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "4 / No Doorbell Required / 3",
             "availableForSale": true,
             "price": {
-              "amount": "626.0",
+              "amount": "709.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3096,7 +3096,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "4 / No Doorbell Required / 4",
             "availableForSale": true,
             "price": {
-              "amount": "677.0",
+              "amount": "784.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3122,7 +3122,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "5 / Yes / None",
             "availableForSale": true,
             "price": {
-              "amount": "521.0",
+              "amount": "589.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3148,7 +3148,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "5 / Yes / 1",
             "availableForSale": true,
             "price": {
-              "amount": "566.0",
+              "amount": "659.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3174,7 +3174,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "5 / Yes / 2",
             "availableForSale": true,
             "price": {
-              "amount": "611.0",
+              "amount": "729.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3200,7 +3200,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "5 / Yes / 3",
             "availableForSale": true,
             "price": {
-              "amount": "656.0",
+              "amount": "799.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3226,7 +3226,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "5 / Yes / 4",
             "availableForSale": true,
             "price": {
-              "amount": "701.0",
+              "amount": "869.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3252,7 +3252,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "5 / No - New Cabling & Power Required / None",
             "availableForSale": true,
             "price": {
-              "amount": "566.0",
+              "amount": "669.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3278,7 +3278,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "5 / No - New Cabling & Power Required / 1",
             "availableForSale": true,
             "price": {
-              "amount": "611.0",
+              "amount": "739.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3304,7 +3304,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "5 / No - New Cabling & Power Required / 2",
             "availableForSale": true,
             "price": {
-              "amount": "656.0",
+              "amount": "809.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3330,7 +3330,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "5 / No - New Cabling & Power Required / 3",
             "availableForSale": true,
             "price": {
-              "amount": "701.0",
+              "amount": "879.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3356,7 +3356,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "5 / No - New Cabling & Power Required / 4",
             "availableForSale": true,
             "price": {
-              "amount": "746.0",
+              "amount": "949.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3382,7 +3382,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "5 / No Doorbell Required / None",
             "availableForSale": true,
             "price": {
-              "amount": "521.0",
+              "amount": "589.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3408,7 +3408,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "5 / No Doorbell Required / 1",
             "availableForSale": true,
             "price": {
-              "amount": "566.0",
+              "amount": "659.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3434,7 +3434,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "5 / No Doorbell Required / 2",
             "availableForSale": true,
             "price": {
-              "amount": "611.0",
+              "amount": "729.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3460,7 +3460,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "5 / No Doorbell Required / 3",
             "availableForSale": true,
             "price": {
-              "amount": "656.0",
+              "amount": "799.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3486,7 +3486,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "5 / No Doorbell Required / 4",
             "availableForSale": true,
             "price": {
-              "amount": "701.0",
+              "amount": "869.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3512,7 +3512,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "5 / No Doorbell Required / 5",
             "availableForSale": true,
             "price": {
-              "amount": "746.0",
+              "amount": "939.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3538,7 +3538,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "6 / Yes / None",
             "availableForSale": true,
             "price": {
-              "amount": "567.0",
+              "amount": "694.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3564,7 +3564,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "6 / Yes / 1",
             "availableForSale": true,
             "price": {
-              "amount": "609.0",
+              "amount": "764.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3590,7 +3590,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "6 / Yes / 2",
             "availableForSale": true,
             "price": {
-              "amount": "651.0",
+              "amount": "834.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3616,7 +3616,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "6 / Yes / 3",
             "availableForSale": true,
             "price": {
-              "amount": "693.0",
+              "amount": "904.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3642,7 +3642,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "6 / Yes / 4",
             "availableForSale": true,
             "price": {
-              "amount": "735.0",
+              "amount": "974.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3668,7 +3668,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "6 / Yes / 5",
             "availableForSale": true,
             "price": {
-              "amount": "777.0",
+              "amount": "1044.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3694,7 +3694,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "6 / No - New Cabling & Power Required / None",
             "availableForSale": true,
             "price": {
-              "amount": "609.0",
+              "amount": "769.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3720,7 +3720,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "6 / No - New Cabling & Power Required / 1",
             "availableForSale": true,
             "price": {
-              "amount": "651.0",
+              "amount": "839.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3746,7 +3746,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "6 / No - New Cabling & Power Required / 2",
             "availableForSale": true,
             "price": {
-              "amount": "693.0",
+              "amount": "909.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3772,7 +3772,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "6 / No - New Cabling & Power Required / 3",
             "availableForSale": true,
             "price": {
-              "amount": "735.0",
+              "amount": "979.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3798,7 +3798,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "6 / No - New Cabling & Power Required / 4",
             "availableForSale": true,
             "price": {
-              "amount": "777.0",
+              "amount": "1049.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3824,7 +3824,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "6 / No - New Cabling & Power Required / 5",
             "availableForSale": true,
             "price": {
-              "amount": "819.0",
+              "amount": "1119.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3850,7 +3850,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "6 / No Doorbell Required / None",
             "availableForSale": true,
             "price": {
-              "amount": "567.0",
+              "amount": "694.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3876,7 +3876,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "6 / No Doorbell Required / 1",
             "availableForSale": true,
             "price": {
-              "amount": "609.0",
+              "amount": "764.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3902,7 +3902,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "6 / No Doorbell Required / 2",
             "availableForSale": true,
             "price": {
-              "amount": "651.0",
+              "amount": "834.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3928,7 +3928,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "6 / No Doorbell Required / 3",
             "availableForSale": true,
             "price": {
-              "amount": "693.0",
+              "amount": "904.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3954,7 +3954,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "6 / No Doorbell Required / 4",
             "availableForSale": true,
             "price": {
-              "amount": "735.0",
+              "amount": "974.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -3980,7 +3980,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "6 / No Doorbell Required / 5",
             "availableForSale": true,
             "price": {
-              "amount": "777.0",
+              "amount": "1044.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -4006,7 +4006,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "6 / No Doorbell Required / 6",
             "availableForSale": true,
             "price": {
-              "amount": "819.0",
+              "amount": "1114.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
