@@ -3531,6 +3531,500 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
               }
             ]
           }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/installation-only-6-1",
+            "title": "6 / Yes / None",
+            "availableForSale": true,
+            "price": {
+              "amount": "567.0",
+              "currencyCode": "EUR"
+            },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              {
+                "name": "How Many Devices To Be Installed",
+                "value": "6"
+              },
+              {
+                "name": "Video Doorbell - Existing Working Wired Doorbell",
+                "value": "Yes"
+              },
+              {
+                "name": "External Cameras - How Many Need New Power Cabling",
+                "value": "None"
+              }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/installation-only-6-2",
+            "title": "6 / Yes / 1",
+            "availableForSale": true,
+            "price": {
+              "amount": "609.0",
+              "currencyCode": "EUR"
+            },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              {
+                "name": "How Many Devices To Be Installed",
+                "value": "6"
+              },
+              {
+                "name": "Video Doorbell - Existing Working Wired Doorbell",
+                "value": "Yes"
+              },
+              {
+                "name": "External Cameras - How Many Need New Power Cabling",
+                "value": "1"
+              }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/installation-only-6-3",
+            "title": "6 / Yes / 2",
+            "availableForSale": true,
+            "price": {
+              "amount": "651.0",
+              "currencyCode": "EUR"
+            },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              {
+                "name": "How Many Devices To Be Installed",
+                "value": "6"
+              },
+              {
+                "name": "Video Doorbell - Existing Working Wired Doorbell",
+                "value": "Yes"
+              },
+              {
+                "name": "External Cameras - How Many Need New Power Cabling",
+                "value": "2"
+              }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/installation-only-6-4",
+            "title": "6 / Yes / 3",
+            "availableForSale": true,
+            "price": {
+              "amount": "693.0",
+              "currencyCode": "EUR"
+            },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              {
+                "name": "How Many Devices To Be Installed",
+                "value": "6"
+              },
+              {
+                "name": "Video Doorbell - Existing Working Wired Doorbell",
+                "value": "Yes"
+              },
+              {
+                "name": "External Cameras - How Many Need New Power Cabling",
+                "value": "3"
+              }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/installation-only-6-5",
+            "title": "6 / Yes / 4",
+            "availableForSale": true,
+            "price": {
+              "amount": "735.0",
+              "currencyCode": "EUR"
+            },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              {
+                "name": "How Many Devices To Be Installed",
+                "value": "6"
+              },
+              {
+                "name": "Video Doorbell - Existing Working Wired Doorbell",
+                "value": "Yes"
+              },
+              {
+                "name": "External Cameras - How Many Need New Power Cabling",
+                "value": "4"
+              }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/installation-only-6-6",
+            "title": "6 / Yes / 5",
+            "availableForSale": true,
+            "price": {
+              "amount": "777.0",
+              "currencyCode": "EUR"
+            },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              {
+                "name": "How Many Devices To Be Installed",
+                "value": "6"
+              },
+              {
+                "name": "Video Doorbell - Existing Working Wired Doorbell",
+                "value": "Yes"
+              },
+              {
+                "name": "External Cameras - How Many Need New Power Cabling",
+                "value": "5"
+              }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/installation-only-6-7",
+            "title": "6 / No - New Cabling & Power Required / None",
+            "availableForSale": true,
+            "price": {
+              "amount": "609.0",
+              "currencyCode": "EUR"
+            },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              {
+                "name": "How Many Devices To Be Installed",
+                "value": "6"
+              },
+              {
+                "name": "Video Doorbell - Existing Working Wired Doorbell",
+                "value": "No - New Cabling & Power Required"
+              },
+              {
+                "name": "External Cameras - How Many Need New Power Cabling",
+                "value": "None"
+              }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/installation-only-6-8",
+            "title": "6 / No - New Cabling & Power Required / 1",
+            "availableForSale": true,
+            "price": {
+              "amount": "651.0",
+              "currencyCode": "EUR"
+            },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              {
+                "name": "How Many Devices To Be Installed",
+                "value": "6"
+              },
+              {
+                "name": "Video Doorbell - Existing Working Wired Doorbell",
+                "value": "No - New Cabling & Power Required"
+              },
+              {
+                "name": "External Cameras - How Many Need New Power Cabling",
+                "value": "1"
+              }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/installation-only-6-9",
+            "title": "6 / No - New Cabling & Power Required / 2",
+            "availableForSale": true,
+            "price": {
+              "amount": "693.0",
+              "currencyCode": "EUR"
+            },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              {
+                "name": "How Many Devices To Be Installed",
+                "value": "6"
+              },
+              {
+                "name": "Video Doorbell - Existing Working Wired Doorbell",
+                "value": "No - New Cabling & Power Required"
+              },
+              {
+                "name": "External Cameras - How Many Need New Power Cabling",
+                "value": "2"
+              }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/installation-only-6-10",
+            "title": "6 / No - New Cabling & Power Required / 3",
+            "availableForSale": true,
+            "price": {
+              "amount": "735.0",
+              "currencyCode": "EUR"
+            },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              {
+                "name": "How Many Devices To Be Installed",
+                "value": "6"
+              },
+              {
+                "name": "Video Doorbell - Existing Working Wired Doorbell",
+                "value": "No - New Cabling & Power Required"
+              },
+              {
+                "name": "External Cameras - How Many Need New Power Cabling",
+                "value": "3"
+              }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/installation-only-6-11",
+            "title": "6 / No - New Cabling & Power Required / 4",
+            "availableForSale": true,
+            "price": {
+              "amount": "777.0",
+              "currencyCode": "EUR"
+            },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              {
+                "name": "How Many Devices To Be Installed",
+                "value": "6"
+              },
+              {
+                "name": "Video Doorbell - Existing Working Wired Doorbell",
+                "value": "No - New Cabling & Power Required"
+              },
+              {
+                "name": "External Cameras - How Many Need New Power Cabling",
+                "value": "4"
+              }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/installation-only-6-12",
+            "title": "6 / No - New Cabling & Power Required / 5",
+            "availableForSale": true,
+            "price": {
+              "amount": "819.0",
+              "currencyCode": "EUR"
+            },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              {
+                "name": "How Many Devices To Be Installed",
+                "value": "6"
+              },
+              {
+                "name": "Video Doorbell - Existing Working Wired Doorbell",
+                "value": "No - New Cabling & Power Required"
+              },
+              {
+                "name": "External Cameras - How Many Need New Power Cabling",
+                "value": "5"
+              }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/installation-only-6-13",
+            "title": "6 / No Doorbell Required / None",
+            "availableForSale": true,
+            "price": {
+              "amount": "567.0",
+              "currencyCode": "EUR"
+            },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              {
+                "name": "How Many Devices To Be Installed",
+                "value": "6"
+              },
+              {
+                "name": "Video Doorbell - Existing Working Wired Doorbell",
+                "value": "No Doorbell Required"
+              },
+              {
+                "name": "External Cameras - How Many Need New Power Cabling",
+                "value": "None"
+              }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/installation-only-6-14",
+            "title": "6 / No Doorbell Required / 1",
+            "availableForSale": true,
+            "price": {
+              "amount": "609.0",
+              "currencyCode": "EUR"
+            },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              {
+                "name": "How Many Devices To Be Installed",
+                "value": "6"
+              },
+              {
+                "name": "Video Doorbell - Existing Working Wired Doorbell",
+                "value": "No Doorbell Required"
+              },
+              {
+                "name": "External Cameras - How Many Need New Power Cabling",
+                "value": "1"
+              }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/installation-only-6-15",
+            "title": "6 / No Doorbell Required / 2",
+            "availableForSale": true,
+            "price": {
+              "amount": "651.0",
+              "currencyCode": "EUR"
+            },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              {
+                "name": "How Many Devices To Be Installed",
+                "value": "6"
+              },
+              {
+                "name": "Video Doorbell - Existing Working Wired Doorbell",
+                "value": "No Doorbell Required"
+              },
+              {
+                "name": "External Cameras - How Many Need New Power Cabling",
+                "value": "2"
+              }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/installation-only-6-16",
+            "title": "6 / No Doorbell Required / 3",
+            "availableForSale": true,
+            "price": {
+              "amount": "693.0",
+              "currencyCode": "EUR"
+            },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              {
+                "name": "How Many Devices To Be Installed",
+                "value": "6"
+              },
+              {
+                "name": "Video Doorbell - Existing Working Wired Doorbell",
+                "value": "No Doorbell Required"
+              },
+              {
+                "name": "External Cameras - How Many Need New Power Cabling",
+                "value": "3"
+              }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/installation-only-6-17",
+            "title": "6 / No Doorbell Required / 4",
+            "availableForSale": true,
+            "price": {
+              "amount": "735.0",
+              "currencyCode": "EUR"
+            },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              {
+                "name": "How Many Devices To Be Installed",
+                "value": "6"
+              },
+              {
+                "name": "Video Doorbell - Existing Working Wired Doorbell",
+                "value": "No Doorbell Required"
+              },
+              {
+                "name": "External Cameras - How Many Need New Power Cabling",
+                "value": "4"
+              }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/installation-only-6-18",
+            "title": "6 / No Doorbell Required / 5",
+            "availableForSale": true,
+            "price": {
+              "amount": "777.0",
+              "currencyCode": "EUR"
+            },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              {
+                "name": "How Many Devices To Be Installed",
+                "value": "6"
+              },
+              {
+                "name": "Video Doorbell - Existing Working Wired Doorbell",
+                "value": "No Doorbell Required"
+              },
+              {
+                "name": "External Cameras - How Many Need New Power Cabling",
+                "value": "5"
+              }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/installation-only-6-19",
+            "title": "6 / No Doorbell Required / 6",
+            "availableForSale": true,
+            "price": {
+              "amount": "819.0",
+              "currencyCode": "EUR"
+            },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              {
+                "name": "How Many Devices To Be Installed",
+                "value": "6"
+              },
+              {
+                "name": "Video Doorbell - Existing Working Wired Doorbell",
+                "value": "No Doorbell Required"
+              },
+              {
+                "name": "External Cameras - How Many Need New Power Cabling",
+                "value": "6"
+              }
+            ]
+          }
         }
       ]
     }
