@@ -126,14 +126,18 @@ export default function InstallationOnlyPage() {
     checkoutConfig[friendly] = v;
   }
 
+  // Strict variant match — no silent fallback to variants[0]. The
+  // catalogue currently has variants for 1–5 devices but no 6-device
+  // permutations, and the old `?? variants[0]` fallback was quietly
+  // booking 6-device jobs at the 1-device price (€139). We surface
+  // the gap to the customer instead and route them to a phone quote.
   const matchedVariant = product?.variants.edges.find((v) =>
     v.node.selectedOptions?.every((so) => effectiveOptions[so.name] === so.value)
-  )?.node ?? product?.variants.edges[0]?.node;
+  )?.node;
+  const hasMatchedVariant = !!matchedVariant;
 
-  const price = matchedVariant?.price ?? product?.priceRange.minVariantPrice;
-  const productPrice = parseFloat(
-    matchedVariant?.price?.amount ?? product?.variants.edges[0]?.node.price?.amount ?? "0"
-  );
+  const price = matchedVariant?.price ?? null;
+  const productPrice = parseFloat(matchedVariant?.price?.amount ?? "0");
   const productImage = product?.images.edges[0]?.node.url ?? "";
 
   return (
@@ -242,10 +246,37 @@ export default function InstallationOnlyPage() {
                   );
                 })}
 
+                {/* If the chosen combination has no matching variant in
+                    the catalogue (e.g. 6 devices — no 6-device variants
+                    exist), we route to a quote instead of booking the
+                    wrong job at variants[0]'s price. */}
+                {product && !hasMatchedVariant && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 text-sm text-amber-900">
+                    <p className="font-semibold mb-1">No fixed price for this combination yet</p>
+                    <p className="mb-3">
+                      Jobs at this size and configuration are quoted individually after a quick chat about access, wiring routes, and Wi-Fi coverage. Give us a call or drop us a message and we&apos;ll come back with a flat price the same day.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <a
+                        href="tel:+35315130424"
+                        className="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold px-5 py-2.5 rounded-full transition-colors"
+                      >
+                        Call 01 513 0424
+                      </a>
+                      <a
+                        href="/contact"
+                        className="inline-flex items-center gap-2 bg-white border-2 border-amber-300 hover:border-amber-400 text-amber-900 text-sm font-semibold px-5 py-2.5 rounded-full transition-colors"
+                      >
+                        Request a quote
+                      </a>
+                    </div>
+                  </div>
+                )}
+
                 {/* Direct-to-Stripe — single-product page, no need to
                     route through the cart drawer. Cuts the funnel from
                     3 clicks (Add → drawer → Checkout) to 1 (Book Now). */}
-                {product && (
+                {product && hasMatchedVariant && (
                   <AddToCartButton
                     productId="installation-only"
                     name={product.title}

@@ -62,11 +62,11 @@ export default async function CameraServicePage() {
         </nav>
 
         {/* Header */}
-        <div className="mb-10">
+        <div className="mb-10 text-center">
           <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-3">
             Floodlight Cameras
           </h1>
-          <p className="text-gray-500 max-w-2xl">
+          <p className="text-gray-500 max-w-2xl mx-auto">
             Powerful floodlight cameras for driveways, gardens, and rear entrances. All professionally supplied and installed.
           </p>
         </div>
@@ -119,8 +119,8 @@ export default async function CameraServicePage() {
                     <ul className="space-y-1.5 mb-4">
                       {[
                         product.handle === "pro-floodlight-cam"
-                          ? "4K (3840×2160) video"
-                          : "1080p HD video",
+                          ? "4K image & 10x zoom"
+                          : "1080p image",
                         "Professional installation",
                         "Optimal positioning",
                         "App setup & config",

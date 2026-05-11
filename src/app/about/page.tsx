@@ -77,6 +77,22 @@ export default function AboutPage() {
                   to quality and care that earned us recognition as Three Ireland SME
                   Business Winner 2025.
                 </p>
+                <p>
+                  If you are interested in our Eldercare Bundle, our sister
+                  company SmartCare Living offers Ireland&apos;s most
+                  comprehensive range of assistive technology for independent
+                  living, including SmartGuardian - the most advanced home
+                  safety system available in Ireland. Click{" "}
+                  <a
+                    href="https://smartcareliving.ie"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-orange-500 font-semibold hover:text-orange-600 underline"
+                  >
+                    HERE
+                  </a>{" "}
+                  for details.
+                </p>
               </div>
             </div>
 

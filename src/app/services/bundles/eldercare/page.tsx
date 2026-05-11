@@ -93,7 +93,7 @@ export default async function EldercareBundlePage() {
             Eldercare Bundle
           </h1>
           <p className="text-gray-700 max-w-2xl">
-            The Basic Ring Video Doorbell Plus + Digital Lockbox — designed for elderly relatives and their carers. See who&apos;s at the door and provide secure key access.
+            Our Plus Video Doorbell + Digital Lockbox — designed for elderly relatives and their carers. See who&apos;s at the door and provide secure key access.
           </p>
         </div>
 
@@ -188,7 +188,7 @@ export default async function EldercareBundlePage() {
         {/* Why this bundle for Dublin homes — unique long-form content
             block; this is the most-different-from-the-others bundle so
             the audience-specific framing matters most here. */}
-        <section className="mt-16 lg:mt-20 max-w-3xl">
+        <section className="mt-16 lg:mt-20 max-w-3xl mx-auto text-center">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4">
             Built for elderly relatives and their families
           </h2>
@@ -216,8 +216,12 @@ export default async function EldercareBundlePage() {
               four-digit code you can change anytime. The bundle pairs well with
               an HSE home-care package or a private carer rota: you can change
               the lockbox code when staff change without anyone needing to be at
-              the property. We can also add a Ring Chime upstairs so your parent
-              hears the doorbell from their bedroom or living room.
+              the property. We can also add an additional Ring Chime upstairs so
+              your parent hears the doorbell from their bedroom. We can pair the
+              system to an 8 inch smart screen located in the living room, beside
+              their favourite chair. They can see and talk to visitors (if they
+              want to), so no more rushing to get to the front door and
+              increasing the risk of a fall.
             </p>
             <p className="text-sm text-gray-500">
               Related: <Link href="/services/bundles/driveway" className="text-brand-700 underline hover:text-brand-800">Driveway Bundle</Link>{" "}for full security coverage,{" "}

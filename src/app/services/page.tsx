@@ -22,7 +22,7 @@ const serviceCategories = [
   },
   {
     title: "Driveway Bundle",
-    description: "Video Doorbell + Floodlight Cam — protect your front entrance.",
+    description: "Add deterrence to your front driveway or extra protection to your garden.",
     href: "/services/bundles/driveway",
     filter: (p: ShopifyProduct) => p.handle === "pro-driveway-bundle",
     staticImage: "/products/pro-driveway-black.png",

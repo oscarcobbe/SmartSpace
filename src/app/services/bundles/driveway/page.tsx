@@ -94,16 +94,16 @@ export default async function DrivewayBundlePage() {
           <span>/</span>
           <Link href="/services/bundles" className="hover:text-brand-500 transition-colors">Bundles</Link>
           <span>/</span>
-          <span className="text-[#1a1a1a] font-medium">Driveway Bundle</span>
+          <span className="text-[#1a1a1a] font-medium">Driveway / Garden Bundle</span>
         </nav>
 
         {/* Header */}
         <div className="mb-10">
           <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-3">
-            Driveway Bundle
+            Driveway / Garden Bundle
           </h1>
           <p className="text-gray-500 max-w-2xl">
-            Video Doorbell + Floodlight Cam — protect your front entrance with a complete Ring system. Available in Basic, Popular, and Premium tiers.
+            Add deterrence to your front driveway or extra protection to your garden.
           </p>
         </div>
 
@@ -156,7 +156,7 @@ export default async function DrivewayBundlePage() {
                     <ul className="space-y-1.5 mb-4">
                       {[
                         product.handle === "pro-driveway-bundle"
-                          ? "All-4K image quality (both)"
+                          ? "4K image & 10x zoom"
                           : "2K Doorbell + 1080p Cam",
                         "Doorbell + Floodlight Cam",
                         "Professional installation",
@@ -182,28 +182,36 @@ export default async function DrivewayBundlePage() {
             block to give Google a real signal that this page is distinct
             from the Whole Home and Eldercare bundles. Real install
             specifics from the Smart Space install log. */}
-        <section className="mt-16 lg:mt-20 max-w-3xl">
+        <section className="mt-16 lg:mt-20 max-w-3xl mx-auto text-center">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4">
-            Why this bundle for Dublin homes
+            Why this bundle for Leinster homes
           </h2>
           <div className="space-y-4 text-gray-700 leading-relaxed">
             <p>
-              For Dublin homes with off-street parking, the Driveway Bundle is the
-              setup we install most often. The combination of a Video Doorbell at
-              the front door and a Floodlight Cam covering the driveway gives a
-              clear view of every approach to your home, day or night. We install
-              this bundle on around forty Dublin properties every month, most often
-              after a near-miss with a car break-in, suspicious courier activity,
-              or because a neighbour had something taken from their drive.
+              For Leinster homes with off-street parking, the Driveway / Garden
+              Bundle is the setup we install most often. The combination of a
+              Video Doorbell at the front door and a Floodlight Cam covering the
+              driveway gives a clear view of every approach to your home, day or
+              night. We install this bundle on around forty Dublin properties
+              every month, most often after a near-miss with a car break-in,
+              suspicious courier activity, or because a neighbour had something
+              taken from their drive.
+            </p>
+            <p>
+              The Floodlight Cam can equally be tasked to protect a back garden
+              instead of the front driveway, providing exceptional wide coverage
+              that typically protects the full garden boundary.
             </p>
             <p>
               Installation takes around two hours. We position the Floodlight Cam
               at a height and angle that captures plate-readable footage of any
               vehicle pulling onto your drive, and the camera doubles as your
-              security light so you can scrap the standalone PIR floodlight at the
-              same time. The doorbell is wired into your existing chime where one
-              exists, and we always supply a Ring Chime as a backup so you never
-              miss a delivery.
+              security light so you can scrap the standalone PIR floodlight at
+              the same time. The doorbell is wired to mains-power using your
+              existing doorbell wiring, where present, if not we have a number of
+              alternative power options available which we can discuss. All
+              doorbell installations include Ring&apos;s plug-in anywhere Chime so
+              you never miss a delivery.
             </p>
             <p>
               If you live in a semi-detached or detached home in Dublin 4, 6, 6W,

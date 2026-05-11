@@ -89,7 +89,7 @@ export default async function WholeHomeBundlePage() {
             Whole Home Bundle
           </h1>
           <p className="text-gray-500 max-w-2xl">
-            Video Doorbell + 2x Floodlight Cams (front &amp; rear) — complete coverage for your entire home. Available in Basic, Popular, and Premium tiers.
+            Video Doorbell + 2x Floodlight Cams (front &amp; rear) — complete coverage for your entire home.
           </p>
         </div>
 
@@ -142,7 +142,7 @@ export default async function WholeHomeBundlePage() {
                     <ul className="space-y-1.5 mb-4">
                       {[
                         product.handle === "pro-whole-home-bundle"
-                          ? "All-4K image quality"
+                          ? "4K image & 10x zoom"
                           : "2K Doorbell + 1080p Cams",
                         "Doorbell + 2x Floodlights",
                         "Full professional installation",
@@ -166,34 +166,32 @@ export default async function WholeHomeBundlePage() {
 
         {/* Why this bundle for Dublin homes — unique long-form content
             block to differentiate from Driveway and Eldercare. */}
-        <section className="mt-16 lg:mt-20 max-w-3xl">
+        <section className="mt-16 lg:mt-20 max-w-3xl mx-auto text-center">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4">
             Why this bundle for Dublin homes
           </h2>
           <div className="space-y-4 text-gray-700 leading-relaxed">
             <p>
-              The Whole Home Bundle is what we install when a customer wants their
-              entire property covered, not just the front door. A Video Doorbell
-              out front, a Floodlight Cam on the driveway, and a second Floodlight
-              Cam at the rear of the house gives full perimeter coverage with no
-              blind spots. This is the most common upgrade for larger Dublin
-              homes: four-bed semis in Castleknock, Sandyford and Stillorgan, and
-              detached properties out in Wicklow, Meath and Kildare.
+              The Whole Home Bundle is what we install when a customer wants
+              their entire property covered, not just the front door. A Video
+              Doorbell out front, a Floodlight Cam on the driveway, and a second
+              Floodlight Cam at the rear of the house gives full perimeter
+              coverage with no blind spots. This is the most common upgrade for
+              larger Dublin homes: four-bed semis in Castleknock, Sandyford and
+              Stillorgan, and detached properties out in Wicklow, Meath and
+              Kildare.
             </p>
             <p>
-              Installation typically takes a half day. We run all the cabling
-              discreetly behind external trim or through the roof space so the
-              system looks built-in rather than retrofitted. We&apos;ll also set
-              up linked notifications across the cameras, so a person spotted at
-              the back triggers the doorbell to record at the same time. That&apos;s
-              the bit most DIY installs miss.
-            </p>
-            <p>
-              If you&apos;ve already got one Ring device and want to expand to full
-              coverage, we can usually upgrade you to this bundle at a discount
-              over starting from scratch. We&apos;ll match your existing camera
-              tier where possible (so all your devices use the same image
-              quality and app behaviour).
+              Installation typically takes half a day. Where possible, we
+              replace existing security lights with the Smart Floodlight Cams.
+              Otherwise, we run new mains-power cables to the Cams, typically
+              through the house wall, so no external cables are visible. The
+              internal white cable runs along an upstairs room&apos;s skirting
+              board, using white clips, and plugs into the nearest socket. All
+              holes are sealed. We&apos;ll also set up linked notifications
+              across the cameras, so a person spotted at the back triggers the
+              doorbell and front floodlight cam to record simultaneously.
+              That&apos;s the bit most DIY installs miss.
             </p>
             <p className="text-sm text-gray-500">
               Related: <Link href="/services/bundles/driveway" className="text-brand-700 underline hover:text-brand-800">Driveway Bundle</Link>{" "}for front-only coverage,{" "}

@@ -130,8 +130,8 @@ export default async function DoorbellServicePage() {
                     <ul className="space-y-1.5 mb-4">
                       {[
                         product.handle === "pro-video-doorbell"
-                          ? "4K (2880×2880) video"
-                          : "2K (1920×1920) video",
+                          ? "4K image & 10x zoom"
+                          : "2K image & 6x zoom",
                         "Professional installation",
                         "Ring Chime included",
                         "App setup & config",
@@ -163,36 +163,37 @@ export default async function DoorbellServicePage() {
         </div>
 
         {/* Long-form content for SEO + decision support */}
-        <section className="mt-20 max-w-3xl">
+        <section className="mt-20 max-w-3xl mx-auto text-center">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4">
-            Why a Ring Video Doorbell for Dublin homes
+            Why a Ring Doorbell for Leinster homes
           </h2>
           <div className="space-y-4 text-gray-700 leading-relaxed">
             <p>
               The Ring Video Doorbell is the single most-installed smart device
               in Irish homes, and we install several every working day across
-              Dublin and Leinster. The reason it sticks is practical: An Post,
-              DPD, FedEx and the major couriers all leave packages at the front
-              door, so being able to see and speak to a delivery driver from the
-              kitchen, the back garden, or away from the house solves an
-              everyday inconvenience as much as a security concern.
+              Dublin and Leinster. The reason for its popularity is practical:
+              An Post, DPD, FedEx and the major couriers all leave packages at
+              the front door. Being able to see and speak to a delivery driver
+              from the kitchen, the back garden, or away from the house solves
+              an everyday inconvenience as much as a security concern.
             </p>
             <p>
-              We supply two tiers. The Wired Doorbell Plus gives you 2K
-              (1920×1920) Head-to-Toe video with Low-Light Sight and is the
-              right choice for most Dublin terraced and semi-D properties.
-              The Wired Doorbell Pro steps up to 4K (2880×2880) with Audio+
-              two-way talk, plus 3D radar motion detection — so it ignores
-              cars on the street and only alerts when someone actually
-              approaches the door.
+              We supply two tiers. Our Plus model gives you 2K video with
+              colour night vision, 6x zoom and is the right choice for most
+              Dublin terraced and semi-D properties where the doorbell is
+              well-lit. Our Pro model adds sharp 4K video, 10x zoom, 3D motion
+              detection (which ignores cars on the street and only alerts on
+              people approaching the door), and pre-roll buffering - meaning
+              the four seconds before a motion event are also captured, so you
+              don&apos;t miss the start of an incident.
             </p>
             <p>
               Every doorbell installation we do includes a Ring Chime so you
-              hear the bell anywhere in the house without needing to be tied
-              to your phone. We also re-use your existing wired doorbell
-              transformer where one exists, which usually saves about €60 vs.
-              running new mains. Installation typically takes under an hour
-              and we walk through the Ring app with you before we leave.
+              hear the bell anywhere in the house without needing to be tied to
+              your phone. We also re-use your existing wiring if a working
+              wired doorbell is present, which can save almost €100 vs. running
+              new mains cabling. Installation can take as little as an hour and
+              we walk you through the Ring app before we leave.
             </p>
             <p className="text-sm text-gray-500">
               Related: <Link href="/services/camera" className="text-brand-700 underline hover:text-brand-800">Floodlight Cameras</Link>{" "}for areas the doorbell doesn&apos;t cover,{" "}
