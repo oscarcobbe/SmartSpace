@@ -103,15 +103,13 @@ async function timedFetch(
   }
 }
 
-function getBaseUrl(request: Request): string {
-  // Prefer explicit env var so probes hit the canonical apex domain
-  // regardless of what host the cron Lambda runs on.
+function getBaseUrl(): string {
+  // Always probe the canonical public domain. The inbound `host` header on
+  // a Vercel cron invocation is the `*.vercel.app` deployment alias, which
+  // returns 401 to unauthenticated traffic — so using it produced a flood
+  // of false 401 alerts on 2026-05-12. Env var wins, apex is the fallback.
   const fromEnv = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL;
   if (fromEnv) return fromEnv.replace(/\/$/, "");
-  // Fall back to the inbound request host.
-  const host = request.headers.get("host");
-  const proto = request.headers.get("x-forwarded-proto") ?? "https";
-  if (host) return `${proto}://${host}`;
   return "https://smart-space.ie";
 }
 
@@ -130,7 +128,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const base = getBaseUrl(request);
+  const base = getBaseUrl();
   const results: CheckResult[] = [];
 
   // 1. Stripe — a revoked key or Stripe outage is silent otherwise.
