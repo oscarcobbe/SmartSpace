@@ -20,7 +20,11 @@
 
 import { useEffect } from "react";
 
-const GADS_CALL_LABEL = process.env.NEXT_PUBLIC_GADS_CALL_LABEL;
+// .trim() guards against a trailing newline in the Vercel env var —
+// a copy-paste artefact that previously made Google Ads reject every
+// phone-click conversion as an unknown label. See matching trim in
+// src/app/layout.tsx for the full story.
+const GADS_CALL_LABEL = process.env.NEXT_PUBLIC_GADS_CALL_LABEL?.trim();
 const GADS_ACCOUNT = "AW-17978501655";
 const PHONE = "+35315130424";
 

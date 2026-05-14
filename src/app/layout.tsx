@@ -202,8 +202,14 @@ export default function RootLayout({
               GA4_ID
                 ? "gtag('config', " + JSON.stringify(GA4_ID) + ");"
                 : "// GA4 disabled — set NEXT_PUBLIC_GA4_MEASUREMENT_ID to enable",
-              // Phone-call conversion (Google Ads call tracking)
-              "var callLabel = " + JSON.stringify(process.env.NEXT_PUBLIC_GADS_CALL_LABEL || "") + ";",
+              // Phone-call conversion (Google Ads call tracking).
+              // .trim() is load-bearing: Vercel env vars can carry a
+              // trailing \n from copy-paste. Without trimming, gtag was
+              // configuring against the literal label "<id>\n" which
+              // Google Ads rejects as unknown, silently dropping every
+              // phone-call conversion. Discovered 2026-05-14 after a
+              // confirmed phone lead didn't register against the account.
+              "var callLabel = " + JSON.stringify((process.env.NEXT_PUBLIC_GADS_CALL_LABEL || "").trim()) + ";",
               "if (callLabel) {",
               "  gtag('config', " + JSON.stringify(GTAG_ID) + " + '/' + callLabel, {",
               "    phone_conversion_number: " + JSON.stringify(BUSINESS_PHONE),
