@@ -51,34 +51,24 @@ const nextConfig = {
       { source: "/pages/terms-and-conditions", destination: "/terms", permanent: true },
       { source: "/pages/disclaimer", destination: "/terms", permanent: true },
 
-      // Catch-all wildcards for old Shopify URL structures.
-      // IMPORTANT: use [^.]+ so we don't accidentally redirect static files
-      // like /products/plus-video-doorbell.png (which must keep serving
-      // from /public).
+      // ────────────────────────────────────────────────────────────
+      // SPECIFIC LEGACY OVERRIDES — MUST come BEFORE the wildcard
+      // catch-alls below. Next.js evaluates redirects top-to-bottom
+      // and the FIRST match wins, so anything that needs a custom
+      // destination has to be declared before /pages/:slug → /
+      // and /products/:slug → /services/:slug catch it.
       //
-      // PRESERVE THE SLUG: the previous version of this rule sent every
-      // /products/* URL to a single destination (/services). That collapsed
-      // ~90 distinct Shopify product URLs into one canonical, and Google
-      // de-duped them all out of the index — visible in GSC as a cliff in
-      // Merchant Listings + Product Snippets + HTTPS URLs around 2026-04-20.
-      // By piping :slug into the destination, /products/<handle> now
-      // redirects to /services/<handle> where the new SSR product page
-      // lives (CURATED_HANDLES in src/app/services/[handle]/page.tsx).
-      // Slugs without a matching new handle 404, which is correct — those
-      // products genuinely don't exist anymore. Specific dead-product
-      // slugs are listed below as explicit overrides that win first.
-      { source: "/products/:slug([^.]+)", destination: "/services/:slug", permanent: true },
-      { source: "/collections/:slug([^.]+)", destination: "/services", permanent: true },
-      { source: "/pages/:slug([^.]+)", destination: "/", permanent: true },
-      { source: "/blogs/:slug([^.]+)", destination: "https://www.smartcareliving.ie/", permanent: true },
+      // A previous comment in this file claimed "specific dead-product
+      // slugs are listed below as explicit overrides that win first" —
+      // that was aspirational, not actual. The specifics were below the
+      // wildcards, so the wildcards always won and the specific lines
+      // were dead code. GSC on 2026-05-14 showed 120 "Page with redirect
+      // — Failed" entries, largely caused by mass-collapsing distinct
+      // legacy URLs to "/" (low-quality redirect pattern). Re-ordering
+      // here is the real fix.
+      // ────────────────────────────────────────────────────────────
 
       // Legacy /pages/* → topically-matching current pages.
-      // Previously all of these went to "/", which Google flags as
-      // "Page with redirect — Failed" because mass-collapsing distinct
-      // URLs to one canonical looks like a low-quality redirect pattern.
-      // GSC on 2026-05-14 showed 120 such failures across the property.
-      // Each mapping below sends the legacy URL to the page that actually
-      // satisfies its original intent.
       { source: "/pages/how-it-works", destination: "/installation", permanent: true },
       { source: "/pages/about-us", destination: "/about", permanent: true },
       { source: "/pages/cost", destination: "/services", permanent: true },
@@ -90,10 +80,8 @@ const nextConfig = {
       { source: "/pages/your-5-star-rated-all-things-ring-installer", destination: "/reviews", permanent: true },
 
       // Legacy Shopify /products/* → topically-matching service pages.
-      // Same root-cause fix as the /pages/* block above — previously these
-      // all redirected to "/" which made them look like noise to Google.
-      // Each mapping now sends the legacy product URL to the new service
-      // page that actually sells the same thing.
+      // These previously went to "/" — same reason as the /pages/*
+      // overrides above.
       { source: "/products/book-your-consultation-call", destination: "/services/free-consultation", permanent: true },
       { source: "/products/onsite-troubleshoot-installation-set-up-of-customer-bought-ring-products", destination: "/services/installation-only", permanent: true },
       { source: "/products/onsite-ring-of-security-consultation", destination: "/services/free-consultation", permanent: true },
@@ -104,6 +92,24 @@ const nextConfig = {
       { source: "/products/security-cam-floodlight-cam-plus", destination: "/services/plus-floodlight-cam", permanent: true },
       { source: "/products/floodlight-cam-pro-mains-powered-copy", destination: "/services/pro-floodlight-cam", permanent: true },
       { source: "/products/whole-house-security-calculator", destination: "/services/bundles/whole-home", permanent: true },
+
+      // ────────────────────────────────────────────────────────────
+      // CATCH-ALL WILDCARDS for old Shopify URL structures.
+      // IMPORTANT: use [^.]+ so we don't accidentally redirect static
+      // files like /products/plus-video-doorbell.png (which must keep
+      // serving from /public).
+      //
+      // PRESERVE THE SLUG: piping :slug into the destination means
+      // /products/<handle> redirects to /services/<handle> where the
+      // new SSR product page lives (CURATED_HANDLES in
+      // src/app/services/[handle]/page.tsx). Slugs without a matching
+      // new handle 404, which is correct — those products genuinely
+      // don't exist anymore.
+      // ────────────────────────────────────────────────────────────
+      { source: "/products/:slug([^.]+)", destination: "/services/:slug", permanent: true },
+      { source: "/collections/:slug([^.]+)", destination: "/services", permanent: true },
+      { source: "/pages/:slug([^.]+)", destination: "/", permanent: true },
+      { source: "/blogs/:slug([^.]+)", destination: "https://www.smartcareliving.ie/", permanent: true },
 
       // Old blog index + any old blog post → smartcareliving.ie blog index.
       // Previously this was ~30 per-post redirects pointing at specific
