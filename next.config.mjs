@@ -72,28 +72,38 @@ const nextConfig = {
       { source: "/pages/:slug([^.]+)", destination: "/", permanent: true },
       { source: "/blogs/:slug([^.]+)", destination: "https://www.smartcareliving.ie/", permanent: true },
 
-      // Old pages -> home page
-      { source: "/pages/how-it-works", destination: "/", permanent: true },
-      { source: "/pages/about-us", destination: "/", permanent: true },
-      { source: "/pages/cost", destination: "/", permanent: true },
-      { source: "/pages/client-stories", destination: "/", permanent: true },
-      { source: "/pages/mary", destination: "/", permanent: true },
-      { source: "/pages/joe", destination: "/", permanent: true },
-      { source: "/pages/anne", destination: "/", permanent: true },
-      { source: "/pages/contact-us", destination: "/", permanent: true },
-      { source: "/pages/your-5-star-rated-all-things-ring-installer", destination: "/", permanent: true },
+      // Legacy /pages/* → topically-matching current pages.
+      // Previously all of these went to "/", which Google flags as
+      // "Page with redirect — Failed" because mass-collapsing distinct
+      // URLs to one canonical looks like a low-quality redirect pattern.
+      // GSC on 2026-05-14 showed 120 such failures across the property.
+      // Each mapping below sends the legacy URL to the page that actually
+      // satisfies its original intent.
+      { source: "/pages/how-it-works", destination: "/installation", permanent: true },
+      { source: "/pages/about-us", destination: "/about", permanent: true },
+      { source: "/pages/cost", destination: "/services", permanent: true },
+      { source: "/pages/client-stories", destination: "/reviews", permanent: true },
+      { source: "/pages/mary", destination: "/reviews", permanent: true },
+      { source: "/pages/joe", destination: "/reviews", permanent: true },
+      { source: "/pages/anne", destination: "/reviews", permanent: true },
+      { source: "/pages/contact-us", destination: "/contact", permanent: true },
+      { source: "/pages/your-5-star-rated-all-things-ring-installer", destination: "/reviews", permanent: true },
 
-      // Old products -> home page
-      { source: "/products/book-your-consultation-call", destination: "/", permanent: true },
-      { source: "/products/onsite-troubleshoot-installation-set-up-of-customer-bought-ring-products", destination: "/", permanent: true },
-      { source: "/products/onsite-ring-of-security-consultation", destination: "/", permanent: true },
-      { source: "/products/ring-driveway-bundle-premium", destination: "/", permanent: true },
-      { source: "/products/ring-video-doorbell-wired", destination: "/", permanent: true },
-      { source: "/products/basic-video-doorbell-mains-or-battery-powered", destination: "/", permanent: true },
-      { source: "/products/advanced-video-doorbell-pro-wired", destination: "/", permanent: true },
-      { source: "/products/security-cam-floodlight-cam-plus", destination: "/", permanent: true },
-      { source: "/products/floodlight-cam-pro-mains-powered-copy", destination: "/", permanent: true },
-      { source: "/products/whole-house-security-calculator", destination: "/", permanent: true },
+      // Legacy Shopify /products/* → topically-matching service pages.
+      // Same root-cause fix as the /pages/* block above — previously these
+      // all redirected to "/" which made them look like noise to Google.
+      // Each mapping now sends the legacy product URL to the new service
+      // page that actually sells the same thing.
+      { source: "/products/book-your-consultation-call", destination: "/services/free-consultation", permanent: true },
+      { source: "/products/onsite-troubleshoot-installation-set-up-of-customer-bought-ring-products", destination: "/services/installation-only", permanent: true },
+      { source: "/products/onsite-ring-of-security-consultation", destination: "/services/free-consultation", permanent: true },
+      { source: "/products/ring-driveway-bundle-premium", destination: "/services/bundles/driveway", permanent: true },
+      { source: "/products/ring-video-doorbell-wired", destination: "/services/plus-video-doorbell", permanent: true },
+      { source: "/products/basic-video-doorbell-mains-or-battery-powered", destination: "/services/plus-video-doorbell", permanent: true },
+      { source: "/products/advanced-video-doorbell-pro-wired", destination: "/services/pro-video-doorbell", permanent: true },
+      { source: "/products/security-cam-floodlight-cam-plus", destination: "/services/plus-floodlight-cam", permanent: true },
+      { source: "/products/floodlight-cam-pro-mains-powered-copy", destination: "/services/pro-floodlight-cam", permanent: true },
+      { source: "/products/whole-house-security-calculator", destination: "/services/bundles/whole-home", permanent: true },
 
       // Old blog index + any old blog post → smartcareliving.ie blog index.
       // Previously this was ~30 per-post redirects pointing at specific
