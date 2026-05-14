@@ -4,6 +4,7 @@ import { Resend } from "resend";
 import { createBookingEvent } from "@/lib/calendly";
 import { logLead, type AttributionRecord } from "@/lib/leads";
 import { fireServerConversion } from "@/lib/server-conversions";
+import { sendToCrm } from "@/lib/crm";
 
 // POST routes are inherently dynamic but explicit is better — without
 // this, Next.js may try static optimization on a future major.
@@ -103,21 +104,30 @@ export async function POST(request: Request) {
       if (result) {
         console.log("[free-checkout] Calendly booking created:", result.eventId);
       } else {
-        console.error("[free-checkout] Calendly booking failed — check [calendly] logs above for details");
+        console.error(
+          `[free-checkout] Calendly booking failed for ${customerEmail} on ${bookedItem.bookingDate} ${bookedItem.bookingSlot}`
+        );
+        // No debug object in the response — was previously leaking the
+        // internal slot/date/kind to the client unnecessarily.
         return NextResponse.json(
-          { error: "Failed to book your consultation. Please try again or contact us.", debug: { date: bookedItem.bookingDate, slot: bookedItem.bookingSlot, kind: "consultation" } },
+          { error: "Failed to book your consultation. Please try again or contact us." },
           { status: 500 }
         );
       }
 
-      // Send notification email to Nigel with customer details
+      // Send notification email to Nigel with customer details.
+      // .env CONTACT_TO_EMAIL takes precedence over the hardcoded fallback
+      // so Nigel can route alerts to a team inbox without a redeploy. All
+      // other handlers (contact, booking, stripe webhook) do this; this one
+      // was the odd-one-out, baking nigel@smart-space.ie into code.
       const apiKey = process.env.RESEND_API_KEY;
       const from = process.env.RESEND_FROM_EMAIL;
+      const notifyTo = process.env.CONTACT_TO_EMAIL ?? "nigel@smart-space.ie";
       if (apiKey && from) {
         const resend = new Resend(apiKey);
         await resend.emails.send({
           from,
-          to: ["nigel@smart-space.ie"],
+          to: [notifyTo],
           replyTo: customerEmail,
           subject: `New Free Consultation Booking — ${customerName}`,
           text: [
@@ -186,6 +196,33 @@ export async function POST(request: Request) {
       firstName: firstName || undefined,
       lastName,
       extraParams: { lead_source: "free_consultation" },
+    });
+
+    // Mirror to SmartCRM (fire-and-forget; never blocks the response).
+    // Previously absent on this path — meant every free-consultation
+    // booking was invisible to the CRM, even though the contact form
+    // and the paid booking endpoint both mirror correctly.
+    void sendToCrm({
+      source: "free_consultation",
+      source_detail: bookedItem?.name || "Free Home Consultation",
+      name: customer?.name || null,
+      email: customer?.email || null,
+      phone: customer?.phone || null,
+      message: null,
+      utm_source: finalAttribution?.utmSource ?? null,
+      utm_medium: finalAttribution?.utmMedium ?? null,
+      utm_campaign: finalAttribution?.utmCampaign ?? null,
+      utm_term: finalAttribution?.utmTerm ?? null,
+      utm_content: finalAttribution?.utmContent ?? null,
+      gclid: finalAttribution?.gclid ?? null,
+      referrer: finalAttribution?.referrer ?? null,
+      tags: ["free-consultation"],
+      custom: {
+        conversion_id: conversionId,
+        booking_date: bookedItem?.bookingDate || null,
+        booking_slot: bookedItem?.bookingSlot || null,
+        address: customer?.address || null,
+      },
     });
 
     return NextResponse.json({ success: true, conversionId });

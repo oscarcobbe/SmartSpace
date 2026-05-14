@@ -4,6 +4,7 @@ import { Resend } from "resend";
 import { createBookingEvent } from "@/lib/calendly";
 import { logLead } from "@/lib/leads";
 import { fireServerConversion } from "@/lib/server-conversions";
+import { sendToCrm } from "@/lib/crm";
 import { sendSms } from "@/lib/sms";
 import { formatEuro } from "@/lib/format";
 import { sendSiteAlert } from "@/lib/site-alerts";
@@ -488,6 +489,37 @@ export async function POST(req: NextRequest) {
       installationAddress,
       sessionId,
       calendlyStatus,
+    });
+
+    // Mirror to SmartCRM (fire-and-forget; never blocks the webhook).
+    // Previously absent on the paid-order path — meant every paying
+    // customer was invisible to the CRM, while contact / booking /
+    // free-consultation all mirrored correctly. Real money customers
+    // are the most valuable record-set; biggest CRM-coverage hole.
+    void sendToCrm({
+      source: "paid_order",
+      source_detail: productName,
+      name: customerName,
+      email,
+      phone: phone || null,
+      message: null,
+      utm_source: (session.metadata?.utm_source as string) || null,
+      utm_medium: (session.metadata?.utm_medium as string) || null,
+      utm_campaign: (session.metadata?.utm_campaign as string) || null,
+      utm_term: (session.metadata?.utm_term as string) || null,
+      utm_content: (session.metadata?.utm_content as string) || null,
+      gclid: gclid || null,
+      referrer: (session.metadata?.referrer as string) || null,
+      tags: ["paid-order", calendlyStatus === "failed" ? "calendly-failed" : "calendly-ok"],
+      custom: {
+        stripe_session_id: sessionId,
+        product: productName,
+        amount_eur: amountTotal,
+        booking_date: bookingDate || null,
+        booking_slot: bookingSlot || null,
+        installation_address: installationAddress || null,
+        configuration: configNote || null,
+      },
     });
 
     // SMS for high-value orders (≥ €100) OR for any order where Calendly
