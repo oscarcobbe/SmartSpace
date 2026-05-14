@@ -32,8 +32,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/services/pro-whole-home-bundle`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE}/services/eldercare-security-bundle`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
 
-    // Local SEO
+    // Local SEO — county index plus the 4 highest-volume county detail
+    // pages (Dublin, Wicklow, Kildare, Meath). Each detail page targets
+    // queries like "ring installer dublin" / "doorbell installation kildare"
+    // that the single /areas page was too generic to win.
     { url: `${BASE}/areas`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE}/areas/dublin`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
+    { url: `${BASE}/areas/wicklow`, lastModified: now, changeFrequency: "monthly", priority: 0.75 },
+    { url: `${BASE}/areas/kildare`, lastModified: now, changeFrequency: "monthly", priority: 0.75 },
+    { url: `${BASE}/areas/meath`, lastModified: now, changeFrequency: "monthly", priority: 0.75 },
 
     // Trust + info
     { url: `${BASE}/reviews`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
