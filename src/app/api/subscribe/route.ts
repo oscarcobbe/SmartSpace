@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { logLead } from "@/lib/leads";
+import { alertTo } from "@/lib/business-constants";
 
 
 // POST routes are inherently dynamic but explicit is better — without
@@ -12,7 +13,23 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: Request) {
   try {
-    const { email, consent } = (await request.json()) as { email?: string; consent?: boolean };
+    const { email, consent, homepage_url } = (await request.json()) as {
+      email?: string;
+      consent?: boolean;
+      homepage_url?: string; // honeypot — see MailingList.tsx
+    };
+
+    // Honeypot — same pattern as /api/contact. Real users can't see the
+    // hidden input; bots that fill every field will leave a non-empty
+    // value here. Return 200 success so the bot doesn't retry, skip every
+    // side effect (no email to Nigel, no Sheet row).
+    if (homepage_url && homepage_url.trim() !== "") {
+      console.warn(
+        `[subscribe] honeypot triggered, dropping bot submission. ` +
+          `email=${(email ?? "").slice(0, 60)} honeypot=${homepage_url.slice(0, 60)}`
+      );
+      return NextResponse.json({ success: true, id: "honeypot" });
+    }
 
     // Tightened from `.includes("@")` which accepted "a@" / "@b" / "@@" —
     // every malformed string was costing Resend bandwidth and writing
@@ -30,7 +47,7 @@ export async function POST(request: Request) {
 
     const apiKey = process.env.RESEND_API_KEY;
     const from = process.env.RESEND_FROM_EMAIL ?? "Smart Space <onboarding@resend.dev>";
-    const to = process.env.CONTACT_TO_EMAIL ?? "nigel@smart-space.ie";
+    const to = alertTo();
 
     if (!apiKey) {
       console.error("Subscribe: RESEND_API_KEY not set");

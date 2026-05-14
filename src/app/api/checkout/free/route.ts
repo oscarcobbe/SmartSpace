@@ -5,6 +5,7 @@ import { createBookingEvent } from "@/lib/calendly";
 import { logLead, type AttributionRecord } from "@/lib/leads";
 import { fireServerConversion } from "@/lib/server-conversions";
 import { sendToCrm } from "@/lib/crm";
+import { alertTo } from "@/lib/business-constants";
 
 // POST routes are inherently dynamic but explicit is better — without
 // this, Next.js may try static optimization on a future major.
@@ -122,7 +123,7 @@ export async function POST(request: Request) {
       // was the odd-one-out, baking nigel@smart-space.ie into code.
       const apiKey = process.env.RESEND_API_KEY;
       const from = process.env.RESEND_FROM_EMAIL;
-      const notifyTo = process.env.CONTACT_TO_EMAIL ?? "nigel@smart-space.ie";
+      const notifyTo = alertTo();
       if (apiKey && from) {
         const resend = new Resend(apiKey);
         await resend.emails.send({

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Star } from "lucide-react";
+import { AGGREGATE_RATING, AGGREGATE_REVIEW_COUNT } from "@/lib/business-constants";
 
 const SITE = "https://smart-space.ie";
 
@@ -86,6 +87,8 @@ function StarRating({ rating }: { rating: number }) {
 // LocalBusiness aggregateRating ALSO lives in src/app/layout.tsx — this
 // is a duplicate; both are valid (Google de-dupes by @id) but consider
 // removing this block entirely once we confirm it.
+// AggregateRating values come from src/lib/business-constants.ts so this
+// page and layout.tsx can't drift. Update there only.
 const reviewsSchema = {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
@@ -94,9 +97,9 @@ const reviewsSchema = {
   url: SITE,
   aggregateRating: {
     "@type": "AggregateRating",
-    ratingValue: "5",
+    ratingValue: AGGREGATE_RATING,
     bestRating: "5",
-    reviewCount: "100",
+    reviewCount: AGGREGATE_REVIEW_COUNT,
   },
 };
 

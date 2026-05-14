@@ -41,8 +41,13 @@ export interface CrmLeadPayload {
  * tagged smart-space.
  */
 export async function sendToCrm(payload: CrmLeadPayload): Promise<void> {
-  const url = process.env.CRM_INBOUND_URL;
-  const secret = process.env.CRM_HMAC_SECRET;
+  // .trim() because Vercel env-var pills hide trailing whitespace from
+  // copy-paste. A trailing newline in CRM_INBOUND_URL would mangle the
+  // fetch target; a trailing newline in CRM_HMAC_SECRET would silently
+  // break the HMAC signature. See the GADS_CALL_LABEL post-mortem in
+  // src/app/layout.tsx for the canonical case.
+  const url = process.env.CRM_INBOUND_URL?.trim();
+  const secret = process.env.CRM_HMAC_SECRET?.trim();
   if (!url || !secret) {
     // Not configured — totally fine, just skip.
     return;

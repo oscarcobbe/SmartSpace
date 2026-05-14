@@ -7,6 +7,7 @@
  *
  * The expected payload shape matches google-apps-script.js (doPost).
  */
+import { alertTo } from "@/lib/business-constants";
 
 export interface AttributionRecord {
   gclid?: string;
@@ -46,7 +47,7 @@ export interface LeadRecord {
 async function sendLeadLogFailureAlert(record: LeadRecord, reason: string): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM_EMAIL;
-  const to = process.env.CONTACT_TO_EMAIL ?? "nigel@smart-space.ie";
+  const to = alertTo();
   if (!apiKey || !from) return; // can't alert if mail isn't wired up
 
   // Best-effort. We don't await chain into the caller's flow — the customer
@@ -90,7 +91,11 @@ async function sendLeadLogFailureAlert(record: LeadRecord, reason: string): Prom
  * contact-form rows.
  */
 export async function logLead(record: LeadRecord): Promise<void> {
-  const url = process.env.GOOGLE_SHEET_WEBHOOK_URL;
+  // .trim() defends against trailing-newline contamination of the env var
+  // (the same class of bug as the GADS_CALL_LABEL post-mortem) — without
+  // it, a copy-paste newline in Vercel would 404 the Apps Script endpoint
+  // and every lead would silently fail to log.
+  const url = process.env.GOOGLE_SHEET_WEBHOOK_URL?.trim();
   if (!url) {
     console.warn("[leads] GOOGLE_SHEET_WEBHOOK_URL not set — skipping lead log");
     await sendLeadLogFailureAlert(record, "GOOGLE_SHEET_WEBHOOK_URL env var not set");

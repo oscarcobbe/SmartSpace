@@ -108,7 +108,10 @@ function getBaseUrl(): string {
   // a Vercel cron invocation is the `*.vercel.app` deployment alias, which
   // returns 401 to unauthenticated traffic — so using it produced a flood
   // of false 401 alerts on 2026-05-12. Env var wins, apex is the fallback.
-  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL;
+  // .trim() — same trailing-whitespace-from-Vercel risk as elsewhere.
+  // If SITE_URL ends in a literal \n, every page probe below would fetch
+  // `https://smart-space.ie\n/...` and we'd alert "every page is down".
+  const fromEnv = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "").trim();
   if (fromEnv) return fromEnv.replace(/\/$/, "");
   return "https://smart-space.ie";
 }

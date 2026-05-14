@@ -6,6 +6,7 @@ import { logLead, type AttributionRecord } from "@/lib/leads";
 import { fireServerConversion } from "@/lib/server-conversions";
 import { sendToCrm } from "@/lib/crm";
 import { sendSiteAlert } from "@/lib/site-alerts";
+import { alertTo } from "@/lib/business-constants";
 
 
 // POST routes are inherently dynamic but explicit is better — without
@@ -49,12 +50,25 @@ interface BookingBody {
   date?: string;
   timeSlot?: string;
   attribution?: AttributionRecord;
+  homepage_url?: string; // honeypot — see BookingCalendar.tsx
 }
 
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as BookingBody;
-    const { name, email, phone, subject, message, date, timeSlot, attribution } = body;
+    const { name, email, phone, subject, message, date, timeSlot, attribution, homepage_url } = body;
+
+    // Honeypot — same pattern as /api/contact and /api/subscribe.
+    // A bot filling every form field will populate the hidden input;
+    // real users can't see it. Return success so the bot doesn't retry,
+    // but skip every side effect (no Calendly booking, no email, no Sheet).
+    if (homepage_url && homepage_url.trim() !== "") {
+      console.warn(
+        `[booking] honeypot triggered, dropping bot submission. ` +
+          `email=${(email ?? "").slice(0, 60)} honeypot=${homepage_url.slice(0, 60)}`
+      );
+      return NextResponse.json({ success: true, id: "honeypot" });
+    }
 
     if (!name?.trim() || !email?.trim() || !date || !timeSlot) {
       return NextResponse.json(
@@ -131,7 +145,7 @@ export async function POST(request: Request) {
     //    break the user flow since the Calendly booking already succeeded).
     const apiKey = process.env.RESEND_API_KEY;
     const from = process.env.RESEND_FROM_EMAIL;
-    const to = process.env.CONTACT_TO_EMAIL ?? "nigel@smart-space.ie";
+    const to = alertTo();
 
     if (apiKey && from) {
       try {

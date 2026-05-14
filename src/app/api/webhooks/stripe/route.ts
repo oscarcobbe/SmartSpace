@@ -8,6 +8,7 @@ import { sendToCrm } from "@/lib/crm";
 import { sendSms } from "@/lib/sms";
 import { formatEuro } from "@/lib/format";
 import { sendSiteAlert } from "@/lib/site-alerts";
+import { alertTo } from "@/lib/business-constants";
 
 // EXPLICIT runtime + dynamic flags. The webhook calls req.text() to get
 // the raw body for Stripe signature verification (which uses Node's
@@ -61,7 +62,7 @@ async function sendOrderNotification(params: {
 }) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM_EMAIL;
-  const to = process.env.CONTACT_TO_EMAIL ?? "nigel@smart-space.ie";
+  const to = alertTo();
   if (!apiKey || !from) {
     console.warn("[stripe webhook] RESEND_API_KEY or RESEND_FROM_EMAIL missing — skipping order email");
     return;
@@ -159,7 +160,7 @@ async function sendPurchaseAttemptAlert(params: {
 }) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM_EMAIL;
-  const to = process.env.CONTACT_TO_EMAIL ?? "nigel@smart-space.ie";
+  const to = alertTo();
   if (!apiKey || !from) {
     console.warn("[stripe webhook] RESEND_API_KEY or RESEND_FROM_EMAIL missing — skipping purchase-attempt alert");
     return;
@@ -392,7 +393,16 @@ export async function POST(req: NextRequest) {
             .map((p) => `${p.question}: ${p.answer}`)
             .join(" | ");
         }
-      } catch { /* leave empty */ }
+      } catch (err) {
+        // /api/checkout truncates the JSON-encoded configuration to ~490 chars
+        // to fit Stripe's metadata cap, which can produce invalid JSON. Log
+        // so we know we silently lost a customer's product Q&A — but don't
+        // throw, the order is still valid without it.
+        console.warn(
+          `[stripe webhook] failed to parse session.metadata.configuration for session=${sessionId}:`,
+          err instanceof Error ? err.message : err
+        );
+      }
     }
 
     // Log paid order to tracking sheet — must await; fire-and-forget gets

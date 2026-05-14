@@ -25,6 +25,7 @@
  */
 
 import { Resend } from "resend";
+import { alertTo } from "@/lib/business-constants";
 
 const DEDUPE_WINDOW_MS = 60 * 60 * 1000; // 1h
 const MAX_ALERTS_PER_WINDOW = 10;
@@ -85,7 +86,7 @@ export interface SendSiteAlertResult {
 export async function sendSiteAlert(params: SiteAlertParams): Promise<SendSiteAlertResult> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM_EMAIL;
-  const to = params.to ?? process.env.CONTACT_TO_EMAIL ?? "nigel@smart-space.ie";
+  const to = params.to ?? alertTo();
 
   if (!apiKey || !from) {
     console.warn(

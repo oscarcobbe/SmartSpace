@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useRef } from "react";
 import { Loader2 } from "lucide-react";
 
 export default function MailingList() {
@@ -9,6 +9,10 @@ export default function MailingList() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // Honeypot — see hidden input below. Bots fill every field; real
+  // users can't see this one. /api/subscribe drops any submission where
+  // this value is non-empty.
+  const honeypotRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -23,7 +27,11 @@ export default function MailingList() {
         // /api/subscribe route under GDPR. The button is disabled if
         // the consent box is unchecked, so this should always be true,
         // but we send it explicitly for transparency.
-        body: JSON.stringify({ email: email.trim(), consent: true }),
+        body: JSON.stringify({
+          email: email.trim(),
+          consent: true,
+          homepage_url: honeypotRef.current?.value ?? "",
+        }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -72,6 +80,20 @@ export default function MailingList() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-3">
+              {/* Honeypot — hidden anti-spam field. Mirrors the pattern in
+                  ContactForm.tsx: off-screen, tab-skip, screen-reader-skip,
+                  no autofill. /api/subscribe treats any non-empty value
+                  here as a bot submission and drops it. */}
+              <input
+                ref={honeypotRef}
+                type="text"
+                name="homepage_url"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                defaultValue=""
+                style={{ position: "absolute", left: "-9999px", top: "-9999px", width: 1, height: 1, opacity: 0 }}
+              />
               <div className="flex flex-col sm:flex-row gap-2">
                 <label htmlFor="newsletter-email" className="sr-only">
                   Email address

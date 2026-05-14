@@ -8,6 +8,7 @@ import { CartProvider } from "@/context/CartContext";
 import GclidCapture from "@/components/GclidCapture";
 import CookieBanner from "@/components/CookieBanner";
 import PhoneClickTracker from "@/components/PhoneClickTracker";
+import { AGGREGATE_RATING, AGGREGATE_REVIEW_COUNT } from "@/lib/business-constants";
 
 // next/font self-hosts the font, eliminates the render-blocking
 // `<link href="fonts.googleapis.com/...">` request, removes the need for
@@ -134,9 +135,9 @@ const jsonLd = {
       ],
       aggregateRating: {
         "@type": "AggregateRating",
-        ratingValue: "5",
+        ratingValue: AGGREGATE_RATING,
         bestRating: "5",
-        reviewCount: "100",
+        reviewCount: AGGREGATE_REVIEW_COUNT,
       },
       award: "Three Ireland SME Business Winner 2025",
     },

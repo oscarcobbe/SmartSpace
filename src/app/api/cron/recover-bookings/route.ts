@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { timingSafeEqual } from "crypto";
+import { alertTo } from "@/lib/business-constants";
 
 export const dynamic = "force-dynamic";
 
@@ -188,7 +189,7 @@ export async function GET(request: Request) {
   // Send Nigel an alert email
   const resendKey = process.env.RESEND_API_KEY;
   const resendFrom = process.env.RESEND_FROM_EMAIL;
-  const to = process.env.CONTACT_TO_EMAIL ?? "nigel@smart-space.ie";
+  const to = alertTo();
   if (resendKey && resendFrom) {
     const futureCount = missed.filter((m) => !m.isPast).length;
     const pastCount = missed.filter((m) => m.isPast).length;
