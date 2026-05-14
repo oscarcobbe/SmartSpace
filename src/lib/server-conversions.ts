@@ -135,8 +135,14 @@ async function fireGoogleAdsPixel(input: ServerConversionInput): Promise<void> {
   // Accepts gclid for click attribution and value/currency for monetary.
   // Emails/phones can be appended as `em` and `pn` (sha256 hex) for ECfL.
   try {
+    // Final safety belt: scrub any whitespace from the label even if a
+    // caller forgot to .trim() the env var. A trailing \n in a Vercel
+    // env var URL-encodes to %0A here and makes Google Ads reject the
+    // conversion as an unknown label. The Vercel value pill hides
+    // whitespace characters in its UI, so this is a defence in depth.
+    const sanitisedLabel = input.gadsLabel.trim().replace(/\s+/g, "");
     const params = new URLSearchParams();
-    params.set("label", input.gadsLabel);
+    params.set("label", sanitisedLabel);
     if (typeof input.value === "number") params.set("value", input.value.toString());
     if (input.currency) params.set("currency_code", input.currency);
     if (input.transactionId) params.set("oid", input.transactionId);

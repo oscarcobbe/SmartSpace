@@ -237,8 +237,13 @@ export async function POST(request: Request) {
     const lastName = rest.join(" ") || undefined;
     // Conversion label pulled from env so the user can fix it in Vercel
     // without a code redeploy if it ever changes in Google Ads.
+    // .trim() before .replace() — the env var can carry a trailing \n
+    // from copy-paste in Vercel, which survives the prefix-strip and
+    // breaks the server-side conversion as a URL param. See
+    // src/components/ContactForm.tsx for the same fix on the client.
     const leadLabel =
       (process.env.NEXT_PUBLIC_GADS_LEAD_SEND_TO || "")
+        .trim()
         .replace(/^AW-\d+\//, "") || "u8cHCNyipZocEJfU6PxC";
     await fireServerConversion({
       gadsLabel: leadLabel, // Smart Space Lead — same label as ContactForm

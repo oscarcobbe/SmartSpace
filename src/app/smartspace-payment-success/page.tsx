@@ -8,11 +8,14 @@ import { CheckCircle, Home, Phone } from "lucide-react";
 // Conversion send_to values. Pulled from env so the user can fix in
 // Vercel without a code redeploy if a label changes (e.g. the conversion
 // is recreated in Google Ads). Falls back to the historic labels.
+// .trim() — see src/components/ContactForm.tsx for the rationale.
+// Trailing-newline env vars in Vercel silently break gtag conversion
+// labels. This was costing every phone-call conversion until 2026-05-14.
 const GADS_PAYMENT_TAG =
-  process.env.NEXT_PUBLIC_GADS_PAYMENT_SEND_TO ||
+  process.env.NEXT_PUBLIC_GADS_PAYMENT_SEND_TO?.trim() ||
   "AW-17978501655/IofPCOiZuJkcEJfU6PxC";
 const GADS_FREE_CONSULTATION_TAG =
-  process.env.NEXT_PUBLIC_GADS_FREE_CONSULT_SEND_TO ||
+  process.env.NEXT_PUBLIC_GADS_FREE_CONSULT_SEND_TO?.trim() ||
   "AW-17978501655/fH4ZCMHv7ZocEJfU6PxC";
 // Lead value for a booked complimentary consultation — calibrated for Google
 // Ads smart bidding. Too high = over-bidding on unqualified leads.

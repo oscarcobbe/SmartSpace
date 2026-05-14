@@ -167,8 +167,10 @@ export async function POST(request: Request) {
     // close) so we double-fire from the server. Same pattern: shared
     // conversionId acts as transaction_id so Google Ads dedupes.
     const conversionId = randomUUID();
+    // .trim() — see src/app/api/contact/route.ts for the rationale.
     const freeConsultLabel =
       (process.env.NEXT_PUBLIC_GADS_FREE_CONSULT_SEND_TO || "")
+        .trim()
         .replace(/^AW-\d+\//, "") || "fH4ZCMHv7ZocEJfU6PxC";
     const [firstName, ...rest] = (customer?.name?.trim() || "").split(/\s+/);
     const lastName = rest.join(" ") || undefined;

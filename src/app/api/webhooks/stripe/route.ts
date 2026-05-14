@@ -452,8 +452,12 @@ export async function POST(req: NextRequest) {
     // dedupes when both client + server fire.
     const [firstName, ...rest] = (customerName || "").trim().split(/\s+/);
     const lastName = rest.join(" ") || undefined;
+    // .trim() — see src/app/api/contact/route.ts for the rationale.
+    // Critical here: this is the money path. A trailing-newline env var
+    // would have dropped every Stripe-purchase conversion silently.
     const paidLabel =
       (process.env.NEXT_PUBLIC_GADS_PAYMENT_SEND_TO || "")
+        .trim()
         .replace(/^AW-\d+\//, "") || "IofPCOiZuJkcEJfU6PxC";
     await fireServerConversion({
       gadsLabel: paidLabel, // SmartSpace Paid Order

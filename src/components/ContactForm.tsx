@@ -8,8 +8,12 @@ import { getAttribution } from "@/lib/attribution";
 // fix in Vercel without a code redeploy if the label changes (e.g. the
 // conversion is recreated in Google Ads). Falls back to the historic
 // label so prior behaviour is preserved when the env var isn't set.
+// .trim() is load-bearing — Vercel env vars can carry a trailing \n
+// from copy-paste, which makes Google Ads reject the conversion as an
+// unknown label. See src/app/layout.tsx (call-label fix) for the same
+// pattern. Discovered when phone-call conversions stopped registering.
 const GADS_LEAD_SEND_TO =
-  process.env.NEXT_PUBLIC_GADS_LEAD_SEND_TO ||
+  process.env.NEXT_PUBLIC_GADS_LEAD_SEND_TO?.trim() ||
   "AW-17978501655/u8cHCNyipZocEJfU6PxC";
 
 // Mirrors the pattern in booking/page.tsx — direct window.gtag fire is

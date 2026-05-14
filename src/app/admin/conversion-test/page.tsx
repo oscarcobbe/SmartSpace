@@ -38,14 +38,18 @@ type FireResult = {
 };
 
 const GADS_ACCOUNT = "AW-17978501655";
+// .trim() — see src/components/ContactForm.tsx for the rationale.
+// Without this, the diagnostic page would say "conversion fired" even
+// when Google Ads rejected the label as malformed (trailing newline),
+// silently misleading anyone using the test page to verify the pipeline.
 const LEAD_TAG =
-  process.env.NEXT_PUBLIC_GADS_LEAD_SEND_TO ||
+  process.env.NEXT_PUBLIC_GADS_LEAD_SEND_TO?.trim() ||
   `${GADS_ACCOUNT}/u8cHCNyipZocEJfU6PxC`;
 const PAYMENT_TAG =
-  process.env.NEXT_PUBLIC_GADS_PAYMENT_SEND_TO ||
+  process.env.NEXT_PUBLIC_GADS_PAYMENT_SEND_TO?.trim() ||
   `${GADS_ACCOUNT}/IofPCOiZuJkcEJfU6PxC`;
 const FREE_CONSULT_TAG =
-  process.env.NEXT_PUBLIC_GADS_FREE_CONSULT_SEND_TO ||
+  process.env.NEXT_PUBLIC_GADS_FREE_CONSULT_SEND_TO?.trim() ||
   `${GADS_ACCOUNT}/fH4ZCMHv7ZocEJfU6PxC`;
 
 type ConsentSnapshot = {
