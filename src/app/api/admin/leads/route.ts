@@ -582,8 +582,12 @@ export async function GET(request: Request) {
     const emailKey = (l.email || "").trim().toLowerCase();
     const match = paidByEmail.get(emailKey);
     if (match) {
+      // Only copy the amount across — do NOT overwrite l.status.
+      // The "Upcoming" view in page.tsx filters by `status === "Upcoming"`,
+      // so flipping to "Paid" hides the booking from that view (which is
+      // wrong: it's still an upcoming installation that happens to have a
+      // known payment amount). Keep status as-is, autofill the amount only.
       l.amount = match.formatted;
-      l.status = "Paid";
     }
   }
 
