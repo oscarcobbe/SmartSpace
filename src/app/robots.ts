@@ -21,6 +21,11 @@ export default function robots(): MetadataRoute.Robots {
           "/backlink-outreach",
           "/gbp-setup",
           "/ga4-setup",
+          // /scan is the QR-code landing for business cards and other print
+          // assets. It's noindex'd at the page level too — both signals so
+          // it stays cleanly separated from /services/free-consultation in
+          // organic search and so analytics can isolate scan traffic.
+          "/scan",
         ],
       },
     ],
