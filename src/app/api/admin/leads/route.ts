@@ -315,7 +315,25 @@ export async function GET(request: Request) {
                 for (const sub of subFields) {
                   const m = sub.match(/^([\w\s]{2,30}):\s*(.+)$/);
                   if (m) {
-                    calendlyDetails.push({ question: m[1].trim(), answer: m[2].trim() });
+                    const label = m[1].trim();
+                    const value = m[2].trim();
+                    // Skip the "Order: cs_xxx..." sub-field — that's the
+                    // internal Stripe session id passed through from
+                    // createBookingEvent in lib/calendly.ts. Admin doesn't
+                    // need to see it on the dashboard.
+                    if (/^order$/i.test(label)) continue;
+                    // Split "Product: Plus Video Doorbell — New Cabling &
+                    // Power Source Required" into separate Product + Cabling
+                    // rows. The em-dash join is added in /api/checkout to fit
+                    // the variant title into a single Stripe metadata field,
+                    // but it reads as a confusing run-on for admins.
+                    if (/^product$/i.test(label) && / — /.test(value)) {
+                      const [productName, variant] = value.split(/ — /, 2);
+                      calendlyDetails.push({ question: "Product", answer: productName.trim() });
+                      if (variant) calendlyDetails.push({ question: "Cabling", answer: variant.trim() });
+                      continue;
+                    }
+                    calendlyDetails.push({ question: label, answer: value });
                   } else {
                     // Free-form trailing notes — keep them but mark generically
                     calendlyDetails.push({ question: "Note", answer: sub });
@@ -536,6 +554,37 @@ export async function GET(request: Request) {
       source: "Stripe Balance (Upcoming Payout)",
       message: err instanceof Error ? err.message : "Unknown error fetching balance",
     });
+  }
+
+  // Cross-reference: a Calendly Installation row carries amount "—" because
+  // Calendly doesn't know the price — the customer paid Stripe, not Calendly.
+  // The matching Stripe Paid Order has the real amount. Copy it across so
+  // the expanded-card "Payment" field autofills with what they actually paid,
+  // rather than the placeholder em-dash. Match by email (lowercased, since
+  // Stripe sometimes lowercases the input). If multiple Stripe orders exist
+  // for the same email, take the highest amount (defensive — a customer who
+  // bought twice has two valid amounts; the bigger one is the install we care
+  // about). The same logic was previously only run client-side for the
+  // "Upcoming" list, leaving the expanded detail view showing "—".
+  const paidByEmail = new Map<string, { eur: number; formatted: string }>();
+  for (const l of leads) {
+    if (l.type !== "Paid Order") continue;
+    const emailKey = (l.email || "").trim().toLowerCase();
+    if (!emailKey || emailKey === "—") continue;
+    const eur = parseFloat(String(l.amount).replace(/[^0-9.]/g, ""));
+    if (!Number.isFinite(eur) || eur <= 0) continue;
+    const prev = paidByEmail.get(emailKey);
+    if (!prev || eur > prev.eur) paidByEmail.set(emailKey, { eur, formatted: l.amount });
+  }
+  for (const l of leads) {
+    if (l.type !== "Installation") continue;
+    if (l.amount !== "—") continue;
+    const emailKey = (l.email || "").trim().toLowerCase();
+    const match = paidByEmail.get(emailKey);
+    if (match) {
+      l.amount = match.formatted;
+      l.status = "Paid";
+    }
   }
 
   return NextResponse.json(
