@@ -121,7 +121,7 @@ export default function Post() {
             </tr>
             <tr>
               <td>Smart doorbell (Ring Video Doorbell + professional install)</td>
-              <td>From €299</td>
+              <td>From €329</td>
               <td>5–8 years, firmware updates indefinitely</td>
             </tr>
             <tr>

@@ -236,7 +236,7 @@ export default function Post() {
         </p>
         <ul>
           <li>
-            <strong>Ring Video Doorbell + installation — from €299.</strong> Includes
+            <strong>Ring Video Doorbell + installation — from €329.</strong> Includes
             Ring Chime, app setup, motion zones, and a walkthrough.
           </li>
           <li>

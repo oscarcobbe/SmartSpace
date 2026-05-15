@@ -29,6 +29,6 @@ export const FAQS = [
   },
   {
     q: "How much does a Ring install cost?",
-    a: "Installation-only starts at €139. A single Ring Video Doorbell or External Camera (supplied and installed) starts at €299. Bundles start at €509. See our Services page for full pricing.",
+    a: "Installation-only starts at €139. A single Ring Video Doorbell (supplied and installed) starts at €329. An External Camera (supplied and installed) starts at €299. Bundles start at €509. See our Services page for full pricing.",
   },
 ];
