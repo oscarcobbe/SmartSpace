@@ -40,8 +40,12 @@ export default function Hero() {
             to /services/bundles which is a relay tab with no conversion
             mechanism — every paid click hitting the homepage was being
             sent one click further from converting.
-          - Secondary (white): Popular Bundles → kept for users who want
-            to browse first. */}
+          - Secondary (white): "Got a device to install?" → routes the
+            post-Amazon audience straight to /services/installation-only.
+            Installation-only is a flat-fee, high-margin revenue stream
+            and the previous "View Popular Bundles" CTA sent these users
+            into the bundles browser, one extra click away from the right
+            page. Updated 2026-05-15 to capture this segment directly. */}
       <div className="fade-up-delay-3 absolute z-10 bottom-16 sm:bottom-32 lg:bottom-36 left-0 right-0 px-4">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 max-w-md sm:max-w-none mx-auto">
           <Link
@@ -52,10 +56,10 @@ export default function Hero() {
             <span className="relative z-10">Book Complimentary Consultation</span>
           </Link>
           <Link
-            href="/services/bundles"
+            href="/services/installation-only"
             className="group inline-flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm hover:bg-white text-[#1C1A18] font-semibold text-sm px-7 sm:px-9 py-3.5 rounded-full border border-white/60 transition-all hover:-translate-y-0.5 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.25)] whitespace-nowrap"
           >
-            <span>View Popular Bundles</span>
+            <span>Got a device to install?</span>
             <ArrowRight className="w-4 h-4 transition-transform duration-500 group-hover:translate-x-1" />
           </Link>
         </div>
