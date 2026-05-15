@@ -5,12 +5,12 @@ const SITE = "https://smart-space.ie";
 export const metadata: Metadata = {
   title: "Ring Video Doorbell Installation | Dublin & Leinster | Smart Space",
   description:
-    "Ring Video Doorbell installation in Dublin and Leinster. Every install includes the Ring Chime, app setup, and motion zone tuning. From €299.",
+    "Ring Video Doorbell installation in Dublin and Leinster. Every install includes the Ring Chime, app setup, and motion zone tuning. From €329.",
   alternates: { canonical: "/services/doorbell" },
   openGraph: {
     title: "Ring Video Doorbell Installation | Dublin & Leinster",
     description:
-      "Professional Ring Video Doorbell installation. Chime included. From €299.",
+      "Professional Ring Video Doorbell installation. Chime included. From €329.",
     url: `${SITE}/services/doorbell`,
     type: "website",
   },
@@ -27,11 +27,11 @@ const serviceSchema = {
   areaServed: { "@type": "Place", name: "Dublin & Leinster, Ireland" },
   offers: {
     "@type": "Offer",
-    price: "299",
+    price: "329",
     priceCurrency: "EUR",
     priceSpecification: {
       "@type": "PriceSpecification",
-      price: "299",
+      price: "329",
       priceCurrency: "EUR",
       valueAddedTaxIncluded: true,
     },

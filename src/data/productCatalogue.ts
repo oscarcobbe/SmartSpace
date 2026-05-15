@@ -25,11 +25,11 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
     ],
     "priceRange": {
       "minVariantPrice": {
-        "amount": "299.0",
+        "amount": "329.0",
         "currencyCode": "EUR"
       },
       "maxVariantPrice": {
-        "amount": "399.0",
+        "amount": "429.0",
         "currencyCode": "EUR"
       }
     },
@@ -63,7 +63,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "No New Cabling Required",
             "availableForSale": true,
             "price": {
-              "amount": "299.0",
+              "amount": "329.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
@@ -81,7 +81,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "title": "New Cabling & Power Source Required",
             "availableForSale": true,
             "price": {
-              "amount": "399.0",
+              "amount": "429.0",
               "currencyCode": "EUR"
             },
             "compareAtPrice": null,
