@@ -39,6 +39,12 @@ const nextConfig = {
       // Old /survey page → new /faq
       { source: "/survey", destination: "/faq", permanent: true },
 
+      // /scan was a short-lived QR-code landing page (2026-05-15). The
+      // business-card QRs now point straight to /services/installation-only.
+      // Defensive redirect kept in case any test prints or shared links
+      // still reference /scan — gracefully forwards to the booking page.
+      { source: "/scan", destination: "/services/installation-only", permanent: true },
+
       // Specific legacy pages → appropriate new pages
       { source: "/pages/contact", destination: "/contact", permanent: true },
       { source: "/pages/reviews", destination: "/reviews", permanent: true },
