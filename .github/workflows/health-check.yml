@@ -1,0 +1,86 @@
+name: Site health check
+
+# Every 30 minutes (UTC). GitHub may delay by a few minutes during high-load
+# periods — that's expected and fine for a health probe.
+#
+# In addition to this, /api/cron/health-check still runs daily at 07:45 UTC
+# from Vercel (vercel.json) as a belt-and-braces fallback. If GitHub Actions
+# is ever down, the Vercel cron still catches problems within a day.
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch: # manual trigger from the Actions tab for testing
+
+# If a previous run is still in flight (e.g. the endpoint is slow), skip the
+# next scheduled invocation rather than queueing it up. Avoids piling on a
+# slow site with extra requests.
+concurrency:
+  group: health-check
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Probe /api/cron/health-check
+    runs-on: ubuntu-latest
+    # Hard ceiling so a hung endpoint doesn't pin a runner for an hour and
+    # eat GitHub Actions minutes from the monthly quota.
+    timeout-minutes: 3
+    steps:
+      - name: Hit the health-check endpoint
+        env:
+          # Repository secret. Set it once at:
+          #   Settings → Secrets and variables → Actions → New repository secret
+          #   Name:  CRON_SECRET
+          #   Value: same string as the CRON_SECRET env var in Vercel
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${CRON_SECRET:-}" ]; then
+            echo "::error::CRON_SECRET repository secret is not set."
+            echo "::error::Add it under Settings → Secrets and variables → Actions."
+            echo "::error::Use the same value as the CRON_SECRET env var in Vercel."
+            exit 1
+          fi
+
+          # Single combined response so we can inspect both HTTP code and body.
+          # --max-time 90 caps any one probe at well under the timeout-minutes
+          # ceiling above. --silent + --show-error suppresses cURL's progress
+          # meter but still surfaces transport errors (DNS, TLS, etc.) clearly.
+          response=$(curl --silent --show-error \
+            --max-time 90 \
+            --header "Authorization: Bearer ${CRON_SECRET}" \
+            --header "User-Agent: github-actions-health-check/1.0" \
+            --write-out "\n__HTTP_CODE__:%{http_code}" \
+            https://smart-space.ie/api/cron/health-check)
+
+          http_code=$(printf '%s\n' "$response" | awk -F: '/^__HTTP_CODE__:/ {print $2}')
+          body=$(printf '%s\n' "$response" | sed '/^__HTTP_CODE__:/d')
+
+          echo "HTTP ${http_code:-?}"
+          echo "----- response body (first 4KB) -----"
+          printf '%s\n' "$body" | head -c 4000
+          echo
+          echo "----- end body -----"
+
+          # Fail #1: transport-level / non-2xx response
+          if [ -z "${http_code:-}" ] || [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "::error::Endpoint returned HTTP ${http_code:-NO_RESPONSE} — site is unhealthy."
+            exit 1
+          fi
+
+          # Fail #2: endpoint returned 200 but the JSON body says ok=false
+          # (i.e. one of the probed pages / Stripe / Apps Script failed).
+          # The endpoint itself fires a Resend alert to nigel@smart-space.ie
+          # via sendSiteAlert() before returning, so failing the workflow
+          # here is just belt-and-braces (GitHub also emails on failure).
+          if printf '%s\n' "$body" | grep -q '"ok":false'; then
+            failed_count=$(printf '%s\n' "$body" | grep -oE '"failed":[0-9]+' | head -1 || true)
+            echo "::error::Health endpoint reports failures (${failed_count:-unknown count}) — see body above."
+            exit 1
+          fi
+
+          echo "✓ Site is healthy."
