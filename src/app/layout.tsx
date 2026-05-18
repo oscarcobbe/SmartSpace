@@ -71,7 +71,21 @@ export const metadata: Metadata = {
 };
 
 const GTAG_ID = "AW-17978501655";
+// E.164 form used by schema.org JSON-LD (Google's structured-data
+// validator prefers the international format). Keep separate from the
+// call-tracking format below — Google rejects E.164 in
+// phone_conversion_number unless the displayed page text also uses E.164.
 const BUSINESS_PHONE = "+35315130424";
+// Local-format used ONLY by the Google Ads call-tracking number-swap.
+// Must match the EXACT string the conversion action "SS - Call
+// (01 513 0424)" expects (verified 18 May 2026 from the action's
+// "Use Google tag" snippet — Google said `'01 513 0424'`). With the
+// previous `+35315130424` value, Google's swap couldn't find the
+// displayed number on the page (because the page renders "01 513 0424"
+// in text and only uses `+35315130424` in tel: hrefs), so the
+// forwarding-number-swap never engaged and paid-click manual dials
+// went untracked.
+const BUSINESS_PHONE_CALL_TRACKING = "01 513 0424";
 // Google Analytics 4 measurement ID. Set NEXT_PUBLIC_GA4_MEASUREMENT_ID
 // in Vercel env to enable GA4 pageview + event tracking. Falls back to
 // Ads-only when the env var isn't set.
@@ -213,7 +227,7 @@ export default function RootLayout({
               "var callLabel = " + JSON.stringify((process.env.NEXT_PUBLIC_GADS_CALL_LABEL || "").trim()) + ";",
               "if (callLabel) {",
               "  gtag('config', " + JSON.stringify(GTAG_ID) + " + '/' + callLabel, {",
-              "    phone_conversion_number: " + JSON.stringify(BUSINESS_PHONE),
+              "    phone_conversion_number: " + JSON.stringify(BUSINESS_PHONE_CALL_TRACKING),
               "  });",
               "}",
             ].join("\n"),
