@@ -152,67 +152,92 @@ export async function POST(request: Request) {
       );
     }
 
-    // Auto-reply to the customer — sets expectation, gives a reply-to
-    // address, and trains them to whitelist us in spam filters. Fire-and-
-    // forget: if it fails the customer flow has already succeeded (Nigel
-    // got the lead email + the row hit the Sheet), so we just log.
-    try {
-      await resend.emails.send({
-        from,
-        to: [email.trim()],
-        replyTo: to,
-        subject: "We've got your message — Smart Space",
-        text: [
-          `Hi ${name.trim().split(" ")[0]},`,
-          "",
-          `Thanks for getting in touch with Smart Space. We've received your enquiry about ${subjectLabel.toLowerCase()} and will be back to you within one business day — usually a lot sooner.`,
-          "",
-          `In the meantime if it's urgent you can reach us directly:`,
-          `  • Phone: 01 513 0424`,
-          `  • Email: info@smart-space.ie`,
-          "",
-          "We're Dublin's #1 Ring installer — flat-priced, no contracts, brand-agnostic across Ring, Eufy, Nest, and Tapo.",
-          "",
-          "Talk soon,",
-          "Nigel & the Smart Space team",
-          "smart-space.ie",
-        ].join("\n"),
-        html: `
-          <div style="font-family:system-ui,-apple-system,sans-serif;line-height:1.6;color:#1a1a1a;max-width:520px">
-            <p>Hi ${escapeHtml(name.trim().split(" ")[0])},</p>
-            <p>Thanks for getting in touch with Smart Space. We've received your enquiry about
-              <strong>${escapeHtml(subjectLabel.toLowerCase())}</strong> and will be back to you
-              within <strong>one business day</strong> &mdash; usually a lot sooner.</p>
-            <p>If it's urgent in the meantime, you can reach us directly:</p>
-            <ul>
-              <li>Phone: <a href="tel:+35315130424" style="color:#16a34a">01 513 0424</a></li>
-              <li>Email: <a href="mailto:info@smart-space.ie" style="color:#16a34a">info@smart-space.ie</a></li>
-            </ul>
-            <p>We're Dublin's #1 Ring installer &mdash; flat-priced, no contracts, brand-agnostic
-              across Ring, Eufy, Nest, and Tapo.</p>
-            <p style="margin-top:24px">Talk soon,<br/>
-              <strong>Nigel &amp; the Smart Space team</strong><br/>
-              <a href="https://smart-space.ie" style="color:#16a34a">smart-space.ie</a></p>
-            <hr style="border:none;border-top:1px solid #e5e5e5;margin:24px 0" />
-            <p style="font-size:12px;color:#999">
-              You're receiving this because you submitted the contact form on smart-space.ie.
-              If this wasn't you, just ignore this email.
-            </p>
-          </div>
-        `,
-      });
-    } catch (autoReplyErr) {
-      // Non-fatal — Nigel still got the lead, the customer just doesn't get
-      // an immediate confirmation. Logged for visibility.
-      console.error("[contact] auto-reply email failed (non-fatal):", autoReplyErr);
-    }
+    // ──────────────────────────────────────────────────────────────
+    // PARALLEL FAN-OUT — the four side effects below all run at once.
+    // Previously they were sequential awaits (auto-reply → logLead →
+    // fireServerConversion → void sendToCrm) which cumulatively took
+    // 6–13 seconds before the customer saw "Message Sent!". A 2026-05-18
+    // mobile QA flagged the form-submit latency as the most likely cause
+    // of the 26 → 3 funnel leak in GA4 (users bailing during the wait).
+    //
+    // Now: Resend lead email (above) is the only sequential step — it's
+    // the "did we capture the lead" check and Resend is fast (~500ms).
+    // Everything downstream goes through Promise.allSettled so a single
+    // failure can't block the other three, and the response goes out as
+    // soon as the slowest task finishes (typically logLead at 3–5s) —
+    // total time roughly cut in half.
+    //
+    // Note: we MUST await this Promise.allSettled. Vercel kills the
+    // serverless function the instant the response is returned, so a
+    // bare `void` fire-and-forget silently drops ~30% of these calls.
+    // The `allSettled` is the right tool — it gives us "parallel but
+    // still awaited" semantics.
+    // ──────────────────────────────────────────────────────────────
 
-    // Await so the row reaches the sheet before this serverless function
-    // returns. Fire-and-forget here was silently dropping ~30% of rows
-    // because Vercel kills the function instance once the response is sent.
-    // logLead swallows its own errors, so a slow/down sheet still won't
-    // break the user flow.
-    await logLead({
+    // Conversion ID generated here so the client-side gtag fire can use
+    // it as `transaction_id` for Google Ads dedupe.
+    const conversionId = randomUUID();
+    const [firstName, ...rest] = (name?.trim() || "").split(/\s+/);
+    const lastName = rest.join(" ") || undefined;
+    const leadLabel =
+      (process.env.NEXT_PUBLIC_GADS_LEAD_SEND_TO || "")
+        .trim()
+        .replace(/^AW-\d+\//, "") || "u8cHCNyipZocEJfU6PxC";
+
+    // Build all four downstream tasks as promises, then await them
+    // together. Errors are caught per-task so one failure doesn't kill
+    // the others (Resend rejection during auto-reply was historically
+    // the most common — wrapping makes that explicit).
+    const autoReplyTask = resend.emails.send({
+      from,
+      to: [email.trim()],
+      replyTo: to,
+      subject: "We've got your message — Smart Space",
+      text: [
+        `Hi ${name.trim().split(" ")[0]},`,
+        "",
+        `Thanks for getting in touch with Smart Space. We've received your enquiry about ${subjectLabel.toLowerCase()} and will be back to you within one business day — usually a lot sooner.`,
+        "",
+        `In the meantime if it's urgent you can reach us directly:`,
+        `  • Phone: 01 513 0424`,
+        `  • Email: info@smart-space.ie`,
+        "",
+        "We're Dublin's #1 Ring installer — flat-priced, no contracts, brand-agnostic across Ring, Eufy, Nest, and Tapo.",
+        "",
+        "Talk soon,",
+        "Nigel & the Smart Space team",
+        "smart-space.ie",
+      ].join("\n"),
+      html: `
+        <div style="font-family:system-ui,-apple-system,sans-serif;line-height:1.6;color:#1a1a1a;max-width:520px">
+          <p>Hi ${escapeHtml(name.trim().split(" ")[0])},</p>
+          <p>Thanks for getting in touch with Smart Space. We've received your enquiry about
+            <strong>${escapeHtml(subjectLabel.toLowerCase())}</strong> and will be back to you
+            within <strong>one business day</strong> &mdash; usually a lot sooner.</p>
+          <p>If it's urgent in the meantime, you can reach us directly:</p>
+          <ul>
+            <li>Phone: <a href="tel:+35315130424" style="color:#16a34a">01 513 0424</a></li>
+            <li>Email: <a href="mailto:info@smart-space.ie" style="color:#16a34a">info@smart-space.ie</a></li>
+          </ul>
+          <p>We're Dublin's #1 Ring installer &mdash; flat-priced, no contracts, brand-agnostic
+            across Ring, Eufy, Nest, and Tapo.</p>
+          <p style="margin-top:24px">Talk soon,<br/>
+            <strong>Nigel &amp; the Smart Space team</strong><br/>
+            <a href="https://smart-space.ie" style="color:#16a34a">smart-space.ie</a></p>
+          <hr style="border:none;border-top:1px solid #e5e5e5;margin:24px 0" />
+          <p style="font-size:12px;color:#999">
+            You're receiving this because you submitted the contact form on smart-space.ie.
+            If this wasn't you, just ignore this email.
+          </p>
+        </div>
+      `,
+    }).catch((err) => {
+      // Non-fatal — Nigel still got the lead, the customer just doesn't
+      // get the immediate confirmation. Logged for visibility.
+      console.error("[contact] auto-reply email failed (non-fatal):", err);
+    });
+
+    const logLeadTask = logLead({
       type: "Contact Enquiry",
       name: name.trim(),
       email: email.trim(),
@@ -222,30 +247,7 @@ export async function POST(request: Request) {
       source: "smart-space.ie",
     });
 
-    // Server-side conversion fire — backstops ContactForm.tsx's client-side
-    // gtag. Client fire misses ~20-40% of submissions due to adblockers,
-    // consent denials, or the user closing the tab before the pixel completes.
-    // Server-side has the email/phone we just received and (when present)
-    // the gclid carried via attribution.
-    //
-    // Both fires share `conversionId` (UUID generated here) → returned to
-    // the client → used as `transaction_id` in the client-side gtag fire
-    // too → Google Ads de-duplicates by transaction_id, so we count one
-    // conversion even though two pings arrive.
-    const conversionId = randomUUID();
-    const [firstName, ...rest] = (name?.trim() || "").split(/\s+/);
-    const lastName = rest.join(" ") || undefined;
-    // Conversion label pulled from env so the user can fix it in Vercel
-    // without a code redeploy if it ever changes in Google Ads.
-    // .trim() before .replace() — the env var can carry a trailing \n
-    // from copy-paste in Vercel, which survives the prefix-strip and
-    // breaks the server-side conversion as a URL param. See
-    // src/components/ContactForm.tsx for the same fix on the client.
-    const leadLabel =
-      (process.env.NEXT_PUBLIC_GADS_LEAD_SEND_TO || "")
-        .trim()
-        .replace(/^AW-\d+\//, "") || "u8cHCNyipZocEJfU6PxC";
-    await fireServerConversion({
+    const fireConversionTask = fireServerConversion({
       gadsLabel: leadLabel, // Smart Space Lead — same label as ContactForm
       ga4EventName: "generate_lead",
       value: 10,
@@ -259,10 +261,7 @@ export async function POST(request: Request) {
       extraParams: { lead_source: "contact_form", topic: subjectLabel },
     });
 
-    // Mirror to SmartCRM (fire-and-forget; errors are swallowed inside sendToCrm).
-    // Runs in parallel with the response — Vercel keeps the function alive long
-    // enough for the 5s timeout above.
-    void sendToCrm({
+    const crmTask = sendToCrm({
       source: "contact_form",
       source_detail: subjectLabel,
       name: name.trim(),
@@ -279,6 +278,11 @@ export async function POST(request: Request) {
       tags: ["contact-form"],
       custom: { conversion_id: conversionId, subject_key: subjectKey },
     });
+
+    // Wait for all four to settle. Ceiling is the slowest task, not the
+    // sum — typically 3–5s vs the old 6–13s. allSettled means one
+    // failure doesn't block the response or the other tasks.
+    await Promise.allSettled([autoReplyTask, logLeadTask, fireConversionTask, crmTask]);
 
     return NextResponse.json({ success: true, id: data?.id, conversionId });
   } catch (e) {
