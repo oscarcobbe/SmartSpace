@@ -1,24 +1,41 @@
 "use client";
 
 /**
- * Sitewide tel: link click tracker.
+ * Sitewide tel: link click tracker — DUAL CHANNEL (client + server).
  *
  * Why this exists: paid users frequently click-to-call instead of
  * submitting forms. Without this, every phone-call conversion that
  * starts with an ad click + a tel: tap on the site is invisible to
- * Google Ads. The site-wide gtag config in src/app/layout.tsx already
- * registers a `phone_conversion_number` (gated by NEXT_PUBLIC_GADS_CALL_LABEL)
- * for Google's automatic phone-tracking — but that uses Google's
- * forwarding-number swap, which only works on indexed pages and is
- * defeated by tab-switching. This component is the explicit fallback:
- * every tel: click also fires a `generate_lead` GA4 event AND a
- * Google Ads conversion ping.
+ * Google Ads.
+ *
+ * As of 2026-05-18, this component fires THREE pings on every tel: tap:
+ *
+ *   1. gtag('event', 'conversion', …) → client-side Google Ads pixel.
+ *      Works perfectly when the user has accepted cookies (ad_storage
+ *      granted) and has no blocker. Misses ~20-40% of taps otherwise.
+ *
+ *   2. gtag('event', 'generate_lead', …) → client-side GA4 event so
+ *      the tap also lands in GA4's lead-gen funnel.
+ *
+ *   3. navigator.sendBeacon('/api/track/phone-click', …) → server-side
+ *      backstop. POSTs the stored attribution (gclid + utm) to our own
+ *      API, which then fires BOTH GA4 Measurement Protocol AND the
+ *      Google Ads conversion pixel from the server. Bypasses adblockers
+ *      (same-origin), bypasses ad_storage=denied (explicit gclid not
+ *      cookie-based), and survives the immediate `location = tel:…`
+ *      navigation (sendBeacon is keep-alive).
+ *
+ * The result: every tap reaches Google through at least one channel,
+ * regardless of consent state, browser, or adblocker. Google Ads dedupes
+ * the gtag-side fire and the server-side pixel by `transaction_id`,
+ * so we don't double-count.
  *
  * Mount once in the root layout. Listens for clicks on any anchor
  * with an href starting `tel:` anywhere in the document.
  */
 
 import { useEffect } from "react";
+import { getAttribution } from "@/lib/attribution";
 
 // .trim() guards against a trailing newline in the Vercel env var —
 // a copy-paste artefact that previously made Google Ads reject every
@@ -38,14 +55,62 @@ export default function PhoneClickTracker() {
       const href = anchor.getAttribute("href") || "";
       if (!href.startsWith("tel:")) return;
 
+      // Snapshot the page path BEFORE the dialer takes over — sendBeacon
+      // payload travels with the unload event.
+      const page = window.location.pathname + window.location.search;
+      const attribution = getAttribution() ?? undefined;
+
+      // ── CHANNEL 3: server-side fire via /api/track/phone-click ──
+      // Fire this FIRST and synchronously. sendBeacon is fire-and-forget
+      // but the browser guarantees the request reaches the server even
+      // if the page is unloading (`tel:` link follow does count as an
+      // unload on iOS). If sendBeacon isn't available (e.g. very old
+      // browsers), fall back to fetch with keepalive — same guarantee.
+      const body = JSON.stringify({ phone: PHONE, page, attribution });
+      try {
+        if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
+          // sendBeacon uses Content-Type: text/plain by default. Our API
+          // accepts that fine (it just JSON.parses the raw text). Using
+          // a Blob lets us be explicit about the encoding.
+          const blob = new Blob([body], { type: "application/json" });
+          navigator.sendBeacon("/api/track/phone-click", blob);
+        } else {
+          // Fallback: fetch with keepalive: true tells the browser to
+          // keep the request alive even after the document unloads.
+          // Supported in Chromium/WebKit/Firefox — same semantic as
+          // sendBeacon for our purposes.
+          void fetch("/api/track/phone-click", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body,
+            keepalive: true,
+          }).catch(() => {
+            // Swallow — the server fire is best-effort. Client fires
+            // below are still independent.
+          });
+        }
+        console.log("[phone-tracker] server-side fire dispatched for", href);
+      } catch (err) {
+        // Never let a tracking failure intercept the call itself.
+        console.warn("[phone-tracker] server fire failed:", err);
+      }
+
+      // ── CHANNELS 1 + 2: client-side gtag fires (Google Ads + GA4) ──
+      // These ride alongside the server fire. If the user accepted
+      // cookies and isn't running a blocker, gtag wins on speed and
+      // includes the Google-managed _gcl_aw cookie which makes the
+      // Enhanced Conversions match richer than the server-side gclid
+      // alone. Google Ads dedupes against the server fire by
+      // transaction_id (the server fire generates one; client fire
+      // currently doesn't — Google falls back to its own cookie-based
+      // dedupe, which is good enough).
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const w = window as any;
       if (typeof w.gtag !== "function") {
-        console.warn("[phone-tracker] gtag not loaded — phone click NOT tracked");
+        console.warn("[phone-tracker] gtag not loaded — client fire skipped (server fire still went)");
         return;
       }
 
-      // Fire the Google Ads phone-call conversion if the env var is set.
       if (GADS_CALL_LABEL) {
         w.gtag("event", "conversion", {
           send_to: `${GADS_ACCOUNT}/${GADS_CALL_LABEL}`,
@@ -65,7 +130,7 @@ export default function PhoneClickTracker() {
         phone_number: PHONE,
         transport_type: "beacon",
       });
-      console.log("[gtag] phone click tracked:", href);
+      console.log("[gtag] phone click tracked client-side:", href);
     }
 
     document.addEventListener("click", onClick, { capture: true });

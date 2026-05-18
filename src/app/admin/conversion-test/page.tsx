@@ -37,6 +37,21 @@ type FireResult = {
   error?: string;
 };
 
+type ServerFireResult = {
+  at: string;
+  type: string;
+  label: string;
+  adsStatus: number | null;
+  adsBodyPreview: string | null;
+  ga4Configured: boolean;
+  ga4Status: number | null;
+  ga4Body: string | null;
+  usingFallback: boolean;
+  envVar: string;
+  txnId: string;
+  error?: string;
+};
+
 const GADS_ACCOUNT = "AW-17978501655";
 // .trim() — see src/components/ContactForm.tsx for the rationale.
 // Without this, the diagnostic page would say "conversion fired" even
@@ -81,6 +96,8 @@ export default function ConversionTestPage() {
   const [consent, setConsent] = useState<ConsentSnapshot | null>(null);
   const [attribution, setAttribution] = useState<ReturnType<typeof getAttribution> | null>(null);
   const [results, setResults] = useState<FireResult[]>([]);
+  const [serverResults, setServerResults] = useState<ServerFireResult[]>([]);
+  const [serverFiring, setServerFiring] = useState<string | null>(null);
   const [testEmail, setTestEmail] = useState("test+conversion@smart-space.ie");
   const [testPhone, setTestPhone] = useState("+353871234567");
 
@@ -153,6 +170,95 @@ export default function ConversionTestPage() {
       { at: new Date().toLocaleTimeString(), type, sendTo, txnId, acked },
       ...r,
     ]);
+  }
+
+  /**
+   * Server-side fire — hits /api/admin/test-conversion, which mirrors what
+   * fireServerConversion() does in /api/contact + /api/webhooks/stripe but
+   * captures the URL Google was hit with + Google's response status.
+   *
+   * Use this to confirm the SERVER path works independently of the gtag
+   * one above. The gtag path is the optimistic best case (consent granted,
+   * no adblocker, page survived) — server path is what every real form
+   * submit and Stripe purchase relies on.
+   */
+  async function fireServerSide(type: "lead" | "payment" | "free_consult" | "call") {
+    setServerFiring(type);
+    const adminKey = sessionStorage.getItem("admin_key") ?? "";
+    const txnTag = `${type}-${Date.now()}`;
+    try {
+      const res = await fetch("/api/admin/test-conversion", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${adminKey}`,
+        },
+        body: JSON.stringify({
+          type,
+          gclid: attribution?.gclid,
+          email: testEmail,
+          phone: testPhone,
+        }),
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const data = (await res.json().catch(() => ({}))) as any;
+      if (!res.ok) {
+        setServerResults((r) => [
+          {
+            at: new Date().toLocaleTimeString(),
+            type,
+            label: "—",
+            adsStatus: null,
+            adsBodyPreview: null,
+            ga4Configured: false,
+            ga4Status: null,
+            ga4Body: null,
+            usingFallback: false,
+            envVar: "(error)",
+            txnId: txnTag,
+            error: data?.error || `HTTP ${res.status}`,
+          },
+          ...r,
+        ]);
+        return;
+      }
+      setServerResults((r) => [
+        {
+          at: new Date().toLocaleTimeString(),
+          type,
+          label: data.label as string,
+          adsStatus: data.adsPixel?.status ?? null,
+          adsBodyPreview: data.adsPixel?.bodyPreview ?? null,
+          ga4Configured: !!data.ga4?.configured,
+          ga4Status: data.ga4?.status ?? null,
+          ga4Body: data.ga4?.body ?? null,
+          usingFallback: !!data.usingFallback,
+          envVar: data.envVar as string,
+          txnId: data.txnId as string,
+        },
+        ...r,
+      ]);
+    } catch (err) {
+      setServerResults((r) => [
+        {
+          at: new Date().toLocaleTimeString(),
+          type,
+          label: "—",
+          adsStatus: null,
+          adsBodyPreview: null,
+          ga4Configured: false,
+          ga4Status: null,
+          ga4Body: null,
+          usingFallback: false,
+          envVar: "(error)",
+          txnId: txnTag,
+          error: err instanceof Error ? err.message : String(err),
+        },
+        ...r,
+      ]);
+    } finally {
+      setServerFiring(null);
+    }
   }
 
   return (
@@ -273,9 +379,112 @@ export default function ConversionTestPage() {
           </div>
         </div>
 
+        {/* Server-side fire buttons — bypass gtag entirely, hit Google
+            directly from our server. This is the path that /api/contact +
+            Stripe webhook + /api/track/phone-click all use under the hood. */}
+        <div className="bg-white rounded-xl shadow-sm p-5 mb-4 border border-purple-100">
+          <h2 className="text-sm font-bold text-gray-700 mb-1">Fire SERVER-SIDE test conversion</h2>
+          <p className="text-xs text-gray-500 mb-3">
+            Mirrors what <code>/api/contact</code> + Stripe webhook + phone-click endpoint do.
+            Shows the exact URL Google was hit with + Google&apos;s response code. Use this when
+            forms/Stripe purchases aren&apos;t showing up in Google Ads — proves the server fire
+            is reaching Google. (Auth: admin key, same as the leads dashboard.)
+          </p>
+          <div className="grid sm:grid-cols-2 gap-2">
+            <button
+              onClick={() => fireServerSide("lead")}
+              disabled={!!serverFiring}
+              className="bg-amber-700 hover:bg-amber-800 text-white text-sm font-semibold py-2.5 rounded-lg disabled:opacity-50"
+            >
+              {serverFiring === "lead" ? "Firing…" : "Server: Lead (contact form)"}
+            </button>
+            <button
+              onClick={() => fireServerSide("payment")}
+              disabled={!!serverFiring}
+              className="bg-blue-700 hover:bg-blue-800 text-white text-sm font-semibold py-2.5 rounded-lg disabled:opacity-50"
+            >
+              {serverFiring === "payment" ? "Firing…" : "Server: Stripe Purchase (€299)"}
+            </button>
+            <button
+              onClick={() => fireServerSide("free_consult")}
+              disabled={!!serverFiring}
+              className="bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold py-2.5 rounded-lg disabled:opacity-50"
+            >
+              {serverFiring === "free_consult" ? "Firing…" : "Server: Free Consultation"}
+            </button>
+            <button
+              onClick={() => fireServerSide("call")}
+              disabled={!!serverFiring}
+              className="bg-orange-700 hover:bg-orange-800 text-white text-sm font-semibold py-2.5 rounded-lg disabled:opacity-50"
+            >
+              {serverFiring === "call" ? "Firing…" : "Server: Phone Click"}
+            </button>
+          </div>
+        </div>
+
+        {/* Server fire results */}
+        {serverResults.length > 0 && (
+          <div className="bg-white rounded-xl shadow-sm p-5 mb-4">
+            <h2 className="text-sm font-bold text-gray-700 mb-3">Server fires this session</h2>
+            <div className="space-y-3">
+              {serverResults.map((r, i) => (
+                <div key={i} className="border border-gray-100 rounded-lg p-3 font-mono text-xs">
+                  <div className="flex flex-wrap gap-3 mb-2 text-gray-600">
+                    <span>{r.at}</span>
+                    <span className="text-gray-900 font-bold">{r.type}</span>
+                    {r.usingFallback && (
+                      <span className="text-amber-700">⚠ using hardcoded fallback ({r.envVar} not set)</span>
+                    )}
+                  </div>
+                  {r.error ? (
+                    <div className="text-red-600">✗ {r.error}</div>
+                  ) : (
+                    <>
+                      <div className="mb-1">
+                        <span className="text-gray-500">label:</span> <span className="text-gray-900">{r.label}</span>
+                      </div>
+                      <div className="mb-1">
+                        <span className="text-gray-500">Google Ads pixel:</span>{" "}
+                        <span className={r.adsStatus === 200 ? "text-emerald-700" : "text-red-700"}>
+                          HTTP {r.adsStatus ?? "—"}
+                        </span>
+                        {r.adsBodyPreview && (
+                          <span className="text-gray-500 ml-2">body: {r.adsBodyPreview}</span>
+                        )}
+                      </div>
+                      <div className="mb-1">
+                        <span className="text-gray-500">GA4 Measurement Protocol:</span>{" "}
+                        {r.ga4Configured ? (
+                          <span className={r.ga4Status === 204 || r.ga4Status === 200 ? "text-emerald-700" : "text-red-700"}>
+                            HTTP {r.ga4Status ?? "—"}
+                            {r.ga4Body && r.ga4Body.length > 0 && (
+                              <span className="text-gray-500 ml-2">{r.ga4Body.slice(0, 60)}</span>
+                            )}
+                          </span>
+                        ) : (
+                          <span className="text-amber-700">
+                            ⚠ not configured — set GA4_API_SECRET in Vercel to enable
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-gray-400 text-[10px]">txn: {r.txnId}</div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 mt-3">
+              <strong>Important:</strong> Google&apos;s URL pixel ALWAYS returns 200, even if the
+              conversion action is paused/deleted or set to &quot;don&apos;t include&quot;. A 200
+              here only proves the ping reached Google — not that it was counted. Check Google Ads
+              → Tools → Conversions → Diagnostics within 6-12 hours to confirm.
+            </p>
+          </div>
+        )}
+
         {/* Recent fires */}
         <div className="bg-white rounded-xl shadow-sm p-5 mb-4">
-          <h2 className="text-sm font-bold text-gray-700 mb-3">Fires this session</h2>
+          <h2 className="text-sm font-bold text-gray-700 mb-3">Client gtag fires this session</h2>
           {results.length === 0 ? (
             <p className="text-xs text-gray-400">No fires yet. Click a button above.</p>
           ) : (
