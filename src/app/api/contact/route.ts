@@ -48,7 +48,27 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = await request.json();
+    // Parse the body in its own try-block. Bots, scanners, and stray curls
+    // POST empty or malformed JSON to /api/contact constantly. These should
+    // return a quiet 400 — NOT trigger the bottom-of-route sendSiteAlert
+    // panic email, which is reserved for genuine infrastructure failures
+    // (Resend down, Apps Script unreachable, etc.). Previously a single
+    // empty-body POST would page Nigel.
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Request body must be valid JSON" },
+        { status: 400 }
+      );
+    }
+    if (!body || typeof body !== "object") {
+      return NextResponse.json(
+        { error: "Request body must be a JSON object" },
+        { status: 400 }
+      );
+    }
     const { name, email, phone, subject, message, attribution, gclid, homepage_url } = body as {
       name?: string;
       email?: string;
