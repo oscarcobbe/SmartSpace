@@ -221,6 +221,7 @@ export default function BookingCalendar({ onSelectionChange, compact, heading = 
           <button
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={page === 0}
+            aria-label="Show earlier dates"
             className="p-1 rounded-lg hover:bg-gray-100 disabled:opacity-30 transition-colors"
           >
             <ChevronLeft className="w-4 h-4 text-gray-600" />
@@ -232,6 +233,7 @@ export default function BookingCalendar({ onSelectionChange, compact, heading = 
           <button
             onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
             disabled={page >= totalPages - 1}
+            aria-label="Show later dates"
             className="p-1 rounded-lg hover:bg-gray-100 disabled:opacity-30 transition-colors"
           >
             <ChevronRight className="w-4 h-4 text-gray-600" />
@@ -246,6 +248,8 @@ export default function BookingCalendar({ onSelectionChange, compact, heading = 
               <button
                 key={iso}
                 onClick={() => setSelectedDate(iso)}
+                aria-label={`${DAY_NAMES[date.getDay()]} ${date.getDate()} ${MONTH_NAMES[date.getMonth()]}`}
+                aria-pressed={isSelected}
                 className={`p-2.5 rounded-xl border text-center transition-all ${
                   isSelected
                     ? "border-brand-500 bg-brand-50 ring-1 ring-brand-500/20"

@@ -13,6 +13,14 @@ export const metadata: Metadata = {
       "Video Doorbell + smart Wi-Fi keybox for elderly relatives. From €509.",
     url: `${SITE}/services/bundles/eldercare`,
     type: "website",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Ring Eldercare Bundle by Smart Space" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Ring Eldercare Bundle | Dublin & Leinster Installation",
+    description:
+      "Video Doorbell + smart Wi-Fi keybox for elderly relatives. From €509.",
+    images: ["/og-default.png"],
   },
 };
 

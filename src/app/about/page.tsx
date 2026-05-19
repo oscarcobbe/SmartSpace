@@ -15,6 +15,14 @@ export const metadata: Metadata = {
       "Dublin's only 5-star Ring installer. 5,000+ installations across Dublin and Leinster.",
     url: `${SITE}/about`,
     type: "website",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "About Smart Space — Dublin's #1 Ring Installer" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "About Smart Space | Dublin's #1 Ring Installer",
+    description:
+      "Dublin's only 5-star Ring installer. 5,000+ installations across Dublin and Leinster.",
+    images: ["/og-default.png"],
   },
 };
 

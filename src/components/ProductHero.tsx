@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Star, Shield, Wrench, Award } from "lucide-react";
 import type { ShopifyProduct } from "@/lib/shopify";
 import { getColourImage, getProductImage } from "@/data/productImages";
@@ -103,13 +104,15 @@ export default function ProductHero({ product, shortDescription }: Props) {
     <div className="grid lg:grid-cols-2 gap-8 lg:gap-14">
       {/* Left: Image Gallery */}
       <div>
-        <div className="bg-transparent rounded-2xl p-10 sm:p-16 flex items-center justify-center aspect-square mb-4">
+        <div className="relative bg-transparent rounded-2xl flex items-center justify-center aspect-square mb-4">
           {allImages[selectedImage] ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               src={allImages[selectedImage]}
               alt={product.title}
-              className="object-contain max-h-full max-w-full transition-opacity duration-300"
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-contain p-10 sm:p-16 transition-opacity duration-300"
             />
           ) : (
             <div className="text-gray-300 text-sm">No image available</div>
@@ -130,8 +133,9 @@ export default function ProductHero({ product, shortDescription }: Props) {
                 }`}
               >
                 {/* Decorative — parent button carries the accessible name */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={img} alt="" className="w-full h-full object-contain" />
+                <div className="relative w-full h-full">
+                  <Image src={img} alt="" fill sizes="80px" className="object-contain" />
+                </div>
               </button>
             ))}
           </div>
@@ -200,9 +204,10 @@ export default function ProductHero({ product, shortDescription }: Props) {
               }
               const helpText = mapped?.help;
 
+              const fieldId = `product-option-${option.name.replace(/[^a-zA-Z0-9]+/g, "-").toLowerCase()}`;
               return (
                 <div key={option.name}>
-                  <label className="block text-sm font-semibold text-[#1a1a1a] mb-1">
+                  <label htmlFor={fieldId} className="block text-sm font-semibold text-[#1a1a1a] mb-1">
                     {displayLabel}{isColour && selectedVal ? `: ${selectedVal}` : ""}
                   </label>
                   {helpText && (
@@ -257,6 +262,7 @@ export default function ProductHero({ product, shortDescription }: Props) {
                     </div>
                   ) : (
                     <select
+                      id={fieldId}
                       value={selectedVal}
                       onChange={(e) => setSelectedOptions((prev) => ({ ...prev, [option.name]: e.target.value }))}
                       className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-none transition-colors"

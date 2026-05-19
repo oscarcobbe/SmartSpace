@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { getAllProducts, type ShopifyProduct } from "@/lib/shopify";
@@ -122,12 +123,12 @@ export default async function ServicesPage() {
               >
                 <div className="relative bg-transparent aspect-[4/3] flex items-center justify-center p-4 overflow-hidden rounded-t-2xl">
                   {image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <Image
                       src={image}
                       alt={cat.title}
-                      className={`${cat.imageClass || "max-h-full max-w-full"} object-cover rounded-xl group-hover:scale-105 transition-transform duration-300`}
-                      loading="lazy"
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className={`${cat.imageClass || ""} object-cover rounded-xl group-hover:scale-105 transition-transform duration-300`}
                     />
                   ) : (
                     <div className="text-gray-300 text-sm">No image</div>

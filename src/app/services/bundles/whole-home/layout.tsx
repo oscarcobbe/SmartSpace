@@ -13,6 +13,14 @@ export const metadata: Metadata = {
       "Video Doorbell + 2x Floodlight Cams supplied and installed. From €987. Save €100.",
     url: `${SITE}/services/bundles/whole-home`,
     type: "website",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Ring Whole Home Bundle by Smart Space" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Ring Whole Home Bundle | Dublin & Leinster Installation",
+    description:
+      "Video Doorbell + 2x Floodlight Cams supplied and installed. From €987. Save €100.",
+    images: ["/og-default.png"],
   },
 };
 

@@ -13,11 +13,35 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: Request) {
   try {
-    const { email, consent, homepage_url } = (await request.json()) as {
+    // Parse body defensively — bots and scanners POST malformed JSON
+    // constantly. Quiet 400 rather than a 500 from the outer catch.
+    let raw: unknown;
+    try {
+      raw = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Request body must be valid JSON" },
+        { status: 400 }
+      );
+    }
+    if (!raw || typeof raw !== "object") {
+      return NextResponse.json(
+        { error: "Request body must be a JSON object" },
+        { status: 400 }
+      );
+    }
+    const { email, consent, homepage_url } = raw as {
       email?: string;
       consent?: boolean;
       homepage_url?: string; // honeypot — see MailingList.tsx
     };
+
+    // Cap email length so a 10MB POST can't be used to blow up Resend
+    // bandwidth or write garbage rows to the Sheet. RFC 5321 caps the
+    // local-part at 64 + domain at 255 = 320; we use that as our limit.
+    if (email && typeof email === "string" && email.length > 320) {
+      return NextResponse.json({ error: "Email is too long (max 320 characters)" }, { status: 400 });
+    }
 
     // Honeypot — same pattern as /api/contact. Real users can't see the
     // hidden input; bots that fill every field will leave a non-empty

@@ -171,6 +171,9 @@ export async function GET(request: Request) {
       {
         headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}` },
         cache: "no-store",
+        // 10s ceiling — Stripe list usually <1s, but a hung call would
+        // otherwise pin the whole admin page render.
+        signal: AbortSignal.timeout(10000),
       }
     );
     if (!stripeRes.ok) {
@@ -266,6 +269,7 @@ export async function GET(request: Request) {
         {
           headers: { Authorization: `Bearer ${calendlyToken}`, "Content-Type": "application/json" },
           cache: "no-store",
+          signal: AbortSignal.timeout(10000),
         }
       );
       if (!calRes.ok) {
@@ -287,6 +291,10 @@ export async function GET(request: Request) {
           const invRes = await fetch(`${event.uri}/invitees`, {
             headers: { Authorization: `Bearer ${calendlyToken}` },
             cache: "no-store",
+            // 8s per-invitee ceiling — the outer loop fans out one of
+            // these per Calendly event so a single hung call could
+            // otherwise serialise into a 90s admin-page render.
+            signal: AbortSignal.timeout(8000),
           });
           const invData = await invRes.json();
           const inv = (invData.collection || [])[0];
@@ -356,7 +364,15 @@ export async function GET(request: Request) {
               }
             }
           }
-        } catch { /* ignore */ }
+        } catch (err) {
+          // Non-fatal per-event — one missing invitee shouldn't blank the
+          // whole dashboard. Log so a recurring failure (e.g. Calendly
+          // rate-limit) is visible in Vercel logs rather than silent.
+          console.warn(
+            `[admin] Calendly invitee fetch failed for event ${event.uri}:`,
+            err instanceof Error ? err.message : err
+          );
+        }
 
         const start = new Date(event.start_time);
         const startStr = start.toLocaleString("en-GB", { timeZone: "Europe/Dublin", weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", hour12: false });
@@ -409,7 +425,13 @@ export async function GET(request: Request) {
       // they're already loaded from the Stripe API above; including them
       // would double-count revenue.
       const url = `${sheetUrl}?token=${encodeURIComponent(readToken)}&type=All&limit=500`;
-      const sheetRes = await fetch(url, { cache: "no-store", redirect: "follow" });
+      // Apps Script can be slow on cold start; 10s gives it room without
+      // pinning the admin page for the full serverless ceiling.
+      const sheetRes = await fetch(url, {
+        cache: "no-store",
+        redirect: "follow",
+        signal: AbortSignal.timeout(10000),
+      });
       if (sheetRes.ok) {
         const sheetData = await sheetRes.json();
         if (sheetData.error) {
@@ -534,6 +556,7 @@ export async function GET(request: Request) {
     const balanceRes = await fetch("https://api.stripe.com/v1/balance", {
       headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}` },
       cache: "no-store",
+      signal: AbortSignal.timeout(10000),
     });
     if (!balanceRes.ok) {
       const errBody = await balanceRes.text().catch(() => "");

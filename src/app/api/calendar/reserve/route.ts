@@ -24,11 +24,33 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    // Parse JSON in its own try-block. Malformed bodies from bots / scanners
+    // should return a 400 rather than fall into the outer catch which would
+    // 500 + log noise.
+    let body: { date?: string; timeSlot?: string; kind?: "consultation" | "installation" };
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Request body must be valid JSON" },
+        { status: 400 }
+      );
+    }
     const { date, timeSlot, kind = "installation" } = body;
 
     if (!date || !timeSlot) {
       return NextResponse.json({ error: "Missing required fields: date, timeSlot" }, { status: 400 });
+    }
+    // Format validation — these flow into a Calendly URL via
+    // getAvailableSlots, so an unbounded string is a real risk.
+    if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return NextResponse.json({ error: "Invalid date format. Use YYYY-MM-DD" }, { status: 400 });
+    }
+    if (typeof timeSlot !== "string" || timeSlot.length > 40) {
+      return NextResponse.json({ error: "Invalid time slot" }, { status: 400 });
+    }
+    if (kind !== "consultation" && kind !== "installation") {
+      return NextResponse.json({ error: "Invalid kind" }, { status: 400 });
     }
 
     // Re-verify the slot is still available on Calendly (the user might

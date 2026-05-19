@@ -18,6 +18,14 @@ export const metadata: Metadata = {
     description:
       "Professional installation by certified Irish installers. Wired or battery, every Ring model. Book online in 90 seconds.",
     locale: "en_IE",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Ring Doorbell Installation in Ireland — Smart Space" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Ring Doorbell Installation in Ireland — From €139",
+    description:
+      "Professional installation by certified Irish installers. Wired or battery, every Ring model.",
+    images: ["/og-default.png"],
   },
 };
 

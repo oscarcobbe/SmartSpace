@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const SITE = "https://smart-space.ie";
@@ -89,12 +90,13 @@ export default function SingleDevicePage() {
               href={choice.href}
               className="group bg-white rounded-2xl border-2 border-gray-100 hover:border-brand-500 overflow-hidden transition-all hover:shadow-lg"
             >
-              <div className="bg-transparent aspect-square flex items-center justify-center p-12">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+              <div className="relative bg-transparent aspect-square flex items-center justify-center p-12">
+                <Image
                   src={choice.image}
                   alt={choice.title}
-                  className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+                  fill
+                  sizes="(max-width: 640px) 100vw, 50vw"
+                  className="object-contain p-12 group-hover:scale-105 transition-transform duration-300"
                 />
               </div>
               <div className="p-6 text-center">
@@ -113,7 +115,7 @@ export default function SingleDevicePage() {
             href="/contact"
             className="inline-flex items-center gap-2 text-brand-500 hover:text-brand-600 font-semibold transition-colors"
           >
-            Don&apos;t see what you need? Click here to contact us
+            Don&apos;t see what you need? Contact us
           </Link>
         </div>
 

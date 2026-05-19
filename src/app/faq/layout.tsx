@@ -18,6 +18,14 @@ export const metadata: Metadata = {
       "Common questions about Ring doorbell and camera installation in Ireland, answered by Dublin's #1 Ring installer.",
     url: `${SITE}/faq`,
     type: "website",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Ring Installation FAQ — Smart Space" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Ring Installation FAQ | Smart Space Dublin",
+    description:
+      "Common questions about Ring doorbell and camera installation in Ireland, answered by Dublin's #1 Ring installer.",
+    images: ["/og-default.png"],
   },
 };
 

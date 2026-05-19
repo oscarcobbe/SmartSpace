@@ -48,11 +48,43 @@ function escapeHtml(text: string) {
 
 export async function POST(request: Request) {
   try {
-    const { items, customer, attribution, gclid }: FreeCheckoutBody = await request.json();
+    // Parse JSON in its own try-block so bot/scanner traffic with malformed
+    // bodies returns a quiet 400 rather than dropping into the outer catch
+    // and being logged as a real checkout failure.
+    let parsed: FreeCheckoutBody;
+    try {
+      parsed = (await request.json()) as FreeCheckoutBody;
+    } catch {
+      return NextResponse.json(
+        { error: "Request body must be valid JSON" },
+        { status: 400 }
+      );
+    }
+    const { items, customer, attribution, gclid } = parsed;
     const finalAttribution = attribution ?? (gclid ? { gclid } : undefined);
 
-    if (!items || items.length === 0) {
+    if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: "No items provided" }, { status: 400 });
+    }
+    if (items.length > 5) {
+      return NextResponse.json({ error: "Too many items" }, { status: 400 });
+    }
+
+    // Cap customer field lengths so a 10MB POST can't blow up Resend
+    // bandwidth or pump absurd rows into the Sheet / Calendly Q&A.
+    if (customer) {
+      if (customer.name && customer.name.length > 200) {
+        return NextResponse.json({ error: "Name is too long (max 200 characters)" }, { status: 400 });
+      }
+      if (customer.email && customer.email.length > 320) {
+        return NextResponse.json({ error: "Email is too long (max 320 characters)" }, { status: 400 });
+      }
+      if (customer.phone && customer.phone.length > 40) {
+        return NextResponse.json({ error: "Phone is too long (max 40 characters)" }, { status: 400 });
+      }
+      if (customer.address && customer.address.length > 500) {
+        return NextResponse.json({ error: "Address is too long (max 500 characters)" }, { status: 400 });
+      }
     }
 
     // Anti-abuse: this route writes to Calendly (consuming real slots

@@ -17,6 +17,14 @@ export const metadata: Metadata = {
       "Practical guides on Ring doorbells, cameras, and smart home setup for Irish homes.",
     url: `${SITE}/blog`,
     type: "website",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Smart Space Guides — Ring & Home Security" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Guides | Ring Installation & Home Security in Ireland",
+    description:
+      "Practical guides on Ring doorbells, cameras, and smart home setup for Irish homes.",
+    images: ["/og-default.png"],
   },
 };
 

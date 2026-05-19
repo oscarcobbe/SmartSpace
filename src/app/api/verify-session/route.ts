@@ -23,9 +23,14 @@ export async function GET(request: Request) {
   }
 
   try {
+    // 10s ceiling — Stripe session GET typically completes in <500ms; a
+    // hung call would otherwise pin this route up to the serverless
+    // function limit and the success page would spin forever (and the
+    // conversion never fires).
     const res = await fetch(`https://api.stripe.com/v1/checkout/sessions/${sessionId}`, {
       headers: { Authorization: `Bearer ${secret}` },
       cache: "no-store",
+      signal: AbortSignal.timeout(10000),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -46,7 +51,10 @@ export async function GET(request: Request) {
     // page already has the user's gclid (from localStorage) and Google
     // Ads' built-in cookie matching for granted-consent users. Loss of
     // match rate ≈ 5–10% in exchange for closing a real PII leak.
-    return NextResponse.json({ paid, amount, currency });
+    return NextResponse.json(
+      { paid, amount, currency },
+      { headers: { "Cache-Control": "no-store, max-age=0" } }
+    );
   } catch (err) {
     console.error("[verify-session] error:", err);
     return NextResponse.json({ error: "Verification failed" }, { status: 500 });

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ShopifyProduct } from "@/lib/shopify";
 import { getProductImage } from "@/data/productImages";
@@ -27,13 +28,15 @@ export default function ProductCard({ product }: { product: ShopifyProduct }) {
           </span>
         )}
         {imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={imageUrl}
-            alt={product.title}
-            className="w-3/4 h-3/4 object-contain group-hover:scale-105 transition-transform duration-300"
-            loading="lazy"
-          />
+          <div className="relative w-3/4 h-3/4">
+            <Image
+              src={imageUrl}
+              alt={product.title}
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 240px"
+              className="object-contain group-hover:scale-105 transition-transform duration-300"
+            />
+          </div>
         ) : (
           <div className="w-3/4 h-3/4 bg-gray-200 rounded-xl flex items-center justify-center text-gray-400 text-sm">
             No image

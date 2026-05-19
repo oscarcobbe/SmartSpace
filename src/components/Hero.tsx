@@ -1,15 +1,20 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CalendarCheck } from "lucide-react";
 
 export default function Hero() {
   return (
     <section className="w-full bg-[#d4d4d4] h-[70vh] sm:h-screen relative overflow-hidden">
-      {/* Full-bleed desktop hero image from ring.com */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+      {/* Full-bleed desktop hero image from ring.com — LCP element on home,
+          so `priority` + next/image so it's served as AVIF/WebP at the
+          right size for the viewport instead of a 1366×768 PNG. */}
+      <Image
         src="https://images.ctfassets.net/2xsswpd01u70/2NWGNqdYfFotIijt96Zb9n/cd6be1445272e247f685b2d4eba888d5/H1_Hero_HP_desktop_1366x768_V5.png"
         alt="Ring security cameras and video doorbells on display"
-        className="absolute inset-0 w-full h-full object-cover object-bottom"
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover object-bottom"
       />
 
       {/* Gradient vignettes. Mobile uses a much stronger, taller top gradient

@@ -16,6 +16,14 @@ export const metadata: Metadata = {
       "5 on Google · 5,000+ installations across Dublin and Leinster.",
     url: `${SITE}/reviews`,
     type: "website",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Smart Space Customer Reviews" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Reviews | Smart Space — Dublin's #1 Ring Installer",
+    description:
+      "5 on Google · 5,000+ installations across Dublin and Leinster.",
+    images: ["/og-default.png"],
   },
 };
 

@@ -129,11 +129,29 @@ async function resolveItems(items: CartItem[]): Promise<ResolvedItem[]> {
 
 export async function POST(request: Request) {
   try {
-    const { items, attribution, gclid: legacyGclid }: CheckoutBody = await request.json();
+    // Parse the body in its own try-block. Bots and scanners POST empty or
+    // malformed JSON; quietly return a 400 instead of falling into the
+    // outer catch which logs the body-parse as a real checkout failure.
+    let parsed: CheckoutBody;
+    try {
+      parsed = (await request.json()) as CheckoutBody;
+    } catch {
+      return NextResponse.json(
+        { error: "Request body must be valid JSON" },
+        { status: 400 }
+      );
+    }
+    const { items, attribution, gclid: legacyGclid } = parsed;
     const gclid = attribution?.gclid ?? legacyGclid ?? "";
 
-    if (!items || items.length === 0) {
+    if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: "No items provided" }, { status: 400 });
+    }
+    // Cap cart size — the largest legitimate Smart Space cart booked
+    // anyone's seen is 4 line items (whole-home bundle plus extras).
+    // Higher than that is either a bug or an attacker probing the route.
+    if (items.length > 20) {
+      return NextResponse.json({ error: "Too many items in cart (max 20)" }, { status: 400 });
     }
 
     let resolved: ResolvedItem[];
@@ -212,6 +230,11 @@ export async function POST(request: Request) {
       params.append(`line_items[${i}][quantity]`, String(item.quantity));
     });
 
+    // 10s ceiling — Stripe's session create normally completes in <1s,
+    // but a stalled call would otherwise pin the serverless function up
+    // to its 10s timeout, after which the user sees a generic 500 and
+    // we lose the conversion. Surfacing a clean 502 lets the client
+    // retry safely.
     const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
       headers: {
@@ -219,6 +242,7 @@ export async function POST(request: Request) {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: params.toString(),
+      signal: AbortSignal.timeout(10000),
     });
 
     const data = await res.json();

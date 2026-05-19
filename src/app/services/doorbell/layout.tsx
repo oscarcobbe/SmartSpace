@@ -13,6 +13,14 @@ export const metadata: Metadata = {
       "Professional Ring Video Doorbell installation. Chime included. From €329.",
     url: `${SITE}/services/doorbell`,
     type: "website",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Ring Video Doorbell Installation by Smart Space" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Ring Video Doorbell Installation | Dublin & Leinster",
+    description:
+      "Professional Ring Video Doorbell installation. Chime included. From €329.",
+    images: ["/og-default.png"],
   },
 };
 

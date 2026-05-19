@@ -13,6 +13,14 @@ export const metadata: Metadata = {
       "Free in-home consultation, no obligation. Dublin and all of Leinster.",
     url: `${SITE}/services/free-consultation`,
     type: "website",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Free Home Security Consultation by Smart Space" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Free Home Security Consultation | Dublin & Leinster",
+    description:
+      "Free in-home consultation, no obligation. Dublin and all of Leinster.",
+    images: ["/og-default.png"],
   },
 };
 

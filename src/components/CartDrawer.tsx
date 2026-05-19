@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useCart } from "@/context/CartContext";
 import { getAttribution } from "@/lib/attribution";
 import { X, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
@@ -80,7 +81,11 @@ export default function CartDrawer() {
             <ShoppingBag className="w-5 h-5" />
             Your Cart {totalQuantity ? `(${totalQuantity})` : ""}
           </h2>
-          <button onClick={closeCart} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+          <button
+            onClick={closeCart}
+            aria-label="Close cart"
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -104,12 +109,15 @@ export default function CartDrawer() {
               {items.map((item) => (
                 <li key={item.productId} className="flex gap-4 py-4 border-b border-gray-100">
                   {item.image && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-20 h-20 object-contain bg-gray-50 rounded-lg flex-shrink-0"
-                    />
+                    <div className="relative w-20 h-20 bg-gray-50 rounded-lg flex-shrink-0">
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        sizes="80px"
+                        className="object-contain"
+                      />
+                    </div>
                   )}
 
                   <div className="flex-1 min-w-0">
@@ -130,14 +138,16 @@ export default function CartDrawer() {
                           else updateQuantity(item.productId, item.quantity - 1);
                         }}
                         disabled={isCheckingOut}
+                        aria-label={`Decrease quantity of ${item.name}`}
                         className="w-7 h-7 flex items-center justify-center border border-gray-300 rounded text-gray-600 hover:bg-gray-100 disabled:opacity-50"
                       >
                         <Minus className="w-3 h-3" />
                       </button>
-                      <span className="text-sm font-medium w-6 text-center">{item.quantity}</span>
+                      <span className="text-sm font-medium w-6 text-center" aria-live="polite">{item.quantity}</span>
                       <button
                         onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                         disabled={isCheckingOut}
+                        aria-label={`Increase quantity of ${item.name}`}
                         className="w-7 h-7 flex items-center justify-center border border-gray-300 rounded text-gray-600 hover:bg-gray-100 disabled:opacity-50"
                       >
                         <Plus className="w-3 h-3" />

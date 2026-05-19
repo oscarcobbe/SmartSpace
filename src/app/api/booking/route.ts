@@ -55,7 +55,25 @@ interface BookingBody {
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as BookingBody;
+    // Parse the body in its own try-block. Bots, scanners and stray curls
+    // POST malformed JSON constantly — those should 400 quietly rather than
+    // surface as 500s via sendSiteAlert at the bottom of the route.
+    let raw: unknown;
+    try {
+      raw = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Request body must be valid JSON" },
+        { status: 400 }
+      );
+    }
+    if (!raw || typeof raw !== "object") {
+      return NextResponse.json(
+        { error: "Request body must be a JSON object" },
+        { status: 400 }
+      );
+    }
+    const body = raw as BookingBody;
     const { name, email, phone, subject, message, date, timeSlot, attribution, homepage_url } = body;
 
     // Honeypot — same pattern as /api/contact and /api/subscribe.
@@ -75,6 +93,34 @@ export async function POST(request: Request) {
         { error: "Missing required fields: name, email, date, timeSlot" },
         { status: 400 }
       );
+    }
+
+    // Defensive length caps so a 10MB POST can't blow up Calendly/Resend
+    // bandwidth or write absurd rows to the Sheet. Same shape as
+    // /api/contact's caps.
+    if (name.trim().length > 200) {
+      return NextResponse.json({ error: "Name is too long (max 200 characters)" }, { status: 400 });
+    }
+    if (email.trim().length > 320) {
+      return NextResponse.json({ error: "Email is too long (max 320 characters)" }, { status: 400 });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      return NextResponse.json({ error: "Please enter a valid email address" }, { status: 400 });
+    }
+    if (phone && phone.length > 40) {
+      return NextResponse.json({ error: "Phone number is too long (max 40 characters)" }, { status: 400 });
+    }
+    if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return NextResponse.json({ error: "Invalid date format. Use YYYY-MM-DD" }, { status: 400 });
+    }
+    if (typeof timeSlot !== "string" || timeSlot.length > 40) {
+      return NextResponse.json({ error: "Invalid time slot" }, { status: 400 });
+    }
+    if (subject && typeof subject === "string" && subject.length > 100) {
+      return NextResponse.json({ error: "Subject is too long (max 100 characters)" }, { status: 400 });
+    }
+    if (message && typeof message === "string" && message.trim().length > 4000) {
+      return NextResponse.json({ error: "Message is too long (max 4000 characters)" }, { status: 400 });
     }
 
     const subjectKey = typeof subject === "string" ? subject : "";

@@ -13,6 +13,14 @@ export const metadata: Metadata = {
       "Choose a Ring Video Doorbell from €329, or an External Camera from €299. Supplied and installed.",
     url: `${SITE}/services/single`,
     type: "website",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Single Ring Device Installation by Smart Space" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Single Ring Device Installation | Dublin & Leinster",
+    description:
+      "Choose a Ring Video Doorbell from €329, or an External Camera from €299. Supplied and installed.",
+    images: ["/og-default.png"],
   },
 };
 

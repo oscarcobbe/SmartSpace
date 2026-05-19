@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { getAllProducts } from "@/lib/shopify";
@@ -85,12 +86,12 @@ export default async function CameraServicePage() {
                   <Link href={`/services/${product.handle}`}>
                     <div className="relative bg-transparent aspect-square p-6 flex items-center justify-center">
                       {image && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
+                        <Image
                           src={image}
                           alt={product.title}
-                          className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
-                          loading="lazy"
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          className="object-contain p-6 group-hover:scale-105 transition-transform duration-300"
                         />
                       )}
                       {hasDiscount && (
@@ -147,7 +148,7 @@ export default async function CameraServicePage() {
             href="/contact"
             className="inline-flex items-center gap-2 text-brand-500 hover:text-brand-600 font-semibold transition-colors"
           >
-            Don&apos;t see what you need? Click here to contact us
+            Don&apos;t see what you need? Contact us
           </Link>
         </div>
 

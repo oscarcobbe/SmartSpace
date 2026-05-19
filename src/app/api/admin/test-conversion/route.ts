@@ -157,7 +157,11 @@ export async function POST(request: Request) {
   let adsBodyPreview: string | null = null;
   let adsError: string | null = null;
   try {
-    const res = await fetch(adsUrl, { method: "GET", cache: "no-store" });
+    const res = await fetch(adsUrl, {
+      method: "GET",
+      cache: "no-store",
+      signal: AbortSignal.timeout(8000),
+    });
     adsStatus = res.status;
     // The Ads pixel responds with a 1x1 GIF for valid hits. Empty body
     // (Content-Length: 0) means Google rejected something (often a missing
@@ -210,6 +214,7 @@ export async function POST(request: Request) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(ga4Body),
         cache: "no-store",
+        signal: AbortSignal.timeout(8000),
       });
       ga4Status = res.status;
       ga4ResponseBody = (await res.text().catch(() => "")).slice(0, 200);

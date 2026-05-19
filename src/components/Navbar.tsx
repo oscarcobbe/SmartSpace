@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, ShoppingBag, Star } from "lucide-react";
@@ -56,8 +57,14 @@ export default function Navbar() {
           <div className="flex items-center justify-between h-24">
             {/* Logo */}
             <Link href="/" aria-label="Smart Space — home">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/Logo1.png" alt="Smart Space" className="h-16 sm:h-20 w-auto" />
+              <Image
+                src="/Logo1.png"
+                alt="Smart Space"
+                width={653}
+                height={504}
+                priority
+                className="h-16 sm:h-20 w-auto"
+              />
             </Link>
 
             {/* Desktop Nav */}

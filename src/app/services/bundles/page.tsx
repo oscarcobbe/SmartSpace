@@ -1,12 +1,30 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { Check, ArrowRight } from "lucide-react";
+
+const SITE = "https://smart-space.ie";
 
 export const metadata: Metadata = {
   title: "Ring Home Bundles | Smart Space",
   description:
     "Save more with Ring bundles. Driveway, Whole Home, and Eldercare packages — all professionally supplied and installed across Leinster.",
   alternates: { canonical: "/services/bundles" },
+  openGraph: {
+    title: "Ring Home Bundles | Smart Space",
+    description:
+      "Save more with Ring bundles. Driveway, Whole Home, and Eldercare packages — professionally supplied and installed across Leinster.",
+    url: `${SITE}/services/bundles`,
+    type: "website",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Ring Home Bundles by Smart Space" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Ring Home Bundles | Smart Space",
+    description:
+      "Save more with Ring bundles. Driveway, Whole Home, and Eldercare packages — professionally supplied and installed across Leinster.",
+    images: ["/og-default.png"],
+  },
 };
 
 const bundles = [
@@ -105,12 +123,12 @@ export default function BundlesPage() {
 
               {/* Image */}
               <div className="relative aspect-[4/3] bg-transparent">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={bundle.image}
                   alt={bundle.name}
-                  className="w-full h-full object-contain p-4"
-                  loading="lazy"
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  className="object-contain p-4"
                 />
               </div>
 

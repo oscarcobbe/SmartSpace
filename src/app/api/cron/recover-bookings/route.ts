@@ -50,7 +50,11 @@ interface MissedOrder {
 async function fetchPaidStripeOrders(stripeKey: string) {
   const r = await fetch(
     "https://api.stripe.com/v1/checkout/sessions?limit=100&status=complete&expand[]=data.custom_fields",
-    { headers: { Authorization: `Bearer ${stripeKey}` }, cache: "no-store" }
+    {
+      headers: { Authorization: `Bearer ${stripeKey}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(10000),
+    }
   );
   if (!r.ok) throw new Error(`Stripe ${r.status}: ${await r.text()}`);
   const data = await r.json();
@@ -65,6 +69,7 @@ async function fetchCalendlyInviteeEmails(calendlyToken: string): Promise<Set<st
   const meRes = await fetch("https://api.calendly.com/users/me", {
     headers: { Authorization: `Bearer ${calendlyToken}` },
     cache: "no-store",
+    signal: AbortSignal.timeout(10000),
   });
   if (!meRes.ok) throw new Error(`Calendly /users/me ${meRes.status}: ${await meRes.text()}`);
   const me = await meRes.json();
@@ -72,7 +77,11 @@ async function fetchCalendlyInviteeEmails(calendlyToken: string): Promise<Set<st
 
   const r = await fetch(
     `https://api.calendly.com/scheduled_events?user=${encodeURIComponent(userUri)}&min_start_time=${past}&max_start_time=${future}&status=active&sort=start_time:asc&count=100`,
-    { headers: { Authorization: `Bearer ${calendlyToken}` }, cache: "no-store" }
+    {
+      headers: { Authorization: `Bearer ${calendlyToken}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(10000),
+    }
   );
   if (!r.ok) throw new Error(`Calendly events ${r.status}: ${await r.text()}`);
   const data = await r.json();
@@ -83,12 +92,18 @@ async function fetchCalendlyInviteeEmails(calendlyToken: string): Promise<Set<st
       const ir = await fetch(`${ev.uri}/invitees`, {
         headers: { Authorization: `Bearer ${calendlyToken}` },
         cache: "no-store",
+        signal: AbortSignal.timeout(8000),
       });
       const id = await ir.json();
       const inv = (id.collection ?? [])[0];
       if (inv?.email) emails.add(String(inv.email).toLowerCase());
-    } catch {
-      // Best-effort; one missing invitee shouldn't fail the whole audit.
+    } catch (err) {
+      // Best-effort — one missing invitee shouldn't fail the whole audit,
+      // but log it so a recurring failure surfaces in Vercel logs.
+      console.warn(
+        `[cron/recover-bookings] invitee fetch failed for ${ev.uri}:`,
+        err instanceof Error ? err.message : err
+      );
     }
   }
   return emails;

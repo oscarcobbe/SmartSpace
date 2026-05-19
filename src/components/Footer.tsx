@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const serviceLinks = [
@@ -26,8 +27,13 @@ export default function Footer() {
           {/* Brand */}
           <div className="col-span-2 lg:col-span-1 flex flex-col items-center lg:items-start">
             <Link href="/" className="mb-4 block" aria-label="Smart Space — home">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/Logo1.png" alt="Smart Space" className="h-10 w-auto brightness-0 invert" />
+              <Image
+                src="/Logo1.png"
+                alt="Smart Space"
+                width={653}
+                height={504}
+                className="h-10 w-auto brightness-0 invert"
+              />
             </Link>
             <p className="text-sm leading-relaxed mb-4 max-w-sm lg:max-w-none">
               Dublin&apos;s #1 Ring installer. Professional Ring doorbell and

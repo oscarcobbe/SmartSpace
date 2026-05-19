@@ -84,9 +84,11 @@ export default function PhoneClickTracker() {
             headers: { "Content-Type": "application/json" },
             body,
             keepalive: true,
-          }).catch(() => {
-            // Swallow — the server fire is best-effort. Client fires
-            // below are still independent.
+          }).catch((err) => {
+            // Best-effort — the client gtag fires below are independent.
+            // Logged (not swallowed silently) so we can see if every tap
+            // is failing on a given browser / network path.
+            console.warn("[phone-tracker] fetch fallback failed:", err);
           });
         }
         console.log("[phone-tracker] server-side fire dispatched for", href);

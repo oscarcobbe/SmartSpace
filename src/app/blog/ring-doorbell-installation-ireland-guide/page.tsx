@@ -18,6 +18,13 @@ export const metadata: Metadata = {
     type: "article",
     publishedTime: post.datePublished,
     modifiedTime: post.dateModified,
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: post.title }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${post.title} | Smart Space`,
+    description: post.description,
+    images: ["/og-default.png"],
   },
 };
 
@@ -240,8 +247,8 @@ export default function Post() {
             Ring Chime, app setup, motion zones, and a walkthrough.
           </li>
           <li>
-            <strong>Ring Video Doorbell Pro + installation — from €399.</strong> Adds
-            pre-roll recording and head-to-toe view.
+            <strong>Ring Video Doorbell + installation with new cabling — from €429.</strong> Adds
+            new power source / cabling for properties without existing doorbell wiring.
           </li>
           <li>
             <strong>Driveway Bundle (Doorbell + Floodlight Cam) — from €658.</strong>{" "}

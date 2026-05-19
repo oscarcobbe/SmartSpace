@@ -56,9 +56,11 @@ export default function GlobalError({
         headers: { "Content-Type": "application/json" },
         body: payload,
         keepalive: true,
-      }).catch(() => {
-        // Swallow — the alert is best-effort and the user already sees
-        // the fallback UI. The console.error above is the durable record.
+      }).catch((err) => {
+        // Best-effort — the user already sees the fallback UI. Logged so
+        // a recurring failure (e.g. server down, CSP blocking) surfaces
+        // in browser devtools rather than being completely invisible.
+        console.warn("[error.tsx] failed to POST client-error alert:", err);
       });
     } catch {
       // JSON.stringify can throw on circular refs in obscure cases.

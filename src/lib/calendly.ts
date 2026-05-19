@@ -138,10 +138,17 @@ export async function createBookingEvent(params: {
     const slot = TIME_SLOTS.find((s) => s.value === params.timeSlot);
     if (!slot) throw new Error(`Invalid time slot: ${params.timeSlot}`);
 
-    // Look up the exact Calendly available start time for this slot
+    // Look up the exact Calendly available start time for this slot.
+    // 6s ceiling — same budget as getAvailableSlots; without it a hung
+    // call would block until the route's outer timeout, after which the
+    // user sees "couldn't lock in that slot" instead of a clean retry.
     const availableRes = await fetch(
       `https://api.calendly.com/event_type_available_times?event_type=${encodeURIComponent(eventTypeUri)}&start_time=${params.date}T00:00:00Z&end_time=${params.date}T23:59:59Z`,
-      { headers: { Authorization: `Bearer ${CALENDLY_TOKEN}`, "Content-Type": "application/json" }, cache: "no-store" }
+      {
+        headers: { Authorization: `Bearer ${CALENDLY_TOKEN}`, "Content-Type": "application/json" },
+        cache: "no-store",
+        signal: AbortSignal.timeout(6000),
+      }
     );
     const availableData = await availableRes.json();
     const availableTimes: { start_time: string; status: string }[] = (availableData.collection || []).filter(

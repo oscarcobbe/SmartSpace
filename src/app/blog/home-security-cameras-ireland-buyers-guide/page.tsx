@@ -18,6 +18,13 @@ export const metadata: Metadata = {
     type: "article",
     publishedTime: post.datePublished,
     modifiedTime: post.dateModified,
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: post.title }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${post.title} | Smart Space`,
+    description: post.description,
+    images: ["/og-default.png"],
   },
 };
 

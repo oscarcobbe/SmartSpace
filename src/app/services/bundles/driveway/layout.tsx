@@ -13,6 +13,14 @@ export const metadata: Metadata = {
       "Video Doorbell + Floodlight Cam supplied and installed. From €658. Save €50.",
     url: `${SITE}/services/bundles/driveway`,
     type: "website",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Ring Driveway Bundle by Smart Space" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Ring Driveway Bundle | Dublin & Leinster Installation",
+    description:
+      "Video Doorbell + Floodlight Cam supplied and installed. From €658. Save €50.",
+    images: ["/og-default.png"],
   },
 };
 

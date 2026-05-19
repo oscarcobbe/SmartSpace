@@ -37,6 +37,13 @@ export async function generateMetadata({
       description: `${c.extended.teaser} Free home consultation, written quote, fitted within the week.`,
       url: `${SITE}/areas/${c.slug}`,
       type: "website",
+      images: [{ url: "/og-default.png", width: 1200, height: 630, alt: `Ring Installer ${c.name} — Smart Space` }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `Ring Installer ${c.name} | Smart Space`,
+      description: `${c.extended.teaser} Free home consultation, written quote, fitted within the week.`,
+      images: ["/og-default.png"],
     },
   };
 }

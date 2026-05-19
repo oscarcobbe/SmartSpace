@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Wrench, Clock, Shield, Wifi } from "lucide-react";
 import { getProductByHandle, ShopifyProduct } from "@/lib/shopify";
 import AddToCartButton from "@/components/AddToCartButton";
@@ -64,10 +65,10 @@ const services = [
 ];
 
 const brands = [
-  { name: "Ring", logo: "/Ring.png", className: "h-14" },
-  { name: "Eufy", logo: "/Eufy.png", className: "h-14" },
-  { name: "Nest", logo: "/Nest_logo.png", className: "h-14" },
-  { name: "Tapo", logo: "/Tapo.png", className: "h-28" },
+  { name: "Ring", logo: "/Ring.png", className: "h-14", width: 284, height: 178 },
+  { name: "Eufy", logo: "/Eufy.png", className: "h-14", width: 325, height: 155 },
+  { name: "Nest", logo: "/Nest_logo.png", className: "h-14", width: 739, height: 315 },
+  { name: "Tapo", logo: "/Tapo.png", className: "h-28", width: 3509, height: 2481 },
 ];
 
 function formatPrice(amount: string, currencyCode: string) {
@@ -155,8 +156,13 @@ export default function InstallationOnlyPage() {
             {brands.map((brand) => (
               <div key={brand.name} className="flex items-center justify-center">
                 {brand.logo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={brand.logo} alt={brand.name} className={`${brand.className || "h-14"} opacity-60`} />
+                  <Image
+                    src={brand.logo}
+                    alt={brand.name}
+                    width={brand.width}
+                    height={brand.height}
+                    className={`${brand.className || "h-14"} w-auto opacity-60`}
+                  />
                 ) : (
                   <span className="text-xl font-bold text-gray-400">{brand.name}</span>
                 )}
@@ -207,9 +213,10 @@ export default function InstallationOnlyPage() {
                   const mapped = installLabels[rawName];
                   const displayLabel = mapped?.label ?? rawName;
                   const helpText = mapped?.help;
+                  const fieldId = `install-option-${option.name.replace(/[^a-zA-Z0-9]+/g, "-").toLowerCase()}`;
                   return (
                     <div key={option.name}>
-                      <label className="block text-sm font-semibold text-[#1a1a1a] mb-1">
+                      <label htmlFor={fieldId} className="block text-sm font-semibold text-[#1a1a1a] mb-1">
                         {displayLabel}
                       </label>
                       {helpText && (
@@ -233,6 +240,7 @@ export default function InstallationOnlyPage() {
                         </div>
                       ) : (
                         <select
+                          id={fieldId}
                           value={selectedVal}
                           onChange={(e) => setSelectedOptions((prev) => ({ ...prev, [option.name]: e.target.value }))}
                           className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-none transition-colors"
