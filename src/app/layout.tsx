@@ -240,11 +240,23 @@ export default function RootLayout({
         />
       </head>
       <body className={`${jakarta.className} antialiased bg-white text-gray-900`}>
+        {/*
+          Skip-to-content link. Must be the FIRST focusable element in the
+          DOM. Invisible until focused (keyboard Tab on desktop, screen-
+          reader swipe on mobile via VoiceOver/TalkBack). When activated
+          it jumps focus past the sticky review strip + Navbar + cart icon
+          to the page content — saves ~15-20 Tab presses on every page
+          load for keyboard and assistive-tech users. The styling is in
+          globals.css under `.skip-link` and `.skip-link:focus`.
+        */}
+        <a href="#main-content" className="skip-link">
+          Skip to content
+        </a>
         <CartProvider>
           <GclidCapture />
           <PhoneClickTracker />
           <Navbar />
-          <main className="min-h-screen">{children}</main>
+          <main id="main-content" className="min-h-screen">{children}</main>
           <CartDrawer />
           <Footer />
           <CookieBanner />

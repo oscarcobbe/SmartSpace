@@ -2,6 +2,52 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Skip-to-content link.
+ *
+ * Invisible by default, appears when focused (keyboard Tab on desktop,
+ * or screen-reader focus on mobile via VoiceOver / TalkBack swipe).
+ * Pops in at the top-left with brand styling, becomes a one-press
+ * shortcut past the sticky review strip + Navbar + cart icon to
+ * `<main id="main-content">`.
+ *
+ * Why off-screen positioning instead of `display:none`: screen readers
+ * skip `display:none` elements entirely. `position:absolute` with a
+ * negative offset keeps the link in the accessibility tree but moves
+ * it off the visible canvas — exactly what we want.
+ *
+ * Tap target is 44 × 44 minimum (Apple's HIG + WCAG 2.2 Target Size AA)
+ * because Bluetooth-keyboard iPad users + VoiceOver users on iPhone
+ * will use this on mobile too.
+ */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  z-index: 9999;
+  background: #f48222; /* brand orange */
+  color: #ffffff;
+  padding: 12px 20px;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  border-radius: 0 0 6px 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  /* min-height ensures the tap target meets WCAG 2.2 AA on mobile */
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.skip-link:focus,
+.skip-link:focus-visible {
+  left: 0;
+  top: 0;
+  outline: 2px solid #1C1A18; /* brand dark — visible focus ring */
+  outline-offset: 2px;
+}
+
 html {
   scroll-behavior: smooth;
   scrollbar-width: none;
