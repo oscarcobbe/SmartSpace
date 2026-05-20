@@ -174,27 +174,15 @@ export default function InstallationOnlyPage() {
 
       {/* Service explainer — reiterates the "Got A Device To Install?"
           framing from the homepage hero CTA so visitors landing here
-          directly understand the offer in two seconds. Most visitors
-          arrive expecting to BUY a doorbell; this section repositions
-          them: you already own it, we install it. */}
+          directly understand the offer in two seconds. */}
       <section className="py-12 lg:py-16 bg-gray-50 border-b border-gray-100">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4 leading-tight">
             Already bought your device?<br className="hidden sm:inline" /> We&apos;ll install it for you.
           </h1>
-          <p className="text-gray-600 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-            You&apos;ve picked your Ring, Eufy, Nest, or Tapo doorbell or camera —
-            from Amazon, Currys, Harvey Norman, wherever. Skip the YouTube
-            tutorials and the ladder gymnastics. We&apos;ll mount it, wire it
-            (new cabling if you need it), configure the app, set your motion
-            zones, and walk you through it before we leave.
-          </p>
-          <p className="text-gray-600 text-sm sm:text-base max-w-2xl mx-auto mt-4 leading-relaxed">
-            Installation from €139. The exact total depends on the number of
-            devices and any new cabling needed — the configurator below shows
-            your price before you book. No monthly fee. No contract. 5,000+
-            installs across Dublin and Leinster. Same-week slots usually
-            available.
+          <p className="text-gray-600 text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
+            Mounting, wiring, app setup — done properly. From €139, with your
+            exact total shown below before you book.
           </p>
         </div>
       </section>
