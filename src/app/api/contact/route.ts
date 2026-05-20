@@ -222,7 +222,7 @@ export async function POST(request: Request) {
         `  • Phone: 01 513 0424`,
         `  • Email: info@smart-space.ie`,
         "",
-        "We're Dublin's #1 Ring installer — flat-priced, no contracts, brand-agnostic across Ring, Eufy, Nest, and Tapo.",
+        "We're Dublin's #1 Ring installer — transparent pricing quoted up front, no contracts, brand-agnostic across Ring, Eufy, Nest, and Tapo.",
         "",
         "Talk soon,",
         "Nigel & the Smart Space team",
@@ -239,8 +239,8 @@ export async function POST(request: Request) {
             <li>Phone: <a href="tel:+35315130424" style="color:#16a34a">01 513 0424</a></li>
             <li>Email: <a href="mailto:info@smart-space.ie" style="color:#16a34a">info@smart-space.ie</a></li>
           </ul>
-          <p>We're Dublin's #1 Ring installer &mdash; flat-priced, no contracts, brand-agnostic
-            across Ring, Eufy, Nest, and Tapo.</p>
+          <p>We're Dublin's #1 Ring installer &mdash; transparent pricing quoted up front,
+            no contracts, brand-agnostic across Ring, Eufy, Nest, and Tapo.</p>
           <p style="margin-top:24px">Talk soon,<br/>
             <strong>Nigel &amp; the Smart Space team</strong><br/>
             <a href="https://smart-space.ie" style="color:#16a34a">smart-space.ie</a></p>

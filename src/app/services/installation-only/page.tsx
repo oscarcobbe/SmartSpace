@@ -190,7 +190,9 @@ export default function InstallationOnlyPage() {
             zones, and walk you through it before we leave.
           </p>
           <p className="text-gray-600 text-sm sm:text-base max-w-2xl mx-auto mt-4 leading-relaxed">
-            One flat price from €139. No monthly fee. No contract. 5,000+
+            Installation from €139. The exact total depends on the number of
+            devices and any new cabling needed — the configurator below shows
+            your price before you book. No monthly fee. No contract. 5,000+
             installs across Dublin and Leinster. Same-week slots usually
             available.
           </p>
