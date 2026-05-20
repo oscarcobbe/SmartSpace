@@ -80,7 +80,7 @@ export default function GbpSetupPage() {
         <p>Add each of these as a separate service under the Services tab:</p>
         <ul>
           <li>Ring Video Doorbell installation — from €329</li>
-          <li>Ring Floodlight Cam installation — from €379</li>
+          <li>Ring Floodlight Cam installation — from €299</li>
           <li>Ring Driveway Bundle — from €658</li>
           <li>Ring Whole Home Bundle — from €987</li>
           <li>Ring Eldercare Bundle — from €509</li>

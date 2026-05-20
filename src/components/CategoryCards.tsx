@@ -4,7 +4,7 @@ import { Check } from "lucide-react";
 const packages = [
   {
     name: "A Single Ring Video Doorbell Or External Camera",
-    price: "From €329",
+    price: "From €299",
     features: [
       "Professional installation included",
       "Ring Chime included with doorbells",
