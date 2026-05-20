@@ -160,7 +160,7 @@ export default function FreeConsultationPage() {
               <div className="bg-green-50 rounded-2xl p-6">
                 <div className="text-sm text-gray-500 mb-1">Price</div>
                 <div className="text-3xl font-extrabold text-green-600">Complimentary</div>
-                <div className="text-xs text-gray-400 mt-1">
+                <div className="text-xs text-gray-500 mt-1">
                   No obligation • No card required
                 </div>
               </div>

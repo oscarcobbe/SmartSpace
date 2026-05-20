@@ -156,7 +156,7 @@ export default function ReviewsPage() {
               </p>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-bold text-gray-900">{review.author}</span>
-                <span className="text-xs text-gray-400">{review.date}</span>
+                <span className="text-xs text-gray-500">{review.date}</span>
               </div>
             </div>
           ))}

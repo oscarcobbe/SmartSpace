@@ -149,7 +149,7 @@ export default function InstallationOnlyPage() {
       {/* Supported Brands */}
       <section className="py-12 bg-white border-b border-gray-100">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-6">
+          <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-6">
             We install all major brands at the same price
           </p>
           <div className="flex items-center justify-center gap-8 sm:gap-12 flex-wrap">
@@ -164,7 +164,7 @@ export default function InstallationOnlyPage() {
                     className={`${brand.className || "h-14"} w-auto opacity-60`}
                   />
                 ) : (
-                  <span className="text-xl font-bold text-gray-400">{brand.name}</span>
+                  <span className="text-xl font-bold text-gray-500">{brand.name}</span>
                 )}
               </div>
             ))}
@@ -198,7 +198,7 @@ export default function InstallationOnlyPage() {
                   <div className="text-3xl font-extrabold text-[#1a1a1a]">
                     {price ? formatPrice(price.amount, price.currencyCode) : "—"}
                   </div>
-                  <div className="text-xs text-gray-400 mt-1">Professional installation included</div>
+                  <div className="text-xs text-gray-500 mt-1">Professional installation included</div>
                 </div>
 
                 {/* Variant selectors */}
@@ -220,7 +220,7 @@ export default function InstallationOnlyPage() {
                         {displayLabel}
                       </label>
                       {helpText && (
-                        <p className="text-xs text-gray-400 mb-2">{helpText}</p>
+                        <p className="text-xs text-gray-500 mb-2">{helpText}</p>
                       )}
                       {option.values.length <= 4 ? (
                         <div className="flex flex-wrap gap-2">

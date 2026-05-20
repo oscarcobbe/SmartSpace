@@ -256,7 +256,7 @@ export default function BookingCalendar({ onSelectionChange, compact, heading = 
                     : "border-gray-200 hover:border-gray-300 bg-white"
                 }`}
               >
-                <div className={`text-[10px] font-semibold uppercase tracking-wider ${isSelected ? "text-brand-500" : "text-gray-400"}`}>
+                <div className={`text-[10px] font-semibold uppercase tracking-wider ${isSelected ? "text-brand-500" : "text-gray-500"}`}>
                   {DAY_NAMES[date.getDay()]}
                 </div>
                 <div className={`text-sm font-bold ${isSelected ? "text-brand-500" : "text-gray-900"}`}>
@@ -281,7 +281,7 @@ export default function BookingCalendar({ onSelectionChange, compact, heading = 
               <div className="w-5 h-5 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : slots.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-3">No slots available on this date</p>
+            <p className="text-sm text-gray-500 text-center py-3">No slots available on this date</p>
           ) : (
             <div className="grid grid-cols-1 gap-2">
               {slots.map((slot) => {

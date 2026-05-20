@@ -18,7 +18,7 @@ import { AGGREGATE_RATING, AGGREGATE_REVIEW_COUNT } from "@/lib/business-constan
 // The font and its visual character are identical to the previous setup.
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "700", "800"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
   variable: "--font-jakarta",
 });

@@ -174,7 +174,7 @@ export default async function ServiceDetailPage({ params }: { params: { handle: 
       <div className="pt-28 sm:pt-40 pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Breadcrumbs */}
-          <nav className="flex items-center gap-2 text-sm text-gray-400 mb-8 overflow-x-auto whitespace-nowrap scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+          <nav className="flex items-center gap-2 text-sm text-gray-500 mb-8 overflow-x-auto whitespace-nowrap scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
             <Link href="/" className="hover:text-brand-500 transition-colors">Home</Link>
             <span>/</span>
             <Link href="/services" className="hover:text-brand-500 transition-colors">Services</Link>

@@ -250,7 +250,7 @@ export default function RingInstallationPage() {
       {/* ──────────── Supported Brands logos ──────────── */}
       <section className="py-12 bg-white border-b border-gray-100">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-6">
+          <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-6">
             We install all major brands at the same price
           </p>
           <div className="flex items-center justify-center gap-8 sm:gap-12 flex-wrap">
@@ -295,7 +295,7 @@ export default function RingInstallationPage() {
                   <div className="text-3xl font-extrabold text-[#1a1a1a]">
                     {price ? formatPrice(price.amount, price.currencyCode) : "—"}
                   </div>
-                  <div className="text-xs text-gray-400 mt-1">Professional installation included</div>
+                  <div className="text-xs text-gray-500 mt-1">Professional installation included</div>
                 </div>
 
                 {/* Variant selectors */}
@@ -317,7 +317,7 @@ export default function RingInstallationPage() {
                         {displayLabel}
                       </label>
                       {helpText && (
-                        <p className="text-xs text-gray-400 mb-2">{helpText}</p>
+                        <p className="text-xs text-gray-500 mb-2">{helpText}</p>
                       )}
                       {option.values.length <= 4 ? (
                         <div className="flex flex-wrap gap-2">
@@ -494,7 +494,7 @@ export default function RingInstallationPage() {
                 <p className="text-gray-600 text-sm leading-relaxed mb-5">&ldquo;{r.text}&rdquo;</p>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-bold text-gray-900">{r.author}</span>
-                  <span className="text-xs text-gray-400">{r.date}</span>
+                  <span className="text-xs text-gray-500">{r.date}</span>
                 </div>
               </div>
             ))}

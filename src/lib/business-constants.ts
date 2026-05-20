@@ -38,9 +38,15 @@ export const BUSINESS_EMAIL = "info@smart-space.ie";
  * place when the real Google Business Profile rating/count drifts more
  * than a few points from the on-site schema. Stale values violate Google's
  * structured-data review-snippet policy if they materially overstate.
+ *
+ * AGGREGATE_REVIEW_COUNT was set to "46" on 2026-05-20 to match the live
+ * Google Business Profile count (previously "100" which materially
+ * overstated reality and risked a Google rich-snippet manual penalty).
+ * Nigel should verify this against the current GBP count quarterly and
+ * bump it here whenever the live GBP value drifts more than a few reviews.
  */
 export const AGGREGATE_RATING = "5";
-export const AGGREGATE_REVIEW_COUNT = "100";
+export const AGGREGATE_REVIEW_COUNT = "46";
 
 /**
  * Where alert / notification emails go when the CONTACT_TO_EMAIL env var

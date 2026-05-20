@@ -74,7 +74,7 @@ export default async function WholeHomeBundlePage() {
       <div className="pt-32 lg:pt-36 pb-16 lg:pb-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 text-sm text-gray-400 mb-8">
+        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-8">
           <Link href="/" className="hover:text-brand-500 transition-colors">Home</Link>
           <span>/</span>
           <Link href="/services" className="hover:text-brand-500 transition-colors">Services</Link>
@@ -135,7 +135,7 @@ export default async function WholeHomeBundlePage() {
                         {formatPrice(price.amount, price.currencyCode)}
                       </span>
                       {hasDiscount && (
-                        <span className="text-sm text-gray-400 line-through">
+                        <span className="text-sm text-gray-500 line-through">
                           {formatPrice(comparePrice.amount, comparePrice.currencyCode)}
                         </span>
                       )}

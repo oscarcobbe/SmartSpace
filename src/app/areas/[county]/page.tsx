@@ -133,7 +133,7 @@ export default async function CountyPage({
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 text-sm text-gray-400 mb-8 flex-wrap">
+        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-8 flex-wrap">
           <Link href="/" className="hover:text-brand-500 transition-colors">Home</Link>
           <span>/</span>
           <Link href="/areas" className="hover:text-brand-500 transition-colors">Areas We Cover</Link>
@@ -153,7 +153,7 @@ export default async function CountyPage({
           <p className="text-gray-600 text-lg leading-relaxed mb-3">
             {ext.teaser}
           </p>
-          <p className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+          <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">
             Towns covered: {c.towns}
           </p>
         </div>

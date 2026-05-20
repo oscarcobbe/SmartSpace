@@ -28,7 +28,7 @@ export default function TestCheckoutPage() {
             <div className="bg-gray-50 rounded-2xl p-6">
               <div className="text-sm text-gray-500 mb-1">Test product</div>
               <div className="text-2xl font-extrabold text-gray-900">€0.00</div>
-              <div className="text-xs text-gray-400 mt-1">Free consultation (test only)</div>
+              <div className="text-xs text-gray-500 mt-1">Free consultation (test only)</div>
             </div>
 
             {bookingSelection && (

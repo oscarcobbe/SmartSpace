@@ -38,7 +38,7 @@ export default function ProductCard({ product }: { product: ShopifyProduct }) {
             />
           </div>
         ) : (
-          <div className="w-3/4 h-3/4 bg-gray-200 rounded-xl flex items-center justify-center text-gray-400 text-sm">
+          <div className="w-3/4 h-3/4 bg-gray-200 rounded-xl flex items-center justify-center text-gray-500 text-sm">
             No image
           </div>
         )}

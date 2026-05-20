@@ -195,7 +195,7 @@ export default function ContactForm() {
           className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm bg-gray-50"
           placeholder="01 513 0424"
         />
-        <p className="mt-1.5 text-xs text-gray-400">We&apos;ll call you back within one business day.</p>
+        <p className="mt-1.5 text-xs text-gray-500">We&apos;ll call you back within one business day.</p>
       </div>
 
       <div>

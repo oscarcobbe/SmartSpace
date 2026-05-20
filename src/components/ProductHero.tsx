@@ -173,7 +173,7 @@ export default function ProductHero({ product, shortDescription }: Props) {
           </span>
           {hasDiscount && (
             <>
-              <span className="text-lg text-gray-400 line-through">
+              <span className="text-lg text-gray-500 line-through">
                 {formatPrice(comparePrice.amount, comparePrice.currencyCode)}
               </span>
               <span className="text-sm font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">

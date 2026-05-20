@@ -14,7 +14,7 @@ export default function BlogLayout({ post, toc, children }: Props) {
     <div className="pt-32 lg:pt-36 pb-16 lg:pb-24">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 text-sm text-gray-400 mb-6">
+        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
           <Link href="/" className="hover:text-brand-500 transition-colors">Home</Link>
           <span>/</span>
           <Link href="/blog" className="hover:text-brand-500 transition-colors">Guides</Link>
@@ -57,7 +57,7 @@ export default function BlogLayout({ post, toc, children }: Props) {
                   href={`#${item.id}`}
                   className="text-sm text-gray-700 hover:text-brand-500 transition-colors"
                 >
-                  <span className="text-gray-400 mr-2">{i + 1}.</span>
+                  <span className="text-gray-500 mr-2">{i + 1}.</span>
                   {item.label}
                 </a>
               </li>

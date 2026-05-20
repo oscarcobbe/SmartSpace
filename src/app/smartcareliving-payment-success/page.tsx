@@ -48,7 +48,7 @@ function PaymentSuccessContent() {
           </p>
 
           {sessionId && (
-            <p className="text-xs text-gray-400 mb-6 font-mono break-all">
+            <p className="text-xs text-gray-500 mb-6 font-mono break-all">
               Reference: {sessionId}
             </p>
           )}

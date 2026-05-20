@@ -96,7 +96,7 @@ export default function CartDrawer() {
             <div className="flex flex-col items-center justify-center h-full text-center">
               <ShoppingBag className="w-12 h-12 text-gray-300 mb-4" />
               <p className="text-gray-500 font-medium">Your cart is empty</p>
-              <p className="text-gray-400 text-sm mt-1">Add some Ring products to get started</p>
+              <p className="text-gray-500 text-sm mt-1">Add some Ring products to get started</p>
               <button
                 onClick={closeCart}
                 className="mt-6 bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm px-6 py-2.5 rounded-full transition-colors"
@@ -155,7 +155,7 @@ export default function CartDrawer() {
                       <button
                         onClick={() => removeItem(item.productId)}
                         disabled={isCheckingOut}
-                        className="ml-auto p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                        className="ml-auto p-1.5 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
                         aria-label={`Remove ${item.name}`}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -175,7 +175,7 @@ export default function CartDrawer() {
               <span className="text-sm text-gray-600">Subtotal</span>
               <span className="text-lg font-bold text-[#1a1a1a]">{formatPrice(totalAmount)}</span>
             </div>
-            <p className="text-xs text-gray-400">Shipping and taxes calculated at checkout</p>
+            <p className="text-xs text-gray-500">Shipping and taxes calculated at checkout</p>
             {checkoutError && (
               <p className="text-xs text-red-600 bg-red-50 px-3 py-2 rounded-lg">{checkoutError}</p>
             )}

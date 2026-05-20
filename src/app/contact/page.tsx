@@ -88,7 +88,7 @@ export default function ContactPage() {
                       <item.icon className="h-5 w-5 text-brand-500" />
                     </div>
                     <div>
-                      <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                      <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
                         {item.label}
                       </div>
                       {item.href ? (

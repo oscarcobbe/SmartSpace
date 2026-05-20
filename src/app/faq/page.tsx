@@ -73,9 +73,9 @@ export default function FAQPage() {
                 >
                   <span className="font-bold text-[#1a1a1a] pr-4">{f.q}</span>
                   {openFaq === i ? (
-                    <ChevronUp className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                    <ChevronUp className="w-5 h-5 text-gray-500 flex-shrink-0" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                    <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
                   )}
                 </button>
                 {openFaq === i && (

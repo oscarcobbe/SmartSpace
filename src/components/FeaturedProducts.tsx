@@ -61,7 +61,7 @@ export default function FeaturedProducts() {
           </h2>
           <div className="py-12 text-center">
             <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-r-transparent" />
-            <p className="mt-4 text-gray-400">Loading products...</p>
+            <p className="mt-4 text-gray-500">Loading products...</p>
           </div>
         </div>
       </section>
@@ -144,7 +144,7 @@ export default function FeaturedProducts() {
             ))}
           </div>
         ) : (
-          <p className="text-gray-400 text-center py-12">No {activeTab === "singles" ? "single products" : "bundles"} found.</p>
+          <p className="text-gray-500 text-center py-12">No {activeTab === "singles" ? "single products" : "bundles"} found.</p>
         )}
 
         <div className="text-center mt-6 sm:hidden">

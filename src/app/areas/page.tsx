@@ -35,7 +35,7 @@ export default function AreasPage() {
     <div className="pt-32 lg:pt-36 pb-16 lg:pb-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 text-sm text-gray-400 mb-8">
+        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-8">
           <Link href="/" className="hover:text-brand-500 transition-colors">Home</Link>
           <span>/</span>
           <span className="text-[#1a1a1a] font-medium">Areas We Cover</span>
@@ -74,7 +74,7 @@ export default function AreasPage() {
                     County {c.name}
                   </div>
                 </div>
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
                   Towns: {c.towns}
                 </p>
                 {/* Teaser for counties with a dedicated detail page (avoids
