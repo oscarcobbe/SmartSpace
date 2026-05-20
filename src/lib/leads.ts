@@ -102,49 +102,73 @@ export async function logLead(record: LeadRecord): Promise<void> {
     return;
   }
 
-  // Hard timeout so a slow Apps Script can't pin the API request for too long.
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  // Flatten attribution fields onto the top-level payload so the Apps Script
+  // can map each into its own column. gclid remains a top-level key for
+  // backwards compatibility with the older script that only knew about it.
+  const { attribution, ...rest } = record;
+  const payload = {
+    ...rest,
+    timestamp: new Date().toISOString(),
+    gclid: attribution?.gclid ?? undefined,
+    landingPage: attribution?.landingPage,
+    referrer: attribution?.referrer,
+    utmSource: attribution?.utmSource,
+    utmMedium: attribution?.utmMedium,
+    utmCampaign: attribution?.utmCampaign,
+    utmContent: attribution?.utmContent,
+    utmTerm: attribution?.utmTerm,
+  };
+  const bodyString = JSON.stringify(payload);
 
-  try {
-    // Flatten attribution fields onto the top-level payload so the Apps Script
-    // can map each into its own column. gclid remains a top-level key for
-    // backwards compatibility with the older script that only knew about it.
-    const { attribution, ...rest } = record;
-    const payload = {
-      ...rest,
-      timestamp: new Date().toISOString(),
-      gclid: attribution?.gclid ?? undefined,
-      landingPage: attribution?.landingPage,
-      referrer: attribution?.referrer,
-      utmSource: attribution?.utmSource,
-      utmMedium: attribution?.utmMedium,
-      utmCampaign: attribution?.utmCampaign,
-      utmContent: attribution?.utmContent,
-      utmTerm: attribution?.utmTerm,
-    };
-
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      cache: "no-store",
-      signal: controller.signal,
-    });
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      console.error(`[leads] webhook responded ${res.status} ${res.statusText} — ${body.slice(0, 200)}`);
-      await sendLeadLogFailureAlert(record, `Apps Script returned HTTP ${res.status} ${res.statusText}`);
+  // Single fetch attempt with a hard timeout. Apps Script cold-start runs
+  // can routinely take 8–12s; the previous 8s timeout was clipping every
+  // first-of-the-day write. Bumped to 12s here. The Stripe webhook (the
+  // hottest caller of logLead) is allowed up to 30s by Stripe so this fits.
+  async function attempt(timeoutMs: number): Promise<{ ok: true } | { ok: false; reason: string }> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url!, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: bodyString,
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      if (!res.ok) {
+        const respBody = await res.text().catch(() => "");
+        return {
+          ok: false,
+          reason: `Apps Script returned HTTP ${res.status} ${res.statusText} — ${respBody.slice(0, 200)}`,
+        };
+      }
+      return { ok: true };
+    } catch (err) {
+      const reason =
+        err instanceof Error
+          ? `${err.name}: ${err.message}` +
+            (err.name === "AbortError" ? ` (Apps Script took >${timeoutMs / 1000}s — likely cold start or quota issue)` : "")
+          : String(err);
+      return { ok: false, reason };
+    } finally {
+      clearTimeout(timeoutId);
     }
-  } catch (err) {
-    // Never let tracking failures break the user flow
-    const reason =
-      err instanceof Error
-        ? `${err.name}: ${err.message}` + (err.name === "AbortError" ? " (Apps Script took >8s — likely cold start or quota issue)" : "")
-        : String(err);
-    console.error("[leads] Failed to log lead:", reason);
-    await sendLeadLogFailureAlert(record, reason);
-  } finally {
-    clearTimeout(timeoutId);
+  }
+
+  // Attempt 1 — typical request, 12s ceiling.
+  let result = await attempt(12000);
+
+  // Retry once on cold-start aborts. By the second attempt the Apps Script
+  // instance is warm so the second call usually finishes in <1s. Add a short
+  // delay before retrying so the Apps Script side has time to fully warm up.
+  if (!result.ok && result.reason.startsWith("AbortError")) {
+    console.warn("[leads] first attempt timed out — retrying after 1.5s warm-up wait");
+    await new Promise((r) => setTimeout(r, 1500));
+    result = await attempt(10000);
+  }
+
+  if (!result.ok) {
+    console.error("[leads] Failed to log lead:", result.reason);
+    await sendLeadLogFailureAlert(record, result.reason);
   }
 }

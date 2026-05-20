@@ -497,12 +497,17 @@ export async function GET(request: Request) {
           // it back out so the dashboard shows topic + message as separate rows.
           const rawNotes = String(r.notes || "").trim();
           const contactDetails: QA[] = [];
+          let parsedTopic: string | undefined;
+          let parsedMessage: string | undefined;
           if (rawNotes) {
             const m = rawNotes.match(/^([^:]{2,40}):\s*([\s\S]+)$/);
             if (m) {
-              contactDetails.push({ question: "Topic", answer: m[1].trim() });
-              contactDetails.push({ question: "Message", answer: m[2].trim() });
+              parsedTopic = m[1].trim();
+              parsedMessage = m[2].trim();
+              contactDetails.push({ question: "Topic", answer: parsedTopic });
+              contactDetails.push({ question: "Message", answer: parsedMessage });
             } else {
+              parsedMessage = rawNotes;
               contactDetails.push({ question: "Message", answer: rawNotes });
             }
           }
@@ -511,6 +516,31 @@ export async function GET(request: Request) {
           if (r.utmCampaign) contactDetails.push({ question: "Campaign", answer: String(r.utmCampaign) });
           if (r.gclid) contactDetails.push({ question: "Google Ads click", answer: "Yes" });
 
+          // Show the parsed Topic in the Product column instead of the
+          // useless generic "Contact form" — Nigel now sees the subject
+          // line at-a-glance without having to expand the row. Also append
+          // a short snippet of the message body so the table row carries
+          // enough context to triage without a click.
+          const messageSnippet = parsedMessage
+            ? parsedMessage.length > 70
+              ? `${parsedMessage.slice(0, 70).trim()}…`
+              : parsedMessage
+            : "";
+          const productLabel = parsedTopic
+            ? messageSnippet
+              ? `${parsedTopic} — ${messageSnippet}`
+              : parsedTopic
+            : "Contact form";
+
+          // Sheet-side status is rarely populated for contact rows. Default
+          // to "Awaiting reply" rather than "New" so the badge actually
+          // communicates the next action — Nigel still owes them a reply.
+          // If Nigel ever updates the Sheet row's Status column to
+          // "Replied" or "Closed", that wins. (Updating from the dashboard
+          // UI is a separate piece of work, not in scope here.)
+          const sheetStatus = String(r.status || "").trim();
+          const statusLabel = sheetStatus || "Awaiting reply";
+
           leads.push({
             date: String(r.date || "—"),
             type: "Contact Enquiry",
@@ -518,11 +548,11 @@ export async function GET(request: Request) {
             email: String(r.email || "—"),
             phone: String(r.phone || "—"),
             address: String(r.address || "—"),
-            product: String(r.product || "Contact form"),
+            product: productLabel,
             amount: r.amount ? formatEuro(Number(r.amount)) : "—",
             bookingDate: "—",
             bookingSlot: "—",
-            status: String(r.status || "New"),
+            status: statusLabel,
             orderId: String(r.notes || "—"),
             details: contactDetails.length ? contactDetails : undefined,
           });

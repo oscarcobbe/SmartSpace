@@ -55,10 +55,13 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   Upcoming: { bg: "bg-blue-100", text: "text-blue-800" },
   Complimentary: { bg: "bg-emerald-100", text: "text-emerald-800" },
   New: { bg: "bg-amber-100", text: "text-amber-800" },
+  "Awaiting reply": { bg: "bg-amber-100", text: "text-amber-800" },
+  Replied: { bg: "bg-blue-100", text: "text-blue-800" },
   Contacted: { bg: "bg-blue-100", text: "text-blue-800" },
   Quoted: { bg: "bg-yellow-100", text: "text-yellow-800" },
   Sold: { bg: "bg-green-100", text: "text-green-800" },
   Lost: { bg: "bg-red-100", text: "text-red-800" },
+  Closed: { bg: "bg-gray-100", text: "text-gray-600" },
 };
 
 interface SourceError {
