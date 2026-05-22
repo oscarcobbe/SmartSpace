@@ -55,12 +55,17 @@ async function timedFetch(
   name: string,
   url: string,
   init: RequestInit = {},
-  expect: (res: Response, body: string) => string | null
+  expect: (res: Response, body: string) => string | null,
+  // Per-check timeout. Default 10s covers public pages + Stripe API
+  // which should respond fast; raise for endpoints that legitimately
+  // take longer to warm up (e.g. Apps Script doGet cold starts can
+  // routinely take 8-12s — the 18 May incident hit exactly that).
+  timeoutMs: number = 10000
 ): Promise<CheckResult> {
   const start = Date.now();
   try {
     const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(), 10000);
+    const t = setTimeout(() => controller.abort(), timeoutMs);
     let res: Response;
     let body = "";
     try {
@@ -97,7 +102,7 @@ async function timedFetch(
     const msg =
       err instanceof Error
         ? `${err.name}: ${err.message}` +
-          (err.name === "AbortError" ? " (>10s timeout)" : "")
+          (err.name === "AbortError" ? ` (>${Math.round(timeoutMs / 1000)}s timeout)` : "")
         : String(err);
     return { name, ok: false, detail: msg, durationMs };
   }
@@ -173,23 +178,39 @@ export async function GET(request: Request) {
 
   // 2. Apps Script read path — catches READ_TOKEN drift, stale deployment URL,
   // exceeded daily quota.
+  //
+  // Apps Script cold starts can take 8-12s legitimately (the WRITE path's
+  // logLead() hit the same problem on 18 May and was bumped to 12s + retry).
+  // This READ probe gets 15s before aborting + one retry on cold-start
+  // aborts — by the second attempt the Apps Script instance is warm, so
+  // it usually returns in under a second.
   const sheetUrl = process.env.GOOGLE_SHEET_WEBHOOK_URL;
   const readToken = process.env.GOOGLE_SHEET_READ_TOKEN;
   if (sheetUrl && readToken) {
     const probe = `${sheetUrl}${sheetUrl.includes("?") ? "&" : "?"}token=${encodeURIComponent(readToken)}&limit=1`;
-    results.push(
-      await timedFetch("google-sheet-read", probe, {}, (res, body) => {
-        if (!res.ok) return `Apps Script returned non-2xx (${body.slice(0, 200)})`;
-        try {
-          const json = JSON.parse(body);
-          if (json.error) return `Apps Script said: ${json.error}`;
-          if (!Array.isArray(json.rows)) return `No .rows array in response`;
-          return null;
-        } catch {
-          return `Apps Script response was not valid JSON: ${body.slice(0, 200)}`;
-        }
-      })
-    );
+    const expect = (res: Response, body: string) => {
+      if (!res.ok) return `Apps Script returned non-2xx (${body.slice(0, 200)})`;
+      try {
+        const json = JSON.parse(body);
+        if (json.error) return `Apps Script said: ${json.error}`;
+        if (!Array.isArray(json.rows)) return `No .rows array in response`;
+        return null;
+      } catch {
+        return `Apps Script response was not valid JSON: ${body.slice(0, 200)}`;
+      }
+    };
+
+    let sheetResult = await timedFetch("google-sheet-read", probe, {}, expect, 15000);
+
+    // Retry once if the failure was a cold-start abort. The second hit is
+    // warm and almost always passes — same pattern as logLead's retry.
+    if (!sheetResult.ok && sheetResult.detail.includes("AbortError")) {
+      console.warn("[health] google-sheet-read first attempt aborted — retrying after 1.5s warm-up wait");
+      await new Promise((r) => setTimeout(r, 1500));
+      sheetResult = await timedFetch("google-sheet-read", probe, {}, expect, 12000);
+    }
+
+    results.push(sheetResult);
   } else {
     results.push({
       name: "google-sheet-read",
