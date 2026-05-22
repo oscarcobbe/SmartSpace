@@ -425,13 +425,46 @@ export async function GET(request: Request) {
       // they're already loaded from the Stripe API above; including them
       // would double-count revenue.
       const url = `${sheetUrl}?token=${encodeURIComponent(readToken)}&type=All&limit=500`;
-      // Apps Script can be slow on cold start; 10s gives it room without
-      // pinning the admin page for the full serverless ceiling.
-      const sheetRes = await fetch(url, {
+      // Apps Script doGet can cold-start at 8-12s. Previous 10s ceiling
+      // clipped any cold-start hit and left the admin dashboard empty
+      // (same class of failure as the 18 May write and the 21 May
+      // health-check abort). New pattern matches health-check and
+      // logLead: 15s first attempt, then if AbortError, wait 1.5s for
+      // the warm-up and retry at 12s. Vercel Pro tier gives us 60s
+      // total function budget so the worst case (~28.5s) still fits.
+      let sheetRes = await fetch(url, {
         cache: "no-store",
         redirect: "follow",
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(15000),
+      }).catch((err: unknown) => {
+        // Return a Response-like sentinel so the retry path below
+        // can decide whether to re-attempt. AbortSignal.timeout()
+        // rejects with a TimeoutError DOMException; we treat both
+        // AbortError and TimeoutError as cold-start aborts.
+        const name = err instanceof Error ? err.name : "Error";
+        return { __abort: true, errorName: name, error: err } as unknown as Response;
       });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((sheetRes as any).__abort) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const errorName = (sheetRes as any).errorName as string;
+        if (errorName === "AbortError" || errorName === "TimeoutError") {
+          console.warn(
+            "[admin] sheet read first attempt aborted (likely Apps Script cold start) — retrying after 1.5s"
+          );
+          await new Promise((r) => setTimeout(r, 1500));
+          sheetRes = await fetch(url, {
+            cache: "no-store",
+            redirect: "follow",
+            signal: AbortSignal.timeout(12000),
+          });
+        } else {
+          // Non-abort throw — rethrow so the outer try/catch records it
+          // as a source error and the dashboard surfaces the actual cause.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          throw (sheetRes as any).error;
+        }
+      }
       if (sheetRes.ok) {
         const sheetData = await sheetRes.json();
         if (sheetData.error) {
