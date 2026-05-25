@@ -100,30 +100,40 @@ const nextConfig = {
       { source: "/products/whole-house-security-calculator", destination: "/services/bundles/whole-home", permanent: true },
 
       // ────────────────────────────────────────────────────────────
-      // CATCH-ALL WILDCARDS for old Shopify URL structures.
-      // IMPORTANT: use [^.]+ so we don't accidentally redirect static
-      // files like /products/plus-video-doorbell.png (which must keep
-      // serving from /public).
+      // NO MORE CATCH-ALL WILDCARDS for legacy Shopify URL structures.
       //
-      // PRESERVE THE SLUG: piping :slug into the destination means
-      // /products/<handle> redirects to /services/<handle> where the
-      // new SSR product page lives (CURATED_HANDLES in
-      // src/app/services/[handle]/page.tsx). Slugs without a matching
-      // new handle 404, which is correct — those products genuinely
-      // don't exist anymore.
+      // Removed 2026-05-25 after GSC continued to show 119 "Page with
+      // redirect — Failed" entries despite the May 14 fix. Root cause
+      // was these four wildcards:
+      //
+      //   /products/:slug → /services/:slug   — produced 404s for any
+      //     legacy product handle not in CURATED_HANDLES
+      //   /collections/:slug → /services      — many-to-one collapse
+      //   /pages/:slug → /                    — many-to-one collapse
+      //     (explicitly called out in the May 14 comment as the
+      //     original cause of the problem)
+      //   /blogs/:slug → smartcareliving.ie   — external-domain
+      //     redirect that Google can't validate from this property
+      //
+      // Trade-off: anyone with a bookmark to a legacy URL not in the
+      // specific override list above will now see a 404 instead of
+      // landing on a hub page. Acceptable — these URLs are 2+ years
+      // old, traffic is negligible, and the SEO penalty for failed
+      // redirects outweighs the rare-bookmark UX hit.
+      //
+      // Google will gradually move the 119 entries from "Page with
+      // redirect — failed" into "Not found (404)" over 4–8 weeks of
+      // re-crawl. The 404 bucket is a softer signal that Google
+      // eventually drops without penalising the rest of the site.
       // ────────────────────────────────────────────────────────────
-      { source: "/products/:slug([^.]+)", destination: "/services/:slug", permanent: true },
-      { source: "/collections/:slug([^.]+)", destination: "/services", permanent: true },
-      { source: "/pages/:slug([^.]+)", destination: "/", permanent: true },
-      { source: "/blogs/:slug([^.]+)", destination: "https://www.smartcareliving.ie/", permanent: true },
 
-      // Old blog index + any old blog post → smartcareliving.ie blog index.
-      // Previously this was ~30 per-post redirects pointing at specific
-      // smartcareliving.ie URLs; many of those destinations 404'd which was
-      // flooding Search Console with "Page with redirect — Failed". Collapsed
-      // to a single catch-all to a guaranteed-live destination.
+      // Keep the legacy /blogs/safe-ageing-powered-by-ai single URL
+      // (not the wildcard) because it appears in actual inbound link
+      // anchor text from the SmartCareLiving ecosystem. External
+      // domain destination is fine for a single explicit redirect —
+      // Google handles those normally; the wildcard variant was the
+      // problem because it implied any sub-slug was valid.
       { source: "/blogs/safe-ageing-powered-by-ai", destination: "https://www.smartcareliving.ie/", permanent: true },
-      { source: "/blogs/safe-ageing-powered-by-ai/:slug*", destination: "https://www.smartcareliving.ie/", permanent: true },
     ];
   },
 };
