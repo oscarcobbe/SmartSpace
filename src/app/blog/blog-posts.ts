@@ -10,6 +10,16 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "ring-vs-eufy-doorbell-ireland",
+    title: "Ring vs Eufy: An Irish Installer's Honest Take in 2026",
+    description:
+      "We've installed thousands of both across Dublin and Leinster. Here's what we tell homeowners when they ask — including why we get asked to swap Eufy for Ring but never the other way around, and why our install price is the same either way.",
+    datePublished: "2026-05-25",
+    dateModified: "2026-05-25",
+    readingTime: "8 min read",
+    category: "Specialist Opinion",
+  },
+  {
     slug: "ring-doorbell-installation-ireland-guide",
     title: "Ring Doorbell Installation Ireland: Complete 2026 Guide",
     description:

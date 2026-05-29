@@ -62,44 +62,87 @@ export default function BlogIndexPage() {
         {/* Header */}
         <div className="mb-14">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4">
-            Guides
+            Guides &amp; Specialist Opinion
           </h1>
           <p className="text-gray-500 text-lg max-w-2xl">
             Practical guides on Ring installation, home security cameras, and smart
-            home setup for Irish homes. Written by Dublin&apos;s #1 Ring installer.
+            home setup for Irish homes — plus the things we&apos;ve learned over
+            5,000+ installs that you won&apos;t find in a brand brochure.
           </p>
         </div>
 
-        {/* Post list */}
-        <div className="grid gap-6 lg:gap-8">
-          {BLOG_POSTS.map((post) => (
-            <Link
-              key={post.slug}
-              href={`/blog/${post.slug}`}
-              className="group bg-white rounded-2xl border border-gray-100 p-6 sm:p-8 hover:border-brand-500 hover:shadow-lg transition-all"
-            >
-              <div className="flex items-center gap-3 mb-3 text-xs font-semibold text-gray-500">
-                <span className="bg-brand-500/10 text-brand-500 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                  {post.category}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  {post.readingTime}
-                </span>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 group-hover:text-brand-500 transition-colors mb-3">
-                {post.title}
-              </h2>
-              <p className="text-gray-600 leading-relaxed mb-4">
-                {post.description}
-              </p>
-              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-500">
-                Read guide
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-              </span>
-            </Link>
-          ))}
-        </div>
+        {(() => {
+          // Group posts by category. "Specialist Opinion" pieces are
+          // first-person, lived-experience-led — we put them at the top
+          // because that's where the genuine value sits. Buying Guides
+          // and Comparisons follow. Order within each group preserves
+          // the BLOG_POSTS array order (newest first, set in blog-posts.ts).
+          const CATEGORY_ORDER = ["Specialist Opinion", "Buying Guide", "Comparison"];
+          const CATEGORY_BLURBS: Record<string, string> = {
+            "Specialist Opinion":
+              "From the van. The things we tell homeowners on the walkthrough — including the patterns we see that you won't read on a tech-review site.",
+            "Buying Guide": "Honest, technical guides on what to buy and what fits an Irish home.",
+            Comparison: "Side-by-side breakdowns of the brands and setups we install most.",
+          };
+          const groups = CATEGORY_ORDER.map((cat) => ({
+            category: cat,
+            blurb: CATEGORY_BLURBS[cat] ?? "",
+            posts: BLOG_POSTS.filter((p) => p.category === cat),
+          })).filter((g) => g.posts.length > 0);
+
+          // Catch any post whose category isn't in our known list so future
+          // categories don't silently drop off the index page.
+          const unknown = BLOG_POSTS.filter((p) => !CATEGORY_ORDER.includes(p.category));
+          if (unknown.length > 0) {
+            groups.push({ category: "More", blurb: "", posts: unknown });
+          }
+
+          return (
+            <div className="space-y-16">
+              {groups.map((group) => (
+                <section key={group.category}>
+                  <header className="mb-6">
+                    <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 mb-1.5">
+                      {group.category}
+                    </h2>
+                    {group.blurb && (
+                      <p className="text-sm text-gray-500 max-w-2xl">{group.blurb}</p>
+                    )}
+                  </header>
+                  <div className="grid gap-6 lg:gap-8">
+                    {group.posts.map((post) => (
+                      <Link
+                        key={post.slug}
+                        href={`/blog/${post.slug}`}
+                        className="group bg-white rounded-2xl border border-gray-100 p-6 sm:p-8 hover:border-brand-500 hover:shadow-lg transition-all"
+                      >
+                        <div className="flex items-center gap-3 mb-3 text-xs font-semibold text-gray-500">
+                          <span className="bg-brand-500/10 text-brand-500 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                            {post.category}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {post.readingTime}
+                          </span>
+                        </div>
+                        <h3 className="text-xl sm:text-2xl font-extrabold text-gray-900 group-hover:text-brand-500 transition-colors mb-3">
+                          {post.title}
+                        </h3>
+                        <p className="text-gray-600 leading-relaxed mb-4">
+                          {post.description}
+                        </p>
+                        <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-500">
+                          Read article
+                          <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          );
+        })()}
 
         {/* CTA */}
         <div className="mt-16 text-center bg-gray-50 rounded-2xl p-8 sm:p-12">
