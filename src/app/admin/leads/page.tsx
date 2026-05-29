@@ -62,6 +62,7 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   Sold: { bg: "bg-green-100", text: "text-green-800" },
   Lost: { bg: "bg-red-100", text: "text-red-800" },
   Closed: { bg: "bg-gray-100", text: "text-gray-600" },
+  Completed: { bg: "bg-gray-100", text: "text-gray-700" },
 };
 
 interface SourceError {

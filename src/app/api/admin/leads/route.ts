@@ -262,10 +262,19 @@ export async function GET(request: Request) {
     });
   } else {
     try {
-      const now = new Date().toISOString();
+      // Pull Calendly events in a window of [30 days ago, 90 days ahead].
+      // The previous min_start_time=now silently dropped every booking from
+      // the dashboard the instant its start time passed — past customers
+      // disappeared while Nigel still needed visibility (follow-ups,
+      // reviews, no-show reconciliation, "wait what was that job last
+      // week"). 30-day past window covers the typical review-chase and
+      // invoice-reconciliation cadence without bloating the response.
+      // The Sheet writes from logLead() persist independently, so this
+      // is purely a dashboard-visibility fix — no data was lost.
+      const pastWindow = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
       const future = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
       const calRes = await fetch(
-        `https://api.calendly.com/scheduled_events?user=https://api.calendly.com/users/88f48d46-ddd1-4222-8aa6-5bd8c93a9c00&min_start_time=${now}&max_start_time=${future}&status=active&sort=start_time:asc`,
+        `https://api.calendly.com/scheduled_events?user=https://api.calendly.com/users/88f48d46-ddd1-4222-8aa6-5bd8c93a9c00&min_start_time=${pastWindow}&max_start_time=${future}&status=active&sort=start_time:asc`,
         {
           headers: { Authorization: `Bearer ${calendlyToken}`, "Content-Type": "application/json" },
           cache: "no-store",
@@ -379,6 +388,14 @@ export async function GET(request: Request) {
 
         const isConsultation = event.name?.toLowerCase().includes("consultation");
 
+        // Date-aware status. The 30-day past window means we now surface
+        // already-completed appointments — labelling them "Upcoming" would
+        // be a lie and would also pollute the page.tsx Upcoming-tab filter
+        // (`l.status === "Upcoming"`). Anything whose start_time has
+        // passed gets "Completed"; future events stay "Upcoming".
+        const isPast = start.getTime() < Date.now();
+        const calendlyStatus = isPast ? "Completed" : "Upcoming";
+
         leads.push({
           date: startStr,
           type: isConsultation ? "Consultation" : "Installation",
@@ -390,7 +407,7 @@ export async function GET(request: Request) {
           amount: isConsultation ? "Complimentary" : "—",
           bookingDate: startStr,
           bookingSlot: `${start.toLocaleString("en-GB", { timeZone: "Europe/Dublin", hour: "2-digit", minute: "2-digit", hour12: false })} – ${new Date(event.end_time).toLocaleString("en-GB", { timeZone: "Europe/Dublin", hour: "2-digit", minute: "2-digit", hour12: false })}`,
-          status: "Upcoming",
+          status: calendlyStatus,
           orderId: notes || "—",
           details: calendlyDetails.length ? calendlyDetails : undefined,
         });
