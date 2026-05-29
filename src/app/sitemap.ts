@@ -60,6 +60,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // distinct buyer-research query so they don't cannibalise each other.
     { url: `${BASE}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
     { url: `${BASE}/blog/ring-vs-eufy-doorbell-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${BASE}/blog/smart-camera-wifi-drops-irish-homes`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${BASE}/blog/tapo-vs-eufy-vs-ring-budget-doorbell-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${BASE}/blog/whole-home-security-beyond-front-door-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${BASE}/blog/battery-vs-hardwired-smart-doorbell-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/blog/home-security-cameras-ireland-buyers-guide`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/blog/ring-doorbell-installation-ireland-guide`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/blog/smart-doorbell-vs-traditional-intercom-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
