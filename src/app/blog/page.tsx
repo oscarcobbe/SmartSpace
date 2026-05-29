@@ -53,18 +53,18 @@ export default function BlogIndexPage() {
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-8">
+        <nav className="flex items-center justify-center gap-2 text-sm text-gray-500 mb-8">
           <Link href="/" className="hover:text-brand-500 transition-colors">Home</Link>
           <span>/</span>
           <span className="text-[#1a1a1a] font-medium">Guides</span>
         </nav>
 
         {/* Header */}
-        <div className="mb-14">
+        <div className="mb-14 text-center">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4">
             Guides &amp; Specialist Opinion
           </h1>
-          <p className="text-gray-500 text-lg max-w-2xl">
+          <p className="text-gray-500 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
             Practical guides on Ring installation, home security cameras, and smart
             home setup for Irish homes, plus the things we&apos;ve learned over
             5,000+ installs that you won&apos;t find in a brand brochure.
@@ -101,15 +101,15 @@ export default function BlogIndexPage() {
             <div className="space-y-16">
               {groups.map((group) => (
                 <section key={group.category}>
-                  <header className="mb-8">
+                  <header className="mb-8 text-center">
                     <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 mb-2.5">
                       {group.category}
                     </h2>
                     {group.blurb && (
-                      <p className="text-sm sm:text-base text-gray-500 max-w-2xl leading-relaxed">{group.blurb}</p>
+                      <p className="text-sm sm:text-base text-gray-500 max-w-2xl mx-auto leading-relaxed">{group.blurb}</p>
                     )}
                   </header>
-                  <div className="grid gap-6 lg:gap-8">
+                  <div className="grid gap-6 lg:gap-8 max-w-3xl mx-auto">
                     {group.posts.map((post) => (
                       <Link
                         key={post.slug}
