@@ -15,6 +15,7 @@ const serviceLinks = [
 const companyLinks = [
   { href: "/about", label: "About Us" },
   { href: "/reviews", label: "Reviews" },
+  { href: "/blog", label: "Guides" },
   { href: "/areas", label: "Areas We Cover" },
   { href: "/contact", label: "Contact" },
 ];
@@ -111,7 +112,7 @@ export default function Footer() {
             <Link href="/terms" className="hover:text-white transition-colors">
               Terms
             </Link>
-            <span className="hidden sm:inline">Dublin&apos;s #1 Ring Installer — Serving All of Leinster</span>
+            <span className="hidden sm:inline">Dublin&apos;s #1 Ring Installer, Serving All of Leinster</span>
           </div>
         </div>
       </div>

@@ -70,8 +70,8 @@ export default function Post() {
         <p>
           The short version: because most of the Ring install content online assumes
           you&apos;re in a US home with a 16–24V AC doorbell transformer sitting behind a plate
-          just inside the front door. Irish homes are different. The existing wired doorbell
-          — if you have one at all — is often a low-voltage chime on an ageing battery
+          just inside the front door. Irish homes are different. The existing wired doorbell,
+          if you have one at all, is often a low-voltage chime on an ageing battery
           transformer, or it&apos;s hard-wired into lighting circuits in a way that violates
           current regulations. We see all of this on a weekly basis.
         </p>
@@ -133,7 +133,7 @@ export default function Post() {
           For most Irish homeowners replacing an existing wired bell, the{" "}
           <Link href="/services/doorbell">Ring Video Doorbell Plus or Pro</Link> is the right
           starting point. Hardwired means no battery to swap every few months, and the
-          higher-end Pro variants include pre-roll recording — you see the four seconds
+          higher-end Pro variants include pre-roll recording, you see the four seconds
           before a motion event was triggered, which is often where the useful information
           actually lives.
         </p>
@@ -144,17 +144,17 @@ export default function Post() {
         </p>
         <ul>
           <li>
-            <strong>Battery-powered bell push + mechanical chime</strong> — an old-school
+            <strong>Battery-powered bell push + mechanical chime</strong>, an old-school
             battery in the chime itself, no transformer. You need the Ring plug-in adapter
             or go fully battery.
           </li>
           <li>
-            <strong>Mains transformer feeding an 8V AC mechanical chime</strong> — common in
+            <strong>Mains transformer feeding an 8V AC mechanical chime</strong>, common in
             homes built after 1990. Ring Video Doorbells work directly with this once a
             compatible transformer (minimum 10VA) is in place.
           </li>
           <li>
-            <strong>No doorbell wiring at all</strong> — you either go battery, or a
+            <strong>No doorbell wiring at all</strong>, you either go battery, or a
             professional installer runs fresh cable from a fused spur to a Ring Plug-In
             Adapter in the hall.
           </li>
@@ -169,7 +169,7 @@ export default function Post() {
 
         <h2 id="weather">Weatherproofing for Irish climate</h2>
         <p>
-          Irish weather is genuinely punishing for doorbell cameras — wind-driven rain hits
+          Irish weather is genuinely punishing for doorbell cameras, wind-driven rain hits
           the front door side-on, and condensation behind the faceplate can fog the lens.
           Two things make a real difference.
         </p>
@@ -177,7 +177,7 @@ export default function Post() {
           First, a <strong>corner mounting kit</strong> if your front door is flush with a
           wall. Angling the doorbell 15° outwards gets faces in frame and also sheds more
           rain. Second, a <strong>silicone bead along the top edge</strong> of the
-          mounting plate — not around the whole unit, which prevents drainage — to stop
+          mounting plate, not around the whole unit, which prevents drainage, to stop
           water tracking in behind the bracket.
         </p>
 
@@ -191,7 +191,7 @@ export default function Post() {
         <p>
           The fix is usually a <strong>Ring Chime Pro</strong>: a plug-in unit that both
           extends Wi-Fi to the doorbell and acts as the in-house chime. Every doorbell
-          install Smart Space does includes a Chime Pro as standard — if you&apos;re buying
+          install Smart Space does includes a Chime Pro as standard, if you&apos;re buying
           direct from Ring or Amazon, factor in another €60.
         </p>
 
@@ -211,16 +211,16 @@ export default function Post() {
             <tr>
               <td>Battery doorbell, direct mount to timber frame</td>
               <td>Yes</td>
-              <td>—</td>
+              <td>n/a</td>
             </tr>
             <tr>
               <td>Swapping an existing wired bell for a Ring Wired</td>
-              <td>Maybe — if you understand AC circuits</td>
+              <td>Maybe, if you understand AC circuits</td>
               <td>Pro recommended</td>
             </tr>
             <tr>
               <td>No existing doorbell wiring, mains power needed</td>
-              <td>No — mains work should be done by a qualified installer</td>
+              <td>No, mains work should be done by a qualified installer</td>
               <td>Yes</td>
             </tr>
             <tr>
@@ -243,23 +243,23 @@ export default function Post() {
         </p>
         <ul>
           <li>
-            <strong>Ring Video Doorbell + installation — from €329.</strong> Includes
+            <strong>Ring Video Doorbell + installation, from €329.</strong> Includes
             Ring Chime, app setup, motion zones, and a walkthrough.
           </li>
           <li>
-            <strong>Ring Video Doorbell + installation with new cabling — from €429.</strong> Adds
+            <strong>Ring Video Doorbell + installation with new cabling, from €429.</strong> Adds
             new power source / cabling for properties without existing doorbell wiring.
           </li>
           <li>
-            <strong>Driveway Bundle (Doorbell + Floodlight Cam) — from €658.</strong>{" "}
+            <strong>Driveway Bundle (Doorbell + Floodlight Cam), from €658.</strong>{" "}
             <Link href="/services/bundles/driveway">See the driveway bundle</Link>.
           </li>
           <li>
-            <strong>Whole Home Bundle (Doorbell + 2x Floodlight Cams) — from €987.</strong>{" "}
+            <strong>Whole Home Bundle (Doorbell + 2x Floodlight Cams), from €987.</strong>{" "}
             <Link href="/services/bundles/whole-home">See the whole home bundle</Link>.
           </li>
           <li>
-            <strong>Installation-only (you supply the device) — from €139.</strong>{" "}
+            <strong>Installation-only (you supply the device), from €139.</strong>{" "}
             <Link href="/services/installation-only">Book installation-only</Link>.
           </li>
         </ul>

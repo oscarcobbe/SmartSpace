@@ -57,7 +57,7 @@ export default function Post() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
       <BlogLayout post={post} toc={toc}>
         <p>
-          A lot of Irish homes — especially those built in the 70s, 80s and 90s — still
+          A lot of Irish homes, especially those built in the 70s, 80s and 90s, still
           have wired intercom systems at the front gate or front door. Most of them are
           either broken, half-broken, or so old the handset inside the hall looks like a
           1987 telephone. If you&apos;re considering ripping out the old intercom and
@@ -83,7 +83,7 @@ export default function Post() {
             Useful for deliveries you missed, or for unwanted callers.
           </li>
           <li>
-            <strong>Remote answering.</strong> You can answer from anywhere — in the
+            <strong>Remote answering.</strong> You can answer from anywhere, in the
             garden, in the car, on holiday. Couriers get a response even when you&apos;re
             not home.
           </li>
@@ -133,7 +133,7 @@ export default function Post() {
             </tr>
             <tr>
               <td>Smart doorbell + smart lock</td>
-              <td>From €509 — see <Link href="/services/bundles/eldercare">Eldercare Bundle</Link></td>
+              <td>From €509, see <Link href="/services/bundles/eldercare">Eldercare Bundle</Link></td>
               <td>5–8 years</td>
             </tr>
           </tbody>
@@ -154,7 +154,7 @@ export default function Post() {
           <li>
             <strong>Voltage.</strong> Older intercoms run 12V or 24V AC. Ring doorbells
             need 8V–24V AC at the bell push. We verify with a multimeter before connecting
-            — a 24V transformer connected directly to a Ring Doorbell Wired will damage
+           , a 24V transformer connected directly to a Ring Doorbell Wired will damage
             the unit.
           </li>
           <li>
@@ -211,14 +211,14 @@ export default function Post() {
         <h2 id="eldercare">Smart doorbells for older family members</h2>
         <p>
           One of the most common reasons we get called to install smart doorbells isn&apos;t
-          for the homeowner — it&apos;s for a parent or an older relative. The setup we
+          for the homeowner, it&apos;s for a parent or an older relative. The setup we
           install most is a Ring Video Doorbell linked to the family&apos;s phones, plus a
           smart Wi-Fi keybox that a carer can open with a one-time code.
         </p>
         <p>
           The older person presses the doorbell, everyone gets notified, and family members
           can answer the door remotely. The carer arrives, enters the keybox code on their
-          phone, collects the key, and lets themselves in — no more keys hidden under plant
+          phone, collects the key, and lets themselves in, no more keys hidden under plant
           pots. See the <Link href="/services/bundles/eldercare">Eldercare Bundle</Link>{" "}
           for the full setup.
         </p>
@@ -228,7 +228,7 @@ export default function Post() {
           If you have an old intercom and you&apos;re not sure whether to repair or replace,
           book a free consultation. We&apos;ll check the existing wiring, test voltages,
           confirm Wi-Fi signal, and tell you honestly whether a smart doorbell makes sense
-          in your home — or whether a like-for-like intercom repair is the right call.
+          in your home, or whether a like-for-like intercom repair is the right call.
         </p>
         <p>
           Smart Space is Dublin&apos;s #1 Ring installer and covers all of Leinster.{" "}

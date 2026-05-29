@@ -99,7 +99,7 @@ export default function Post() {
           <strong>Two:</strong> the insulation. From around 2015 onwards, more or less every new build
           and most retrofits use either PIR boards (the rigid foam ones with a silver foil face) or
           thermal-insulated plasterboard with a foil backing. Foil is a near-perfect Wi-Fi reflector.
-          It&apos;s not just attenuating the signal — it&apos;s actively bouncing it back into the
+          It&apos;s not just attenuating the signal, it&apos;s actively bouncing it back into the
           house. We&apos;ve been in 2020-build homes in Lucan and Adamstown where the router&apos;s
           eight metres from the front door in a straight line and the signal at the threshold is
           essentially zero. The foil is doing exactly what it&apos;s designed to do for heat. It does
@@ -107,7 +107,7 @@ export default function Post() {
         </p>
         <p>
           <strong>Three:</strong> the consumer unit. Irish builds typically have the fuse board in or
-          near the hall — often directly between the router and the front door. Big metal box full of
+          near the hall, often directly between the router and the front door. Big metal box full of
           copper. Another shadow on the signal.
         </p>
         <p>
@@ -124,7 +124,7 @@ export default function Post() {
         <p>
           The first thing we ask: where&apos;s the router right now, and can it move? The number of
           times the router is in a wardrobe behind a TV behind a sofa is silly. If we can&apos;t
-          move it, we can usually run a Cat6 cable to a better spot — or recommend the homeowner ask
+          move it, we can usually run a Cat6 cable to a better spot, or recommend the homeowner ask
           their broadband provider for a longer fibre patch lead and a relocation.
         </p>
         <p>
@@ -148,7 +148,7 @@ export default function Post() {
         </p>
         <p>
           <strong>The Ring Chime Pro.</strong> If you&apos;re going with a Ring doorbell, this plugs
-          into a socket somewhere between the router and the door. It does double duty — extends the
+          into a socket somewhere between the router and the door. It does double duty, extends the
           Wi-Fi specifically to the doorbell <em>and</em> acts as an indoor chime so you don&apos;t
           have to rely on your phone to hear the bell. We tend to put it in the hall press or just
           inside the porch wall. Genuinely the cleanest fix for Ring.
@@ -187,14 +187,14 @@ export default function Post() {
 
         <h2 id="homebase">If you&apos;ve got Eufy: where to put the HomeBase</h2>
         <p>
-          One thing specifically for Eufy customers. Eufy&apos;s HomeBase isn&apos;t an extender —
-          it&apos;s a hub that talks to the cameras on a dedicated low-frequency channel separate
+          One thing specifically for Eufy customers. Eufy&apos;s HomeBase isn&apos;t an extender.
+          It&apos;s a hub that talks to the cameras on a dedicated low-frequency channel separate
           from your house Wi-Fi. So in theory it doesn&apos;t care about the foil-backed walls. In
           practice you still need to think about where it sits, because the HomeBase&apos;s own
           radio still has to reach the camera.
         </p>
         <p>
-          We aim to put it as close to the inside of the front wall as we can — usually in the hall
+          We aim to put it as close to the inside of the front wall as we can, usually in the hall
           coats press, on top of a shelf, or wherever there&apos;s a free socket and a clear line of
           sight (or near-line) to the doorbell. If the customer has stuck it on the sideboard at the
           back of the kitchen, the signal&apos;s travelling the full depth of the house plus through
@@ -205,7 +205,7 @@ export default function Post() {
         <p>
           Every install we do, we mount the camera temporarily, power it up, walk the signal,
           measure the strength, then take it down and put the bracket up properly. Sounds obvious.
-          It&apos;s the step most DIY jobs skip — and it&apos;s the reason the camera comes off the
+          It&apos;s the step most DIY jobs skip, and it&apos;s the reason the camera comes off the
           wall three months later.
         </p>
         <p>
@@ -215,7 +215,7 @@ export default function Post() {
           <Link href="/services/free-consultation" className="text-brand-500 hover:underline">
             complimentary consultation
           </Link>{" "}
-          covers exactly this — we&apos;ll come out, measure the signal, and tell you what would
+          covers exactly this, we&apos;ll come out, measure the signal, and tell you what would
           actually solve it. If the fix is just a €60 extender plugged into the right socket,
           we&apos;ll tell you that and you can do it yourself.
         </p>

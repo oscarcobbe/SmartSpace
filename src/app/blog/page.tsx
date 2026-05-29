@@ -17,7 +17,7 @@ export const metadata: Metadata = {
       "Practical guides on Ring doorbells, cameras, and smart home setup for Irish homes.",
     url: `${SITE}/blog`,
     type: "website",
-    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Smart Space Guides — Ring & Home Security" }],
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Smart Space Guides, Ring & Home Security" }],
   },
   twitter: {
     card: "summary_large_image",
@@ -66,21 +66,21 @@ export default function BlogIndexPage() {
           </h1>
           <p className="text-gray-500 text-lg max-w-2xl">
             Practical guides on Ring installation, home security cameras, and smart
-            home setup for Irish homes — plus the things we&apos;ve learned over
+            home setup for Irish homes, plus the things we&apos;ve learned over
             5,000+ installs that you won&apos;t find in a brand brochure.
           </p>
         </div>
 
         {(() => {
           // Group posts by category. "Specialist Opinion" pieces are
-          // first-person, lived-experience-led — we put them at the top
+          // first-person, lived-experience-led, we put them at the top
           // because that's where the genuine value sits. Buying Guides
           // and Comparisons follow. Order within each group preserves
           // the BLOG_POSTS array order (newest first, set in blog-posts.ts).
           const CATEGORY_ORDER = ["Specialist Opinion", "Buying Guide", "Comparison"];
           const CATEGORY_BLURBS: Record<string, string> = {
             "Specialist Opinion":
-              "From the van. The things we tell homeowners on the walkthrough — including the patterns we see that you won't read on a tech-review site.",
+              "From the van. The things we tell homeowners on the walkthrough, including the patterns we see that you won't read on a tech-review site.",
             "Buying Guide": "Honest, technical guides on what to buy and what fits an Irish home.",
             Comparison: "Side-by-side breakdowns of the brands and setups we install most.",
           };
@@ -101,12 +101,12 @@ export default function BlogIndexPage() {
             <div className="space-y-16">
               {groups.map((group) => (
                 <section key={group.category}>
-                  <header className="mb-6">
-                    <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 mb-1.5">
+                  <header className="mb-8">
+                    <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 mb-2.5">
                       {group.category}
                     </h2>
                     {group.blurb && (
-                      <p className="text-sm text-gray-500 max-w-2xl">{group.blurb}</p>
+                      <p className="text-sm sm:text-base text-gray-500 max-w-2xl leading-relaxed">{group.blurb}</p>
                     )}
                   </header>
                   <div className="grid gap-6 lg:gap-8">

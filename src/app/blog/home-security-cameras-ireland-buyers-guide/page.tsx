@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 
 const toc = [
   { id: "what-to-look-for", label: "What to actually look for in 2026" },
-  { id: "comparison", label: "Ring vs Nest vs Eufy vs Tapo — compared" },
+  { id: "comparison", label: "Ring vs Nest vs Eufy vs Tapo, compared" },
   { id: "floodlight", label: "Floodlight cameras for driveways" },
   { id: "indoor", label: "Indoor cameras: do you need one?" },
   { id: "insurance", label: "Insurance and Garda-recommended setups" },
@@ -62,7 +62,7 @@ export default function Post() {
           know the problem: the market is saturated with sub-€100 no-name cameras, Amazon
           reviews contradict each other, and most of the &quot;best of 2026&quot; lists are
           written by people who never installed one on an actual Irish property. This guide
-          is different. We install these cameras for a living — and here&apos;s what
+          is different. We install these cameras for a living, and here&apos;s what
           actually works in 2026.
         </p>
 
@@ -98,12 +98,12 @@ export default function Post() {
         </ul>
         <p><strong>Doesn&apos;t really matter:</strong></p>
         <ul>
-          <li>4K resolution — the lens and sensor are the bottleneck, not pixel count.</li>
-          <li>Two-way audio on outdoor cams — hardly anyone uses it.</li>
-          <li>Pan-and-tilt on outdoor cams — fragile and prone to wind failure.</li>
+          <li>4K resolution, the lens and sensor are the bottleneck, not pixel count.</li>
+          <li>Two-way audio on outdoor cams, hardly anyone uses it.</li>
+          <li>Pan-and-tilt on outdoor cams, fragile and prone to wind failure.</li>
         </ul>
 
-        <h2 id="comparison">Ring vs Nest vs Eufy vs Tapo — compared</h2>
+        <h2 id="comparison">Ring vs Nest vs Eufy vs Tapo, compared</h2>
         <p>
           All four brands have outdoor cameras that work in Ireland. Here&apos;s how they
           actually compare in use.
@@ -122,7 +122,7 @@ export default function Post() {
               <td>Ring</td>
               <td>Unified system with doorbell, integrates with Alexa</td>
               <td>Cloud-recording subscription for 30-day history</td>
-              <td>Yes (Ring Protect — €3.99/mo basic)</td>
+              <td>Yes (Ring Protect, €3.99/mo basic)</td>
             </tr>
             <tr>
               <td>Nest (Google)</td>
@@ -138,15 +138,15 @@ export default function Post() {
             </tr>
             <tr>
               <td>Tapo (TP-Link)</td>
-              <td>Budget — cheapest of the four</td>
+              <td>Budget, cheapest of the four</td>
               <td>App is less polished; integration limited</td>
               <td>Optional</td>
             </tr>
           </tbody>
         </table>
         <p>
-          We install all four brands — see <Link href="/services/installation-only">installation-only</Link>{" "}
-          for pricing — and the most common choice for new Irish customers in 2026 is
+          We install all four brands, see <Link href="/services/installation-only">installation-only</Link>{" "}
+          for pricing, and the most common choice for new Irish customers in 2026 is
           still Ring, because the ecosystem (doorbell + cameras + Chime Pro + smart lock)
           all lives in one app.
         </p>
@@ -156,7 +156,7 @@ export default function Post() {
           If there&apos;s one camera worth putting on an Irish home, it&apos;s a floodlight
           camera at the driveway or side entrance. Motion triggers a bright light, the
           camera records, and you get an alert on your phone. Most break-ins and package
-          thefts are opportunistic — a floodlight camera deters both.
+          thefts are opportunistic, a floodlight camera deters both.
         </p>
         <p>
           For details on our Ring Floodlight Cam install, see{" "}
@@ -167,7 +167,7 @@ export default function Post() {
 
         <h2 id="indoor">Indoor cameras: do you need one?</h2>
         <p>
-          Honest answer: probably not, unless you have a specific reason — monitoring an
+          Honest answer: probably not, unless you have a specific reason, monitoring an
           elderly parent at home, watching a pet, or keeping an eye on a holiday-let. For
           general home security, outdoor cameras at entry points catch far more useful
           footage than an indoor camera pointed at an empty hallway.
@@ -175,7 +175,7 @@ export default function Post() {
         <p>
           If you do want an indoor camera, the Ring Indoor Cam and Eufy Indoor Cam are both
           well-priced. Eufy has a privacy-shutter mode that physically blocks the lens when
-          you&apos;re home — worth having if you dislike the idea of an always-on camera
+          you&apos;re home, worth having if you dislike the idea of an always-on camera
           in the kitchen.
         </p>
 
@@ -190,7 +190,7 @@ export default function Post() {
           <li>A video doorbell that records to the cloud or a local hub.</li>
           <li>
             Installation by a professional (sometimes a formal install specification is
-            required — we supply this on request).
+            required, we supply this on request).
           </li>
         </ul>
         <p>
@@ -227,7 +227,7 @@ export default function Post() {
           </li>
           <li>
             <strong>Elderly relative&apos;s home anywhere in Leinster.</strong> Ring
-            Video Doorbell + smart Wi-Fi keybox for carer access. Around €509 — see the{" "}
+            Video Doorbell + smart Wi-Fi keybox for carer access. Around €509, see the{" "}
             <Link href="/services/bundles/eldercare">Eldercare Bundle</Link>.
           </li>
         </ul>
@@ -237,7 +237,7 @@ export default function Post() {
           If you&apos;d like Smart Space to come out, walk the property, and put together a
           camera plan that actually fits your house, book a{" "}
           <Link href="/services/free-consultation">complimentary consultation</Link>. No
-          hard sell — we&apos;ll recommend the right camera count and brands for your
+          hard sell, we&apos;ll recommend the right camera count and brands for your
           needs, and you can decide whether you want us to install or whether you&apos;d
           rather do it yourself.
         </p>

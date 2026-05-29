@@ -66,7 +66,7 @@ export default function Post() {
 
         <h2 id="what-tapo-is">What Tapo actually is</h2>
         <p>
-          Tapo is TP-Link&apos;s consumer smart-home brand. TP-Link itself is enormous — they make a
+          Tapo is TP-Link&apos;s consumer smart-home brand. TP-Link itself is enormous, they make a
           big chunk of the world&apos;s home routers. Tapo started off as the cheap-and-cheerful
           range: smart plugs at €15, light bulbs at €12, indoor cameras at €25. They were excellent
           at that. Then they expanded outwards into doorbells, outdoor cameras, robot hoovers,
@@ -75,7 +75,7 @@ export default function Post() {
         <p>
           The thing to understand is that the smart-doorbell line is the newest, least-mature part
           of Tapo&apos;s catalogue. The indoor cameras and the smart plugs are years ahead in
-          development cycles. The outdoor security stuff is catching up — but it&apos;s catching up
+          development cycles. The outdoor security stuff is catching up, but it&apos;s catching up
           to where Eufy was about three years ago, which is itself behind where Ring is now.
           That&apos;s the position.
         </p>
@@ -83,7 +83,7 @@ export default function Post() {
         <h2 id="ages-out">The three things that age out fastest</h2>
         <p>
           When we get called out to a job where a Tapo doorbell or camera has stopped working, it&apos;s
-          usually one of these three things. Not always in the camera&apos;s second week —
+          usually one of these three things. Not always in the camera&apos;s second week,
           usually somewhere between twelve and twenty-four months in.
         </p>
         <p>
@@ -92,7 +92,7 @@ export default function Post() {
           story. The rubber gaskets on the back of the unit dry out faster than the equivalent Ring
           or Eufy gear, the plastic housing yellows from UV faster, and the screw covers tend to pop
           off. Once water gets in, that&apos;s the camera. Irish weather is the test that finishes
-          most of the cheaper kit — we have driving horizontal rain six months of the year and
+          most of the cheaper kit, we have driving horizontal rain six months of the year and
           temperature swings between freezing and 14°C in the same week. It&apos;s a worse climate
           for outdoor electronics than people think.
         </p>
@@ -106,7 +106,7 @@ export default function Post() {
         </p>
         <p>
           <strong>The app updates.</strong> The Tapo app gets fewer updates than the Ring or Eufy
-          apps. Not always a bad thing — but when iOS or Android pushes a major update, the smaller
+          apps. Not always a bad thing, but when iOS or Android pushes a major update, the smaller
           apps can break for a week or two. We had a customer in Stillorgan last spring whose Tapo
           notifications stopped firing after an iOS update and didn&apos;t come back for nearly a
           month. That&apos;s the kind of thing that pushes someone to replace the whole system.
@@ -121,7 +121,7 @@ export default function Post() {
         </p>
         <p>
           Most of the time they ask us to put up a Ring or a Eufy in its place. The cost of that
-          swap — new doorbell, our install fee — is usually around the same as if they&apos;d
+          swap, new doorbell, our install fee, is usually around the same as if they&apos;d
           bought the better doorbell in the first place. So they&apos;ve effectively paid twice.
           The Tapo wasn&apos;t the cheap option, it was just the option they bought first.
         </p>
@@ -141,7 +141,7 @@ export default function Post() {
         <p>
           <strong>Garden sheds and outbuildings.</strong> If you want eyes on a shed at the back of
           the garden that contains nothing irreplaceable, Tapo will do the job for half the price of
-          a Eufy. The trade-off — slower notifications, shorter expected lifespan — matters less
+          a Eufy. The trade-off, slower notifications, shorter expected lifespan, matters less
           when you&apos;re mostly interested in deterrence and a recording-after-the-fact.
         </p>
         <p>
@@ -162,7 +162,7 @@ export default function Post() {
         </p>
         <p>
           <strong>Tapo doorbell, DIY install.</strong> €60 for the doorbell. Free to install
-          yourself. Likely replacement in 18 to 24 months — call it €60 again. Plus the second
+          yourself. Likely replacement in 18 to 24 months, call it €60 again. Plus the second
           install. Plus any frustration in between. Five-year cost: somewhere between €120 and
           €200, plus your time.
         </p>

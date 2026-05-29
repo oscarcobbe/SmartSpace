@@ -76,8 +76,8 @@ export default function Post() {
           down faster.
         </p>
         <p>
-          The second is motion events. If your bell is on a road with footfall — kids walking past
-          to school in the morning, the postman, a courier in the afternoon — every motion event
+          The second is motion events. If your bell is on a road with footfall, kids walking past
+          to school in the morning, the postman, a courier in the afternoon, every motion event
           wakes the camera, fires a recording, and pushes a notification. Each one is a small drain.
           Set the motion sensitivity high and you&apos;ll be charging the bell every six weeks. Set
           it low and you&apos;ll miss things.
@@ -91,7 +91,7 @@ export default function Post() {
         <h2 id="irish-chimes">Why your old chime probably won&apos;t do</h2>
         <p>
           Most Irish homes built between roughly the 1960s and the early 2000s have a wired doorbell
-          with a low-voltage transformer hidden somewhere — usually in the hot press, sometimes in
+          with a low-voltage transformer hidden somewhere, usually in the hot press, sometimes in
           the meter box, occasionally up in the attic. That transformer steps your 230V mains down
           to either 4V, 6V, or most commonly 8V AC. Enough to ring a mechanical bell when someone
           pushes the button. It&apos;s been doing that job uncomplaining for thirty or forty years.
@@ -114,7 +114,7 @@ export default function Post() {
 
         <h2 id="8v-16v">The 8V vs 16V battle in plain English</h2>
         <p>
-          Modern Ring and Eufy doorbells will physically wire to the old 8V chime — the terminals
+          Modern Ring and Eufy doorbells will physically wire to the old 8V chime, the terminals
           fit, the wire works. You can put the bell on the wall and it&apos;ll light up. That makes
           a lot of people think the install is done.
         </p>
@@ -123,7 +123,7 @@ export default function Post() {
           &quot;wired&quot; models have a small backup battery that gets topped up when the
           transformer can supply enough current. On 8V, the bell is essentially running off battery
           for most of its life and getting a slow trickle from the chime. So you&apos;re back to
-          charging it again, just less often. It&apos;s not properly hardwired — it&apos;s
+          charging it again, just less often. It&apos;s not properly hardwired, it&apos;s
           accidentally-still-battery.
         </p>
         <p>
@@ -147,7 +147,7 @@ export default function Post() {
         <p>
           <strong>No existing wired bell at all.</strong> Some older bungalows and a lot of newer
           apartments simply don&apos;t have a wired doorbell circuit. Putting one in from scratch is
-          a real piece of work — a chase down the wall, a fish through the cavity, a connection to
+          a real piece of work, a chase down the wall, a fish through the cavity, a connection to
           the consumer unit. For a single doorbell with a quiet entryway, a battery unit is often
           a better trade-off.
         </p>
@@ -158,8 +158,8 @@ export default function Post() {
           people.
         </p>
         <p>
-          For everyone else — busy fronts, normal Irish weather, a desire to never think about it
-          again — hardwired is the answer if it can be done cleanly.
+          For everyone else, busy fronts, normal Irish weather, a desire to never think about it
+          again, hardwired is the answer if it can be done cleanly.
         </p>
 
         <h2 id="hardwire-conversion">What we actually do on a hardwire conversion</h2>
@@ -175,7 +175,7 @@ export default function Post() {
           need to pull new cable.
         </p>
         <p>
-          Then we fit a modern transformer — typically 16V or 24V, properly rated, on its own MCB in
+          Then we fit a modern transformer, typically 16V or 24V, properly rated, on its own MCB in
           the consumer unit so it can be isolated for any future work. The doorbell wires get
           terminated at the front door behind the bracket, with appropriate weatherproofing where
           the cable enters the bell. Where we&apos;re replacing an internal mechanical chime that&apos;s
@@ -194,7 +194,7 @@ export default function Post() {
           People do attempt this themselves and we&apos;d gently advise against it.
         </p>
         <p>
-          The actual transformer change is technically simple — disconnect the old one, wire in the
+          The actual transformer change is technically simple, disconnect the old one, wire in the
           new one. The problem is the old one is wired into a 230V circuit somewhere in your
           consumer unit, and it&apos;s often on a shared lighting circuit because that&apos;s how
           the original electrician routed it in 1985. If you don&apos;t know what you&apos;re
@@ -204,7 +204,7 @@ export default function Post() {
         <p>
           We&apos;ve been called out twice this year to homes where someone had attempted a DIY
           transformer swap and ended up with half the upstairs lights dead or a tripping main RCD.
-          Both times the original work was done thinking it was a doorbell job. It wasn&apos;t — it
+          Both times the original work was done thinking it was a doorbell job. It wasn&apos;t, it
           was a mains job that touched a doorbell.
         </p>
         <p>
@@ -221,7 +221,7 @@ export default function Post() {
         <p>
           For a house we&apos;d live in long-term: hardwired, every time. Charging a doorbell every
           twelve weeks in January is the kind of small annoyance that wears you down. Five-year
-          cost is roughly the same once you factor in the transformer install — and the day-to-day
+          cost is roughly the same once you factor in the transformer install, and the day-to-day
           experience is significantly better.
         </p>
         <p>
@@ -229,9 +229,9 @@ export default function Post() {
           work, no holes that need filling on the way out.
         </p>
         <p>
-          If you want a look at your own setup — what the existing transformer is, whether the
+          If you want a look at your own setup, what the existing transformer is, whether the
           cabling will carry the new voltage, whether a hardwire conversion is even possible without
-          opening walls — that&apos;s exactly what the{" "}
+          opening walls, that&apos;s exactly what the{" "}
           <Link href="/services/free-consultation" className="text-brand-500 hover:underline">
             complimentary consultation
           </Link>{" "}
