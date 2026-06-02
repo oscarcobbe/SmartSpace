@@ -17,20 +17,33 @@ export const TIME_SLOTS = [
 export const AVAILABLE_DAYS = [1, 2, 3, 4, 5];
 
 /**
- * Earliest bookable date = today + leadDays.
+ * Earliest bookable date = today + N working days (Mon-Fri only).
  *
- * Previously this function also enforced a hard floor via a constant
- * EARLIEST_BOOKING_DATE = 2026-05-07. That date is now in the past, so
- * the floor had no effect — it was dead code. Removed during the
- * 2026-05-14 sanitisation pass. If we ever need to block bookings during
- * a holiday window, add a future-dated floor back here.
+ * Counts forward `leadDays` weekdays from tomorrow, skipping Saturdays
+ * and Sundays. Examples (assuming leadDays = 2):
+ *   - Today Mon → Tue (1), Wed (2) → earliest = Wed
+ *   - Today Fri → Mon (1), Tue (2) → earliest = Tue next week
+ *   - Today Sat → Mon (1), Tue (2) → earliest = Tue
+ *
+ * Default 4 matches the BookingCalendar default — appropriate for any
+ * flow that involves stock (product purchase + install). Installation-
+ * only and free consultation flows pass 2 explicitly because no stock
+ * is sourced for those visits.
+ *
+ * Previously this function added calendar days, which under-counted any
+ * lead time that straddled a weekend. Switched to working-day counting
+ * on 2026-06-02 so the gate matches the copy claim ("X working days").
  */
-export function getEarliestBookableDate(leadDays = 5): Date {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const buffered = new Date(today);
-  buffered.setDate(today.getDate() + leadDays);
-  return buffered;
+export function getEarliestBookableDate(leadDays = 4): Date {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  let counted = 0;
+  while (counted < leadDays) {
+    date.setDate(date.getDate() + 1);
+    const dow = date.getDay();
+    if (dow !== 0 && dow !== 6) counted++;
+  }
+  return date;
 }
 
 type EventKind = "consultation" | "installation";

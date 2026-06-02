@@ -376,14 +376,14 @@ export default function RingInstallationPage() {
                 )}
               </div>
 
-              {/* Right: Booking Calendar — paid LP for installation-only;
-                  customer brings their own device, 5-day lead like
-                  /services/installation-only. Matches the site-wide default;
-                  kept explicit as a safety net. */}
+              {/* Right: Booking Calendar — paid LP mirrors
+                  /services/installation-only exactly (customer brings their
+                  own device, no stock to source). 2-working-day lead matches
+                  the installation-only flow. */}
               <div>
                 <BookingCalendar
                   onSelectionChange={setBookingSelection}
-                  leadDays={5}
+                  leadDays={2}
                 />
               </div>
             </div>

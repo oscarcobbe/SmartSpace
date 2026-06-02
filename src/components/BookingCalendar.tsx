@@ -21,13 +21,14 @@ interface BookingCalendarProps {
   confirmLabel?: string;
   kind?: "consultation" | "installation";
   /**
-   * Working-day lead time before the earliest selectable date. Defaults to
-   * 5 (the site-wide standard as of 2026-05-11 — tightened from 7 to
-   * shorten the funnel; crew prep + materials sourcing for camera/doorbell/
-   * bundle jobs now fits inside a working week). Customer-supplied
-   * "Installation Only" and the free consultation / site visit also use 5,
-   * so all current flows are aligned. Whatever value is passed here is
-   * then floor-clamped against EARLIEST_BOOKING_DATE in lib/calendly.ts.
+   * Working-day lead time before the earliest selectable date.
+   *
+   * Defaults to 4 — appropriate for any flow that involves stock
+   * (product purchase + install: doorbells, cameras, bundles). The
+   * Installation-Only flow passes 2 (customer brings their own device,
+   * no stock to source) and Free Consultation passes 2 (site survey
+   * only, no stock and no install crew). Counting is true working days
+   * (Mon-Fri), implemented in lib/calendly.ts getEarliestBookableDate.
    */
   leadDays?: number;
 }
@@ -55,7 +56,7 @@ function formatDateISO(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-export default function BookingCalendar({ onSelectionChange, compact, heading = "Choose an Installation Date", confirmLabel = "Installation", kind = "installation", leadDays = 5 }: BookingCalendarProps) {
+export default function BookingCalendar({ onSelectionChange, compact, heading = "Choose an Installation Date", confirmLabel = "Installation", kind = "installation", leadDays = 4 }: BookingCalendarProps) {
   const { totalQuantity } = useCart();
   const [availableDates] = useState(() => getAvailableDates(leadDays));
   const [selectedDate, setSelectedDate] = useState<string>("");
