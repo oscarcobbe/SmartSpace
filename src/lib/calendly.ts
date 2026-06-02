@@ -13,17 +13,20 @@ export const TIME_SLOTS = [
   { label: "15:00 – 17:00", value: "15:00-17:00", startHour: 15, startMin: 0, endHour: 17, endMin: 0 },
 ];
 
-// Available days: Monday (1) through Friday (5) — full weekday coverage
-export const AVAILABLE_DAYS = [1, 2, 3, 4, 5];
+// Available booking days: Monday (1) through Thursday (4). Friday was
+// removed sitewide on 2026-06-02 — internal-use day for stock prep,
+// admin, and route batching; not offered to customers.
+export const AVAILABLE_DAYS = [1, 2, 3, 4];
 
 /**
- * Earliest bookable date = today + N working days (Mon-Fri only).
+ * Earliest bookable date = today + N working days, counted Mon-Fri.
  *
- * Counts forward `leadDays` weekdays from tomorrow, skipping Saturdays
- * and Sundays. Examples (assuming leadDays = 2):
- *   - Today Mon → Tue (1), Wed (2) → earliest = Wed
- *   - Today Fri → Mon (1), Tue (2) → earliest = Tue next week
- *   - Today Sat → Mon (1), Tue (2) → earliest = Tue
+ * Note: this function counts Mon-Fri because that's the standard
+ * "working day" semantic. The customer-facing calendar then further
+ * filters to AVAILABLE_DAYS (Mon-Thu only since Friday was blocked
+ * sitewide on 2026-06-02). So if this function returns a Friday, the
+ * calendar will skip to the following Monday — the floor date never
+ * lands on a Friday slot.
  *
  * Default 4 matches the BookingCalendar default — appropriate for any
  * flow that involves stock (product purchase + install). Installation-
