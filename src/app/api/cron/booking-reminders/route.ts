@@ -226,11 +226,14 @@ function buildEmailHtml(opts: {
         </table>
       </td></tr>`;
 
-  const visitWord = isConsultation ? "calling out for your free site visit" : "calling out to fit your";
-  const visitTail = isConsultation ? "" : ` ${productLine}.`;
+  // Sentence order matters: keep "tomorrow at ${slot}" together, then the
+  // purpose clause. Previous formula left "your" dangling without a noun
+  // for installs ("...to fit your tomorrow at 10:00 - 12:00 Ring Video
+  // Doorbell Pro"), which read awkwardly. Now: `we're calling out tomorrow
+  // at ${slot} to fit your ${productLine}`.
   const introSentence = isConsultation
-    ? `Just a quick note to confirm we're ${visitWord} tomorrow at ${escapeHtml(slot)}.`
-    : `Just a quick note to confirm we're ${visitWord} tomorrow at ${escapeHtml(slot)}${escapeHtml(visitTail)}`;
+    ? `Just a quick note to confirm we're calling out for your free site visit tomorrow at ${escapeHtml(slot)}.`
+    : `Just a quick note to confirm we're calling out tomorrow at ${escapeHtml(slot)} to fit your ${escapeHtml(productLine)}.`;
 
   return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en-IE">
@@ -349,7 +352,7 @@ function buildEmailText(opts: { firstName: string; slot: string; productLine: st
   return [
     `Hi ${firstName},`,
     "",
-    `Looking forward to your booking tomorrow at ${slot} for your ${productLine}.`,
+    `Looking forward to your booking tomorrow at ${slot}. We're calling out to fit your ${productLine}.`,
     "",
     "A couple of things before we arrive:",
     "  - Wi-Fi reaches the front door or install location. If the signal is weak there, get the router moved closer or plug in an extender before tomorrow morning.",
