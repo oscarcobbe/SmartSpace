@@ -208,9 +208,19 @@ export async function POST(request: Request) {
     // together. Errors are caught per-task so one failure doesn't kill
     // the others (Resend rejection during auto-reply was historically
     // the most common — wrapping makes that explicit).
+    //
+    // IMPORTANT: the Resend SDK resolves with `{ data, error }` on most
+    // failure modes (sandbox restrictions, invalid recipient, rate limit
+    // exceeded, blocked domain). It only THROWS on network or auth
+    // errors. A bare `.catch()` therefore misses the most common failure
+    // modes. We unpack the result, check `.error` explicitly, and page
+    // Nigel via sendSiteAlert when the customer-side auto-reply fails so
+    // the lead doesn't bounce in silence.
     const firstNameSafe = escapeHtml(name.trim().split(" ")[0]);
     const subjectLowerSafe = escapeHtml(subjectLabel.toLowerCase());
-    const autoReplyTask = resend.emails.send({
+    const customerEmail = email.trim();
+    const customerName = name.trim();
+    const autoReplyTask: Promise<{ ok: boolean; reason?: string }> = resend.emails.send({
       from,
       to: [email.trim()],
       replyTo: to,
@@ -298,10 +308,65 @@ export async function POST(request: Request) {
 </table>
 </body>
 </html>`,
-    }).catch((err) => {
-      // Non-fatal: Nigel still got the lead, the customer just doesn't
-      // get the immediate confirmation. Logged for visibility.
-      console.error("[contact] auto-reply email failed (non-fatal):", err);
+    }).then(async (result) => {
+      // Resend's resolved-error path. SDK returns { data, error } and we
+      // have to check explicitly — a bare .catch() never sees this.
+      if (result && "error" in result && result.error) {
+        const reason = JSON.stringify(result.error);
+        console.error("[contact] auto-reply email rejected by Resend:", reason);
+        await sendSiteAlert({
+          category: "contact-form",
+          severity: "warning",
+          summary: "Contact auto-reply email failed to send",
+          details: [
+            "The customer submitted the contact form successfully, but our auto-reply confirmation email was REJECTED by Resend.",
+            "",
+            "The lead alert email to you still arrived — the lead is captured.",
+            "The customer just didn't get the immediate \"we've got your message\" confirmation.",
+            "Worth a quick manual reply if the timing is sensitive.",
+            "",
+            `Customer name:  ${customerName}`,
+            `Customer email: ${customerEmail}`,
+            "",
+            "Most likely causes:",
+            "  1. Resend account is in sandbox / test mode (free tier only ships",
+            "     to verified team addresses). Verify the sending domain at",
+            "     https://resend.com/domains to lift the restriction.",
+            "  2. RESEND_FROM_EMAIL uses an unverified domain.",
+            "  3. The customer's email is on a hard-bounce suppression list.",
+            "",
+            "Resend error payload:",
+            reason,
+          ].join("\n"),
+          dedupeKey: `contact-form:auto-reply-failed:${(result.error as { name?: string }).name ?? "unknown"}`,
+        });
+        return { ok: false, reason };
+      }
+      return { ok: true };
+    }).catch(async (err) => {
+      // Network / SDK throw. Different from the resolved-error path above,
+      // and rarer.
+      const reason = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+      console.error("[contact] auto-reply email threw:", reason);
+      await sendSiteAlert({
+        category: "contact-form",
+        severity: "warning",
+        summary: "Contact auto-reply email threw an exception",
+        details: [
+          "The customer submitted the contact form successfully, but our auto-reply",
+          "confirmation email threw an uncaught exception during send.",
+          "",
+          "The lead alert email to you still arrived — the lead is captured.",
+          "",
+          `Customer name:  ${customerName}`,
+          `Customer email: ${customerEmail}`,
+          "",
+          "Exception:",
+          reason,
+        ].join("\n"),
+        dedupeKey: `contact-form:auto-reply-threw:${err instanceof Error ? err.name : "unknown"}`,
+      });
+      return { ok: false, reason };
     });
 
     const logLeadTask = logLead({
@@ -349,9 +414,22 @@ export async function POST(request: Request) {
     // Wait for all four to settle. Ceiling is the slowest task, not the
     // sum — typically 3–5s vs the old 6–13s. allSettled means one
     // failure doesn't block the response or the other tasks.
-    await Promise.allSettled([autoReplyTask, logLeadTask, fireConversionTask, crmTask]);
+    const [autoReplyResult] = await Promise.all([
+      autoReplyTask,
+      Promise.allSettled([logLeadTask, fireConversionTask, crmTask]),
+    ]);
 
-    return NextResponse.json({ success: true, id: data?.id, conversionId });
+    return NextResponse.json({
+      success: true,
+      id: data?.id,
+      conversionId,
+      // Lead email always succeeds at this point (errors above return 502),
+      // so we hardcode true. Auto-reply outcome surfaces the silent-failure
+      // mode so manual contact-form tests show clearly which side worked.
+      leadEmailSent: true,
+      autoReplySent: autoReplyResult.ok,
+      autoReplyError: autoReplyResult.ok ? undefined : autoReplyResult.reason,
+    });
   } catch (e) {
     console.error("Contact API error:", e);
     // Unexpected exception — alert Nigel. This is the catch-all for anything
