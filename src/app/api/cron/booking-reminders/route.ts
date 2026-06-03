@@ -217,7 +217,7 @@ function buildEmailHtml(opts: {
           </td></tr>
           <tr><td style="padding:6px 20px 18px;font-family:'Plus Jakarta Sans','Inter',Helvetica,Arial,sans-serif;color:#3f3d3a;font-size:14px;line-height:1.55;">
             <ul style="margin:0;padding-left:20px;">
-              <li style="margin-bottom:10px;"><strong style="color:#1C1A18;">Wi-Fi reaches the front door or install location.</strong> If the signal is weak there, get the router moved closer or plug in an extender before tomorrow morning.</li>
+              <li style="margin-bottom:10px;"><strong style="color:#1C1A18;">Wi-Fi reaches the front door or install location.</strong> If the signal is weak there, get the router moved closer or plug in an extender before we arrive.</li>
               <li style="margin-bottom:10px;"><strong style="color:#1C1A18;">App installed on the phone you want to use.</strong> Ring, Eufy, Nest or Tapo, whichever brand you bought. We'll log in together on the day.</li>
               <li style="margin-bottom:10px;"><strong style="color:#1C1A18;">Passwords known.</strong> Wi-Fi password, and the app account password. We can't recover these for you.</li>
               <li><strong style="color:#1C1A18;">Someone home at the slot.</strong> Even if it's a quick install, we need access to the door.</li>
@@ -355,7 +355,7 @@ function buildEmailText(opts: { firstName: string; slot: string; productLine: st
     `Looking forward to your booking tomorrow at ${slot}. We're calling out to fit your ${productLine}.`,
     "",
     "A couple of things before we arrive:",
-    "  - Wi-Fi reaches the front door or install location. If the signal is weak there, get the router moved closer or plug in an extender before tomorrow morning.",
+    "  - Wi-Fi reaches the front door or install location. If the signal is weak there, get the router moved closer or plug in an extender before we arrive.",
     "  - App installed on the phone you want to use. Ring, Eufy, Nest or Tapo, whichever brand you bought. We'll log in together on the day.",
     "  - Passwords known. Wi-Fi password, and the app account password. We can't recover these for you.",
     "  - Someone home at the slot. Even if it's a quick install, we need access to the door.",
