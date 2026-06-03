@@ -21,7 +21,7 @@ export interface AttributionRecord {
 }
 
 export interface LeadRecord {
-  type: "Free Consultation" | "Paid Order" | "Contact Enquiry" | "Newsletter Signup";
+  type: "Free Consultation" | "Paid Order" | "Contact Enquiry" | "Newsletter Signup" | "Booking Reminder";
   name?: string;
   email?: string;
   phone?: string;
