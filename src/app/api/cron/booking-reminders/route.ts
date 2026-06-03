@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import twilio from "twilio";
 import { timingSafeEqual } from "crypto";
 import { logLead } from "@/lib/leads";
 import { sendSiteAlert } from "@/lib/site-alerts";
@@ -312,6 +313,22 @@ function buildEmailHtml(opts: {
 </html>`;
 }
 
+/**
+ * Build the SMS body. Single-segment GSM-7 target (160 chars) is the ideal,
+ * but we accept up to ~2 segments (320 chars) before Twilio splits and bills
+ * twice. Matches Nigel's manual SMS phrasing as closely as we can fit.
+ *
+ * Install vs consultation gets different prep cues — installs need the
+ * Wi-Fi + app + passwords reminder; consultations are just "be home".
+ */
+function buildSmsText(opts: { firstName: string; slot: string; isConsultation: boolean }): string {
+  const { firstName, slot, isConsultation } = opts;
+  if (isConsultation) {
+    return `Hi ${firstName}, Nigel @ Smart Space. See you tomorrow at ${slot} for your site visit. Just be home, we'll walk the property and quote on the day. ${BUSINESS_PHONE_DISPLAY} if anything.`;
+  }
+  return `Hi ${firstName}, Nigel @ Smart Space. See you tomorrow at ${slot}. Have ready: Wi-Fi to the install area, your app installed, passwords known. ${BUSINESS_PHONE_DISPLAY} if anything.`;
+}
+
 function buildEmailText(opts: { firstName: string; slot: string; productLine: string; isConsultation: boolean }): string {
   const { firstName, slot, productLine, isConsultation } = opts;
   if (isConsultation) {
@@ -466,10 +483,35 @@ export async function GET(request: Request) {
   const alreadySent = await fetchSentEventUris();
 
   const resend = new Resend(resendKey);
+
+  // Twilio is optional: if creds are missing we still send emails (no SMS).
+  // This lets the cron go live BEFORE Twilio env vars are added in Vercel,
+  // and keeps the route from breaking if Twilio is ever rotated out.
+  const twilioSid = process.env.TWILIO_ACCOUNT_SID;
+  const twilioToken = process.env.TWILIO_AUTH_TOKEN;
+  // Either a direct From number (E.164) or a Messaging Service SID (MGxxxx).
+  // We support either — twilio-node accepts both via the same `from` field
+  // when passing a number, or `messagingServiceSid` when passing the MG SID.
+  const twilioFromNumber = process.env.TWILIO_PHONE_NUMBER;
+  const twilioMessagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
+  const twilioClient = twilioSid && twilioToken ? twilio(twilioSid, twilioToken) : null;
+  const twilioReady = twilioClient && (twilioFromNumber || twilioMessagingServiceSid);
+  if (!twilioReady) {
+    console.warn(
+      "[cron/booking-reminders] Twilio not configured — SMS will be skipped. " +
+        "Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and one of TWILIO_PHONE_NUMBER " +
+        "or TWILIO_MESSAGING_SERVICE_SID to enable.",
+    );
+  }
+
   let sent = 0;
   let skipped = 0;
   let failed = 0;
+  let smsSent = 0;
+  let smsSkipped = 0;
+  let smsFailed = 0;
   const failures: { event: string; reason: string }[] = [];
+  const smsFailures: { event: string; phone: string; reason: string }[] = [];
 
   for (const event of events) {
     if (alreadySent.has(event.uri)) {
@@ -535,23 +577,68 @@ export async function GET(request: Request) {
       continue;
     }
 
+    // SMS send is best-effort. The email has already landed at this point so
+    // the customer has the reminder even if Twilio fails or the phone number
+    // is missing / a landline. We track outcomes separately so the alerting
+    // can distinguish "email pipeline broke" (loud, paging) from "this one
+    // SMS didn't send" (quiet, logged).
+    const customerPhone =
+      invitee.text_reminder_number ||
+      extractPhone(invitee.questions_and_answers) ||
+      "";
+    let smsStatus: "sent" | "skipped" | "failed" = "skipped";
+    let smsReason = "";
+    if (!twilioReady) {
+      smsSkipped++;
+      smsReason = "twilio not configured";
+    } else if (!customerPhone) {
+      smsSkipped++;
+      smsReason = "no invitee phone number on Calendly event";
+    } else {
+      try {
+        await twilioClient!.messages.create({
+          to: customerPhone,
+          body: buildSmsText({ firstName, slot, isConsultation }),
+          ...(twilioMessagingServiceSid
+            ? { messagingServiceSid: twilioMessagingServiceSid }
+            : { from: twilioFromNumber }),
+        });
+        smsSent++;
+        smsStatus = "sent";
+      } catch (err) {
+        const reason = err instanceof Error ? err.message : String(err);
+        console.warn(`[cron/booking-reminders] Twilio send failed for ${customerPhone}:`, reason);
+        smsFailed++;
+        smsStatus = "failed";
+        smsReason = `twilio: ${reason}`;
+        smsFailures.push({ event: event.uri, phone: customerPhone, reason });
+      }
+    }
+
     // Log the send to the Sheet so the next run skips this event. We do this
-    // AFTER a successful send so a Sheet write that fails doesn't block the
-    // email (the customer still gets the reminder; worst case the next run
-    // re-sends, which is annoying but recoverable). logLead swallows its
-    // own errors and alerts Nigel via Resend if the write fails.
+    // AFTER a successful EMAIL send (SMS state recorded in notes) so a Sheet
+    // write that fails doesn't block the email (the customer still gets the
+    // reminder; worst case the next run re-sends, which is annoying but
+    // recoverable). logLead swallows its own errors and alerts Nigel via
+    // Resend if the write fails.
+    const smsNote =
+      smsStatus === "sent"
+        ? "SMS sent."
+        : smsStatus === "skipped"
+          ? `SMS skipped (${smsReason}).`
+          : `SMS failed (${smsReason}).`;
     await logLead({
       type: "Booking Reminder",
       name: fullName || undefined,
       email: invitee.email,
-      phone: invitee.text_reminder_number || extractPhone(invitee.questions_and_answers) || undefined,
+      phone: customerPhone || undefined,
       address: extractAddress(invitee.questions_and_answers) || undefined,
       product: eventName || undefined,
       bookingDate: dateStr,
       bookingSlot: slot,
       orderId: event.uri, // idempotency key on next run
       source: "cron/booking-reminders",
-      notes: `Sent ${isConsultation ? "consultation" : "installation"} reminder for ${firstName}`,
+      notes: `Sent ${isConsultation ? "consultation" : "installation"} reminder for ${firstName}. ${smsNote}`,
     });
 
     sent++;
@@ -577,12 +664,34 @@ export async function GET(request: Request) {
     });
   }
 
+  // If a chunk of SMS sends failed, log an aggregated warning. We don't
+  // page Nigel for a small number of bad/landline numbers (those will fail
+  // forever), but a wholesale Twilio outage should be visible.
+  if (smsFailed >= 3) {
+    await sendSiteAlert({
+      category: "booking-reminders",
+      severity: "warning",
+      summary: `Booking reminder SMS: ${smsFailed} of ${events.length} failed for ${dateStr}`,
+      details: [
+        `Email pipeline OK (${sent} sent).`,
+        `SMS: ${smsSent} sent, ${smsSkipped} skipped, ${smsFailed} failed.`,
+        "",
+        "SMS failures:",
+        ...smsFailures.map((f) => `  - ${f.phone} (${f.event}): ${f.reason}`),
+        "",
+        "If most of these are 'not a mobile number' style errors, no action needed.",
+        "If it looks like a Twilio outage (auth, balance, sub-account suspended), check the Twilio console.",
+      ].join("\n"),
+    });
+  }
+
   return NextResponse.json({
     ok: true,
     date: dateStr,
     sent,
     skipped,
     failed,
+    sms: { sent: smsSent, skipped: smsSkipped, failed: smsFailed },
     total: events.length,
   });
 }
