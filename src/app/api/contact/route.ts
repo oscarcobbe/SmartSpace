@@ -123,11 +123,11 @@ export async function POST(request: Request) {
       from,
       to: [to],
       replyTo: email.trim(),
-      subject: `Smart Space contact: ${subjectLabel} — ${name.trim()}`,
+      subject: `Smart Space contact: ${subjectLabel}, ${name.trim()}`,
       text: [
         `Name: ${name.trim()}`,
         `Email: ${email.trim()}`,
-        `Phone: ${phone?.trim() || "—"}`,
+        `Phone: ${phone?.trim() || "(none)"}`,
         `Topic: ${subjectLabel}`,
         "",
         message.trim(),
@@ -136,7 +136,7 @@ export async function POST(request: Request) {
         <h2>New message from smart-space.ie</h2>
         <p><strong>Name:</strong> ${escapeHtml(name.trim())}</p>
         <p><strong>Email:</strong> ${escapeHtml(email.trim())}</p>
-        <p><strong>Phone:</strong> ${escapeHtml(phone?.trim() || "—")}</p>
+        <p><strong>Phone:</strong> ${escapeHtml(phone?.trim() || "(none)")}</p>
         <p><strong>Topic:</strong> ${escapeHtml(subjectLabel)}</p>
         <hr />
         <pre style="font-family:system-ui,sans-serif;white-space:pre-wrap;">${escapeHtml(message.trim())}</pre>
@@ -208,51 +208,98 @@ export async function POST(request: Request) {
     // together. Errors are caught per-task so one failure doesn't kill
     // the others (Resend rejection during auto-reply was historically
     // the most common — wrapping makes that explicit).
+    const firstNameSafe = escapeHtml(name.trim().split(" ")[0]);
+    const subjectLowerSafe = escapeHtml(subjectLabel.toLowerCase());
     const autoReplyTask = resend.emails.send({
       from,
       to: [email.trim()],
       replyTo: to,
-      subject: "We've got your message — Smart Space",
+      subject: "We've got your message, Smart Space",
       text: [
         `Hi ${name.trim().split(" ")[0]},`,
         "",
-        `Thanks for getting in touch with Smart Space. We've received your enquiry about ${subjectLabel.toLowerCase()} and will be back to you within one business day — usually a lot sooner.`,
+        `Thanks for getting in touch with Smart Space. We've received your enquiry about ${subjectLabel.toLowerCase()} and will be back to you within one business day (usually a lot sooner).`,
         "",
-        `In the meantime if it's urgent you can reach us directly:`,
-        `  • Phone: 01 513 0424`,
-        `  • Email: info@smart-space.ie`,
+        `If it's urgent in the meantime, you can reach us directly:`,
+        `  Phone: 01 513 0424`,
+        `  Email: info@smart-space.ie`,
         "",
-        "We're Dublin's #1 Ring installer — transparent pricing quoted up front, no contracts, brand-agnostic across Ring, Eufy, Nest, and Tapo.",
+        "We're Dublin's #1 Ring installer, transparent pricing quoted up front, no contracts, brand-agnostic across Ring, Eufy, Nest, and Tapo.",
         "",
         "Talk soon,",
-        "Nigel & the Smart Space team",
+        "Nigel and the Smart Space team",
         "smart-space.ie",
       ].join("\n"),
-      html: `
-        <div style="font-family:system-ui,-apple-system,sans-serif;line-height:1.6;color:#1a1a1a;max-width:520px">
-          <p>Hi ${escapeHtml(name.trim().split(" ")[0])},</p>
-          <p>Thanks for getting in touch with Smart Space. We've received your enquiry about
-            <strong>${escapeHtml(subjectLabel.toLowerCase())}</strong> and will be back to you
-            within <strong>one business day</strong> &mdash; usually a lot sooner.</p>
-          <p>If it's urgent in the meantime, you can reach us directly:</p>
-          <ul>
-            <li>Phone: <a href="tel:+35315130424" style="color:#16a34a">01 513 0424</a></li>
-            <li>Email: <a href="mailto:info@smart-space.ie" style="color:#16a34a">info@smart-space.ie</a></li>
-          </ul>
-          <p>We're Dublin's #1 Ring installer &mdash; transparent pricing quoted up front,
-            no contracts, brand-agnostic across Ring, Eufy, Nest, and Tapo.</p>
-          <p style="margin-top:24px">Talk soon,<br/>
-            <strong>Nigel &amp; the Smart Space team</strong><br/>
-            <a href="https://smart-space.ie" style="color:#16a34a">smart-space.ie</a></p>
-          <hr style="border:none;border-top:1px solid #e5e5e5;margin:24px 0" />
-          <p style="font-size:12px;color:#999">
-            You're receiving this because you submitted the contact form on smart-space.ie.
-            If this wasn't you, just ignore this email.
-          </p>
+      // 600px table layout, inline styles only — Gmail / Outlook / Apple
+      // Mail all strip <style> blocks aggressively, so EVERY style must be
+      // an inline attribute. Mirrors the SCL launch email template language
+      // (ad-assets/email-outreach/04-smartcareliving-launch.html).
+      html: `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-IE">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light only">
+<title>We've got your message, Smart Space</title>
+</head>
+<body style="margin:0;padding:0;background:#f1efea;font-family:'Plus Jakarta Sans','Inter',Helvetica,Arial,sans-serif;">
+<div style="display:none !important;visibility:hidden;mso-hide:all;font-size:1px;color:#f1efea;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">Thanks, we've got your enquiry. We'll be back to you within one business day.</div>
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background:#f1efea;">
+  <tr><td align="center" style="padding:24px 12px;">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="width:600px;max-width:600px;background:#ffffff;border-radius:8px;overflow:hidden;">
+      <tr><td style="padding:24px 32px 16px;border-bottom:1px solid #e6e3df;" align="left">
+        <img src="https://smart-space.ie/Logo1.png" width="120" height="auto" alt="Smart Space" style="display:block;height:auto;max-width:120px;border:0;outline:none;text-decoration:none;">
+      </td></tr>
+      <tr><td style="padding:36px 32px 8px;font-family:'Plus Jakarta Sans','Inter',Helvetica,Arial,sans-serif;">
+        <h1 style="margin:0;font-size:24px;line-height:1.2;letter-spacing:-0.4px;color:#1C1A18;font-weight:800;">Thanks, ${firstNameSafe}. We've got your message.</h1>
+        <p style="margin:16px 0 0;font-size:16px;line-height:1.6;color:#3f3d3a;">We've received your enquiry about <strong style="color:#1C1A18;">${subjectLowerSafe}</strong> and will be back to you within <strong style="color:#1C1A18;">one business day</strong> (usually a lot sooner).</p>
+      </td></tr>
+      <tr><td style="padding:24px 32px 8px;font-family:'Plus Jakarta Sans','Inter',Helvetica,Arial,sans-serif;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="border-left:3px solid #f48222;">
+          <tr><td style="padding:4px 0 4px 16px;">
+            <p style="margin:0 0 8px;font-size:15px;line-height:1.55;color:#1C1A18;font-weight:700;">Need us sooner? Reach us directly:</p>
+            <p style="margin:0;font-size:15px;line-height:1.7;color:#3f3d3a;">
+              Phone: <a href="tel:+35315130424" style="color:#f48222;font-weight:700;text-decoration:underline;">01 513 0424</a><br>
+              Email: <a href="mailto:info@smart-space.ie" style="color:#f48222;font-weight:700;text-decoration:underline;">info@smart-space.ie</a>
+            </p>
+          </td></tr>
+        </table>
+      </td></tr>
+      <tr><td style="padding:24px 32px 8px;font-family:'Plus Jakarta Sans','Inter',Helvetica,Arial,sans-serif;">
+        <p style="margin:0;font-size:15px;line-height:1.6;color:#3f3d3a;">We're Dublin's #1 Ring installer. Transparent pricing quoted up front, no contracts, brand-agnostic across Ring, Eufy, Nest, and Tapo.</p>
+      </td></tr>
+      <tr><td style="padding:24px 32px 32px;font-family:'Plus Jakarta Sans','Inter',Helvetica,Arial,sans-serif;">
+        <p style="margin:0;font-size:15px;line-height:1.6;color:#3f3d3a;">Talk soon,<br><strong style="color:#1C1A18;">Nigel and the Smart Space team</strong><br><a href="https://smart-space.ie" style="color:#f48222;font-weight:700;text-decoration:underline;">smart-space.ie</a></p>
+      </td></tr>
+      <tr><td style="padding:28px 32px;background:#1C1A18;color:#cccccc;font-family:'Plus Jakarta Sans','Inter',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.55;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+          <tr>
+            <td valign="top" style="padding-right:16px;">
+              <div style="font-weight:800;color:#ffffff;font-size:14px;letter-spacing:0.4px;margin-bottom:8px;">Smart Space</div>
+              <div>Dublin's #1 Ring installer.</div>
+              <div>Brand-agnostic. No contract.</div>
+            </td>
+            <td valign="top" style="padding-left:16px;text-align:right;">
+              <div><a href="tel:+35315130424" style="color:#ffffff;text-decoration:none;font-weight:700;">01 513 0424</a></div>
+              <div><a href="mailto:info@smart-space.ie" style="color:#ffffff;text-decoration:none;">info@smart-space.ie</a></div>
+              <div><a href="https://smart-space.ie" style="color:#ffffff;text-decoration:none;">smart-space.ie</a></div>
+            </td>
+          </tr>
+        </table>
+        <div style="border-top:1px solid #2e2c2a;margin-top:18px;padding-top:14px;font-size:11px;color:#888;line-height:1.55;">
+          You're receiving this because you submitted the contact form on smart-space.ie. If this wasn't you, just ignore this email.
         </div>
-      `,
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`,
     }).catch((err) => {
-      // Non-fatal — Nigel still got the lead, the customer just doesn't
+      // Non-fatal: Nigel still got the lead, the customer just doesn't
       // get the immediate confirmation. Logged for visibility.
       console.error("[contact] auto-reply email failed (non-fatal):", err);
     });

@@ -72,8 +72,8 @@ async function sendOrderNotification(params: {
     params.calendlyStatus === "created"
       ? "✅ Calendly event created automatically."
       : params.calendlyStatus === "failed"
-      ? "⚠️ Calendly event creation FAILED — please book manually in Calendly."
-      : "ℹ️ No booking date/slot in cart — Calendly was not attempted.";
+      ? "⚠️ Calendly event creation FAILED, please book manually in Calendly."
+      : "ℹ️ No booking date/slot in cart, Calendly was not attempted.";
 
   const dateLabel = params.bookingLabel || params.bookingDate || "—";
   const slotLabel = params.bookingSlot || "—";
@@ -83,20 +83,27 @@ async function sendOrderNotification(params: {
   // for an explicit currency-aware formatter.
   const formattedAmount = formatEuro(params.amount);
 
+  const resend = new Resend(apiKey);
+
+  // ──────────────────────────────────────────────────────────────
+  // Internal alert to Nigel (unchanged behaviour, em dashes stripped).
+  // This is the "we got money" signal Nigel acts on, so failure here
+  // is logged loudly but the function continues so the customer-facing
+  // email below still gets attempted.
+  // ──────────────────────────────────────────────────────────────
   try {
-    const resend = new Resend(apiKey);
     await resend.emails.send({
       from,
       to: [to],
       replyTo: params.email,
-      subject: `New Paid Order — ${params.customerName} — ${formattedAmount}`,
+      subject: `New Paid Order, ${params.customerName}, ${formattedAmount}`,
       text: [
         `New paid order via smart-space.ie`,
         "",
         `Customer: ${params.customerName}`,
         `Email: ${params.email}`,
-        `Phone: ${params.phone || "—"}`,
-        `Address: ${params.installationAddress || "—"}`,
+        `Phone: ${params.phone || "(none)"}`,
+        `Address: ${params.installationAddress || "(none)"}`,
         "",
         `Product: ${params.productName}`,
         `Amount: ${formattedAmount}`,
@@ -112,8 +119,8 @@ async function sendOrderNotification(params: {
         <h2>New Paid Order</h2>
         <p><strong>Customer:</strong> ${escapeHtml(params.customerName)}</p>
         <p><strong>Email:</strong> ${escapeHtml(params.email)}</p>
-        <p><strong>Phone:</strong> ${escapeHtml(params.phone || "—")}</p>
-        <p><strong>Address:</strong> ${escapeHtml(params.installationAddress || "—")}</p>
+        <p><strong>Phone:</strong> ${escapeHtml(params.phone || "(none)")}</p>
+        <p><strong>Address:</strong> ${escapeHtml(params.installationAddress || "(none)")}</p>
         <hr />
         <p><strong>Product:</strong> ${escapeHtml(params.productName)}</p>
         <p><strong>Amount:</strong> ${escapeHtml(formattedAmount)}</p>
@@ -128,6 +135,198 @@ async function sendOrderNotification(params: {
     console.log(`[stripe webhook] order notification email sent for session=${params.sessionId}`);
   } catch (err) {
     console.error(`[stripe webhook] order notification email FAILED for session=${params.sessionId}:`, err);
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  // Customer-facing purchase confirmation (NEW).
+  //
+  // Stripe sends a generic payment receipt, but it's bland and doesn't
+  // mention the install date, what happens next, or who to call. This
+  // is the Smart Space-branded thank-you that lands within seconds of
+  // the customer paying.
+  //
+  // Wrapped in its OWN try/catch. If this fails, we log loudly but do
+  // NOT throw — the internal Nigel alert above already fired and the
+  // webhook must still return 200 to Stripe (otherwise Stripe retries
+  // and we double-book Calendly + double-email Nigel).
+  //
+  // Skip the customer email entirely if we have no address to send to.
+  // ──────────────────────────────────────────────────────────────
+  if (!params.email) {
+    console.warn(`[stripe webhook] no customer email on session=${params.sessionId}, skipping customer confirmation`);
+    return;
+  }
+
+  try {
+    const firstName = (params.customerName || "").trim().split(/\s+/)[0] || "there";
+    const firstNameSafe = escapeHtml(firstName);
+    const productSafe = escapeHtml(params.productName);
+    const amountSafe = escapeHtml(formattedAmount);
+    const dateSafe = escapeHtml(dateLabel);
+    const slotSafe = escapeHtml(slotLabel);
+    // Trim product name for subject line so it stays under common
+    // inbox preview widths (~60 chars after the "Order confirmed..."
+    // prefix consumes ~30).
+    const shortProduct =
+      params.productName.length > 50
+        ? params.productName.slice(0, 47) + "..."
+        : params.productName;
+
+    await resend.emails.send({
+      from,
+      to: [params.email],
+      replyTo: to, // replies route to Nigel, not from-address (no-reply)
+      subject: `Order confirmed, Smart Space, ${shortProduct}`,
+      text: [
+        `Hi ${firstName},`,
+        "",
+        "Thanks. We've got your order and everything's locked in.",
+        "",
+        "Order summary",
+        `  Product: ${params.productName}`,
+        `  Amount:  ${formattedAmount}`,
+        `  Date:    ${dateLabel}`,
+        `  Slot:    ${slotLabel}`,
+        "",
+        "What happens next",
+        "  1. We'll email you a quick prep checklist the night before, WiFi name and password, app account, anything we need ready when we arrive.",
+        "  2. We arrive in your slot, install everything, walk you through the app, and train the family before we leave.",
+        "  3. Any issue in the first 30 days, we come back free of charge.",
+        "",
+        "Questions before then?",
+        "  Phone: 01 513 0424",
+        "  Email: info@smart-space.ie",
+        "",
+        "Talk soon,",
+        "Nigel and the Smart Space team",
+        "smart-space.ie",
+        "",
+        "Stripe sends a separate payment receipt to this address. This email is just the install side.",
+      ].join("\n"),
+      html: `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-IE">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light only">
+<title>Order confirmed, Smart Space</title>
+</head>
+<body style="margin:0;padding:0;background:#f1efea;font-family:'Plus Jakarta Sans','Inter',Helvetica,Arial,sans-serif;">
+<div style="display:none !important;visibility:hidden;mso-hide:all;font-size:1px;color:#f1efea;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">Order confirmed. Install booked for ${dateSafe}, ${slotSafe}.</div>
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background:#f1efea;">
+  <tr><td align="center" style="padding:24px 12px;">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="width:600px;max-width:600px;background:#ffffff;border-radius:8px;overflow:hidden;">
+      <tr><td style="padding:24px 32px 16px;border-bottom:1px solid #e6e3df;" align="left">
+        <img src="https://smart-space.ie/Logo1.png" width="120" height="auto" alt="Smart Space" style="display:block;height:auto;max-width:120px;border:0;outline:none;text-decoration:none;">
+      </td></tr>
+      <tr><td style="padding:36px 32px 8px;font-family:'Plus Jakarta Sans','Inter',Helvetica,Arial,sans-serif;">
+        <div style="font-size:12px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:#f48222;">Order confirmed</div>
+        <h1 style="margin:10px 0 0;font-size:26px;line-height:1.15;letter-spacing:-0.5px;color:#1C1A18;font-weight:800;">Thanks, ${firstNameSafe}. We've got your order.</h1>
+        <p style="margin:14px 0 0;font-size:16px;line-height:1.6;color:#3f3d3a;">Everything's locked in. Here's what you booked and what to expect.</p>
+      </td></tr>
+      <tr><td style="padding:24px 32px 8px;font-family:'Plus Jakarta Sans','Inter',Helvetica,Arial,sans-serif;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background:#fef4eb;border:1px solid #f4d4a8;border-radius:6px;">
+          <tr><td style="padding:18px 20px;">
+            <div style="font-size:11px;font-weight:800;color:#d96d15;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:10px;">Order summary</div>
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="font-size:14px;line-height:1.6;color:#1C1A18;">
+              <tr>
+                <td style="padding:4px 0;color:#7a7975;font-weight:600;width:120px;">Product</td>
+                <td style="padding:4px 0;color:#1C1A18;font-weight:700;">${productSafe}</td>
+              </tr>
+              <tr>
+                <td style="padding:4px 0;color:#7a7975;font-weight:600;">Amount</td>
+                <td style="padding:4px 0;color:#1C1A18;font-weight:700;">${amountSafe}</td>
+              </tr>
+              <tr>
+                <td style="padding:4px 0;color:#7a7975;font-weight:600;">Install date</td>
+                <td style="padding:4px 0;color:#1C1A18;font-weight:700;">${dateSafe}</td>
+              </tr>
+              <tr>
+                <td style="padding:4px 0;color:#7a7975;font-weight:600;">Time slot</td>
+                <td style="padding:4px 0;color:#1C1A18;font-weight:700;">${slotSafe}</td>
+              </tr>
+            </table>
+          </td></tr>
+        </table>
+      </td></tr>
+      <tr><td style="padding:28px 32px 8px;font-family:'Plus Jakarta Sans','Inter',Helvetica,Arial,sans-serif;">
+        <div style="font-size:12px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:#f48222;margin-bottom:10px;">What happens next</div>
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+          <tr>
+            <td valign="top" style="padding:0 0 14px;width:36px;">
+              <div style="background:#f48222;color:#ffffff;width:28px;height:28px;border-radius:999px;text-align:center;font-weight:800;font-size:14px;line-height:28px;font-family:'Plus Jakarta Sans','Inter',Helvetica,Arial,sans-serif;">1</div>
+            </td>
+            <td valign="top" style="padding:0 0 14px 12px;font-size:15px;line-height:1.55;color:#3f3d3a;">
+              We'll email you a quick prep checklist the night before. WiFi name and password, app account, anything we need ready when we arrive.
+            </td>
+          </tr>
+          <tr>
+            <td valign="top" style="padding:0 0 14px;width:36px;">
+              <div style="background:#f48222;color:#ffffff;width:28px;height:28px;border-radius:999px;text-align:center;font-weight:800;font-size:14px;line-height:28px;font-family:'Plus Jakarta Sans','Inter',Helvetica,Arial,sans-serif;">2</div>
+            </td>
+            <td valign="top" style="padding:0 0 14px 12px;font-size:15px;line-height:1.55;color:#3f3d3a;">
+              We arrive in your slot, install everything, walk you through the app, and train the family before we leave.
+            </td>
+          </tr>
+          <tr>
+            <td valign="top" style="padding:0;width:36px;">
+              <div style="background:#f48222;color:#ffffff;width:28px;height:28px;border-radius:999px;text-align:center;font-weight:800;font-size:14px;line-height:28px;font-family:'Plus Jakarta Sans','Inter',Helvetica,Arial,sans-serif;">3</div>
+            </td>
+            <td valign="top" style="padding:0 0 0 12px;font-size:15px;line-height:1.55;color:#3f3d3a;">
+              Any issue in the first 30 days, we come back free of charge.
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+      <tr><td style="padding:24px 32px 8px;font-family:'Plus Jakarta Sans','Inter',Helvetica,Arial,sans-serif;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="border-left:3px solid #f48222;">
+          <tr><td style="padding:4px 0 4px 16px;">
+            <p style="margin:0 0 8px;font-size:15px;line-height:1.55;color:#1C1A18;font-weight:700;">Questions before then?</p>
+            <p style="margin:0;font-size:15px;line-height:1.7;color:#3f3d3a;">
+              Phone: <a href="tel:+35315130424" style="color:#f48222;font-weight:700;text-decoration:underline;">01 513 0424</a><br>
+              Email: <a href="mailto:info@smart-space.ie" style="color:#f48222;font-weight:700;text-decoration:underline;">info@smart-space.ie</a>
+            </p>
+          </td></tr>
+        </table>
+      </td></tr>
+      <tr><td style="padding:24px 32px 32px;font-family:'Plus Jakarta Sans','Inter',Helvetica,Arial,sans-serif;">
+        <p style="margin:0;font-size:15px;line-height:1.6;color:#3f3d3a;">Talk soon,<br><strong style="color:#1C1A18;">Nigel and the Smart Space team</strong><br><a href="https://smart-space.ie" style="color:#f48222;font-weight:700;text-decoration:underline;">smart-space.ie</a></p>
+      </td></tr>
+      <tr><td style="padding:28px 32px;background:#1C1A18;color:#cccccc;font-family:'Plus Jakarta Sans','Inter',Helvetica,Arial,sans-serif;font-size:13px;line-height:1.55;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+          <tr>
+            <td valign="top" style="padding-right:16px;">
+              <div style="font-weight:800;color:#ffffff;font-size:14px;letter-spacing:0.4px;margin-bottom:8px;">Smart Space</div>
+              <div>Dublin's #1 Ring installer.</div>
+              <div>5,000+ installs across Leinster.</div>
+            </td>
+            <td valign="top" style="padding-left:16px;text-align:right;">
+              <div><a href="tel:+35315130424" style="color:#ffffff;text-decoration:none;font-weight:700;">01 513 0424</a></div>
+              <div><a href="mailto:info@smart-space.ie" style="color:#ffffff;text-decoration:none;">info@smart-space.ie</a></div>
+              <div><a href="https://smart-space.ie" style="color:#ffffff;text-decoration:none;">smart-space.ie</a></div>
+            </td>
+          </tr>
+        </table>
+        <div style="border-top:1px solid #2e2c2a;margin-top:18px;padding-top:14px;font-size:11px;color:#888;line-height:1.55;">
+          Stripe sends a separate payment receipt to this address. This email is just the install side, what you booked and what happens next.<br>
+          © Smart Space · Three Ireland SME Business Winner 2025 · Dublin and Leinster
+        </div>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`,
+    });
+    console.log(`[stripe webhook] customer confirmation email sent for session=${params.sessionId}`);
+  } catch (err) {
+    // Non-fatal: Nigel already got the internal alert above, the customer
+    // just doesn't get the branded confirmation (Stripe still sends its
+    // own receipt). Log loudly so we can spot a regression in Vercel logs.
+    console.error(`[stripe webhook] customer confirmation email FAILED for session=${params.sessionId}:`, err);
   }
 }
 
