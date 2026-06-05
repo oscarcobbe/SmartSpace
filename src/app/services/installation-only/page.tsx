@@ -65,19 +65,16 @@ const services = [
   },
 ];
 
-// Brand logo grid heights are tuned per-PNG so all five render at roughly
-// equal visual width (~125-135px). Each PNG has a different aspect ratio
-// and a different amount of internal whitespace, so a flat `h-14` for
-// everything makes square-ish logos (Ring) look small and wide logos
-// (Aosu) look enormous. The class-name math was derived by reading the
-// non-transparent content bounding box of each file — Ring/Eufy/Aosu
-// have ~0% padding, Nest has 9%, Tapo has 67%.
+// Aosu's PNG is a wide horizontal lockup (4.3:1) with no padding, so it
+// renders much wider than the others at any given height. h-7 lands it
+// at ~120px wide — in line with Eufy/Nest/Tapo. Tapo's heavy internal
+// PNG padding (67%) is why it needs h-28 to hit similar content size.
 const brands = [
-  { name: "Ring", logo: "/Ring.png", className: "h-20", width: 284, height: 178 },
-  { name: "Eufy", logo: "/Eufy.png", className: "h-16", width: 325, height: 155 },
+  { name: "Ring", logo: "/Ring.png", className: "h-14", width: 284, height: 178 },
+  { name: "Eufy", logo: "/Eufy.png", className: "h-14", width: 325, height: 155 },
   { name: "Nest", logo: "/Nest_logo.png", className: "h-14", width: 739, height: 315 },
   { name: "Tapo", logo: "/Tapo.png", className: "h-28", width: 3509, height: 2481 },
-  { name: "Aosu", logo: "/Aosu.png", className: "h-8", width: 3970, height: 930 },
+  { name: "Aosu", logo: "/Aosu.png", className: "h-7", width: 3970, height: 930 },
 ];
 
 function formatPrice(amount: string, currencyCode: string) {

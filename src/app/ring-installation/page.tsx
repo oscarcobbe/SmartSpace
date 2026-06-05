@@ -132,14 +132,13 @@ const FAQ = [
   },
 ];
 
-// Heights tuned per-PNG for equal visual width (~125-135px) — see
-// matching note in src/app/services/installation-only/page.tsx.
+// See matching brand-grid note in src/app/services/installation-only/page.tsx.
 const supportedBrands = [
-  { name: "Ring", logo: "/Ring.png", className: "h-20", width: 284, height: 178 },
-  { name: "Eufy", logo: "/Eufy.png", className: "h-16", width: 325, height: 155 },
+  { name: "Ring", logo: "/Ring.png", className: "h-14", width: 284, height: 178 },
+  { name: "Eufy", logo: "/Eufy.png", className: "h-14", width: 325, height: 155 },
   { name: "Nest", logo: "/Nest_logo.png", className: "h-14", width: 739, height: 315 },
   { name: "Tapo", logo: "/Tapo.png", className: "h-28", width: 3509, height: 2481 },
-  { name: "Aosu", logo: "/Aosu.png", className: "h-8", width: 3970, height: 930 },
+  { name: "Aosu", logo: "/Aosu.png", className: "h-7", width: 3970, height: 930 },
 ];
 
 function formatPrice(amount: string, currencyCode: string) {
