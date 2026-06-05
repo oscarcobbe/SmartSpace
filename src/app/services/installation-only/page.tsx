@@ -6,6 +6,7 @@ import { Wrench, Clock, Shield, Wifi } from "lucide-react";
 import { getProductByHandle, ShopifyProduct } from "@/lib/shopify";
 import AddToCartButton from "@/components/AddToCartButton";
 import BookingCalendar from "@/components/BookingCalendar";
+import QrScanTracker from "@/components/QrScanTracker";
 
 const SITE = "https://smart-space.ie";
 
@@ -146,6 +147,9 @@ export default function InstallationOnlyPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SERVICE_SCHEMA) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(BREADCRUMB_SCHEMA) }} />
+      {/* Logs a "QR Scan" row to the leads sheet when this page is opened
+          via the installer business-card QR (URL contains ?ref=card). */}
+      <QrScanTracker />
     <div className="pt-32 lg:pt-36">
       {/* Supported Brands */}
       <section className="py-12 bg-white border-b border-gray-100">
