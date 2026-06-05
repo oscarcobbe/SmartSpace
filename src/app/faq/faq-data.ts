@@ -13,7 +13,7 @@ export const FAQS = [
   },
   {
     q: "Can you work with cameras I already bought?",
-    a: "Usually yes, if they're Ring, Eufy, Nest or Tapo devices. We'll let you know at the consultation whether we'd recommend keeping them or replacing.",
+    a: "Usually yes, if they're Ring, Eufy, Nest, Tapo or Aosu devices. We'll let you know at the consultation whether we'd recommend keeping them or replacing.",
   },
   {
     q: "Will having this affect my home insurance?",

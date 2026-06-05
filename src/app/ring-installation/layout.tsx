@@ -44,7 +44,7 @@ const jsonLd = {
         { "@type": "Country", name: "Ireland" },
       ],
       description:
-        "Professional installation of Ring, Eufy, Tapo, Nest, and Arlo video doorbells and security cameras across Ireland. Wired or battery, same-week installation.",
+        "Professional installation of Ring, Eufy, Tapo, Nest, Aosu, and Arlo video doorbells and security cameras across Ireland. Wired or battery, same-week installation.",
       offers: {
         "@type": "Offer",
         price: "139",

@@ -33,7 +33,7 @@ const packages = [
     price: "From €139",
     features: [
       "Your existing device installed",
-      "Ring, Eufy, Nest & Tapo supported",
+      "Ring, Eufy, Nest, Tapo & Aosu supported",
       "Professional mounting & wiring",
       "App setup & configuration",
       "Wi-Fi signal check",

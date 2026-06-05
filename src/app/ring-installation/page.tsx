@@ -53,6 +53,7 @@ const BRANDS = [
   { name: "Eufy", tag: "Doorbell & floodlight cams" },
   { name: "Tapo", tag: "Doorbell & cameras" },
   { name: "Nest", tag: "Google Nest doorbells" },
+  { name: "Aosu", tag: "Solar & 4K outdoor cams" },
   { name: "Arlo", tag: "Wired & wireless" },
 ];
 
@@ -136,6 +137,7 @@ const supportedBrands = [
   { name: "Eufy", logo: "/Eufy.png", className: "h-14", width: 325, height: 155 },
   { name: "Nest", logo: "/Nest_logo.png", className: "h-14", width: 739, height: 315 },
   { name: "Tapo", logo: "/Tapo.png", className: "h-28", width: 3509, height: 2481 },
+  { name: "Aosu", logo: "/Aosu.png", className: "h-14", width: 3970, height: 930 },
 ];
 
 function formatPrice(amount: string, currencyCode: string) {
@@ -220,7 +222,7 @@ export default function RingInstallationPage() {
           </h1>
           <p className="text-gray-500 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
             Professional installation by certified Irish installers. Wired or battery, every Ring,
-            Eufy, Tapo, or Nest model. Configure your install and pick a date below.
+            Eufy, Tapo, Nest or Aosu model. Configure your install and pick a date below.
           </p>
 
           {/* Above-fold CTAs. Paid traffic on this LP needs an immediate

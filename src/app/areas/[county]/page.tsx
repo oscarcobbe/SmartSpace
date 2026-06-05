@@ -30,7 +30,7 @@ export async function generateMetadata({
   }
   return {
     title: `Ring Installer ${c.name} · Doorbell & Camera Installation | Smart Space`,
-    description: `Professional Ring doorbell and security camera installation across County ${c.name}. Brand-agnostic (Ring, Eufy, Nest, Tapo), flat from €139, no contract. Free home consultation.`,
+    description: `Professional Ring doorbell and security camera installation across County ${c.name}. Brand-agnostic (Ring, Eufy, Nest, Tapo, Aosu), flat from €139, no contract. Free home consultation.`,
     alternates: { canonical: `/areas/${c.slug}` },
     openGraph: {
       title: `Ring Installer ${c.name} | Smart Space`,
@@ -216,7 +216,7 @@ export default async function CountyPage({
               { href: "/services/bundles/driveway", label: "Driveway Bundle — doorbell + floodlight" },
               { href: "/services/bundles/whole-home", label: "Whole Home Bundle — multi-camera" },
               { href: "/services/bundles/eldercare", label: "Eldercare Bundle — doorbell + lockbox" },
-              { href: "/services/installation-only", label: "Installation-only · €139 · Ring, Eufy, Nest, Tapo" },
+              { href: "/services/installation-only", label: "Installation-only · €139 · Ring, Eufy, Nest, Tapo, Aosu" },
             ].map((s) => (
               <li key={s.href}>
                 <Link

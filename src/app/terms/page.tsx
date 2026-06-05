@@ -32,7 +32,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-bold text-gray-900 mt-8 mb-3">1. Who we are</h2>
             <p>
-              Smart Space is a Ring, Eufy, Nest, and Tapo camera and video-doorbell installation business operating
+              Smart Space is a Ring, Eufy, Nest, Tapo, and Aosu camera and video-doorbell installation business operating
               across Dublin, Leinster, and the surrounding counties. Contact:{" "}
               <a href="mailto:info@smart-space.ie" className="text-brand-500 hover:underline">
                 info@smart-space.ie
@@ -108,7 +108,7 @@ export default function TermsPage() {
               <li>Damage caused by power surges, water ingress beyond the device&apos;s IP rating, or third-party
                 modifications after we leave site.</li>
               <li>Wi-Fi or network problems caused by changes to your home network after installation.</li>
-              <li>Subscription fees charged by Ring, Eufy, Nest, or any other manufacturer.</li>
+              <li>Subscription fees charged by Ring, Eufy, Nest, Aosu, or any other manufacturer.</li>
             </ul>
           </section>
 

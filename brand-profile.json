@@ -11,7 +11,7 @@
   "audience": {
     "primary": {
       "label": "The post-Amazon installer",
-      "description": "Dublin or Leinster homeowner aged 45-64 who has just bought (or is about to buy) a Ring, Eufy, Tapo or Nest smart doorbell from Amazon, Currys or Harvey Norman. Has the box. Doesn't have the time, ladder, drill bit or chime-wiring confidence to fit it themselves. Wants it done this week, by someone insured, for a known price.",
+      "description": "Dublin or Leinster homeowner aged 45-64 who has just bought (or is about to buy) a Ring, Eufy, Tapo, Nest or Aosu smart doorbell from Amazon, Currys or Harvey Norman. Has the box. Doesn't have the time, ladder, drill bit or chime-wiring confidence to fit it themselves. Wants it done this week, by someone insured, for a known price.",
       "demographics": {
         "age_range": "45-64",
         "gender_split": "70% male, 30% female",
@@ -139,7 +139,7 @@
   ],
   "differentiators": [
     "Flat-priced install starting at €139 — no quote forms, no surprises",
-    "Brand-agnostic: installs Ring, Eufy, Tapo, Nest, Arlo at the same fee",
+    "Brand-agnostic: installs Ring, Eufy, Tapo, Nest, Aosu, Arlo at the same fee",
     "No contract, no monthly monitoring fee (vs Phonewatch / HomeSecure)",
     "Local Dublin + Leinster trade installer (not a nationwide call-centre brand)",
     "5,000+ Ring-specific installs",

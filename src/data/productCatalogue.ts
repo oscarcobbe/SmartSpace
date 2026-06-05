@@ -2167,8 +2167,8 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
     "id": "gid://shopify/Product/15301577965891",
     "title": "Installation Only",
     "handle": "installation-only",
-    "description": "Already have a Ring, Eufy, Nest, Tapo or similar smart home device? We will professionally install it for you. Same expert service, same price — regardless of brand. Includes professional mounting, wiring, app setup, and configuration.",
-    "descriptionHtml": "<p>Already have a Ring, Eufy, Nest, Tapo or similar smart home device? We will professionally install it for you. Same expert service, same price — regardless of brand. Includes professional mounting, wiring, app setup, and configuration.</p>",
+    "description": "Already have a Ring, Eufy, Nest, Tapo, Aosu or similar smart home device? We will professionally install it for you. Same expert service, same price — regardless of brand. Includes professional mounting, wiring, app setup, and configuration.",
+    "descriptionHtml": "<p>Already have a Ring, Eufy, Nest, Tapo, Aosu or similar smart home device? We will professionally install it for you. Same expert service, same price — regardless of brand. Includes professional mounting, wiring, app setup, and configuration.</p>",
     "productType": "Installation",
     "tags": [
       "Installation",

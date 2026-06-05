@@ -15,7 +15,7 @@ const SERVICE_SCHEMA = {
   name: "Smart Doorbell & Camera Installation Dublin (Customer-Supplied Device)",
   serviceType: "Home Security Installation",
   description:
-    "Professional installation of Ring, Eufy, Nest and Tapo smart doorbells and cameras you've already bought. Mounting, wiring, app configuration and walkthrough included. Available across Dublin and all of Leinster.",
+    "Professional installation of Ring, Eufy, Nest, Tapo and Aosu smart doorbells and cameras you've already bought. Mounting, wiring, app configuration and walkthrough included. Available across Dublin and all of Leinster.",
   provider: { "@id": `${SITE}/#localbusiness` },
   areaServed: [
     { "@type": "AdministrativeArea", name: "Dublin" },
@@ -69,6 +69,7 @@ const brands = [
   { name: "Eufy", logo: "/Eufy.png", className: "h-14", width: 325, height: 155 },
   { name: "Nest", logo: "/Nest_logo.png", className: "h-14", width: 739, height: 315 },
   { name: "Tapo", logo: "/Tapo.png", className: "h-28", width: 3509, height: 2481 },
+  { name: "Aosu", logo: "/Aosu.png", className: "h-14", width: 3970, height: 930 },
 ];
 
 function formatPrice(amount: string, currencyCode: string) {

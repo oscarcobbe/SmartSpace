@@ -84,7 +84,7 @@ export default function GbpSetupPage() {
           <li>Ring Driveway Bundle — from €658</li>
           <li>Ring Whole Home Bundle — from €987</li>
           <li>Ring Eldercare Bundle — from €509</li>
-          <li>Installation-only (Ring, Eufy, Nest, Tapo) — from €139</li>
+          <li>Installation-only (Ring, Eufy, Nest, Tapo, Aosu) — from €139</li>
           <li>Free home security consultation — complimentary</li>
         </ul>
 

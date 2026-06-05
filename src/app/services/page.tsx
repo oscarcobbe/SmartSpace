@@ -45,7 +45,7 @@ const serviceCategories = [
   },
   {
     title: "Installation Only",
-    description: "Already have a Ring, Eufy, Nest or Tapo device? We'll install it.",
+    description: "Already have a Ring, Eufy, Nest, Tapo or Aosu device? We'll install it.",
     href: "/services/installation-only",
     filter: () => false,
     staticImage: "/products/installation.png",

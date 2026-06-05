@@ -217,7 +217,7 @@ export const COUNTIES: County[] = [
     slug: "offaly",
     towns: "Tullamore, Birr, Edenderry, Clara, Banagher",
     copy:
-      "Smart Space installs Ring doorbells and cameras across County Offaly — Tullamore, Birr, Edenderry, Clara and Banagher. Offaly is one of the counties where we batch appointments, so get in touch and we'll let you know the next available date we're in the area. Installation includes everything you'd expect: professional mounting, weatherproofing, wiring, Wi-Fi coverage check, Ring app setup, and a full walkthrough before we leave. We also offer installation-only service for customers who've already bought a Ring, Eufy, Nest or Tapo device.",
+      "Smart Space installs Ring doorbells and cameras across County Offaly — Tullamore, Birr, Edenderry, Clara and Banagher. Offaly is one of the counties where we batch appointments, so get in touch and we'll let you know the next available date we're in the area. Installation includes everything you'd expect: professional mounting, weatherproofing, wiring, Wi-Fi coverage check, Ring app setup, and a full walkthrough before we leave. We also offer installation-only service for customers who've already bought a Ring, Eufy, Nest, Tapo or Aosu device.",
   },
   {
     name: "Westmeath",

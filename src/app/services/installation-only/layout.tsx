@@ -3,23 +3,23 @@ import type { Metadata } from "next";
 const SITE = "https://smart-space.ie";
 
 export const metadata: Metadata = {
-  title: "Installation Only — Ring, Eufy, Nest & Tapo | Dublin & Leinster | Smart Space",
+  title: "Installation Only — Ring, Eufy, Nest, Tapo & Aosu | Dublin & Leinster | Smart Space",
   description:
-    "Already bought a Ring, Eufy, Nest or Tapo device? We'll install it across Dublin and Leinster. Mounting, wiring, app setup. From €139.",
+    "Already bought a Ring, Eufy, Nest, Tapo or Aosu device? We'll install it across Dublin and Leinster. Mounting, wiring, app setup. From €139.",
   alternates: { canonical: "/services/installation-only" },
   openGraph: {
     title: "Installation Only | Dublin & Leinster | Smart Space",
     description:
-      "Professional Ring, Eufy, Nest and Tapo installation across Dublin and Leinster. From €139.",
+      "Professional Ring, Eufy, Nest, Tapo and Aosu installation across Dublin and Leinster. From €139.",
     url: `${SITE}/services/installation-only`,
     type: "website",
-    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Installation Only — Ring, Eufy, Nest, Tapo — Smart Space" }],
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Installation Only — Ring, Eufy, Nest, Tapo, Aosu — Smart Space" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Installation Only | Dublin & Leinster | Smart Space",
     description:
-      "Professional Ring, Eufy, Nest and Tapo installation across Dublin and Leinster. From €139.",
+      "Professional Ring, Eufy, Nest, Tapo and Aosu installation across Dublin and Leinster. From €139.",
     images: ["/og-default.png"],
   },
 };
@@ -28,9 +28,9 @@ const serviceSchema = {
   "@context": "https://schema.org",
   "@type": "Service",
   serviceType: "Smart Home Device Installation",
-  name: "Ring / Eufy / Nest / Tapo Installation Only — Dublin & Leinster",
+  name: "Ring / Eufy / Nest / Tapo / Aosu Installation Only — Dublin & Leinster",
   description:
-    "Professional installation for customer-supplied Ring, Eufy, Nest and Tapo doorbells and cameras. Dublin and all of Leinster.",
+    "Professional installation for customer-supplied Ring, Eufy, Nest, Tapo and Aosu doorbells and cameras. Dublin and all of Leinster.",
   provider: { "@id": `${SITE}/#localbusiness` },
   areaServed: { "@type": "Place", name: "Dublin & Leinster, Ireland" },
   offers: {
