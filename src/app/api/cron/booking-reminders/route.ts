@@ -9,6 +9,17 @@ import { BUSINESS_PHONE_DISPLAY, BUSINESS_EMAIL, BUSINESS_SITE } from "@/lib/bus
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+// ────────────────────────────────────────────────────────────────────────────
+// PAUSED — 2026-06-10. Oscar asked to stop automated reminders until he
+// can talk to Nigel about whether to keep them. The vercel.json cron entry
+// has also been removed so this route doesn't fire on schedule. Flip
+// REMINDERS_PAUSED back to false AND re-add the cron entry to /vercel.json:
+//   { "path": "/api/cron/booking-reminders", "schedule": "0 17 * * *" }
+// when ready to resume. Customers go back to whatever manual reminder flow
+// Nigel was running before we automated this.
+// ────────────────────────────────────────────────────────────────────────────
+const REMINDERS_PAUSED = true;
+
 /**
  * Day-before booking reminder.
  *
@@ -396,6 +407,17 @@ export async function GET(request: Request) {
   const expected = `Bearer ${process.env.CRON_SECRET ?? ""}`;
   if (!process.env.CRON_SECRET || !safeBearerEqual(auth, expected)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // PAUSED kill-switch — see comment at top of file. Even if someone
+  // manually triggers the route with valid auth (or the vercel.json cron
+  // entry is accidentally re-added), no reminders go out until
+  // REMINDERS_PAUSED is flipped back to false.
+  if (REMINDERS_PAUSED) {
+    return NextResponse.json(
+      { ok: true, paused: true, message: "Booking reminders are paused. Re-enable in src/app/api/cron/booking-reminders/route.ts (REMINDERS_PAUSED = false) and re-add the cron entry in vercel.json." },
+      { status: 200 }
+    );
   }
 
   const calendlyToken = process.env.CALENDLY_PERSONAL_TOKEN;
