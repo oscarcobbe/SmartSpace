@@ -24,24 +24,6 @@ export const metadata: Metadata = {
   },
 };
 
-const serviceSchema = {
-  "@context": "https://schema.org",
-  "@type": "Service",
-  serviceType: "Ring Floodlight Camera Installation",
-  name: "Ring Floodlight Camera Installation Dublin & Leinster",
-  description:
-    "Professional Ring Floodlight Cam installation for driveways, gardens, and rear entrances. Dublin and all of Leinster.",
-  provider: { "@id": `${SITE}/#localbusiness` },
-  areaServed: { "@type": "Place", name: "Dublin & Leinster, Ireland" },
-  offers: {
-    "@type": "Offer",
-    price: "299",
-    priceCurrency: "EUR",
-    availability: "https://schema.org/InStock",
-    url: `${SITE}/services/camera`,
-  },
-};
-
 const breadcrumbSchema = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
@@ -55,7 +37,6 @@ const breadcrumbSchema = {
 export default function CameraLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       {children}
     </>

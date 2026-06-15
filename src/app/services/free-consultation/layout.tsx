@@ -24,24 +24,6 @@ export const metadata: Metadata = {
   },
 };
 
-const serviceSchema = {
-  "@context": "https://schema.org",
-  "@type": "Service",
-  serviceType: "Home Security Consultation",
-  name: "Free Home Security Consultation — Dublin & Leinster",
-  description:
-    "Complimentary in-home security consultation with written quote. Dublin and all of Leinster.",
-  provider: { "@id": `${SITE}/#localbusiness` },
-  areaServed: { "@type": "Place", name: "Dublin & Leinster, Ireland" },
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "EUR",
-    availability: "https://schema.org/InStock",
-    url: `${SITE}/services/free-consultation`,
-  },
-};
-
 const breadcrumbSchema = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
@@ -55,7 +37,6 @@ const breadcrumbSchema = {
 export default function FreeConsultationLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       {children}
     </>

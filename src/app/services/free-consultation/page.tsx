@@ -29,16 +29,6 @@ const SERVICE_SCHEMA = {
   // aggregateRating intentionally omitted: see bundles/driveway/page.tsx.
 };
 
-const BREADCRUMB_SCHEMA = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  itemListElement: [
-    { "@type": "ListItem", position: 1, name: "Home", item: SITE },
-    { "@type": "ListItem", position: 2, name: "Services", item: `${SITE}/services` },
-    { "@type": "ListItem", position: 3, name: "Free Consultation", item: `${SITE}/services/free-consultation` },
-  ],
-};
-
 const benefits = [
   {
     icon: Home,
@@ -140,7 +130,6 @@ export default function FreeConsultationPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SERVICE_SCHEMA) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(BREADCRUMB_SCHEMA) }} />
     <div className="pt-32 lg:pt-36">
       {/* Book */}
       <section className="py-12 lg:py-20">

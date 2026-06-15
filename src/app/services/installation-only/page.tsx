@@ -32,16 +32,6 @@ const SERVICE_SCHEMA = {
   // aggregateRating intentionally omitted: see bundles/driveway/page.tsx.
 };
 
-const BREADCRUMB_SCHEMA = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  itemListElement: [
-    { "@type": "ListItem", position: 1, name: "Home", item: SITE },
-    { "@type": "ListItem", position: 2, name: "Services", item: `${SITE}/services` },
-    { "@type": "ListItem", position: 3, name: "Installation Only", item: `${SITE}/services/installation-only` },
-  ],
-};
-
 const services = [
   {
     icon: Wrench,
@@ -150,7 +140,6 @@ export default function InstallationOnlyPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SERVICE_SCHEMA) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(BREADCRUMB_SCHEMA) }} />
       {/* Logs a "QR Scan" row to the leads sheet when this page is opened
           via the installer business-card QR (URL contains ?ref=card). */}
       <QrScanTracker />

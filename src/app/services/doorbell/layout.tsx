@@ -24,30 +24,6 @@ export const metadata: Metadata = {
   },
 };
 
-const serviceSchema = {
-  "@context": "https://schema.org",
-  "@type": "Service",
-  serviceType: "Ring Video Doorbell Installation",
-  name: "Ring Video Doorbell Installation Dublin & Leinster",
-  description:
-    "Professional Ring Video Doorbell installation including Ring Chime, app setup, and motion zone tuning. Dublin and all of Leinster.",
-  provider: { "@id": `${SITE}/#localbusiness` },
-  areaServed: { "@type": "Place", name: "Dublin & Leinster, Ireland" },
-  offers: {
-    "@type": "Offer",
-    price: "329",
-    priceCurrency: "EUR",
-    priceSpecification: {
-      "@type": "PriceSpecification",
-      price: "329",
-      priceCurrency: "EUR",
-      valueAddedTaxIncluded: true,
-    },
-    availability: "https://schema.org/InStock",
-    url: `${SITE}/services/doorbell`,
-  },
-};
-
 const breadcrumbSchema = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
@@ -61,7 +37,6 @@ const breadcrumbSchema = {
 export default function DoorbellLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       {children}
     </>

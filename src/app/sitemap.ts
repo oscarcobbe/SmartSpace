@@ -20,6 +20,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/services/single`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
     { url: `${BASE}/services/installation-only`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     { url: `${BASE}/services/free-consultation`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
+    // NOTE: /services/other-brands is intentionally NOT listed yet. The page
+    // exists in the repo but is not deployed to production (pending sign-off
+    // on its estimated Eufy pricing). Add this line in the SAME commit that
+    // ships the page, so the sitemap never points Google at a 404.
+    // { url: `${BASE}/services/other-brands`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
 
     // Individual product detail pages (static-generated, one per curated handle)
     { url: `${BASE}/services/plus-video-doorbell`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },

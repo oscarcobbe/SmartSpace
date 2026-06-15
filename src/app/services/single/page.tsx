@@ -31,16 +31,6 @@ const SERVICE_SCHEMA = {
   // aggregateRating intentionally omitted: see bundles/driveway/page.tsx.
 };
 
-const BREADCRUMB_SCHEMA = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  itemListElement: [
-    { "@type": "ListItem", position: 1, name: "Home", item: SITE },
-    { "@type": "ListItem", position: 2, name: "Services", item: `${SITE}/services` },
-    { "@type": "ListItem", position: 3, name: "Single Device", item: `${SITE}/services/single` },
-  ],
-};
-
 const choices = [
   {
     title: "Video Doorbell",
@@ -60,7 +50,6 @@ export default function SingleDevicePage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SERVICE_SCHEMA) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(BREADCRUMB_SCHEMA) }} />
     <div className="pt-32 lg:pt-36 pb-16 lg:pb-24">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumbs */}

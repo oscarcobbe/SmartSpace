@@ -55,21 +55,9 @@ export default async function WholeHomeBundlePage() {
     // for the rationale. Site-wide rating lives on LocalBusiness.
   };
 
-  const breadcrumbSchema = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: SITE },
-      { "@type": "ListItem", position: 2, name: "Services", item: `${SITE}/services` },
-      { "@type": "ListItem", position: 3, name: "Bundles", item: `${SITE}/services/bundles` },
-      { "@type": "ListItem", position: 4, name: "Whole Home Bundle", item: `${SITE}/services/bundles/whole-home` },
-    ],
-  };
-
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
 
       <div className="pt-32 lg:pt-36 pb-16 lg:pb-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

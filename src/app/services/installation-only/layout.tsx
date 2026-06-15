@@ -24,24 +24,6 @@ export const metadata: Metadata = {
   },
 };
 
-const serviceSchema = {
-  "@context": "https://schema.org",
-  "@type": "Service",
-  serviceType: "Smart Home Device Installation",
-  name: "Ring / Eufy / Nest / Tapo / Aosu Installation Only — Dublin & Leinster",
-  description:
-    "Professional installation for customer-supplied Ring, Eufy, Nest, Tapo and Aosu doorbells and cameras. Dublin and all of Leinster.",
-  provider: { "@id": `${SITE}/#localbusiness` },
-  areaServed: { "@type": "Place", name: "Dublin & Leinster, Ireland" },
-  offers: {
-    "@type": "Offer",
-    price: "139",
-    priceCurrency: "EUR",
-    availability: "https://schema.org/InStock",
-    url: `${SITE}/services/installation-only`,
-  },
-};
-
 const breadcrumbSchema = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
@@ -55,7 +37,6 @@ const breadcrumbSchema = {
 export default function InstallationOnlyLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       {children}
     </>

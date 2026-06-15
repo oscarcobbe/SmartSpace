@@ -75,7 +75,11 @@ const nextConfig = {
       // ────────────────────────────────────────────────────────────
 
       // Legacy /pages/* → topically-matching current pages.
-      { source: "/pages/how-it-works", destination: "/installation", permanent: true },
+      // Point straight at the final destination (not /installation) so this
+      // is a single 308 hop, not a 308→/installation→/services/installation-only
+      // chain. Redirect chains waste crawl budget and dilute link equity, and
+      // GSC flags multi-hop legacy redirects.
+      { source: "/pages/how-it-works", destination: "/services/installation-only", permanent: true },
       { source: "/pages/about-us", destination: "/about", permanent: true },
       { source: "/pages/cost", destination: "/services", permanent: true },
       { source: "/pages/client-stories", destination: "/reviews", permanent: true },
