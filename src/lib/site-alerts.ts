@@ -129,7 +129,7 @@ export async function sendSiteAlert(params: SiteAlertParams): Promise<SendSiteAl
     "",
     params.details ?? "(no further detail)",
     "",
-    ", ",
+    "----------------------------------------",
     `Admin:  ${dashboardUrl}`,
     `Logs:   ${logsUrl}`,
     "",

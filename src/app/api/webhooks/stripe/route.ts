@@ -75,8 +75,8 @@ async function sendOrderNotification(params: {
       ? "⚠️ Calendly event creation FAILED, please book manually in Calendly."
       : "ℹ️ No booking date/slot in cart, Calendly was not attempted.";
 
-  const dateLabel = params.bookingLabel || params.bookingDate || ", ";
-  const slotLabel = params.bookingSlot || ", ";
+  const dateLabel = params.bookingLabel || params.bookingDate || "-";
+  const slotLabel = params.bookingSlot || "-";
   // Use formatEuro for consistency with the site's price display rules
   // (drop `.00` on whole-euro amounts). `params.currency` is unused here
   // because the site is EUR-only; if that ever changes, swap formatEuro
@@ -376,8 +376,8 @@ async function sendPurchaseAttemptAlert(params: {
   // because the site is EUR-only; if that ever changes, swap formatEuro
   // for an explicit currency-aware formatter.
   const formattedAmount = formatEuro(params.amount);
-  const dateLabel = params.bookingLabel || params.bookingDate || ", ";
-  const slotLabel = params.bookingSlot || ", ";
+  const dateLabel = params.bookingLabel || params.bookingDate || "-";
+  const slotLabel = params.bookingSlot || "-";
 
   let subject: string;
   let kindLabel: string;
@@ -420,9 +420,9 @@ async function sendPurchaseAttemptAlert(params: {
         urgencyLine,
         "",
         `Customer: ${params.customerName}`,
-        `Email: ${params.email || ", "}`,
-        `Phone: ${params.phone || ", "}`,
-        `Address: ${params.installationAddress || ", "}`,
+        `Email: ${params.email || "-"}`,
+        `Phone: ${params.phone || "-"}`,
+        `Address: ${params.installationAddress || "-"}`,
         "",
         `Product: ${params.productName}`,
         `Amount: ${formattedAmount}`,
@@ -438,9 +438,9 @@ async function sendPurchaseAttemptAlert(params: {
         <p style="color:#b91c1c;font-weight:bold;margin-top:0">${escapeHtml(urgencyLine)}</p>
         <hr/>
         <p><strong>Customer:</strong> ${escapeHtml(params.customerName)}</p>
-        <p><strong>Email:</strong> ${escapeHtml(params.email || ", ")}</p>
-        <p><strong>Phone:</strong> ${escapeHtml(params.phone || ", ")}</p>
-        <p><strong>Address:</strong> ${escapeHtml(params.installationAddress || ", ")}</p>
+        <p><strong>Email:</strong> ${escapeHtml(params.email || "-")}</p>
+        <p><strong>Phone:</strong> ${escapeHtml(params.phone || "-")}</p>
+        <p><strong>Address:</strong> ${escapeHtml(params.installationAddress || "-")}</p>
         <hr/>
         <p><strong>Product:</strong> ${escapeHtml(params.productName)}</p>
         <p><strong>Amount:</strong> ${escapeHtml(formattedAmount)}</p>

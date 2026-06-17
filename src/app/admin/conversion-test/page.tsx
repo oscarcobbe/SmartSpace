@@ -121,7 +121,7 @@ export default function ConversionTestPage() {
     const w = window as any;
     if (typeof w.gtag !== "function") {
       setResults((r) => [
-        { at: new Date().toLocaleTimeString(), type, sendTo: ", ", txnId: ", ", acked: false, error: "window.gtag not loaded" },
+        { at: new Date().toLocaleTimeString(), type, sendTo: "-", txnId: "-", acked: false, error: "window.gtag not loaded" },
         ...r,
       ]);
       return;
@@ -207,7 +207,7 @@ export default function ConversionTestPage() {
           {
             at: new Date().toLocaleTimeString(),
             type,
-            label: ", ",
+            label: "-",
             adsStatus: null,
             adsBodyPreview: null,
             ga4Configured: false,
@@ -243,7 +243,7 @@ export default function ConversionTestPage() {
         {
           at: new Date().toLocaleTimeString(),
           type,
-          label: ", ",
+          label: "-",
           adsStatus: null,
           adsBodyPreview: null,
           ga4Configured: false,
@@ -283,26 +283,26 @@ export default function ConversionTestPage() {
             <div>
               <dt className="text-xs text-gray-500">Consent, ad_storage</dt>
               <dd className={`font-mono ${consent?.ad_storage === "granted" ? "text-emerald-600" : "text-amber-600"}`}>
-                {consent?.ad_storage ?? ", "}
+                {consent?.ad_storage ?? "-"}
               </dd>
             </div>
             <div>
               <dt className="text-xs text-gray-500">Consent, ad_user_data</dt>
               <dd className={`font-mono ${consent?.ad_user_data === "granted" ? "text-emerald-600" : "text-amber-600"}`}>
-                {consent?.ad_user_data ?? ", "}
+                {consent?.ad_user_data ?? "-"}
               </dd>
             </div>
             <div>
               <dt className="text-xs text-gray-500">Consent, analytics_storage</dt>
               <dd className={`font-mono ${consent?.analytics_storage === "granted" ? "text-emerald-600" : "text-amber-600"}`}>
-                {consent?.analytics_storage ?? ", "}
+                {consent?.analytics_storage ?? "-"}
               </dd>
             </div>
             <div className="sm:col-span-2">
               <dt className="text-xs text-gray-500">Stored attribution (gclid + utm)</dt>
               <dd className="font-mono text-xs text-gray-700 break-all">
                 {attribution
-                  ? `gclid=${attribution.gclid ?? ", "} | utm_source=${attribution.utmSource ?? ", "} | utm_campaign=${attribution.utmCampaign ?? ", "} | landing=${attribution.landingPage ?? ", "}`
+                  ? `gclid=${attribution.gclid ?? "-"} | utm_source=${attribution.utmSource ?? "-"} | utm_campaign=${attribution.utmCampaign ?? "-"} | landing=${attribution.landingPage ?? "-"}`
                   : "no attribution stored (visit the site via a paid-ad URL with ?gclid=… to test capture)"}
               </dd>
             </div>
@@ -446,7 +446,7 @@ export default function ConversionTestPage() {
                       <div className="mb-1">
                         <span className="text-gray-500">Google Ads pixel:</span>{" "}
                         <span className={r.adsStatus === 200 ? "text-emerald-700" : "text-red-700"}>
-                          HTTP {r.adsStatus ?? ", "}
+                          HTTP {r.adsStatus ?? "-"}
                         </span>
                         {r.adsBodyPreview && (
                           <span className="text-gray-500 ml-2">body: {r.adsBodyPreview}</span>
@@ -456,7 +456,7 @@ export default function ConversionTestPage() {
                         <span className="text-gray-500">GA4 Measurement Protocol:</span>{" "}
                         {r.ga4Configured ? (
                           <span className={r.ga4Status === 204 || r.ga4Status === 200 ? "text-emerald-700" : "text-red-700"}>
-                            HTTP {r.ga4Status ?? ", "}
+                            HTTP {r.ga4Status ?? "-"}
                             {r.ga4Body && r.ga4Body.length > 0 && (
                               <span className="text-gray-500 ml-2">{r.ga4Body.slice(0, 60)}</span>
                             )}

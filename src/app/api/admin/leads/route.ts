@@ -188,7 +188,7 @@ export async function GET(request: Request) {
       const addr = session.customer_details?.address;
       const addrParts = [addr?.line1, addr?.line2, addr?.city, addr?.postal_code].filter(Boolean);
       const installAddr = session.custom_fields?.find((f: { key: string; text?: { value: string } }) => f.key === "installation_address")?.text?.value;
-      const address = installAddr || addrParts.join(", ") || ", ";
+      const address = installAddr || addrParts.join(", ") || "-";
 
       // Build details: Stripe custom-fields + parsed metadata.configuration
       // (the JSON-encoded answers from the product page's variant selectors).
@@ -232,14 +232,14 @@ export async function GET(request: Request) {
       leads.push({
         date: created.toLocaleString("en-GB", { timeZone: "Europe/Dublin", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false }),
         type: "Paid Order",
-        name: session.customer_details?.name || ", ",
-        email: session.customer_details?.email || ", ",
-        phone: session.customer_details?.phone || ", ",
+        name: session.customer_details?.name || "-",
+        email: session.customer_details?.email || "-",
+        phone: session.customer_details?.phone || "-",
         address,
         product: session.metadata?.product_name || "Order",
         amount: formatEuro(session.amount_total / 100),
-        bookingDate: session.metadata?.booking_label || session.metadata?.booking_date || ", ",
-        bookingSlot: session.metadata?.booking_slot || ", ",
+        bookingDate: session.metadata?.booking_label || session.metadata?.booking_date || "-",
+        bookingSlot: session.metadata?.booking_slot || "-",
         status: session.payment_status === "paid" ? "Paid" : session.payment_status,
         orderId: session.id,
         details: details.length ? details : undefined,
@@ -289,10 +289,10 @@ export async function GET(request: Request) {
 
       for (const event of calData.collection || []) {
         // Get invitee details
-        let inviteeName = ", ";
-        let inviteeEmail = ", ";
-        let inviteePhone = ", ";
-        let inviteeAddress = ", ";
+        let inviteeName = "-";
+        let inviteeEmail = "-";
+        let inviteePhone = "-";
+        let inviteeAddress = "-";
         let notes = "";
         const calendlyDetails: QA[] = [];
 
@@ -308,12 +308,12 @@ export async function GET(request: Request) {
           const invData = await invRes.json();
           const inv = (invData.collection || [])[0];
           if (inv) {
-            inviteeName = inv.name || ", ";
-            inviteeEmail = inv.email || ", ";
+            inviteeName = inv.name || "-";
+            inviteeEmail = inv.email || "-";
             // Phone from text_reminder_number or parsed from Q&A
             const qaList: { answer: string }[] = inv.questions_and_answers || [];
             const phoneFromQA = qaList.map((q) => q.answer).join(" ").match(/Phone:\s*([^|]+)/i)?.[1]?.trim();
-            inviteePhone = inv.text_reminder_number || phoneFromQA || ", ";
+            inviteePhone = inv.text_reminder_number || phoneFromQA || "-";
             const qas: { question: string; answer: string }[] = inv.questions_and_answers || [];
             notes = qas.map((q) => q.answer).join("; ");
             // Surface every Q&A pair into details. Calendly often packs
@@ -403,12 +403,12 @@ export async function GET(request: Request) {
           email: inviteeEmail,
           phone: inviteePhone,
           address: inviteeAddress,
-          product: event.name || ", ",
-          amount: isConsultation ? "Complimentary" : ", ",
+          product: event.name || "-",
+          amount: isConsultation ? "Complimentary" : "-",
           bookingDate: startStr,
           bookingSlot: `${start.toLocaleString("en-GB", { timeZone: "Europe/Dublin", hour: "2-digit", minute: "2-digit", hour12: false })} – ${new Date(event.end_time).toLocaleString("en-GB", { timeZone: "Europe/Dublin", hour: "2-digit", minute: "2-digit", hour12: false })}`,
           status: calendlyStatus,
-          orderId: notes || ", ",
+          orderId: notes || "-",
           details: calendlyDetails.length ? calendlyDetails : undefined,
         });
       }
@@ -521,18 +521,18 @@ export async function GET(request: Request) {
             if (r.notes) manualDetails.push({ question: "Notes", answer: String(r.notes) });
 
             leads.push({
-              date: String(r.date || ", "),
+              date: String(r.date || "-"),
               type: "Paid Order",
-              name: String(r.name || ", "),
-              email: String(r.email || ", "),
-              phone: String(r.phone || ", "),
-              address: String(r.address || ", "),
-              product: String(r.product || ", "),
-              amount: r.amount ? formatEuro(Number(r.amount)) : ", ",
-              bookingDate: String(r.bookingDate || ", "),
-              bookingSlot: String(r.bookingSlot || ", "),
+              name: String(r.name || "-"),
+              email: String(r.email || "-"),
+              phone: String(r.phone || "-"),
+              address: String(r.address || "-"),
+              product: String(r.product || "-"),
+              amount: r.amount ? formatEuro(Number(r.amount)) : "-",
+              bookingDate: String(r.bookingDate || "-"),
+              bookingSlot: String(r.bookingSlot || "-"),
               status: String(r.status || "New"),
-              orderId: orderId || ", ",
+              orderId: orderId || "-",
               details: manualDetails.length ? manualDetails : undefined,
             });
             continue;
@@ -592,18 +592,18 @@ export async function GET(request: Request) {
           const statusLabel = sheetStatus || "Awaiting reply";
 
           leads.push({
-            date: String(r.date || ", "),
+            date: String(r.date || "-"),
             type: "Contact Enquiry",
-            name: String(r.name || ", "),
-            email: String(r.email || ", "),
-            phone: String(r.phone || ", "),
-            address: String(r.address || ", "),
+            name: String(r.name || "-"),
+            email: String(r.email || "-"),
+            phone: String(r.phone || "-"),
+            address: String(r.address || "-"),
             product: productLabel,
-            amount: r.amount ? formatEuro(Number(r.amount)) : ", ",
-            bookingDate: ", ",
-            bookingSlot: ", ",
+            amount: r.amount ? formatEuro(Number(r.amount)) : "-",
+            bookingDate: "-",
+            bookingSlot: "-",
             status: statusLabel,
-            orderId: String(r.notes || ", "),
+            orderId: String(r.notes || "-"),
             details: contactDetails.length ? contactDetails : undefined,
           });
         }
@@ -673,7 +673,7 @@ export async function GET(request: Request) {
   for (const l of leads) {
     if (l.type !== "Paid Order") continue;
     const emailKey = (l.email || "").trim().toLowerCase();
-    if (!emailKey || emailKey === ", ") continue;
+    if (!emailKey || emailKey === "-") continue;
     const eur = parseFloat(String(l.amount).replace(/[^0-9.]/g, ""));
     if (!Number.isFinite(eur) || eur <= 0) continue;
     const prev = paidByEmail.get(emailKey);
@@ -681,7 +681,7 @@ export async function GET(request: Request) {
   }
   for (const l of leads) {
     if (l.type !== "Installation") continue;
-    if (l.amount !== ", ") continue;
+    if (l.amount !== "-") continue;
     const emailKey = (l.email || "").trim().toLowerCase();
     const match = paidByEmail.get(emailKey);
     if (match) {

@@ -206,7 +206,7 @@ export async function POST(request: Request) {
             "",
             `Name: ${name.trim()}`,
             `Email: ${email.trim()}`,
-            `Phone: ${phone?.trim() || ", "}`,
+            `Phone: ${phone?.trim() || "-"}`,
             `Topic: ${subjectLabel}`,
             "",
             `Date: ${dateLabel}`,
@@ -220,7 +220,7 @@ export async function POST(request: Request) {
             <h2>New Site Visit Booking</h2>
             <p><strong>Name:</strong> ${escapeHtml(name.trim())}</p>
             <p><strong>Email:</strong> ${escapeHtml(email.trim())}</p>
-            <p><strong>Phone:</strong> ${escapeHtml(phone?.trim() || ", ")}</p>
+            <p><strong>Phone:</strong> ${escapeHtml(phone?.trim() || "-")}</p>
             <p><strong>Topic:</strong> ${escapeHtml(subjectLabel)}</p>
             <hr />
             <p><strong>Date:</strong> ${escapeHtml(dateLabel)}</p>

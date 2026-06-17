@@ -141,7 +141,7 @@ export async function GET(request: Request) {
     const cd = (session.customer_details ?? {}) as Record<string, unknown>;
     const md = (session.metadata ?? {}) as Record<string, unknown>;
     const email = String(cd.email ?? session.customer_email ?? "").toLowerCase();
-    const name = String(cd.name ?? email.split("@")[0] ?? ", ");
+    const name = String(cd.name ?? email.split("@")[0] ?? "-");
     const product = String(md.product_name ?? "Order");
     const bookingDate = String(md.booking_date ?? "");
     const bookingSlot = String(md.booking_slot ?? "");

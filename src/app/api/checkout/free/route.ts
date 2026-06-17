@@ -168,8 +168,8 @@ export async function POST(request: Request) {
             "",
             `Name: ${customerName}`,
             `Email: ${customerEmail}`,
-            `Phone: ${customerPhone || ", "}`,
-            `Address: ${customerAddress || ", "}`,
+            `Phone: ${customerPhone || "-"}`,
+            `Address: ${customerAddress || "-"}`,
             `Date: ${bookedItem.bookingLabel || bookedItem.bookingDate}`,
             `Time Slot: ${bookedItem.bookingSlot}`,
           ].join("\n"),
@@ -177,8 +177,8 @@ export async function POST(request: Request) {
             <h2>New Free Consultation Booking</h2>
             <p><strong>Name:</strong> ${escapeHtml(customerName)}</p>
             <p><strong>Email:</strong> ${escapeHtml(customerEmail)}</p>
-            <p><strong>Phone:</strong> ${escapeHtml(customerPhone || ", ")}</p>
-            <p><strong>Address:</strong> ${escapeHtml(customerAddress || ", ")}</p>
+            <p><strong>Phone:</strong> ${escapeHtml(customerPhone || "-")}</p>
+            <p><strong>Address:</strong> ${escapeHtml(customerAddress || "-")}</p>
             <hr />
             <p><strong>Date:</strong> ${escapeHtml(bookedItem.bookingLabel || bookedItem.bookingDate || "")}</p>
             <p><strong>Time Slot:</strong> ${escapeHtml(bookedItem.bookingSlot || "")}</p>

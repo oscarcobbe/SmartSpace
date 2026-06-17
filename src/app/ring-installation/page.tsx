@@ -296,7 +296,7 @@ export default function RingInstallationPage() {
                 <div className="bg-gray-50 rounded-2xl p-6">
                   <div className="text-sm text-gray-500 mb-1">Total price</div>
                   <div className="text-3xl font-extrabold text-[#1a1a1a]">
-                    {price ? formatPrice(price.amount, price.currencyCode) : ", "}
+                    {price ? formatPrice(price.amount, price.currencyCode) : "Quote required"}
                   </div>
                   <div className="text-xs text-gray-500 mt-1">Professional installation included</div>
                 </div>
