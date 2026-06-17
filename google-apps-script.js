@@ -16,6 +16,7 @@ var COLUMNS = [
   { key: "type",          label: "Type",          width: 140 },
   { key: "name",          label: "Name",          width: 160 },
   { key: "email",         label: "Email",         width: 220 },
+  { key: "gclid",         label: "GCLID",         width: 200 },
   { key: "phone",         label: "Phone",         width: 140 },
   { key: "address",       label: "Address",       width: 250 },
   { key: "product",       label: "Product",       width: 200 },
@@ -27,8 +28,9 @@ var COLUMNS = [
   { key: "source",        label: "Source",        width: 120 },
   { key: "notes",         label: "Notes",         width: 250 },
   { key: "status",        label: "Status",        width: 100 },
-  { key: "gclid",         label: "GCLID",         width: 200 },
-  // Attribution columns (added 2026-04-23):
+  // Attribution columns (added 2026-04-23). GCLID moved up next to the
+  // contact details (after Email, before Phone) on 2026-06-17 so the
+  // came-from-an-ad signal sits beside the lead, not out past the notes.
   { key: "landingPage",   label: "Landing Page",  width: 200 },
   { key: "referrer",      label: "Referrer",      width: 180 },
   { key: "utmSource",     label: "UTM Source",    width: 120 },
@@ -88,6 +90,45 @@ function setupHeaders() {
     .whenTextEqualTo("New").setBackground("#e2e3e5").setFontColor("#383d41")
     .setRanges([sheet.getRange(statusRangeA1)]).build());
   sheet.setConditionalFormatRules(rules);
+}
+
+/**
+ * ONE-TIME migration — run ONCE from the Apps Script editor after pasting
+ * this updated file (select `migrateGclidColumn` in the function dropdown,
+ * click Run). It physically moves the existing GCLID column so it sits
+ * between Email and Phone, carrying all its existing data with it, so old
+ * rows stay aligned with the new column order above.
+ *
+ * Do NOT use setupHeaders() for this — that only rewrites the header labels
+ * by position and would leave the existing GCLID data stranded under the
+ * wrong heading. This function moves the whole column (header + data).
+ *
+ * Idempotent: safe to re-run; does nothing if GCLID is already in place.
+ *
+ * AFTER running it, redeploy the web app so new rows are written in the
+ * matching order: Deploy > Manage deployments > (edit, pencil icon) >
+ * Version: New version > Deploy. The webhook URL does not change.
+ */
+function migrateGclidColumn() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Leads") || ss.getActiveSheet();
+  var lastCol = sheet.getLastColumn();
+  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  var gclidCol = headers.indexOf("GCLID") + 1; // 1-based; 0 means not found
+  var phoneCol = headers.indexOf("Phone") + 1;
+  if (gclidCol === 0 || phoneCol === 0) {
+    throw new Error("Could not find a 'GCLID' and/or 'Phone' header in row 1. Check the header labels.");
+  }
+  if (gclidCol === phoneCol - 1) {
+    Logger.log("GCLID is already directly before Phone (column " + gclidCol + "). Nothing to do.");
+    return;
+  }
+  // Current real layout has GCLID to the RIGHT of Phone (e.g. col 16 vs 5).
+  // Moving that column to Phone's index drops it in just before Phone, and
+  // Phone (plus everything between) shifts one to the right.
+  var gclidRange = sheet.getRange(1, gclidCol, sheet.getMaxRows(), 1);
+  sheet.moveColumns(gclidRange, phoneCol);
+  Logger.log("Moved GCLID from column " + gclidCol + " to before Phone (column " + phoneCol + ").");
 }
 
 function doPost(e) {
