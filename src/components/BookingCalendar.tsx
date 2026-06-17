@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Calendar, Clock, ChevronLeft, ChevronRight, AlertCircle, Timer } from "lucide-react";
 import { useCart } from "@/context/CartContext";
-import { getEarliestBookableDate } from "@/lib/calendly";
+import { getEarliestBookableDate, isDateBlocked } from "@/lib/calendly";
 
 const AVAILABLE_DAYS = [1, 2, 3, 4]; // Mon-Thu — Friday blocked sitewide (2026-06-02)
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -42,7 +42,9 @@ function getAvailableDates(leadDays: number): Date[] {
   for (let i = 0; i <= 49; i++) {
     const date = new Date(start);
     date.setDate(start.getDate() + i);
-    if (AVAILABLE_DAYS.includes(date.getDay())) {
+    // Exclude both the weekly day-of-week block (Mon-Thu only) and any
+    // sitewide blackout range (holidays / close-downs) in lib/calendly.ts.
+    if (AVAILABLE_DAYS.includes(date.getDay()) && !isDateBlocked(date)) {
       dates.push(date);
     }
   }

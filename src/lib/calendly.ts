@@ -19,6 +19,45 @@ export const TIME_SLOTS = [
 export const AVAILABLE_DAYS = [1, 2, 3, 4];
 
 /**
+ * Sitewide calendar blackout ranges (inclusive, YYYY-MM-DD, Dublin dates).
+ * No bookings of ANY kind (consultation or installation) are offered on
+ * these dates, regardless of what Calendly reports as available. Used by
+ * the booking calendar UI, the availability API, and booking creation, so
+ * a blocked date can't be reached from the UI or by a crafted request.
+ *
+ * To lift a block, delete its entry. To add a holiday/close-down, add a
+ * range. Ranges are inclusive of both start and end.
+ */
+export interface BlockedDateRange {
+  start: string; // YYYY-MM-DD, inclusive
+  end: string; // YYYY-MM-DD, inclusive
+  reason: string;
+}
+export const BLOCKED_DATE_RANGES: BlockedDateRange[] = [
+  // Added 2026-06-17: full close-down, no bookings 9–20 July 2026 inclusive.
+  { start: "2026-07-09", end: "2026-07-20", reason: "Closed 9-20 July 2026" },
+];
+
+/**
+ * Is this date inside any sitewide blackout range? Accepts a YYYY-MM-DD
+ * string (as the API passes) or a Date (as the client calendar passes,
+ * compared by its local Y/M/D so it matches the displayed day). ISO date
+ * strings compare correctly with >=/<= because the format is lexicographic.
+ */
+export function isDateBlocked(date: string | Date): boolean {
+  let iso: string;
+  if (typeof date === "string") {
+    iso = date.slice(0, 10);
+  } else {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    iso = `${y}-${m}-${d}`;
+  }
+  return BLOCKED_DATE_RANGES.some((r) => iso >= r.start && iso <= r.end);
+}
+
+/**
  * Earliest bookable date = today + N working days, counted Mon-Fri.
  *
  * Note: this function counts Mon-Fri because that's the standard
@@ -61,6 +100,11 @@ function getEventTypeUri(kind: EventKind): string | undefined {
  * Maps Calendly's available start times back to our fixed TIME_SLOTS.
  */
 export async function getAvailableSlots(dateStr: string, kind: EventKind = "installation"): Promise<typeof TIME_SLOTS> {
+  // Sitewide calendar blackout — return no slots on blocked dates without
+  // even calling Calendly. Covers both the availability API and the reserve
+  // re-check, since both go through here.
+  if (isDateBlocked(dateStr)) return [];
+
   const eventTypeUri = getEventTypeUri(kind);
 
   if (!CALENDLY_TOKEN || !eventTypeUri) {
@@ -143,6 +187,14 @@ export async function createBookingEvent(params: {
   kind?: EventKind;
 }): Promise<{ eventId: string } | null> {
   const kind = params.kind ?? "installation";
+
+  // Sitewide calendar blackout — refuse to create a booking on a blocked
+  // date even if a request bypasses the UI + availability/reserve checks.
+  if (isDateBlocked(params.date)) {
+    console.error(`[calendly] Refusing booking on blocked date ${params.date}`);
+    return null;
+  }
+
   const eventTypeUri = getEventTypeUri(kind);
 
   if (!CALENDLY_TOKEN || !eventTypeUri) {

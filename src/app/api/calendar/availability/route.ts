@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAvailableSlots, AVAILABLE_DAYS } from "@/lib/calendly";
+import { getAvailableSlots, AVAILABLE_DAYS, isDateBlocked } from "@/lib/calendly";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +15,11 @@ export async function GET(request: Request) {
   // Check the date is a valid available day (Mon-Thu; Friday blocked sitewide)
   const dateObj = new Date(date + "T12:00:00");
   if (!AVAILABLE_DAYS.includes(dateObj.getDay())) {
+    return NextResponse.json({ slots: [] });
+  }
+
+  // Sitewide calendar blackout (holiday / close-down range)
+  if (isDateBlocked(date)) {
     return NextResponse.json({ slots: [] });
   }
 
