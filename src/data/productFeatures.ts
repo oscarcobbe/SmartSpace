@@ -59,6 +59,45 @@ const featuresByHandle: Record<string, ProductFeatureSet> = {
       "Weather Rating": "IP65",
     },
   },
+  "eufy-driveway-bundle": {
+    shortDescription:
+      "Video Doorbell E340 at the door plus a Floodlight Cam E340 on the drive, recording locally to an S380 HomeBase. Front door and driveway covered together, no monthly subscription.",
+    highlights: [
+      "Video Doorbell E340",
+      "Floodlight Cam E340",
+      "S380 HomeBase for local storage",
+      "Driveway / Garden coverage",
+      "No monthly subscription",
+      "Supplied and professionally installed",
+    ],
+    specs: {},
+  },
+  "eufy-whole-home-bundle": {
+    shortDescription:
+      "Video Doorbell E340 plus two Floodlight Cams, front and rear, on an S380 HomeBase. Whole-perimeter coverage in one visit, no monthly subscription.",
+    highlights: [
+      "Video Doorbell E340",
+      "Two Floodlight Cams (front and rear)",
+      "S380 HomeBase for local storage",
+      "Whole-perimeter coverage",
+      "No monthly subscription",
+      "Supplied and professionally installed",
+    ],
+    specs: {},
+  },
+  "eufy-eldercare-bundle": {
+    shortDescription:
+      "Video Doorbell E340 with a loud plug-in Chime and the S380 HomeBase. The Chime rings indoors with no phone needed, and everything records at home. Built for older relatives.",
+    highlights: [
+      "Video Doorbell E340",
+      "Loud plug-in indoor Chime",
+      "S380 HomeBase for local storage",
+      "No phone needed to hear the door",
+      "No monthly subscription",
+      "Supplied and professionally installed",
+    ],
+    specs: {},
+  },
   // ── New lineup: Video Doorbells ──
   "plus-video-doorbell": {
     // All specs below match Ring's official product page (Wired Video

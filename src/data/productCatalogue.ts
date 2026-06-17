@@ -4146,5 +4146,140 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
         }
       ]
     }
+  },
+  {
+    "id": "gid://smart-space/Product/eufy-driveway-bundle",
+    "title": "Eufy Driveway / Garden Bundle",
+    "handle": "eufy-driveway-bundle",
+    "description": "Eufy Driveway / Garden Bundle. The Video Doorbell E340 at the front door plus a Floodlight Cam E340 on the drive, recording locally to an S380 HomeBase. Front door and the most-used approach to the house covered together. Supplied and professionally installed, no monthly subscription.",
+    "descriptionHtml": "<p>Eufy Driveway / Garden Bundle. The Video Doorbell E340 at the front door plus a Floodlight Cam E340 on the drive, recording locally to an S380 HomeBase. Front door and the most-used approach to the house covered together. Supplied and professionally installed, no monthly subscription.</p>",
+    "productType": "Bundle",
+    "tags": ["Bundle", "Eufy"],
+    "priceRange": {
+      "minVariantPrice": { "amount": "853.0", "currencyCode": "EUR" },
+      "maxVariantPrice": { "amount": "1013.0", "currencyCode": "EUR" }
+    },
+    "compareAtPriceRange": {
+      "minVariantPrice": { "amount": "0.0", "currencyCode": "EUR" },
+      "maxVariantPrice": { "amount": "0.0", "currencyCode": "EUR" }
+    },
+    "options": [
+      { "name": "Choose A Power Option", "values": ["Existing doorbell power", "New power feed required"] }
+    ],
+    "images": { "edges": [] },
+    "variants": {
+      "edges": [
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/eufy-driveway-existing",
+            "title": "Existing doorbell power",
+            "availableForSale": true,
+            "price": { "amount": "853.0", "currencyCode": "EUR" },
+            "compareAtPrice": null,
+            "selectedOptions": [ { "name": "Choose A Power Option", "value": "Existing doorbell power" } ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/eufy-driveway-newfeed",
+            "title": "New power feed required",
+            "availableForSale": true,
+            "price": { "amount": "1013.0", "currencyCode": "EUR" },
+            "compareAtPrice": null,
+            "selectedOptions": [ { "name": "Choose A Power Option", "value": "New power feed required" } ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "gid://smart-space/Product/eufy-whole-home-bundle",
+    "title": "Eufy Whole Home Bundle",
+    "handle": "eufy-whole-home-bundle",
+    "description": "Eufy Whole Home Bundle. The Video Doorbell E340 plus two Floodlight Cams (front and rear) recording locally to an S380 HomeBase, for whole-perimeter coverage in one visit. Supplied and professionally installed, no monthly subscription.",
+    "descriptionHtml": "<p>Eufy Whole Home Bundle. The Video Doorbell E340 plus two Floodlight Cams (front and rear) recording locally to an S380 HomeBase, for whole-perimeter coverage in one visit. Supplied and professionally installed, no monthly subscription.</p>",
+    "productType": "Bundle",
+    "tags": ["Bundle", "Eufy"],
+    "priceRange": {
+      "minVariantPrice": { "amount": "1198.0", "currencyCode": "EUR" },
+      "maxVariantPrice": { "amount": "1428.0", "currencyCode": "EUR" }
+    },
+    "compareAtPriceRange": {
+      "minVariantPrice": { "amount": "0.0", "currencyCode": "EUR" },
+      "maxVariantPrice": { "amount": "0.0", "currencyCode": "EUR" }
+    },
+    "options": [
+      { "name": "Choose A Power Option", "values": ["Existing doorbell power", "New power feed required"] }
+    ],
+    "images": { "edges": [] },
+    "variants": {
+      "edges": [
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/eufy-wholehome-existing",
+            "title": "Existing doorbell power",
+            "availableForSale": true,
+            "price": { "amount": "1198.0", "currencyCode": "EUR" },
+            "compareAtPrice": null,
+            "selectedOptions": [ { "name": "Choose A Power Option", "value": "Existing doorbell power" } ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/eufy-wholehome-newfeed",
+            "title": "New power feed required",
+            "availableForSale": true,
+            "price": { "amount": "1428.0", "currencyCode": "EUR" },
+            "compareAtPrice": null,
+            "selectedOptions": [ { "name": "Choose A Power Option", "value": "New power feed required" } ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "gid://smart-space/Product/eufy-eldercare-bundle",
+    "title": "Eufy Eldercare Bundle",
+    "handle": "eufy-eldercare-bundle",
+    "description": "Eufy Eldercare Bundle. The Video Doorbell E340 with a plug-in Chime and the S380 HomeBase, set up to be as simple as possible: the Chime rings loudly indoors with no phone needed, and everything records at home. Built for older relatives and the family who help them. Supplied and professionally installed, no monthly subscription.",
+    "descriptionHtml": "<p>Eufy Eldercare Bundle. The Video Doorbell E340 with a plug-in Chime and the S380 HomeBase, set up to be as simple as possible: the Chime rings loudly indoors with no phone needed, and everything records at home. Built for older relatives and the family who help them. Supplied and professionally installed, no monthly subscription.</p>",
+    "productType": "Bundle",
+    "tags": ["Bundle", "Eufy"],
+    "priceRange": {
+      "minVariantPrice": { "amount": "519.0", "currencyCode": "EUR" },
+      "maxVariantPrice": { "amount": "609.0", "currencyCode": "EUR" }
+    },
+    "compareAtPriceRange": {
+      "minVariantPrice": { "amount": "0.0", "currencyCode": "EUR" },
+      "maxVariantPrice": { "amount": "0.0", "currencyCode": "EUR" }
+    },
+    "options": [
+      { "name": "Choose A Power Option", "values": ["Existing doorbell power", "New power feed required"] }
+    ],
+    "images": { "edges": [] },
+    "variants": {
+      "edges": [
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/eufy-eldercare-existing",
+            "title": "Existing doorbell power",
+            "availableForSale": true,
+            "price": { "amount": "519.0", "currencyCode": "EUR" },
+            "compareAtPrice": null,
+            "selectedOptions": [ { "name": "Choose A Power Option", "value": "Existing doorbell power" } ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/eufy-eldercare-newfeed",
+            "title": "New power feed required",
+            "availableForSale": true,
+            "price": { "amount": "609.0", "currencyCode": "EUR" },
+            "compareAtPrice": null,
+            "selectedOptions": [ { "name": "Choose A Power Option", "value": "New power feed required" } ]
+          }
+        }
+      ]
+    }
   }
 ];

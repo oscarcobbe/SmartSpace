@@ -26,6 +26,7 @@ const bundles = [
     name: "Driveway / Garden Bundle",
     tagline: "Front door and driveway, fully covered.",
     image: "/products/eufy-bundle-driveway.png",
+    href: "/services/eufy-driveway-bundle",
     price: 853,
     features: [
       "Video Doorbell E340 at the door plus a Floodlight Cam on the drive",
@@ -38,6 +39,7 @@ const bundles = [
     name: "Whole Home Bundle",
     tagline: "Front, drive and rear. The full perimeter.",
     image: "/products/eufy-bundle-wholehome.png",
+    href: "/services/eufy-whole-home-bundle",
     price: 1198,
     features: [
       "Video Doorbell E340 plus two Floodlight Cams (front and rear)",
@@ -50,6 +52,7 @@ const bundles = [
     name: "Eldercare Bundle",
     tagline: "A loud plug-in chime indoors, with everything stored locally.",
     image: "/products/eufy-eldercare-bundle.png",
+    href: "/services/eufy-eldercare-bundle",
     price: 519,
     features: [
       "Video Doorbell E340 with a plug-in Chime and the S380 HomeBase",
@@ -131,8 +134,8 @@ export default function EufyBundlesPage() {
                       <span className="text-2xl font-extrabold text-gray-900">From €{b.price.toLocaleString("en-IE")}</span>
                       <span className="text-xs text-gray-400 font-medium">supplied + installed</span>
                     </div>
-                    <Link href="/services/free-consultation" className="inline-flex w-full items-center justify-center gap-2 bg-[#005d8e] hover:bg-[#004c75] text-white font-semibold text-sm rounded-xl px-5 py-3 transition-colors">
-                      Book Free Consultation <ArrowRight className="h-4 w-4" />
+                    <Link href={b.href} className="inline-flex w-full items-center justify-center gap-2 bg-[#005d8e] hover:bg-[#004c75] text-white font-semibold text-sm rounded-xl px-5 py-3 transition-colors">
+                      Configure Bundle <ArrowRight className="h-4 w-4" />
                     </Link>
                   </div>
                 </div>

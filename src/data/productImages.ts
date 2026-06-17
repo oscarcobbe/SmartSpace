@@ -22,6 +22,9 @@ export const ringStockImages: Record<string, string> = {
   // Eufy single products (blue ProductHero flow, /services/eufy-*)
   "eufy-video-doorbell-e340": "/products/eufy-doorbell-e340.png",
   "eufy-floodlight-cam-e340": "/products/eufy-floodlight-e340.png",
+  "eufy-driveway-bundle": "/products/eufy-bundle-driveway.png",
+  "eufy-whole-home-bundle": "/products/eufy-bundle-wholehome.png",
+  "eufy-eldercare-bundle": "/products/eufy-eldercare-bundle.png",
 
   // Eldercare
   "eldercare-security-bundle": "/products/eldercare-bundle.png",

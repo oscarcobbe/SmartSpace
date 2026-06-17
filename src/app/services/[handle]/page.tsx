@@ -21,6 +21,9 @@ const CURATED_HANDLES = [
   "eldercare-security-bundle",
   "eufy-video-doorbell-e340",
   "eufy-floodlight-cam-e340",
+  "eufy-driveway-bundle",
+  "eufy-whole-home-bundle",
+  "eufy-eldercare-bundle",
 ];
 
 export function generateStaticParams() {
@@ -107,13 +110,16 @@ export default async function ServiceDetailPage({ params }: { params: { handle: 
     : categoryBreadcrumbs[product.productType] ?? null;
 
   const curatedSet = new Set(CURATED_HANDLES);
-  const relatedProducts = all
-    .filter((r) => r.productType === product.productType && r.handle !== product.handle)
-    .filter((r) => curatedSet.has(r.handle))
-    // Keep related products within the same brand so Ring never shows on a
-    // Eufy page (and vice-versa).
-    .filter((r) => r.tags.includes("Eufy") === isEufy)
-    .slice(0, 4);
+  // Eufy pages skip "related" entirely (ProductCard is orange/Ring-themed, so
+  // it would clash on a blue page). Ring pages exclude any Eufy product so the
+  // two brands never cross-show.
+  const relatedProducts = isEufy
+    ? []
+    : all
+        .filter((r) => r.productType === product.productType && r.handle !== product.handle)
+        .filter((r) => curatedSet.has(r.handle))
+        .filter((r) => !r.tags.includes("Eufy"))
+        .slice(0, 4);
 
   // Service JSON-LD schema
   const serviceSchema = {

@@ -39,6 +39,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/services/eldercare-security-bundle`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE}/services/eufy-video-doorbell-e340`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE}/services/eufy-floodlight-cam-e340`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE}/services/eufy-driveway-bundle`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE}/services/eufy-whole-home-bundle`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE}/services/eufy-eldercare-bundle`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
 
     // Local SEO, county index plus the 4 highest-volume county detail
     // pages (Dublin, Wicklow, Kildare, Meath). Each detail page targets
