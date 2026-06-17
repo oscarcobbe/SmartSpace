@@ -41,8 +41,13 @@ var COLUMNS = [
 ];
 
 function setupHeaders() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  sheet.setName("Leads");
+  // Operate on the existing "Leads" tab if there is one; only fall back to
+  // the active sheet for a brand-new spreadsheet. Renaming the active sheet
+  // to "Leads" when a "Leads" tab already exists throws
+  // ("A sheet with the name 'Leads' already exists") — this guard avoids it.
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Leads") || ss.getActiveSheet();
+  if (sheet.getName() !== "Leads") sheet.setName("Leads");
 
   var headers = COLUMNS.map(function (c) { return c.label; });
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
@@ -665,4 +670,78 @@ function totalRevenueFromAds() {
 
   Logger.log("TOTAL made from Google Ads customers (gclid present): EUR " + round2_(adsTotal) + " across " + adsCount + " order(s).");
   Logger.log("(For comparison — no gclid / organic+other: EUR " + round2_(otherTotal) + " across " + otherCount + " order(s).)");
+}
+
+// Canonical OLD column order (before GCLID was moved). The existing DATA in
+// the sheet is still in this order, because the column was never physically
+// moved — only the header labels were relabelled by setupHeaders.
+var OLD_COLUMN_ORDER = ["Date","Type","Name","Email","Phone","Address","Product","Amount","Currency","Booking Date","Booking Slot","Order ID","Source","Notes","Status","GCLID","Landing Page","Referrer","UTM Source","UTM Medium","UTM Campaign","UTM Content","UTM Term"];
+
+/**
+ * Repair the Leads sheet after a setupHeaders() relabel left the columns
+ * misaligned (GCLID data showing under the "Status" label). The DATA was
+ * never moved, so it is still in OLD_COLUMN_ORDER (GCLID in column 16).
+ * This:
+ *   1. Verifies that layout BY CONTENT, so it can't corrupt a sheet that's
+ *      in a different state (aborts with a clear message if unexpected).
+ *   2. Rewrites row 1 to the original labels so headers match the data.
+ *   3. Moves the GCLID column (header + data together) to between Email and
+ *      Phone — the intended final order.
+ *   4. Re-applies the header formatting.
+ *
+ * Run once: pick repairLeadsSheet > Run. AFTER it succeeds, redeploy the web
+ * app (Deploy > Manage deployments > edit > New version) so doPost writes new
+ * rows in the same order. THEN re-run the report functions.
+ */
+function repairLeadsSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Leads");
+  if (!sheet) throw new Error("No 'Leads' tab found. Open the leads spreadsheet and run this again.");
+
+  var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
+  if (lastCol < OLD_COLUMN_ORDER.length) {
+    throw new Error("Only " + lastCol + " columns found; expected at least " + OLD_COLUMN_ORDER.length + ". Send a screenshot and I'll adjust.");
+  }
+
+  // Content sample (up to 50 rows) to identify columns by what they hold,
+  // not by the (currently unreliable) header labels.
+  var n = Math.max(0, Math.min(lastRow - 1, 50));
+  var sample = n > 0 ? sheet.getRange(2, 1, n, lastCol).getValues() : [];
+  function shareWith(col1, test) {
+    var hit = 0, tot = 0;
+    for (var i = 0; i < sample.length; i++) {
+      var v = String(sample[i][col1 - 1] || "").trim();
+      if (v) { tot++; if (test(v)) hit++; }
+    }
+    return tot === 0 ? -1 : hit / tot; // -1 = no data to judge
+  }
+  var emailCol = OLD_COLUMN_ORDER.indexOf("Email") + 1;  // 4
+  var gclidCol = OLD_COLUMN_ORDER.indexOf("GCLID") + 1;  // 16
+  var phoneCol = OLD_COLUMN_ORDER.indexOf("Phone") + 1;  // 5
+
+  var emailShare = shareWith(emailCol, function (v) { return v.indexOf("@") >= 0; });
+  var gclidNonId = shareWith(gclidCol, function (v) { return v.indexOf("@") >= 0 || v.length < 12; }); // short/@ = NOT a gclid
+
+  if (emailShare !== -1 && emailShare < 0.6) {
+    throw new Error("Stopped for safety: column " + emailCol + " doesn't look like Email (only " + Math.round(emailShare * 100) + "% have @). Send a screenshot and I'll adjust.");
+  }
+  if (gclidNonId > 0.5) {
+    throw new Error("Stopped for safety: column " + gclidCol + " doesn't look like GCLID (looks like short/email values). The sheet may already be realigned, or in a different state. Send a screenshot and I'll adjust.");
+  }
+
+  // 1. Restore OLD-order labels so headers line up with the unmoved data.
+  sheet.getRange(1, 1, 1, OLD_COLUMN_ORDER.length).setValues([OLD_COLUMN_ORDER]);
+
+  // 2. Move GCLID (col 16) to before Phone (col 5) — header + data together.
+  sheet.moveColumns(sheet.getRange(1, gclidCol, sheet.getMaxRows(), 1), phoneCol);
+
+  // 3. Re-apply header formatting.
+  var hdr = sheet.getRange(1, 1, 1, sheet.getLastColumn());
+  hdr.setFontWeight("bold").setBackground("#1a1a1a").setFontColor("#ffffff");
+  sheet.setFrozenRows(1);
+
+  Logger.log("Repaired. GCLID is now between Email and Phone, aligned with its data. " +
+             "Check: the GCLID column should show click IDs (or be blank), and Phone should show phone numbers. " +
+             "Now redeploy the web app (Manage deployments > New version), then re-run the reports.");
 }
