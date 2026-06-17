@@ -252,6 +252,16 @@ export async function GET(request: Request) {
           if (!sentinel.test(body)) {
             return `page returned 200 but expected content (${sentinel.source}) not found in first 16KB`;
           }
+          // Negative check: broken-render markers that should never appear on a
+          // live page. Catches the class of bug where a mechanical edit shipped
+          // a stray placeholder or an em-dash into rendered output. The em-dash
+          // is built via String.fromCharCode so this source stays em-dash-free.
+          const EM_DASH = String.fromCharCode(0x2014);
+          const broken =
+            body.includes("[object Object]") ||
+            body.includes(EM_DASH) ||
+            />\s*undefined\s*<|>\s*NaN\s*</.test(body);
+          if (broken) return "page contains a broken-render marker (object Object, em-dash, undefined or NaN)";
           return null;
         }
       )

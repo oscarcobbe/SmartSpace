@@ -7,9 +7,10 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/guard-strings.mjs && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "check:strings": "node scripts/guard-strings.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.577.0",
