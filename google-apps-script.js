@@ -408,3 +408,113 @@ function doGet(e) {
     .createTextOutput(JSON.stringify({ rows: rows, count: rows.length }))
     .setMimeType(ContentService.MimeType.JSON);
 }
+
+/**
+ * Week-on-week order value: Google Ads vs Organic.
+ *
+ * Run from the Apps Script editor (pick `buildAdsVsOrganicWeekly` > Run).
+ * Reads the Leads sheet, takes "Paid Order" rows (the only rows with real
+ * order value), and splits them by whether the GCLID column is filled:
+ *   - GCLID present  -> the customer arrived via a Google Ad   ("Ads")
+ *   - GCLID blank    -> organic / direct / Maps / referral      ("Organic")
+ * Buckets by week (Monday-Sunday, Dublin time) and writes a refreshable
+ * tab "Ads vs Organic (weekly)" with a line chart. Safe to re-run; it
+ * rebuilds the tab each time.
+ *
+ * Attribution caveats (worth knowing when reading the numbers):
+ *   - GCLID is captured on the ad click and kept for ~90 days, so an order
+ *     counts as "Ads" if the buyer clicked a Google ad any time in the
+ *     prior 90 days on that device. It is last-known ad attribution.
+ *   - If the GCLID didn't survive the journey into Stripe checkout, an
+ *     ad-driven order can look Organic. So "Ads" here is a LOWER BOUND on
+ *     ad-influenced revenue; Google Ads' own conversion count may differ.
+ */
+function buildAdsVsOrganicWeekly() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Leads") || ss.getActiveSheet();
+  var data = sheet.getDataRange().getValues();
+  if (data.length < 2) { Logger.log("No data rows."); return; }
+
+  var headers = data[0];
+  function col(label) {
+    var i = headers.indexOf(label);
+    if (i < 0) throw new Error("Missing column header: " + label);
+    return i;
+  }
+  // Look up by header name so this keeps working regardless of column order.
+  var cType = col("Type"), cAmount = col("Amount"), cGclid = col("GCLID"), cDate = col("Date");
+
+  var weeks = {}; // 'yyyy-MM-dd' (Monday) -> {adsN, adsV, orgN, orgV}
+  for (var r = 1; r < data.length; r++) {
+    var row = data[r];
+    if (String(row[cType]).trim() !== "Paid Order") continue;
+    var amt = parseFloat(String(row[cAmount]).replace(/[^0-9.\-]/g, "")) || 0;
+    if (amt <= 0) continue;
+    var d = parseSheetDate_(row[cDate]);
+    if (!d) continue;
+    var monday = mondayOf_(d);
+    var key = Utilities.formatDate(monday, "Europe/Dublin", "yyyy-MM-dd");
+    if (!weeks[key]) weeks[key] = { adsN: 0, adsV: 0, orgN: 0, orgV: 0 };
+    if (String(row[cGclid]).trim() !== "") { weeks[key].adsN++; weeks[key].adsV += amt; }
+    else { weeks[key].orgN++; weeks[key].orgV += amt; }
+  }
+
+  var keys = Object.keys(weeks).sort();
+  var out = [["Week starting", "Ads orders", "Ads value (EUR)", "Organic orders", "Organic value (EUR)", "Total value (EUR)", "Ads % of value"]];
+  var tA = 0, tAv = 0, tO = 0, tOv = 0;
+  keys.forEach(function (k) {
+    var w = weeks[k];
+    var tot = w.adsV + w.orgV;
+    out.push([k, w.adsN, round2_(w.adsV), w.orgN, round2_(w.orgV), round2_(tot), tot ? Math.round(w.adsV / tot * 100) + "%" : "0%"]);
+    tA += w.adsN; tAv += w.adsV; tO += w.orgN; tOv += w.orgV;
+  });
+  var grand = tAv + tOv;
+  out.push(["TOTAL", tA, round2_(tAv), tO, round2_(tOv), round2_(grand), grand ? Math.round(tAv / grand * 100) + "%" : "0%"]);
+
+  var name = "Ads vs Organic (weekly)";
+  var rep = ss.getSheetByName(name);
+  if (rep) { rep.clear(); rep.getCharts().forEach(function (c) { rep.removeChart(c); }); }
+  else { rep = ss.insertSheet(name); }
+
+  rep.getRange(1, 1, out.length, out[0].length).setValues(out);
+  rep.getRange(1, 1, 1, out[0].length).setFontWeight("bold").setBackground("#1a1a1a").setFontColor("#ffffff");
+  rep.getRange(out.length, 1, 1, out[0].length).setFontWeight("bold").setBackground("#fef4eb");
+  rep.setFrozenRows(1);
+  [140, 90, 130, 110, 150, 140, 110].forEach(function (wd, i) { rep.setColumnWidth(i + 1, wd); });
+
+  // Line chart: Ads value vs Organic value per week (exclude the TOTAL row).
+  if (keys.length >= 1) {
+    var chart = rep.newChart()
+      .asLineChart()
+      .addRange(rep.getRange(1, 1, keys.length + 1, 1))   // Week starting
+      .addRange(rep.getRange(1, 3, keys.length + 1, 1))   // Ads value
+      .addRange(rep.getRange(1, 5, keys.length + 1, 1))   // Organic value
+      .setMergeStrategy(Charts.ChartMergeStrategy.MERGE_COLUMNS)
+      .setNumHeaders(1)
+      .setOption("title", "Order value per week: Google Ads vs Organic (EUR)")
+      .setOption("legend", { position: "bottom" })
+      .setOption("colors", ["#f48222", "#1C1A18"])
+      .setPosition(2, out[0].length + 2, 0, 0)
+      .build();
+    rep.insertChart(chart);
+  }
+  Logger.log("Built '" + name + "' across " + keys.length + " week(s). Ads EUR " + round2_(tAv) + " vs Organic EUR " + round2_(tOv) + ".");
+}
+
+function parseSheetDate_(v) {
+  if (Object.prototype.toString.call(v) === "[object Date]") return v;
+  var s = String(v).trim();
+  var m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/); // doPost writes dd/MM/yyyy HH:mm
+  if (m) return new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10));
+  var d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function mondayOf_(d) {
+  var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  var day = x.getDay();              // 0 Sun .. 6 Sat
+  x.setDate(x.getDate() + (day === 0 ? -6 : 1 - day)); // back to Monday
+  return x;
+}
+
+function round2_(n) { return Math.round(n * 100) / 100; }
