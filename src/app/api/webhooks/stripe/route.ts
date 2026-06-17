@@ -164,6 +164,12 @@ async function sendOrderNotification(params: {
     const amountSafe = escapeHtml(formattedAmount);
     const dateSafe = escapeHtml(dateLabel);
     const slotSafe = escapeHtml(slotLabel);
+    // Brand-aware tagline: Eufy buyers shouldn't see "Ring installer" in their
+    // order confirmation. Ring (and anything else) keeps the standard line.
+    const isEufyOrder = /eufy/i.test(params.productName || "");
+    const brandTagline = isEufyOrder
+      ? "Dublin's trusted smart security installer."
+      : "Dublin's #1 Ring installer.";
     // Trim product name for subject line so it stays under common
     // inbox preview widths (~60 chars after the "Order confirmed..."
     // prefix consumes ~30).
@@ -300,7 +306,7 @@ async function sendOrderNotification(params: {
           <tr>
             <td valign="top" style="padding-right:16px;">
               <div style="font-weight:800;color:#ffffff;font-size:14px;letter-spacing:0.4px;margin-bottom:8px;">Smart Space</div>
-              <div>Dublin's #1 Ring installer.</div>
+              <div>${brandTagline}</div>
               <div>5,000+ installs across Leinster.</div>
             </td>
             <td valign="top" style="padding-left:16px;text-align:right;">
