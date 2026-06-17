@@ -520,21 +520,35 @@ function mondayOf_(d) {
 function round2_(n) { return Math.round(n * 100) / 100; }
 
 /**
- * Week-on-week LEAD COUNT: Google Ads vs Organic.
+ * Week-on-week LEADS + ESTIMATED VALUE: Google Ads vs Organic.
  *
  * Companion to buildAdsVsOrganicWeekly. Most installer sales close offline
- * (no Stripe "Paid Order" row), so order VALUE is often empty — this counts
- * inbound LEADS instead, which the sheet captures in full. A lead is any row
- * whose Type is in LEAD_TYPES below; split by GCLID present (Google Ads) vs
- * blank (organic/direct), bucketed by week (Mon-Sun, Dublin).
+ * (no Stripe "Paid Order" row), so real order VALUE is mostly empty — this
+ * counts inbound LEADS and attaches an ESTIMATED euro value so you can put
+ * the weekly Ads number next to your weekly Google Ads spend.
+ *
+ * A lead is any row whose Type is in LEAD_TYPES; split by GCLID present
+ * (Google Ads) vs blank (organic/direct), bucketed by week (Mon-Sun, Dublin).
+ *
+ * VALUE per lead:
+ *   - A "Paid Order" row with a real Amount uses that actual Amount.
+ *   - Every other lead (consultation / enquiry) is valued at VALUE_PER_LEAD
+ *     below — an ESTIMATE you set. A sensible figure is:
+ *         average job value  ×  the share of leads that become paying jobs
+ *     e.g. avg job €350 × 40% close rate = €140 per lead.
+ *   EDIT VALUE_PER_LEAD to your real number before trusting the euro columns.
  *
  * Run from the editor: pick `buildAdsVsOrganicLeadsWeekly` > Run.
- * Writes a refreshable tab "Ads vs Organic leads (weekly)" with a chart.
+ * Writes a refreshable tab "Ads vs Organic leads (weekly)" with a value chart.
  *
- * Note: QR Scan and Booking Reminder rows are deliberately excluded — they
- * are passive/system events, never carry a GCLID, and are not inbound leads.
+ * Note: QR Scan and Booking Reminder rows are excluded — passive/system
+ * events, never carry a GCLID, not inbound leads.
  */
 var LEAD_TYPES = ["Free Consultation", "Contact Enquiry", "Paid Order", "Newsletter Signup"];
+
+// >>> SET THIS to what one lead is worth to you (avg job value × close rate).
+// Placeholder until you confirm your real number.
+var VALUE_PER_LEAD = 150;
 
 function buildAdsVsOrganicLeadsWeekly() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -548,33 +562,39 @@ function buildAdsVsOrganicLeadsWeekly() {
     if (i < 0) throw new Error("Missing column header: " + label);
     return i;
   }
-  var cType = col("Type"), cGclid = col("GCLID"), cDate = col("Date");
+  var cType = col("Type"), cGclid = col("GCLID"), cDate = col("Date"), cAmount = col("Amount");
   var leadSet = {};
   LEAD_TYPES.forEach(function (t) { leadSet[t] = true; });
 
-  var weeks = {}; // 'yyyy-MM-dd' (Monday) -> {ads, org}
+  var weeks = {}; // 'yyyy-MM-dd' (Monday) -> {ads, org, adsV, orgV}
   for (var r = 1; r < data.length; r++) {
     var row = data[r];
-    if (!leadSet[String(row[cType]).trim()]) continue;
+    var type = String(row[cType]).trim();
+    if (!leadSet[type]) continue;
     var d = parseSheetDate_(row[cDate]);
     if (!d) continue;
     var key = Utilities.formatDate(mondayOf_(d), "Europe/Dublin", "yyyy-MM-dd");
-    if (!weeks[key]) weeks[key] = { ads: 0, org: 0 };
-    if (String(row[cGclid]).trim() !== "") weeks[key].ads++;
-    else weeks[key].org++;
+    if (!weeks[key]) weeks[key] = { ads: 0, org: 0, adsV: 0, orgV: 0 };
+
+    // Real money where we have it (a paid Stripe order), else the estimate.
+    var amt = parseFloat(String(row[cAmount]).replace(/[^0-9.\-]/g, "")) || 0;
+    var val = (type === "Paid Order" && amt > 0) ? amt : VALUE_PER_LEAD;
+
+    if (String(row[cGclid]).trim() !== "") { weeks[key].ads++; weeks[key].adsV += val; }
+    else { weeks[key].org++; weeks[key].orgV += val; }
   }
 
   var keys = Object.keys(weeks).sort();
-  var out = [["Week starting", "Ads leads", "Organic leads", "Total leads", "Ads % of leads"]];
-  var tA = 0, tO = 0;
+  var out = [["Week starting", "Ads leads", "Organic leads", "Ads value (EUR)", "Organic value (EUR)", "Total value (EUR)", "Ads % of value"]];
+  var tA = 0, tO = 0, tAv = 0, tOv = 0;
   keys.forEach(function (k) {
     var w = weeks[k];
-    var tot = w.ads + w.org;
-    out.push([k, w.ads, w.org, tot, tot ? Math.round(w.ads / tot * 100) + "%" : "0%"]);
-    tA += w.ads; tO += w.org;
+    var totV = w.adsV + w.orgV;
+    out.push([k, w.ads, w.org, round2_(w.adsV), round2_(w.orgV), round2_(totV), totV ? Math.round(w.adsV / totV * 100) + "%" : "0%"]);
+    tA += w.ads; tO += w.org; tAv += w.adsV; tOv += w.orgV;
   });
-  var grand = tA + tO;
-  out.push(["TOTAL", tA, tO, grand, grand ? Math.round(tA / grand * 100) + "%" : "0%"]);
+  var grandV = tAv + tOv;
+  out.push(["TOTAL", tA, tO, round2_(tAv), round2_(tOv), round2_(grandV), grandV ? Math.round(tAv / grandV * 100) + "%" : "0%"]);
 
   var name = "Ads vs Organic leads (weekly)";
   var rep = ss.getSheetByName(name);
@@ -585,22 +605,27 @@ function buildAdsVsOrganicLeadsWeekly() {
   rep.getRange(1, 1, 1, out[0].length).setFontWeight("bold").setBackground("#1a1a1a").setFontColor("#ffffff");
   rep.getRange(out.length, 1, 1, out[0].length).setFontWeight("bold").setBackground("#fef4eb");
   rep.setFrozenRows(1);
-  [140, 90, 110, 90, 110].forEach(function (wd, i) { rep.setColumnWidth(i + 1, wd); });
+  [140, 90, 110, 130, 150, 140, 110].forEach(function (wd, i) { rep.setColumnWidth(i + 1, wd); });
 
+  // Note under the table so nobody mistakes the estimate for booked revenue.
+  rep.getRange(out.length + 2, 1).setValue("Estimated value = Paid Order rows use real Amount; all other leads valued at EUR " + VALUE_PER_LEAD + " each (edit VALUE_PER_LEAD in the script).");
+  rep.getRange(out.length + 2, 1).setFontColor("#888888").setFontStyle("italic");
+
+  // Value chart: Ads value vs Organic value per week (cols 4 and 5).
   if (keys.length >= 1) {
     var chart = rep.newChart()
       .asLineChart()
       .addRange(rep.getRange(1, 1, keys.length + 1, 1))   // Week starting
-      .addRange(rep.getRange(1, 2, keys.length + 1, 1))   // Ads leads
-      .addRange(rep.getRange(1, 3, keys.length + 1, 1))   // Organic leads
+      .addRange(rep.getRange(1, 4, keys.length + 1, 1))   // Ads value
+      .addRange(rep.getRange(1, 5, keys.length + 1, 1))   // Organic value
       .setMergeStrategy(Charts.ChartMergeStrategy.MERGE_COLUMNS)
       .setNumHeaders(1)
-      .setOption("title", "Leads per week: Google Ads vs Organic")
+      .setOption("title", "Estimated lead value per week: Google Ads vs Organic (EUR)")
       .setOption("legend", { position: "bottom" })
       .setOption("colors", ["#f48222", "#1C1A18"])
       .setPosition(2, out[0].length + 2, 0, 0)
       .build();
     rep.insertChart(chart);
   }
-  Logger.log("Built '" + name + "' across " + keys.length + " week(s). Ads " + tA + " vs Organic " + tO + " leads.");
+  Logger.log("Built '" + name + "' across " + keys.length + " week(s). Ads " + tA + " leads / EUR " + round2_(tAv) + " vs Organic " + tO + " leads / EUR " + round2_(tOv) + " (at EUR " + VALUE_PER_LEAD + "/lead).");
 }
