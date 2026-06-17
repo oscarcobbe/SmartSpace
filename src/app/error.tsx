@@ -3,7 +3,7 @@
 /**
  * Root error boundary. Renders for any uncaught error in any route
  * (server OR client) below the root layout. Without this file, an
- * unhandled throw shows Next.js's default unbranded error page — paid
+ * unhandled throw shows Next.js's default unbranded error page, paid
  * traffic that hits an error sees no recovery path, no contact info,
  * and bounces. With this file they get a branded fallback with a phone
  * tap-to-call (which still fires phone-conversion via PhoneClickTracker)
@@ -57,14 +57,14 @@ export default function GlobalError({
         body: payload,
         keepalive: true,
       }).catch((err) => {
-        // Best-effort — the user already sees the fallback UI. Logged so
+        // Best-effort, the user already sees the fallback UI. Logged so
         // a recurring failure (e.g. server down, CSP blocking) surfaces
         // in browser devtools rather than being completely invisible.
         console.warn("[error.tsx] failed to POST client-error alert:", err);
       });
     } catch {
       // JSON.stringify can throw on circular refs in obscure cases.
-      // Ignore — the GA4 'exception' event above is the backup signal.
+      // Ignore, the GA4 'exception' event above is the backup signal.
     }
   }, [error]);
 
@@ -78,7 +78,7 @@ export default function GlobalError({
           We hit a snag loading this page
         </h1>
         <p className="text-gray-600 mb-8 leading-relaxed">
-          Try again in a second. If it keeps happening, give us a call &mdash;
+          Try again in a second. If it keeps happening, give us a call, 
           we&apos;ll book your install over the phone in two minutes.
         </p>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">

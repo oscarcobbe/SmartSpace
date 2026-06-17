@@ -3,7 +3,7 @@ import Link from "next/link";
 
 const SITE = "https://smart-space.ie";
 
-// metadata (title/description/canonical) lives in layout.tsx — duplicate
+// metadata (title/description/canonical) lives in layout.tsx, duplicate
 // declaration here was being silently overridden anyway and risked
 // future drift. See src/app/services/single/layout.tsx.
 
@@ -67,7 +67,7 @@ export default function SingleDevicePage() {
             What would you like installed?
           </h1>
           <p className="text-gray-500 text-lg max-w-xl mx-auto">
-            Choose a Video Doorbell or External Camera — we supply and professionally install it.
+            Choose a Video Doorbell or External Camera, we supply and professionally install it.
           </p>
         </div>
 
@@ -126,7 +126,7 @@ export default function SingleDevicePage() {
             </p>
             <p>
               An External Floodlight Camera is the right choice when the area you
-              want covered isn&apos;t the front door — typically a driveway,
+              want covered isn&apos;t the front door, typically a driveway,
               side passage, rear garden, or shed. The Floodlight Cam doubles as
               your security light, so it usually replaces a separate PIR
               floodlight rather than adding to your fittings. Cameras also have

@@ -7,29 +7,29 @@ export const runtime = "nodejs";
 /**
  * Receives uncaught client-side errors from src/app/error.tsx (and any other
  * boundary that posts to this endpoint) and forwards them to Nigel via
- * sendSiteAlert. Heavy filtering — browsers throw a lot of garbage that is
+ * sendSiteAlert. Heavy filtering, browsers throw a lot of garbage that is
  * NOT a real Smart Space bug (ad-blocker race, extension injection, stale
  * deploy chunk-load, ResizeObserver loop bug, cross-origin "Script error.").
  *
  * Defence layers:
- *   1. Known-noise regex (NOISE_PATTERNS) — drop without alerting.
+ *   1. Known-noise regex (NOISE_PATTERNS), drop without alerting.
  *   2. sendSiteAlert dedup (1h per message+url).
  *   3. sendSiteAlert process rate-limit (10 emails per 15min).
  *
  * Body shape (all optional except `message`):
  *   { message, stack?, url?, userAgent?, digest? }
  *
- * Returns 200 always — alerts must not visibly fail in the user's browser.
+ * Returns 200 always, alerts must not visibly fail in the user's browser.
  */
 
 const NOISE_PATTERNS: RegExp[] = [
-  // Stale-deploy chunk loading — happens to users on the previous deploy
+  // Stale-deploy chunk loading, happens to users on the previous deploy
   // for ~1 minute after each Vercel release. Not a bug, will self-heal.
   /Loading chunk \d+ failed/i,
   /Failed to fetch dynamically imported module/i,
   /ChunkLoadError/i,
   /Loading CSS chunk/i,
-  // Cross-origin script errors are reported with no context — not actionable.
+  // Cross-origin script errors are reported with no context, not actionable.
   /^Script error\.?$/,
   // ResizeObserver browser-engine quirk, not a real failure.
   /ResizeObserver loop (limit exceeded|completed with undelivered notifications)/i,
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    // Malformed payload — drop silently. We don't want to alert on
+    // Malformed payload, drop silently. We don't want to alert on
     // every random POST a scanner makes against this endpoint.
     return NextResponse.json({ ok: false, reason: "invalid-json" }, { status: 400 });
   }

@@ -30,7 +30,7 @@ const serviceCategories = [
   },
   {
     title: "Whole Home Bundle",
-    description: "Video Doorbell + 2x Floodlights — complete home coverage.",
+    description: "Video Doorbell + 2x Floodlights, complete home coverage.",
     href: "/services/bundles/whole-home",
     filter: (p: ShopifyProduct) => p.handle === "pro-whole-home-bundle",
     staticImage: "/products/pro-wholehome-black-black.png",
@@ -53,7 +53,7 @@ const serviceCategories = [
 ];
 
 // Each child page Google should know about, in priority order. Powers
-// the ItemList schema below — gives Google a clear hierarchy of services
+// the ItemList schema below, gives Google a clear hierarchy of services
 // to consider for indexing + sitelinks treatment.
 const SERVICE_INDEX = [
   { name: "Video Doorbell Installation", url: `${SITE}/services/doorbell` },
@@ -61,6 +61,7 @@ const SERVICE_INDEX = [
   { name: "Driveway Bundle", url: `${SITE}/services/bundles/driveway` },
   { name: "Whole Home Bundle", url: `${SITE}/services/bundles/whole-home` },
   { name: "Eldercare Bundle", url: `${SITE}/services/bundles/eldercare` },
+  { name: "Other Brands (Eufy Supplied & Installed)", url: `${SITE}/services/other-brands` },
   { name: "Single Device Installation", url: `${SITE}/services/single` },
   { name: "Installation Only (Customer Device)", url: `${SITE}/services/installation-only` },
   { name: "Free Home Consultation", url: `${SITE}/services/free-consultation` },
@@ -107,6 +108,18 @@ export default async function ServicesPage() {
           </p>
         </div>
 
+        {/* Eufy entry pill, centred above the service grid. Text-only and
+            sized to its label (not full-width) so it reads as a neat pill,
+            in Eufy's brand blue (#005D8E) to set it apart from the Ring grid. */}
+        <div className="mb-10 flex justify-center">
+          <Link
+            href="/services/eufy"
+            className="inline-flex items-center justify-center bg-gradient-to-r from-[#0a6ea3] to-[#005d8e] hover:from-[#005d8e] hover:to-[#004c75] text-white font-bold text-sm sm:text-base px-7 py-3 rounded-full transition-all shadow-[0_10px_30px_-8px_rgba(0,93,142,0.5)] hover:shadow-[0_16px_45px_-8px_rgba(0,93,142,0.65)] hover:-translate-y-0.5"
+          >
+            Our Eufy Services
+          </Link>
+        </div>
+
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {serviceCategories.map((cat) => {
             const matchingProduct = products.find(cat.filter);
@@ -121,14 +134,14 @@ export default async function ServicesPage() {
                 href={cat.href}
                 className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow"
               >
-                <div className="relative bg-transparent aspect-[4/3] flex items-center justify-center p-4 overflow-hidden rounded-t-2xl">
+                <div className="relative bg-white aspect-[4/3] flex items-center justify-center p-6 overflow-hidden rounded-t-2xl border-b border-gray-100">
                   {image ? (
                     <Image
                       src={image}
                       alt={cat.title}
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      className={`${cat.imageClass || ""} object-cover rounded-xl group-hover:scale-105 transition-transform duration-300`}
+                      className={`${cat.imageClass || ""} object-contain group-hover:scale-105 transition-transform duration-300`}
                     />
                   ) : (
                     <div className="text-gray-300 text-sm">No image</div>
@@ -147,6 +160,7 @@ export default async function ServicesPage() {
             );
           })}
         </div>
+
       </div>
 
       {/* Complimentary consultation */}

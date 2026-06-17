@@ -7,7 +7,7 @@ import { fireServerConversion } from "@/lib/server-conversions";
 import { sendToCrm } from "@/lib/crm";
 import { alertTo } from "@/lib/business-constants";
 
-// POST routes are inherently dynamic but explicit is better — without
+// POST routes are inherently dynamic but explicit is better, without
 // this, Next.js may try static optimization on a future major.
 export const dynamic = "force-dynamic";
 
@@ -140,7 +140,7 @@ export async function POST(request: Request) {
         console.error(
           `[free-checkout] Calendly booking failed for ${customerEmail} on ${bookedItem.bookingDate} ${bookedItem.bookingSlot}`
         );
-        // No debug object in the response — was previously leaking the
+        // No debug object in the response, was previously leaking the
         // internal slot/date/kind to the client unnecessarily.
         return NextResponse.json(
           { error: "Failed to book your consultation. Please try again or contact us." },
@@ -162,14 +162,14 @@ export async function POST(request: Request) {
           from,
           to: [notifyTo],
           replyTo: customerEmail,
-          subject: `New Free Consultation Booking — ${customerName}`,
+          subject: `New Free Consultation Booking, ${customerName}`,
           text: [
             `New free consultation booked on smart-space.ie`,
             "",
             `Name: ${customerName}`,
             `Email: ${customerEmail}`,
-            `Phone: ${customerPhone || "—"}`,
-            `Address: ${customerAddress || "—"}`,
+            `Phone: ${customerPhone || ", "}`,
+            `Address: ${customerAddress || ", "}`,
             `Date: ${bookedItem.bookingLabel || bookedItem.bookingDate}`,
             `Time Slot: ${bookedItem.bookingSlot}`,
           ].join("\n"),
@@ -177,8 +177,8 @@ export async function POST(request: Request) {
             <h2>New Free Consultation Booking</h2>
             <p><strong>Name:</strong> ${escapeHtml(customerName)}</p>
             <p><strong>Email:</strong> ${escapeHtml(customerEmail)}</p>
-            <p><strong>Phone:</strong> ${escapeHtml(customerPhone || "—")}</p>
-            <p><strong>Address:</strong> ${escapeHtml(customerAddress || "—")}</p>
+            <p><strong>Phone:</strong> ${escapeHtml(customerPhone || ", ")}</p>
+            <p><strong>Address:</strong> ${escapeHtml(customerAddress || ", ")}</p>
             <hr />
             <p><strong>Date:</strong> ${escapeHtml(bookedItem.bookingLabel || bookedItem.bookingDate || "")}</p>
             <p><strong>Time Slot:</strong> ${escapeHtml(bookedItem.bookingSlot || "")}</p>
@@ -210,7 +210,7 @@ export async function POST(request: Request) {
     // close) so we double-fire from the server. Same pattern: shared
     // conversionId acts as transaction_id so Google Ads dedupes.
     const conversionId = randomUUID();
-    // .trim() — see src/app/api/contact/route.ts for the rationale.
+    // .trim(), see src/app/api/contact/route.ts for the rationale.
     const freeConsultLabel =
       (process.env.NEXT_PUBLIC_GADS_FREE_CONSULT_SEND_TO || "")
         .trim()
@@ -232,7 +232,7 @@ export async function POST(request: Request) {
     });
 
     // Mirror to SmartCRM (fire-and-forget; never blocks the response).
-    // Previously absent on this path — meant every free-consultation
+    // Previously absent on this path, meant every free-consultation
     // booking was invisible to the CRM, even though the contact form
     // and the paid booking endpoint both mirror correctly.
     void sendToCrm({

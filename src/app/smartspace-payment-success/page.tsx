@@ -8,7 +8,7 @@ import { CheckCircle, Home, Phone } from "lucide-react";
 // Conversion send_to values. Pulled from env so the user can fix in
 // Vercel without a code redeploy if a label changes (e.g. the conversion
 // is recreated in Google Ads). Falls back to the historic labels.
-// .trim() — see src/components/ContactForm.tsx for the rationale.
+// .trim(), see src/components/ContactForm.tsx for the rationale.
 // Trailing-newline env vars in Vercel silently break gtag conversion
 // labels. This was costing every phone-call conversion until 2026-05-14.
 const GADS_PAYMENT_TAG =
@@ -17,7 +17,7 @@ const GADS_PAYMENT_TAG =
 const GADS_FREE_CONSULTATION_TAG =
   process.env.NEXT_PUBLIC_GADS_FREE_CONSULT_SEND_TO?.trim() ||
   "AW-17978501655/fH4ZCMHv7ZocEJfU6PxC";
-// Lead value for a booked complimentary consultation — calibrated for Google
+// Lead value for a booked complimentary consultation, calibrated for Google
 // Ads smart bidding. Too high = over-bidding on unqualified leads.
 const FREE_CONSULTATION_VALUE = 50;
 
@@ -52,12 +52,12 @@ function PaymentSuccessContent() {
           const parsed = JSON.parse(raw) as { email?: string; phone?: string };
           email = parsed.email;
           phone = parsed.phone;
-          // Single-use — clear immediately so a refresh doesn't re-fire
+          // Single-use, clear immediately so a refresh doesn't re-fire
           // the conversion against an old identity.
           sessionStorage.removeItem("ss_pending_identity");
         }
       } catch {
-        /* corrupt storage — fire without enhanced data */
+        /* corrupt storage, fire without enhanced data */
       }
       setState({ status: "free", email, phone });
       return;
@@ -112,7 +112,7 @@ function PaymentSuccessContent() {
         transport_type: "beacon",
         event_callback: () => console.log("[gtag] AW free-consult ack"),
       });
-      // GA4 recommended lead event — so GA4 reports this as a conversion too
+      // GA4 recommended lead event, so GA4 reports this as a conversion too
       w.gtag("event", "generate_lead", {
         currency: "EUR",
         value: FREE_CONSULTATION_VALUE,

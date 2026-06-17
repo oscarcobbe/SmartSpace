@@ -68,7 +68,7 @@ export default async function DoorbellServicePage() {
         <div className="flex items-start gap-3 bg-brand-50 border border-brand-100 rounded-xl p-4 mb-10">
           <Info className="h-5 w-5 text-brand-500 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-gray-700">
-            <strong>All doorbell installations include the supply and setup of a Ring Chime</strong> — so you never miss a visitor, even when you&apos;re away from your phone.
+            <strong>All doorbell installations include the supply and setup of a Ring Chime</strong>, so you never miss a visitor, even when you&apos;re away from your phone.
           </p>
         </div>
 

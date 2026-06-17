@@ -13,7 +13,7 @@ import { AGGREGATE_RATING, AGGREGATE_REVIEW_COUNT } from "@/lib/business-constan
 // next/font self-hosts the font, eliminates the render-blocking
 // `<link href="fonts.googleapis.com/...">` request, removes the need for
 // preconnect tags, and ships ONLY the weights actually used. Single
-// biggest LCP improvement available — Google PSI was waiting 300-500ms
+// biggest LCP improvement available, Google PSI was waiting 300-500ms
 // on mobile for the external font CSS to download before first paint.
 // The font and its visual character are identical to the previous setup.
 const jakarta = Plus_Jakarta_Sans({
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
         url: "/og-default.png",
         width: 1200,
         height: 630,
-        alt: "Smart Space — Dublin's #1 Ring Installer",
+        alt: "Smart Space, Dublin's #1 Ring Installer",
       },
     ],
   },
@@ -73,13 +73,13 @@ export const metadata: Metadata = {
 const GTAG_ID = "AW-17978501655";
 // E.164 form used by schema.org JSON-LD (Google's structured-data
 // validator prefers the international format). Keep separate from the
-// call-tracking format below — Google rejects E.164 in
+// call-tracking format below, Google rejects E.164 in
 // phone_conversion_number unless the displayed page text also uses E.164.
 const BUSINESS_PHONE = "+35315130424";
 // Local-format used ONLY by the Google Ads call-tracking number-swap.
 // Must match the EXACT string the conversion action "SS - Call
 // (01 513 0424)" expects (verified 18 May 2026 from the action's
-// "Use Google tag" snippet — Google said `'01 513 0424'`). With the
+// "Use Google tag" snippet, Google said `'01 513 0424'`). With the
 // previous `+35315130424` value, Google's swap couldn't find the
 // displayed number on the page (because the page renders "01 513 0424"
 // in text and only uses `+35315130424` in tel: hrefs), so the
@@ -184,7 +184,7 @@ export default function RootLayout({
               "window.dataLayer = window.dataLayer || [];",
               "function gtag(){dataLayer.push(arguments);}",
               "gtag('js', new Date());",
-              // ── Consent Mode v2 ADVANCED — the lever that brings denied-
+              // ── Consent Mode v2 ADVANCED, the lever that brings denied-
               // consent conversions back from /dev/null. ──
               //   url_passthrough: true   → preserves the gclid query param
               //     across internal navigation even when ad_storage='denied',
@@ -216,7 +216,7 @@ export default function RootLayout({
               // GA4 (only configured when the measurement ID env var is set)
               GA4_ID
                 ? "gtag('config', " + JSON.stringify(GA4_ID) + ");"
-                : "// GA4 disabled — set NEXT_PUBLIC_GA4_MEASUREMENT_ID to enable",
+                : "// GA4 disabled, set NEXT_PUBLIC_GA4_MEASUREMENT_ID to enable",
               // Phone-call conversion (Google Ads call tracking).
               // .trim() is load-bearing: Vercel env vars can carry a
               // trailing \n from copy-paste. Without trimming, gtag was
@@ -245,7 +245,7 @@ export default function RootLayout({
           DOM. Invisible until focused (keyboard Tab on desktop, screen-
           reader swipe on mobile via VoiceOver/TalkBack). When activated
           it jumps focus past the sticky review strip + Navbar + cart icon
-          to the page content — saves ~15-20 Tab presses on every page
+          to the page content, saves ~15-20 Tab presses on every page
           load for keyboard and assistive-tech users. The styling is in
           globals.css under `.skip-link` and `.skip-link:focus`.
         */}

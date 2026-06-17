@@ -12,7 +12,7 @@ import { RefreshCw, Search, Filter, Calendar, MapPin, Phone, Mail, User, Chevron
  * Origin is left blank so Google Maps uses the device's current location.
  */
 function buildRouteUrl(addresses: string[]): string | null {
-  const valid = addresses.filter((a) => a && a !== "—").map((a) => a.trim());
+  const valid = addresses.filter((a) => a && a !== ", ").map((a) => a.trim());
   if (valid.length === 0) return null;
   const enc = (s: string) => encodeURIComponent(s);
   if (valid.length === 1) {
@@ -73,7 +73,7 @@ interface SourceError {
 export default function AdminLeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [sourceErrors, setSourceErrors] = useState<SourceError[]>([]);
-  // Stripe balance — funds held by Stripe (available + pending) that
+  // Stripe balance, funds held by Stripe (available + pending) that
   // haven't yet swept to the bank. Comes straight from the Stripe API
   // server-side. The OTHER revenue card ("Upcoming work value") is
   // computed below from the leads array, not from Stripe.
@@ -141,7 +141,7 @@ export default function AdminLeadsPage() {
 
   // Cross-referenced "Upcoming work value":
   // Same customer often appears in two upcoming rows (a Stripe Paid Order
-  // with a real € amount AND a Calendly Installation row with amount "—").
+  // with a real € amount AND a Calendly Installation row with amount ", ").
   // Naive sum either double-counts or shows €0 for the Calendly row.
   //
   // Approach: build a name → max-amount lookup across ALL leads (Stripe
@@ -167,7 +167,7 @@ export default function AdminLeadsPage() {
     const amt = parseEur(lead.amount);
     if (amt <= 0) continue;
     recordAmount(`name:${norm(lead.name)}`, amt);
-    if (lead.email && lead.email !== "—") recordAmount(`email:${norm(lead.email)}`, amt);
+    if (lead.email && lead.email !== ", ") recordAmount(`email:${norm(lead.email)}`, amt);
   }
 
   // Walk upcoming leads, dedupe by name (or email if no usable name),
@@ -178,7 +178,7 @@ export default function AdminLeadsPage() {
     if (lead.status !== "Upcoming") continue;
     const nameKey = norm(lead.name);
     const emailKey = norm(lead.email);
-    const dedupeKey = nameKey && nameKey !== "—" ? `n:${nameKey}` : emailKey ? `e:${emailKey}` : "";
+    const dedupeKey = nameKey && nameKey !== ", " ? `n:${nameKey}` : emailKey ? `e:${emailKey}` : "";
     if (!dedupeKey || upcomingValueSeen.has(dedupeKey)) continue;
     upcomingValueSeen.add(dedupeKey);
 
@@ -193,7 +193,7 @@ export default function AdminLeadsPage() {
     upcomingWorkValue += matched;
   }
 
-  // Auth is enforced by src/app/admin/layout.tsx — by the time this
+  // Auth is enforced by src/app/admin/layout.tsx, by the time this
   // page renders, sessionStorage["admin_key"] is guaranteed populated.
   // If the API returns 401 mid-session, the layout's password gate kicks
   // back in on next reload.
@@ -228,7 +228,7 @@ export default function AdminLeadsPage() {
         {/*
           Per-source error banners. The /api/admin/leads endpoint runs three
           fetches in parallel (Stripe, Calendly, Apps Script). If any fails,
-          its data is missing from the list — without surfacing this, a
+          its data is missing from the list, without surfacing this, a
           partial outage looks like "we just have fewer leads today" and
           decisions get made on incomplete data.
         */}
@@ -246,7 +246,7 @@ export default function AdminLeadsPage() {
                     Data source unavailable: {e.source}
                   </div>
                   <div className="text-xs text-amber-800 mt-0.5 break-words">
-                    {e.message} — records from this source aren&apos;t in the list below.
+                    {e.message}, records from this source aren&apos;t in the list below.
                   </div>
                 </div>
               </div>
@@ -344,7 +344,7 @@ export default function AdminLeadsPage() {
               !search || [l.name, l.email, l.phone, l.address, l.product].join(" ").toLowerCase().includes(search.toLowerCase())
             );
           const routeUrl = buildRouteUrl(upcoming.map((l) => l.address));
-          const stopCount = upcoming.filter((l) => l.address && l.address !== "—").length;
+          const stopCount = upcoming.filter((l) => l.address && l.address !== ", ").length;
           return (
             <>
               <div className="flex flex-col sm:flex-row gap-3 mb-4">
@@ -382,7 +382,7 @@ export default function AdminLeadsPage() {
                   {upcoming.map((lead, i) => {
                     const typeColor = TYPE_COLORS[lead.type] || { bg: "bg-gray-50", text: "text-gray-700" };
                     const isExpanded = expandedCard === i;
-                    const mapsUrl = lead.address !== "—" ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lead.address)}` : null;
+                    const mapsUrl = lead.address !== ", " ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lead.address)}` : null;
                     return (
                       <div
                         key={i}
@@ -390,7 +390,7 @@ export default function AdminLeadsPage() {
                           isExpanded ? "border-brand-500 shadow-lg ring-1 ring-brand-500/20" : "border-gray-100 hover:shadow-md"
                         }`}
                       >
-                        {/* Card header — always visible, clickable */}
+                        {/* Card header, always visible, clickable */}
                         <div className="p-5" onClick={() => setExpandedCard(isExpanded ? null : i)}>
                           <div className="flex items-center justify-between mb-3">
                             <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${typeColor.bg} ${typeColor.text}`}>
@@ -443,13 +443,13 @@ export default function AdminLeadsPage() {
                                 <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
                                 <a href={`mailto:${lead.email}`} className="text-brand-500 hover:underline truncate">{lead.email}</a>
                               </div>
-                              {lead.phone !== "—" && (
+                              {lead.phone !== ", " && (
                                 <div className="flex items-center gap-2 text-sm">
                                   <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
                                   <a href={`tel:${lead.phone}`} className="text-brand-500 hover:underline">{lead.phone}</a>
                                 </div>
                               )}
-                              {lead.address !== "—" && (
+                              {lead.address !== ", " && (
                                 <div className="flex items-start gap-2 text-sm">
                                   <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
                                   <span className="text-gray-700">{lead.address}</span>
@@ -473,7 +473,7 @@ export default function AdminLeadsPage() {
                             )}
 
                             {/* Embedded Google Maps preview */}
-                            {lead.address !== "—" && (
+                            {lead.address !== ", " && (
                               <div className="rounded-xl overflow-hidden border border-gray-200">
                                 <iframe
                                   title={`Map of ${lead.address}`}
@@ -502,7 +502,7 @@ export default function AdminLeadsPage() {
                                   <ExternalLink className="w-3 h-3" />
                                 </a>
                               )}
-                              {lead.phone !== "—" && (
+                              {lead.phone !== ", " && (
                                 <a
                                   href={`tel:${lead.phone}`}
                                   className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 hover:bg-green-100 text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
@@ -614,16 +614,16 @@ export default function AdminLeadsPage() {
                               <td className="px-4 py-3">
                                 <div className="font-medium text-gray-900">{lead.name}</div>
                                 <div className="text-xs text-gray-400">{lead.email}</div>
-                                {lead.phone !== "—" && <div className="text-xs text-gray-400">{lead.phone}</div>}
+                                {lead.phone !== ", " && <div className="text-xs text-gray-400">{lead.phone}</div>}
                               </td>
-                              <td className="px-4 py-3 text-gray-600 text-xs max-w-[180px]">{lead.address !== "—" ? lead.address : ""}</td>
+                              <td className="px-4 py-3 text-gray-600 text-xs max-w-[180px]">{lead.address !== ", " ? lead.address : ""}</td>
                               <td className="px-4 py-3 text-gray-700 max-w-[200px] truncate">{lead.product}</td>
                               <td className="px-4 py-3 font-semibold text-gray-900">{lead.amount}</td>
                               <td className="px-4 py-3 text-gray-600 text-xs">
-                                {lead.bookingDate !== "—" && (
+                                {lead.bookingDate !== ", " && (
                                   <>
                                     <div>{lead.bookingDate}</div>
-                                    {lead.bookingSlot !== "—" && <div className="text-gray-400">{lead.bookingSlot}</div>}
+                                    {lead.bookingSlot !== ", " && <div className="text-gray-400">{lead.bookingSlot}</div>}
                                   </>
                                 )}
                               </td>

@@ -1,22 +1,22 @@
 "use client";
 
 /**
- * /ring-installation — Google Ads paid landing page.
+ * /ring-installation, Google Ads paid landing page.
  *
  * Mirrors /services/installation-only's proven flow exactly:
  *   - Same Shopify product (installation-only) for live pricing
  *   - Same interactive variant selectors that update the price
  *   - Same AddToCartButton → Stripe checkout → Calendly auto-book
- *   - Same BookingCalendar (Mon-Thu × 3 slots — Friday blocked sitewide)
+ *   - Same BookingCalendar (Mon-Thu × 3 slots, Friday blocked sitewide)
  *
  * The Stripe success path already fires the SS- Any value stripe
  * Google Ads conversion (AW-17978501655/IofPCOiZuJkcEJfU6PxC) plus
- * GA4 `purchase` event with hashed user_data — so this LP gets
+ * GA4 `purchase` event with hashed user_data, so this LP gets
  * conversion tracking for free with no custom wiring.
  *
  * LP-specific additions on top of installation-only:
  *   - Hero copy that matches the active RSA's "From €139 / Book
- *     Online — Instant Dates" promise
+ *     Online, Instant Dates" promise
  *   - Brands We Install grid
  *   - 5 Star reviews snippet
  *   - <FeaturedProducts /> carousel
@@ -73,7 +73,7 @@ const INCLUDED = [
   {
     icon: Cable,
     title: "Hardwired or Battery",
-    body: "Hardwire to existing chime or battery — same flat fee.",
+    body: "Hardwire to existing chime or battery, same flat fee.",
   },
   {
     icon: Smartphone,
@@ -94,12 +94,12 @@ const REVIEWS = [
     date: "2 weeks ago",
   },
   {
-    text: "Had the driveway bundle installed — doorbell and floodlight cam. Professional job, very tidy cabling, and they took the time to explain how everything works. Great value.",
+    text: "Had the driveway bundle installed, doorbell and floodlight cam. Professional job, very tidy cabling, and they took the time to explain how everything works. Great value.",
     author: "James O'Brien",
     date: "1 month ago",
   },
   {
-    text: "Couldn't be happier. We had a whole home setup done — doorbell, two floodlights. The team were friendly, professional, and left everything spotless. Already recommended to neighbours.",
+    text: "Couldn't be happier. We had a whole home setup done, doorbell, two floodlights. The team were friendly, professional, and left everything spotless. Already recommended to neighbours.",
     author: "Aoife D.",
     date: "2 months ago",
   },
@@ -116,7 +116,7 @@ const FAQ = [
   },
   {
     q: "Do I need to buy the doorbell from you?",
-    a: "No — install your own. We install whatever you bought, from Amazon, Currys, Harvey Norman, the brand directly, or even second-hand. The €139 covers the labour.",
+    a: "No, install your own. We install whatever you bought, from Amazon, Currys, Harvey Norman, the brand directly, or even second-hand. The €139 covers the labour.",
   },
   {
     q: "How fast can you come?",
@@ -124,11 +124,11 @@ const FAQ = [
   },
   {
     q: "What if it doesn't work after you leave?",
-    a: "First 30 days are covered — we come back free of charge for any setup or app issue. After 30 days, we offer a paid call-out (€60) if there's a setup change you'd like.",
+    a: "First 30 days are covered, we come back free of charge for any setup or app issue. After 30 days, we offer a paid call-out (€60) if there's a setup change you'd like.",
   },
   {
-    q: "Do you install other things — cameras, alarms, smart locks?",
-    a: "Yes. CCTV, floodlight cameras, smart locks, network access, video intercoms — we do all of it. Pick \u201cSomething else\u201d and we'll quote on the call.",
+    q: "Do you install other things, cameras, alarms, smart locks?",
+    a: "Yes. CCTV, floodlight cameras, smart locks, network access, video intercoms, we do all of it. Pick \u201cSomething else\u201d and we'll quote on the call.",
   },
 ];
 
@@ -185,7 +185,7 @@ export default function RingInstallationPage() {
   const productOptions = product?.options?.filter((o) => !(o.values.length === 1 && o.values[0] === "Default Title")) ?? [];
   const effectiveOptions = { ...Object.fromEntries(productOptions.map((o) => [o.name, o.values[0]])), ...selectedOptions };
 
-  // Same friendly-label remap as installation-only/page.tsx — short labels
+  // Same friendly-label remap as installation-only/page.tsx, short labels
   // for the dashboard and Stripe metadata.
   const FRIENDLY_LABELS: Record<string, string> = {
     "How Many Ring or Similar Products Are To Be Installed": "Number of devices",
@@ -218,7 +218,7 @@ export default function RingInstallationPage() {
             Dublin&apos;s #1 Ring Installer
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4 leading-[1.08] tracking-tight">
-            Ring Doorbell Installation in Ireland —{" "}
+            Ring Doorbell Installation in Ireland,{" "}
             <span className="text-brand-500">From €139</span>
           </h1>
           <p className="text-gray-500 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
@@ -280,7 +280,7 @@ export default function RingInstallationPage() {
               Configure Your Installation
             </h2>
             <p className="text-gray-500 text-lg max-w-xl mx-auto">
-              Tell us about your setup and choose a date — instant pricing, instant booking.
+              Tell us about your setup and choose a date, instant pricing, instant booking.
             </p>
           </div>
 
@@ -296,7 +296,7 @@ export default function RingInstallationPage() {
                 <div className="bg-gray-50 rounded-2xl p-6">
                   <div className="text-sm text-gray-500 mb-1">Total price</div>
                   <div className="text-3xl font-extrabold text-[#1a1a1a]">
-                    {price ? formatPrice(price.amount, price.currencyCode) : "—"}
+                    {price ? formatPrice(price.amount, price.currencyCode) : ", "}
                   </div>
                   <div className="text-xs text-gray-500 mt-1">Professional installation included</div>
                 </div>
@@ -379,7 +379,7 @@ export default function RingInstallationPage() {
                 )}
               </div>
 
-              {/* Right: Booking Calendar — paid LP mirrors
+              {/* Right: Booking Calendar, paid LP mirrors
                   /services/installation-only exactly (customer brings their
                   own device, no stock to source). 2-working-day lead matches
                   the installation-only flow. */}
@@ -457,7 +457,7 @@ export default function RingInstallationPage() {
               How It Works
             </h2>
             <p className="text-gray-500 text-lg">
-              Configure, pay, install — in that order.
+              Configure, pay, install, in that order.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto">
@@ -605,7 +605,7 @@ export default function RingInstallationPage() {
         </div>
       </section>
 
-      {/* Mobile sticky bottom bar — visible only on small screens, only
+      {/* Mobile sticky bottom bar, visible only on small screens, only
           on this paid LP. Tap-to-call on the left, anchor-to-form on
           the right. The phone-call link triggers PhoneClickTracker
           which fires both the Google Ads phone-call conversion AND a

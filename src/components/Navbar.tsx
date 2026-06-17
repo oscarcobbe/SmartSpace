@@ -56,7 +56,7 @@ export default function Navbar() {
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-24">
             {/* Logo */}
-            <Link href="/" aria-label="Smart Space — home">
+            <Link href="/" aria-label="Smart Space, home">
               <Image
                 src="/Logo1.png"
                 alt="Smart Space"

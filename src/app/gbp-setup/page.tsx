@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "GBP & Search Console Setup — Internal",
+  title: "GBP & Search Console Setup, Internal",
   description: "Internal hand-off guide for Google Business Profile and Search Console setup.",
   robots: { index: false, follow: false },
 };
@@ -18,18 +18,18 @@ export default function GbpSetupPage() {
           Google Business Profile &amp; Search Console Setup
         </h1>
         <p className="text-gray-500 mb-10">
-          Two of the highest-impact tasks for local SEO. Do GBP first — it&apos;s what
+          Two of the highest-impact tasks for local SEO. Do GBP first, it&apos;s what
           shows up in Google Maps and in the local pack when someone searches
           &quot;Ring installer Dublin&quot;. Then do Search Console so we can see what
           people are actually finding us for.
         </p>
 
-        <h2 id="gbp">1. Google Business Profile — step-by-step</h2>
+        <h2 id="gbp">1. Google Business Profile, step-by-step</h2>
 
         <h3>Create / claim the profile</h3>
         <ol>
           <li>Go to <a href="https://business.google.com" target="_blank" rel="noopener noreferrer">business.google.com</a> and sign in with the Google account that should own the listing.</li>
-          <li>Search for &quot;Smart Space&quot;. If a profile already exists (likely — Google auto-creates these), claim it. If not, create a new one.</li>
+          <li>Search for &quot;Smart Space&quot;. If a profile already exists (likely, Google auto-creates these), claim it. If not, create a new one.</li>
           <li>For business name, enter exactly: <strong>Smart Space</strong></li>
           <li>For category, choose: <strong>Security system installer</strong> (primary).</li>
           <li>Add secondary category: <strong>Electrical installation service</strong>.</li>
@@ -41,9 +41,9 @@ export default function GbpSetupPage() {
           Customers don&apos;t come to us, we go to them.
         </p>
         <ol>
-          <li>When asked &quot;do customers visit your location?&quot; — select <strong>No</strong>.</li>
+          <li>When asked &quot;do customers visit your location?&quot;, select <strong>No</strong>.</li>
           <li>For service areas, add all 12 counties: Dublin, Wicklow, Kildare, Meath, Louth, Wexford, Carlow, Kilkenny, Laois, Offaly, Westmeath, Longford.</li>
-          <li>Do NOT list a specific street address publicly. Google will ask for one for verification — it&apos;ll be hidden on the public profile.</li>
+          <li>Do NOT list a specific street address publicly. Google will ask for one for verification, it&apos;ll be hidden on the public profile.</li>
         </ol>
 
         <h3>Business details to fill in</h3>
@@ -72,40 +72,40 @@ export default function GbpSetupPage() {
           Leinster. We professionally install Ring Video Doorbells, Floodlight Cams, smart
           locks and home security cameras. Over 5,000 installations completed. Three Ireland
           SME Business Winner 2025. Free consultations, honest written quotes, and a clean,
-          professional install — usually in under three hours. Book online at smart-space.ie
+          professional install, usually in under three hours. Book online at smart-space.ie
           or call 01 513 0424.
         </blockquote>
 
         <h3>Services to list</h3>
         <p>Add each of these as a separate service under the Services tab:</p>
         <ul>
-          <li>Ring Video Doorbell installation — from €329</li>
-          <li>Ring Floodlight Cam installation — from €299</li>
-          <li>Ring Driveway Bundle — from €658</li>
-          <li>Ring Whole Home Bundle — from €987</li>
-          <li>Ring Eldercare Bundle — from €509</li>
-          <li>Installation-only (Ring, Eufy, Nest, Tapo, Aosu) — from €139</li>
-          <li>Free home security consultation — complimentary</li>
+          <li>Ring Video Doorbell installation, from €329</li>
+          <li>Ring Floodlight Cam installation, from €299</li>
+          <li>Ring Driveway Bundle, from €658</li>
+          <li>Ring Whole Home Bundle, from €987</li>
+          <li>Ring Eldercare Bundle, from €509</li>
+          <li>Installation-only (Ring, Eufy, Nest, Tapo, Aosu), from €139</li>
+          <li>Free home security consultation, complimentary</li>
         </ul>
 
         <h3>Photo strategy</h3>
         <p>Upload at least 10 high-quality photos. Target mix:</p>
         <ul>
-          <li>Logo (required) — use /Logo1.png at 1200×1200</li>
-          <li>Cover photo (required) — use /og-default.png (already 1200×630)</li>
+          <li>Logo (required), use /Logo1.png at 1200×1200</li>
+          <li>Cover photo (required), use /og-default.png (already 1200×630)</li>
           <li>3–5 in-progress install shots (installer on ladder, mounting doorbell, cable routing)</li>
           <li>3–5 finished-install shots (doorbell mounted, camera on wall, phone app screen)</li>
           <li>1–2 team photos</li>
           <li>1 van/branded vehicle photo</li>
         </ul>
         <p>
-          Avoid stock photos — Google can detect them and they damage credibility. Shoot on a
+          Avoid stock photos, Google can detect them and they damage credibility. Shoot on a
           phone if needed, just make sure they&apos;re well-lit and in focus.
         </p>
 
         <h3>Verification</h3>
         <p>
-          Google will ask to verify the listing — usually by postcard to your business
+          Google will ask to verify the listing, usually by postcard to your business
           address, sometimes by phone call or video. Expect 5–14 days for postcard. Until
           verification is complete, the listing won&apos;t appear in Maps.
         </p>
@@ -116,7 +116,7 @@ export default function GbpSetupPage() {
           to every customer 3–7 days after their install:
         </p>
         <blockquote>
-          Subject: Quick favour — a minute to leave us a review?
+          Subject: Quick favour, a minute to leave us a review?
           <br /><br />
           Hi [first name],
           <br /><br />
@@ -124,30 +124,30 @@ export default function GbpSetupPage() {
           job, would you mind leaving a quick Google review? It takes 60 seconds and it
           genuinely makes a big difference for a small business like ours.
           <br /><br />
-          Direct link (skips the search): [your GBP short review URL — found in your GBP
+          Direct link (skips the search): [your GBP short review URL, found in your GBP
           dashboard under &quot;Ask for reviews&quot;]
           <br /><br />
-          If something wasn&apos;t right, please tell me directly first so we can fix it —
+          If something wasn&apos;t right, please tell me directly first so we can fix it,
           I&apos;d much rather know.
           <br /><br />
           Thanks a million,
           <br />
-          Nigel — Smart Space
+          Nigel, Smart Space
         </blockquote>
 
-        <h2 id="search-console">2. Google Search Console — step-by-step</h2>
+        <h2 id="search-console">2. Google Search Console, step-by-step</h2>
 
         <h3>Add the property</h3>
         <ol>
           <li>Go to <a href="https://search.google.com/search-console" target="_blank" rel="noopener noreferrer">search.google.com/search-console</a> and sign in.</li>
           <li>Click &quot;Add property&quot; → choose <strong>Domain</strong> (not URL prefix).</li>
-          <li>Enter <strong>smart-space.ie</strong> (no http, no www — just the domain).</li>
+          <li>Enter <strong>smart-space.ie</strong> (no http, no www, just the domain).</li>
           <li>Google will give you a DNS TXT record to add.</li>
         </ol>
 
         <h3>Add the TXT record</h3>
         <p>
-          Log in to your DNS provider (probably wherever your domain is registered — check
+          Log in to your DNS provider (probably wherever your domain is registered, check
           Namecheap, GoDaddy, Cloudflare, etc.). Add a TXT record:
         </p>
         <ul>
@@ -173,7 +173,7 @@ export default function GbpSetupPage() {
             spam it.
           </li>
           <li>
-            Check the Core Web Vitals tab after 28 days — it&apos;ll show real-user data for
+            Check the Core Web Vitals tab after 28 days, it&apos;ll show real-user data for
             page speed.
           </li>
           <li>
@@ -196,11 +196,11 @@ export default function GbpSetupPage() {
 
         <h2 id="next">What&apos;s next after GBP + Search Console</h2>
         <ul>
-          <li>Bing Webmaster Tools — same process as Search Console, less important but free.</li>
-          <li>Apple Business Connect — claim the listing that shows up in Apple Maps.</li>
-          <li>Review responses — reply to every Google review within 48 hours. Boosts GBP signal.</li>
-          <li>GBP posts — weekly photo post (an install, a tip, a seasonal reminder). Boosts local visibility.</li>
-          <li>Review acquisition — target 10+ new Google reviews per month for the first 3 months.</li>
+          <li>Bing Webmaster Tools, same process as Search Console, less important but free.</li>
+          <li>Apple Business Connect, claim the listing that shows up in Apple Maps.</li>
+          <li>Review responses, reply to every Google review within 48 hours. Boosts GBP signal.</li>
+          <li>GBP posts, weekly photo post (an install, a tip, a seasonal reminder). Boosts local visibility.</li>
+          <li>Review acquisition, target 10+ new Google reviews per month for the first 3 months.</li>
         </ul>
       </div>
     </div>

@@ -149,7 +149,7 @@ export default async function CameraServicePage() {
           <div className="space-y-4 text-gray-700 leading-relaxed">
             <p>
               The Ring Floodlight Cam is the device we install when a customer
-              wants to cover an area the doorbell can&apos;t see — typically a
+              wants to cover an area the doorbell can&apos;t see, typically a
               driveway, side passage, rear garden, or detached shed or garage.
               Because it doubles as a security floodlight, most installs replace
               an existing PIR floodlight rather than add to your fittings, so

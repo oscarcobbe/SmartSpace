@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Cookie consent banner — wires up Google Consent Mode v2.
+ * Cookie consent banner, wires up Google Consent Mode v2.
  *
  * Why this exists: Smart Space serves Ireland (EU/EEA). Without Consent
  * Mode v2 the Google Ads + GA4 tags collect zero ad-personalisation
@@ -57,7 +57,7 @@ function fireConsentUpdate(decision: Decision) {
   } else {
     // Reject = leave everything denied (the default), but explicitly send
     // an update so Google Ads knows the user actively refused (vs. just
-    // not having decided yet — improves modeled conversion accuracy).
+    // not having decided yet, improves modeled conversion accuracy).
     w.gtag("consent", "update", {
       ad_storage: "denied",
       ad_user_data: "denied",
@@ -90,7 +90,7 @@ export default function CookieBanner() {
         JSON.stringify({ decision, decidedAt: Date.now() } satisfies StoredConsent)
       );
     } catch {
-      // Storage may be blocked — still fire the consent update so it
+      // Storage may be blocked, still fire the consent update so it
       // applies for this session at least.
     }
     fireConsentUpdate(decision);

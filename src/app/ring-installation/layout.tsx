@@ -3,26 +3,26 @@ import type { Metadata } from "next";
 const SITE = "https://smart-space.ie";
 
 export const metadata: Metadata = {
-  title: "Ring Doorbell Installation in Ireland — From €139 | Smart Space",
+  title: "Ring Doorbell Installation in Ireland, From €139 | Smart Space",
   description:
-    "Professional Ring doorbell installation in Dublin and across Leinster. From €139, same-day quote, 5,000+ installs done, 5★ Google reviews. Book online — we confirm by phone within 1 hour.",
+    "Professional Ring doorbell installation in Dublin and across Leinster. From €139, same-day quote, 5,000+ installs done, 5★ Google reviews. Book online, we confirm by phone within 1 hour.",
   alternates: { canonical: `${SITE}/ring-installation` },
-  // Paid-only landing page — keep out of organic search to avoid
+  // Paid-only landing page, keep out of organic search to avoid
   // cannibalising /services/installation-only.
   robots: { index: false, follow: true },
   openGraph: {
     type: "website",
     url: `${SITE}/ring-installation`,
     siteName: "Smart Space",
-    title: "Ring Doorbell Installation in Ireland — From €139",
+    title: "Ring Doorbell Installation in Ireland, From €139",
     description:
       "Professional installation by certified Irish installers. Wired or battery, every Ring model. Book online in 90 seconds.",
     locale: "en_IE",
-    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Ring Doorbell Installation in Ireland — Smart Space" }],
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Ring Doorbell Installation in Ireland, Smart Space" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ring Doorbell Installation in Ireland — From €139",
+    title: "Ring Doorbell Installation in Ireland, From €139",
     description:
       "Professional installation by certified Irish installers. Wired or battery, every Ring model.",
     images: ["/og-default.png"],
@@ -77,7 +77,7 @@ const jsonLd = {
           name: "Do I need to buy the doorbell from you?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "No — install your own. We install whatever you bought, from Amazon, Currys, Harvey Norman, the brand directly, or even second-hand. The €139 covers the labour.",
+            text: "No, install your own. We install whatever you bought, from Amazon, Currys, Harvey Norman, the brand directly, or even second-hand. The €139 covers the labour.",
           },
         },
         {
@@ -93,7 +93,7 @@ const jsonLd = {
           name: "What if it doesn't work after you leave?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "First 30 days are covered — we come back free of charge for any setup or app issue. After 30 days, we offer a paid call-out (€60) if there's a setup change you'd like.",
+            text: "First 30 days are covered, we come back free of charge for any setup or app issue. After 30 days, we offer a paid call-out (€60) if there's a setup change you'd like.",
           },
         },
       ],

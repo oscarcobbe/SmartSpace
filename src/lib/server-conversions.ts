@@ -8,15 +8,15 @@
  *   - Mobile browsers throttling background JS on tab-switch
  *
  * This module fires conversions a second time from the server (the source of
- * truth — we only call it after the row has been confirmed paid / written to
+ * truth, we only call it after the row has been confirmed paid / written to
  * the lead sheet), so Google Ads + GA4 see every real conversion.
  *
  * Two channels:
- *   1) GA4 Measurement Protocol — official, authenticated. Requires
+ *   1) GA4 Measurement Protocol, official, authenticated. Requires
  *      GA4_API_SECRET (create in GA4 Admin → Data Streams → Measurement
  *      Protocol API secrets). When GA4 is linked to Google Ads, server-fired
  *      events become importable Google Ads conversions.
- *   2) Google Ads conversion pixel — unauthenticated GET to the legacy
+ *   2) Google Ads conversion pixel, unauthenticated GET to the legacy
  *      googleadservices endpoint. Less reliable than the Conversions API but
  *      requires zero new credentials and acts as a backstop when (1) is not
  *      configured.
@@ -31,7 +31,7 @@ const GA4_ID = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID; // e.g. G-JR2WXNSLEL
 const GA4_API_SECRET = process.env.GA4_API_SECRET;
 const GADS_ACCOUNT_ID = "17978501655"; // from AW-17978501655
 
-/** Sha256 lowercase-trim — Google's Enhanced Conversions hashing format. */
+/** Sha256 lowercase-trim, Google's Enhanced Conversions hashing format. */
 function hashPii(value: string | undefined): string | undefined {
   if (!value) return undefined;
   const normalised = value.trim().toLowerCase();
@@ -46,7 +46,7 @@ export interface ServerConversionInput {
   ga4EventName: "purchase" | "generate_lead" | "book_appointment";
   value?: number;
   currency?: string;
-  /** Stripe session id / order id — dedupes the conversion across retries. */
+  /** Stripe session id / order id, dedupes the conversion across retries. */
   transactionId?: string;
   /** Carried through from URL → localStorage → checkout metadata; null if user came from organic. */
   gclid?: string;
@@ -62,7 +62,7 @@ export interface ServerConversionInput {
 /**
  * Fire conversion through both channels concurrently. Awaits both with a
  * 4s ceiling so a hung Google endpoint can't pin the parent serverless
- * function. Always resolves — never throws.
+ * function. Always resolves, never throws.
  */
 export async function fireServerConversion(input: ServerConversionInput): Promise<void> {
   const tasks: Array<Promise<unknown>> = [];
@@ -71,10 +71,10 @@ export async function fireServerConversion(input: ServerConversionInput): Promis
     tasks.push(fireGA4(input));
   } else if (!GA4_API_SECRET) {
     // Logged once per cold start so we know the safety net isn't installed.
-    console.warn("[conv] GA4_API_SECRET not set — skipping server-side GA4 conversion fire");
+    console.warn("[conv] GA4_API_SECRET not set, skipping server-side GA4 conversion fire");
   }
 
-  // Always fire the Google Ads pixel — it has no setup requirements.
+  // Always fire the Google Ads pixel, it has no setup requirements.
   tasks.push(fireGoogleAdsPixel(input));
 
   await Promise.race([
@@ -154,7 +154,7 @@ async function fireGoogleAdsPixel(input: ServerConversionInput): Promise<void> {
 
     const url = `https://www.googleadservices.com/pagead/conversion/${GADS_ACCOUNT_ID}/?${params.toString()}`;
     const res = await fetch(url, { method: "GET", cache: "no-store" });
-    // The pixel always 200s with a 1x1 GIF — failure here usually means the
+    // The pixel always 200s with a 1x1 GIF, failure here usually means the
     // network blocked us, not that Google rejected the conversion.
     if (!res.ok) {
       console.error(`[conv] Google Ads pixel responded ${res.status}`);

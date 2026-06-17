@@ -8,7 +8,7 @@
  *   1. Ad blockers / privacy extensions silently drop the gtag ping.
  *   2. Consent Mode v2 default-deny: until the user accepts cookies
  *      `ad_storage` is "denied", so gtag fires anonymised pings that
- *      Google statistically models — at low call volume (we see ~10
+ *      Google statistically models, at low call volume (we see ~10
  *      calls / month) the modelled count is effectively zero.
  *   3. The tap on a `tel:` link starts the dialer immediately. On many
  *      mobile browsers the page is suspended before the gtag ping has
@@ -21,14 +21,14 @@
  *   - No cookies needed (gclid is passed explicitly from localStorage).
  *   - Adblockers can't intercept (same-origin POST to our own API).
  *   - The fetch survives the page navigating to the dialer because we
- *     POST via navigator.sendBeacon — keep-alive even on unload.
+ *     POST via navigator.sendBeacon, keep-alive even on unload.
  *   - We then fire to BOTH GA4 Measurement Protocol AND the Google Ads
  *     conversion pixel from the server, giving Google two chances to
  *     attribute the call back to the original paid click.
  *
  * Side benefit: every phone tap also lands in the `Smart Space Leads`
  * Google Sheet as a "Contact Enquiry" row, so Nigel can see who's
- * been tapping the number in /admin/leads — previously totally invisible
+ * been tapping the number in /admin/leads, previously totally invisible
  * unless the caller also filled the form.
  *
  * Endpoint contract:
@@ -47,7 +47,7 @@
  *       utmTerm?: string,
  *     }
  *   }
- *   Returns: 204 (no body, no caching) — designed to be ignored by the
+ *   Returns: 204 (no body, no caching), designed to be ignored by the
  *   client because the caller used sendBeacon and isn't waiting for a
  *   response.
  *
@@ -61,7 +61,7 @@ import { fireServerConversion } from "@/lib/server-conversions";
 import { logLead, type AttributionRecord } from "@/lib/leads";
 import { BUSINESS_PHONE_E164 } from "@/lib/business-constants";
 
-// Force dynamic — never cache, every phone click is a unique conversion fire.
+// Force dynamic, never cache, every phone click is a unique conversion fire.
 export const dynamic = "force-dynamic";
 
 interface PhoneClickBody {
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
     const raw = await request.text();
     if (raw) body = JSON.parse(raw) as PhoneClickBody;
   } catch (parseErr) {
-    // sendBeacon failures land here. Don't 4xx — the user already started
+    // sendBeacon failures land here. Don't 4xx, the user already started
     // a phone call. Just log and move on.
     console.warn("[phone-click] body parse failed:", parseErr);
   }
@@ -94,10 +94,10 @@ export async function POST(request: Request) {
     .replace(/^AW-\d+\//, "")
     .replace(/\s+/g, "");
 
-  // Stable transaction ID — Google Ads + GA4 dedupe by this, so even if
+  // Stable transaction ID, Google Ads + GA4 dedupe by this, so even if
   // client-side gtag AND this server fire both arrive, only one conversion
   // counts. The client-side PhoneClickTracker.tsx does NOT currently pass
-  // a transaction_id — TODO add one if we see double-counting in Ads.
+  // a transaction_id, TODO add one if we see double-counting in Ads.
   const conversionId = randomUUID();
 
   // Fire both server-side channels (GA4 MP + Google Ads pixel). Best-effort,
@@ -110,7 +110,7 @@ export async function POST(request: Request) {
       currency: "EUR",
       transactionId: conversionId,
       gclid: attribution?.gclid,
-      // No email/phone yet — phone clicks happen before the user enters
+      // No email/phone yet, phone clicks happen before the user enters
       // identifying details. Enhanced Conversions matching will use the
       // gclid alone.
       extraParams: {
@@ -121,7 +121,7 @@ export async function POST(request: Request) {
     });
   } else {
     console.warn(
-      "[phone-click] NEXT_PUBLIC_GADS_CALL_LABEL not set — skipping conversion fire (lead-log still happens)"
+      "[phone-click] NEXT_PUBLIC_GADS_CALL_LABEL not set, skipping conversion fire (lead-log still happens)"
     );
   }
 
@@ -131,12 +131,12 @@ export async function POST(request: Request) {
   await logLead({
     type: "Contact Enquiry",
     phone,
-    notes: `Phone tap on ${page} — caller has NOT yet completed a form. Watch the call log on the office line for the matching incoming number.`,
+    notes: `Phone tap on ${page}, caller has NOT yet completed a form. Watch the call log on the office line for the matching incoming number.`,
     source: "phone_click",
     attribution,
   });
 
-  // 204 No Content — sendBeacon doesn't read the response, but returning
+  // 204 No Content, sendBeacon doesn't read the response, but returning
   // 204 (rather than 200) makes any accidental fetch+await callers also
   // happy to not see a body. Cache-Control: no-store stops CDNs from
   // collapsing repeated calls into one (every tap is a real conversion).
@@ -146,10 +146,10 @@ export async function POST(request: Request) {
   });
 }
 
-// Reject non-POST methods — phone clicks always POST.
+// Reject non-POST methods, phone clicks always POST.
 export async function GET() {
   return NextResponse.json(
-    { error: "Method not allowed — POST /api/track/phone-click with JSON body" },
+    { error: "Method not allowed, POST /api/track/phone-click with JSON body" },
     { status: 405 }
   );
 }

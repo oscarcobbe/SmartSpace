@@ -38,6 +38,8 @@ interface AddToCartButtonProps {
    * when we skip the cart entirely.
    */
   directLabel?: string;
+  /** Accent colour theme. Eufy product pages pass "blue"; default is Ring orange. */
+  accent?: "orange" | "blue";
 }
 
 export default function AddToCartButton({
@@ -55,6 +57,7 @@ export default function AddToCartButton({
   configuration,
   directCheckout = false,
   directLabel = "Book Now",
+  accent = "orange",
 }: AddToCartButtonProps) {
   const { addItem } = useCart();
   const [status, setStatus] = useState<"idle" | "loading" | "added">("idle");
@@ -125,6 +128,8 @@ export default function AddToCartButton({
         className={`inline-flex items-center justify-center gap-2 font-semibold rounded-full transition-all w-full ${sizeClasses[size]} ${
           status === "added"
             ? "bg-green-500 text-white"
+            : accent === "blue"
+            ? "bg-[#005d8e] hover:bg-[#004c75] text-white"
             : "bg-brand-500 hover:bg-brand-600 text-white"
         } disabled:opacity-70`}
       >

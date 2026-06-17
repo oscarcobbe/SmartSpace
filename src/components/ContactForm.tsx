@@ -8,7 +8,7 @@ import { getAttribution } from "@/lib/attribution";
 // fix in Vercel without a code redeploy if the label changes (e.g. the
 // conversion is recreated in Google Ads). Falls back to the historic
 // label so prior behaviour is preserved when the env var isn't set.
-// .trim() is load-bearing — Vercel env vars can carry a trailing \n
+// .trim() is load-bearing, Vercel env vars can carry a trailing \n
 // from copy-paste, which makes Google Ads reject the conversion as an
 // unknown label. See src/app/layout.tsx (call-label fix) for the same
 // pattern. Discovered when phone-call conversions stopped registering.
@@ -16,22 +16,22 @@ const GADS_LEAD_SEND_TO =
   process.env.NEXT_PUBLIC_GADS_LEAD_SEND_TO?.trim() ||
   "AW-17978501655/u8cHCNyipZocEJfU6PxC";
 
-// Mirrors the pattern in booking/page.tsx — direct window.gtag fire is
+// Mirrors the pattern in booking/page.tsx, direct window.gtag fire is
 // reliable; the prior <Script> + conditional render approach silently
 // dropped the call after page hydration had finished.
 //
 // `conversionId` comes from the API response (server-generated UUID).
 // Sending it as `transaction_id` lets Google Ads dedupe this client-side
-// fire against the matching server-side fire — same id → counted once.
+// fire against the matching server-side fire, same id → counted once.
 function fireContactConversion(email: string, phone: string, conversionId?: string) {
   if (typeof window === "undefined") return;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const gtag = (window as any).gtag;
   if (typeof gtag !== "function") {
-    console.warn("[gtag] window.gtag not available — conversion NOT fired");
+    console.warn("[gtag] window.gtag not available, conversion NOT fired");
     return;
   }
-  // Enhanced Conversions — Google hashes these client-side. Use
+  // Enhanced Conversions, Google hashes these client-side. Use
   // `email_address` (not bare `email`) per Google's user_data schema.
   gtag("set", "user_data", { email_address: email, phone_number: phone });
   gtag("event", "conversion", {
@@ -74,7 +74,7 @@ export default function ContactForm() {
     setError(null);
 
     const form = e.target as HTMLFormElement;
-    // `homepage_url` is the honeypot field — hidden from real users via CSS,
+    // `homepage_url` is the honeypot field, hidden from real users via CSS,
     // skipped by screen readers via aria-hidden, ignored by browser autofill
     // via autocomplete=off + non-standard name. Bots that scrape every input
     // and fill it indiscriminately will leave a non-empty value here, which
@@ -134,7 +134,7 @@ export default function ContactForm() {
       ) : null}
 
       {/*
-        Honeypot — hidden anti-spam field. Real users never see or interact
+        Honeypot, hidden anti-spam field. Real users never see or interact
         with it (off-screen, tab-skip, screen-reader-skip, no autofill). Bots
         that fill every input on the page will leave a non-empty value here,
         which the /api/contact route treats as a drop signal.
@@ -202,7 +202,7 @@ export default function ContactForm() {
         <label htmlFor="subject" className="block text-sm font-semibold text-gray-700 mb-2">
           Subject
         </label>
-        {/* Reordered to put Installation Enquiry first — that's what
+        {/* Reordered to put Installation Enquiry first, that's what
             the majority of paid clicks are. "Support Request" removed:
             paid leads aren't existing customers needing help, and
             existing customers should call directly (the option was

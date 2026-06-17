@@ -1,7 +1,7 @@
 /**
  * Single source of truth for business-level constants that previously
  * existed in multiple files (drift risk). If any of these change, change
- * them HERE and only here — every consumer reads from this module.
+ * them HERE and only here, every consumer reads from this module.
  *
  * The constants that landed here did so because a grep found them
  * duplicated across 2+ files with no shared origin:

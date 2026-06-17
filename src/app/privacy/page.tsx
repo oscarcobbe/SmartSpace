@@ -74,15 +74,15 @@ export default function PrivacyPage() {
             <p>The lawful bases under GDPR are:</p>
             <ul className="list-disc pl-6 space-y-2">
               <li>
-                <strong>Performance of a contract</strong> — when you place a paid order, book a free consultation, or
+                <strong>Performance of a contract</strong>, when you place a paid order, book a free consultation, or
                 request an installation, we need your contact details to deliver the service.
               </li>
               <li>
-                <strong>Legitimate interest</strong> — to respond to enquiries, schedule installations, and run a small
+                <strong>Legitimate interest</strong>, to respond to enquiries, schedule installations, and run a small
                 business safely.
               </li>
               <li>
-                <strong>Consent</strong> — for advertising and analytics cookies. You give consent via the cookie
+                <strong>Consent</strong>, for advertising and analytics cookies. You give consent via the cookie
                 banner; you can change your mind any time by clearing site data and re-visiting.
               </li>
             </ul>
@@ -96,27 +96,27 @@ export default function PrivacyPage() {
             </p>
             <ul className="list-disc pl-6 space-y-2">
               <li>
-                <strong>Stripe</strong> (payment processing) — name, email, phone, address, payment details. Stored in
+                <strong>Stripe</strong> (payment processing), name, email, phone, address, payment details. Stored in
                 the EU and US.
               </li>
               <li>
-                <strong>Calendly</strong> (booking calendar) — name, email, phone, address, booking slot. Stored in the
+                <strong>Calendly</strong> (booking calendar), name, email, phone, address, booking slot. Stored in the
                 US under SCCs.
               </li>
               <li>
-                <strong>Resend</strong> (transactional email) — your email address and any message you sent us. Stored
+                <strong>Resend</strong> (transactional email), your email address and any message you sent us. Stored
                 in the EU.
               </li>
               <li>
-                <strong>Google</strong> (Analytics 4 and Ads) — anonymised behavioural data plus, when you consent,
+                <strong>Google</strong> (Analytics 4 and Ads), anonymised behavioural data plus, when you consent,
                 hashed email and phone for advertising attribution. Stored in the EU and US under SCCs.
               </li>
               <li>
-                <strong>Google Sheets / Apps Script</strong> (internal lead tracking) — every field above. Stored in
+                <strong>Google Sheets / Apps Script</strong> (internal lead tracking), every field above. Stored in
                 the EU.
               </li>
               <li>
-                <strong>Vercel</strong> (website hosting) — request logs and error logs only. Stored in the EU
+                <strong>Vercel</strong> (website hosting), request logs and error logs only. Stored in the EU
                 (Dublin).
               </li>
             </ul>

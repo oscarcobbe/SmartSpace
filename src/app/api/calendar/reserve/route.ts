@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getAvailableSlots } from "@/lib/calendly";
 
 
-// POST routes are inherently dynamic but explicit is better — without
+// POST routes are inherently dynamic but explicit is better, without
 // this, Next.js may try static optimization on a future major.
 export const dynamic = "force-dynamic";
 
@@ -10,14 +10,14 @@ export const dynamic = "force-dynamic";
  * NOTE: This endpoint does NOT actually hold a slot. It re-checks
  * Calendly availability and returns `available: true/false`. The
  * earlier `{reserved: true, expiresIn: 1200}` response shape was
- * misleading — the corresponding `DELETE` is a no-op. Real reservation
+ * misleading, the corresponding `DELETE` is a no-op. Real reservation
  * happens at checkout completion (Stripe → Calendly invitee create).
  *
  * The response keeps `reserved`/`expiresIn` keys for backward
  * compatibility with BookingCalendar.tsx, but the comment above
  * accurately describes the actual semantics: this is an availability
  * RE-CHECK, not a hold. A 1200s "reservation" runs purely on the
- * client as a UI countdown — two customers checking the same slot at
+ * client as a UI countdown, two customers checking the same slot at
  * the same second both pass; whoever finishes Stripe checkout first
  * wins; the other gets a Calendly 409 which is alerted to Nigel via
  * the Stripe webhook's email + SMS.
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     if (!date || !timeSlot) {
       return NextResponse.json({ error: "Missing required fields: date, timeSlot" }, { status: 400 });
     }
-    // Format validation — these flow into a Calendly URL via
+    // Format validation, these flow into a Calendly URL via
     // getAvailableSlots, so an unbounded string is a real risk.
     if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return NextResponse.json({ error: "Invalid date format. Use YYYY-MM-DD" }, { status: 400 });

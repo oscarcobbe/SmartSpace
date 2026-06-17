@@ -23,14 +23,14 @@ function escapeHtml(s: string): string {
 }
 
 /**
- * Daily safety net — diagnoses paid Stripe orders that are missing a
+ * Daily safety net, diagnoses paid Stripe orders that are missing a
  * matching Calendly event and emails Nigel when there's something to act
  * on. Read-only by design: the cron does NOT auto-book, so a stale Stripe
  * webhook can't accidentally create double-bookings without human review.
  *
  * Runs via Vercel cron (configured in /vercel.json). Vercel injects a
  * special Authorization header `Bearer <CRON_SECRET>` on every cron-driven
- * request — we reject anything else so this endpoint can't be hit by
+ * request, we reject anything else so this endpoint can't be hit by
  * randoms scraping the site.
  *
  * Mirror of the manual /scripts/recover-bookings.mjs diagnostic mode.
@@ -98,7 +98,7 @@ async function fetchCalendlyInviteeEmails(calendlyToken: string): Promise<Set<st
       const inv = (id.collection ?? [])[0];
       if (inv?.email) emails.add(String(inv.email).toLowerCase());
     } catch (err) {
-      // Best-effort — one missing invitee shouldn't fail the whole audit,
+      // Best-effort, one missing invitee shouldn't fail the whole audit,
       // but log it so a recurring failure surfaces in Vercel logs.
       console.warn(
         `[cron/recover-bookings] invitee fetch failed for ${ev.uri}:`,
@@ -110,7 +110,7 @@ async function fetchCalendlyInviteeEmails(calendlyToken: string): Promise<Set<st
 }
 
 export async function GET(request: Request) {
-  // Vercel cron auth — reject anything else. Timing-safe to prevent the
+  // Vercel cron auth, reject anything else. Timing-safe to prevent the
   // secret being recovered byte-by-byte via response-time differences.
   const auth = request.headers.get("authorization") ?? "";
   const expected = `Bearer ${process.env.CRON_SECRET ?? ""}`;
@@ -141,7 +141,7 @@ export async function GET(request: Request) {
     const cd = (session.customer_details ?? {}) as Record<string, unknown>;
     const md = (session.metadata ?? {}) as Record<string, unknown>;
     const email = String(cd.email ?? session.customer_email ?? "").toLowerCase();
-    const name = String(cd.name ?? email.split("@")[0] ?? "—");
+    const name = String(cd.name ?? email.split("@")[0] ?? ", ");
     const product = String(md.product_name ?? "Order");
     const bookingDate = String(md.booking_date ?? "");
     const bookingSlot = String(md.booking_slot ?? "");
@@ -186,7 +186,7 @@ export async function GET(request: Request) {
   }
 
   // Only email when there's something genuinely actionable. Past missed
-  // bookings are a one-time phone call, not a recurring problem — emailing
+  // bookings are a one-time phone call, not a recurring problem, emailing
   // about them every day would train Nigel to ignore the alert.
   const futureRecoverable = missed.filter((m) => !m.isPast);
   if (futureRecoverable.length === 0) {
@@ -197,7 +197,7 @@ export async function GET(request: Request) {
       past: missed.filter((m) => m.isPast).length,
       checked: stripeOrders.length,
       emailed: false,
-      note: "All missed bookings are past — phone call only, no email sent",
+      note: "All missed bookings are past, phone call only, no email sent",
     });
   }
 
@@ -209,7 +209,7 @@ export async function GET(request: Request) {
     const futureCount = missed.filter((m) => !m.isPast).length;
     const pastCount = missed.filter((m) => m.isPast).length;
     // Escape every Stripe-supplied field. Stripe sanitizes their own
-    // fields but we don't trust upstream data into our HTML — a custom
+    // fields but we don't trust upstream data into our HTML, a custom
     // product_name with `<script>` would otherwise inject into Nigel's
     // inbox.
     const rows = missed
@@ -227,7 +227,7 @@ export async function GET(request: Request) {
         text: missed
           .map(
             (m) =>
-              `${m.name} <${m.email}> — ${m.product} — €${m.amount} — ${m.bookingLabel || m.bookingSlot} ${m.isPast ? "(PAST)" : ""}`
+              `${m.name} <${m.email}>, ${m.product}, €${m.amount}, ${m.bookingLabel || m.bookingSlot} ${m.isPast ? "(PAST)" : ""}`
           )
           .join("\n"),
         html: `

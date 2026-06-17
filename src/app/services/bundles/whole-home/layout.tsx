@@ -5,7 +5,7 @@ const SITE = "https://smart-space.ie";
 export const metadata: Metadata = {
   title: "Ring Whole Home Bundle Installation | Dublin & Leinster | Smart Space",
   description:
-    "Ring Whole Home Bundle — Video Doorbell plus 2x Floodlight Cams, professionally installed across Dublin and Leinster. Save €100. From €987.",
+    "Ring Whole Home Bundle, Video Doorbell plus 2x Floodlight Cams, professionally installed across Dublin and Leinster. Save €100. From €987.",
   alternates: { canonical: "/services/bundles/whole-home" },
   openGraph: {
     title: "Ring Whole Home Bundle | Dublin & Leinster Installation",

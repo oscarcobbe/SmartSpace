@@ -5,7 +5,7 @@ import { Calendar, Clock, ChevronLeft, ChevronRight, AlertCircle, Timer } from "
 import { useCart } from "@/context/CartContext";
 import { getEarliestBookableDate, isDateBlocked } from "@/lib/calendly";
 
-const AVAILABLE_DAYS = [1, 2, 3, 4]; // Mon-Thu — Friday blocked sitewide (2026-06-02)
+const AVAILABLE_DAYS = [1, 2, 3, 4]; // Mon-Thu, Friday blocked sitewide (2026-06-02)
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -23,7 +23,7 @@ interface BookingCalendarProps {
   /**
    * Working-day lead time before the earliest selectable date.
    *
-   * Defaults to 4 — appropriate for any flow that involves stock
+   * Defaults to 4, appropriate for any flow that involves stock
    * (product purchase + install: doorbells, cameras, bundles). The
    * Installation-Only flow passes 2 (customer brings their own device,
    * no stock to source) and Free Consultation passes 2 (site survey
@@ -31,6 +31,8 @@ interface BookingCalendarProps {
    * (Mon-Fri), implemented in lib/calendly.ts getEarliestBookableDate.
    */
   leadDays?: number;
+  /** Accent colour theme. Eufy product pages pass "blue"; default is Ring orange. */
+  accent?: "orange" | "blue";
 }
 
 function getAvailableDates(leadDays: number): Date[] {
@@ -58,7 +60,18 @@ function formatDateISO(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-export default function BookingCalendar({ onSelectionChange, compact, heading = "Choose an Installation Date", confirmLabel = "Installation", kind = "installation", leadDays = 4 }: BookingCalendarProps) {
+export default function BookingCalendar({ onSelectionChange, compact, heading = "Choose an Installation Date", confirmLabel = "Installation", kind = "installation", leadDays = 4, accent = "orange" }: BookingCalendarProps) {
+  // Accent theming only. Every booking rule/constraint (working days, lead
+  // time, blackout ranges, slot logic) is identical regardless of accent;
+  // Eufy product pages pass accent="blue" so only the colours differ.
+  const isBlue = accent === "blue";
+  const ac = {
+    text: isBlue ? "text-[#005d8e]" : "text-brand-500",
+    text600: isBlue ? "text-[#004c75]" : "text-brand-600",
+    selBox: isBlue ? "border-[#005d8e] bg-[#005d8e]/5 ring-1 ring-[#005d8e]/20" : "border-brand-500 bg-brand-50 ring-1 ring-brand-500/20",
+    spinner: isBlue ? "border-[#005d8e]" : "border-brand-500",
+    noteBox: isBlue ? "bg-[#005d8e]/5 border-[#005d8e]/20" : "bg-brand-50 border-brand-100",
+  };
   const { totalQuantity } = useCart();
   const [availableDates] = useState(() => getAvailableDates(leadDays));
   const [selectedDate, setSelectedDate] = useState<string>("");
@@ -96,7 +109,7 @@ export default function BookingCalendar({ onSelectionChange, compact, heading = 
 
   // Track which date the IN-FLIGHT availability fetch is for. If the
   // user clicks date A, then quickly clicks date B before A's response
-  // arrives, A's slots would otherwise overwrite B's correct slots —
+  // arrives, A's slots would otherwise overwrite B's correct slots,
   // showing stale availability to a paying customer. With a ref we
   // discard any response whose date no longer matches the user's
   // current selection.
@@ -168,7 +181,7 @@ export default function BookingCalendar({ onSelectionChange, compact, heading = 
   // Hard-guard against double-click race. `disabled={reserving}` on the
   // button isn't enough: React batches setState, so two rapid clicks
   // within the same animation frame both fire handleSlotSelect before
-  // the re-render disables the buttons. The ref check is synchronous —
+  // the re-render disables the buttons. The ref check is synchronous,
   // the second call sees `reservingRef.current === true` and bails.
   const reservingRef = useRef(false);
 
@@ -206,7 +219,7 @@ export default function BookingCalendar({ onSelectionChange, compact, heading = 
     <div className="border border-gray-200 rounded-2xl p-5">
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
-        <Calendar className="w-5 h-5 text-brand-500" />
+        <Calendar className={`w-5 h-5 ${ac.text}`} />
         <h3 className="text-sm font-bold text-gray-900">{heading}</h3>
       </div>
 
@@ -255,14 +268,14 @@ export default function BookingCalendar({ onSelectionChange, compact, heading = 
                 aria-pressed={isSelected}
                 className={`p-2.5 rounded-xl border text-center transition-all ${
                   isSelected
-                    ? "border-brand-500 bg-brand-50 ring-1 ring-brand-500/20"
+                    ? ac.selBox
                     : "border-gray-200 hover:border-gray-300 bg-white"
                 }`}
               >
-                <div className={`text-[10px] font-semibold uppercase tracking-wider ${isSelected ? "text-brand-500" : "text-gray-500"}`}>
+                <div className={`text-[10px] font-semibold uppercase tracking-wider ${isSelected ? ac.text : "text-gray-500"}`}>
                   {DAY_NAMES[date.getDay()]}
                 </div>
-                <div className={`text-sm font-bold ${isSelected ? "text-brand-500" : "text-gray-900"}`}>
+                <div className={`text-sm font-bold ${isSelected ? ac.text : "text-gray-900"}`}>
                   {date.getDate()} {MONTH_NAMES[date.getMonth()]}
                 </div>
               </button>
@@ -275,13 +288,13 @@ export default function BookingCalendar({ onSelectionChange, compact, heading = 
       {selectedDate && (
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <Clock className="w-4 h-4 text-brand-500" />
+            <Clock className={`w-4 h-4 ${ac.text}`} />
             <span className="text-sm font-bold text-gray-900">Select a Time</span>
           </div>
 
           {loadingSlots ? (
             <div className="flex justify-center py-4">
-              <div className="w-5 h-5 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+              <div className={`w-5 h-5 border-2 ${ac.spinner} border-t-transparent rounded-full animate-spin`} />
             </div>
           ) : slots.length === 0 ? (
             <p className="text-sm text-gray-500 text-center py-3">No slots available on this date</p>
@@ -296,11 +309,11 @@ export default function BookingCalendar({ onSelectionChange, compact, heading = 
                     disabled={reserving}
                     className={`p-3 rounded-xl border text-center transition-all ${
                       isSelected
-                        ? "border-brand-500 bg-brand-50 ring-1 ring-brand-500/20"
+                        ? ac.selBox
                         : "border-gray-200 hover:border-gray-300 bg-white"
                     } disabled:opacity-50`}
                   >
-                    <span className={`text-sm font-semibold ${isSelected ? "text-brand-500" : "text-gray-700"}`}>
+                    <span className={`text-sm font-semibold ${isSelected ? ac.text : "text-gray-700"}`}>
                       {reserving && selectedSlot === slot.value ? "Reserving..." : slot.label}
                     </span>
                   </button>
@@ -313,17 +326,17 @@ export default function BookingCalendar({ onSelectionChange, compact, heading = 
 
       {/* Reservation confirmation with countdown */}
       {selectedDate && selectedSlot && reservationExpiry > 0 && (
-        <div className="mt-4 p-3 bg-brand-50 rounded-xl border border-brand-100">
+        <div className={`mt-4 p-3 rounded-xl border ${ac.noteBox}`}>
           <div className="flex items-start gap-2">
-            <Timer className="w-4 h-4 text-brand-500 flex-shrink-0 mt-0.5" />
+            <Timer className={`w-4 h-4 ${ac.text} flex-shrink-0 mt-0.5`} />
             <div>
-              <p className="text-xs font-semibold text-brand-600">
+              <p className={`text-xs font-semibold ${ac.text600}`}>
                 {confirmLabel}: {availableDates.find((d) => formatDateISO(d) === selectedDate) &&
                   `${DAY_NAMES[availableDates.find((d) => formatDateISO(d) === selectedDate)!.getDay()]} ${availableDates.find((d) => formatDateISO(d) === selectedDate)!.getDate()} ${MONTH_NAMES[availableDates.find((d) => formatDateISO(d) === selectedDate)!.getMonth()]}`}{" "}
                 at {slots.find((s) => s.value === selectedSlot)?.label}
               </p>
-              <p className="text-[10px] text-brand-500 mt-1">
-                Reserved for {minutesLeft} min — complete checkout to confirm
+              <p className={`text-[10px] ${ac.text} mt-1`}>
+                Reserved for {minutesLeft} min, complete checkout to confirm
               </p>
             </div>
           </div>

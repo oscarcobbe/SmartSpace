@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "GA4 Setup — Internal",
+  title: "GA4 Setup, Internal",
   description: "Internal hand-off: step-by-step to set up Google Analytics 4 for Smart Space.",
   robots: { index: false, follow: false },
 };
@@ -15,15 +15,15 @@ export default function Ga4SetupPage() {
         </div>
 
         <h1 className="text-3xl font-extrabold text-gray-900 mb-3">
-          Google Analytics 4 — setup guide
+          Google Analytics 4, setup guide
         </h1>
         <p className="text-gray-500 mb-10">
           ~10 minutes. All you need to do is create the GA4 property and copy
           the Measurement ID into Vercel. The website code is already wired to
-          pick it up automatically — no further code changes needed.
+          pick it up automatically, no further code changes needed.
         </p>
 
-        <h2 id="step-1">Step 1 — Create the GA4 property</h2>
+        <h2 id="step-1">Step 1, Create the GA4 property</h2>
         <ol>
           <li>Go to <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer">analytics.google.com</a> and sign in with the Google account that owns Smart Space.</li>
           <li>Click the gear icon (bottom-left) → <strong>Admin</strong>.</li>
@@ -49,7 +49,7 @@ export default function Ga4SetupPage() {
             <tr><th>Field</th><th>Value</th></tr>
           </thead>
           <tbody>
-            <tr><td>Industry category</td><td>Jobs & Education &gt; Other — OR — Real Estate / Home Services</td></tr>
+            <tr><td>Industry category</td><td>Jobs & Education &gt; Other, OR, Real Estate / Home Services</td></tr>
             <tr><td>Business size</td><td>Small (1–10 employees)</td></tr>
           </tbody>
         </table>
@@ -62,23 +62,23 @@ export default function Ga4SetupPage() {
           <li>✅ Examine user behaviour</li>
         </ul>
 
-        <h2 id="step-2">Step 2 — Create the Web data stream</h2>
+        <h2 id="step-2">Step 2, Create the Web data stream</h2>
         <ol>
           <li>When prompted, choose <strong>Web</strong> as the platform.</li>
           <li>Website URL: <code>https://smart-space.ie</code></li>
           <li>Stream name: <code>Smart Space Website</code></li>
-          <li>Enable <strong>Enhanced Measurement</strong> (the blue toggle — on by default, leave it on). This auto-tracks scroll depth, outbound clicks, site search, and file downloads.</li>
+          <li>Enable <strong>Enhanced Measurement</strong> (the blue toggle, on by default, leave it on). This auto-tracks scroll depth, outbound clicks, site search, and file downloads.</li>
           <li>Click <strong>Create stream</strong>.</li>
         </ol>
 
         <h3>Copy the Measurement ID</h3>
         <p>
           On the stream details page, you&apos;ll see your <strong>Measurement ID</strong>{" "}
-          — starts with <code>G-</code> followed by 10 uppercase letters/digits
+        , starts with <code>G-</code> followed by 10 uppercase letters/digits
           (e.g. <code>G-XYZ1234567</code>). Copy it.
         </p>
 
-        <h2 id="step-3">Step 3 — Add the Measurement ID to Vercel</h2>
+        <h2 id="step-3">Step 3, Add the Measurement ID to Vercel</h2>
         <ol>
           <li>Go to <a href="https://vercel.com" target="_blank" rel="noopener noreferrer">vercel.com</a> → your <strong>smart-space</strong> project.</li>
           <li><strong>Settings</strong> → <strong>Environment Variables</strong>.</li>
@@ -93,12 +93,12 @@ export default function Ga4SetupPage() {
           <li><strong>Deployments</strong> tab → three-dot menu on the latest deployment → <strong>Redeploy</strong> (to pick up the new env var).</li>
         </ol>
 
-        <h2 id="step-4">Step 4 — Verify it&apos;s working</h2>
+        <h2 id="step-4">Step 4, Verify it&apos;s working</h2>
         <ol>
           <li>Wait for the Vercel redeploy to finish (~1 minute).</li>
           <li>Open <a href="https://smart-space.ie" target="_blank" rel="noopener noreferrer">smart-space.ie</a> in a private browser window.</li>
           <li>Back in GA4 → <strong>Reports</strong> → <strong>Realtime</strong>. You should see yourself as one active user within 30 seconds.</li>
-          <li>Click around the site — the pageviews should appear in the Realtime report.</li>
+          <li>Click around the site, the pageviews should appear in the Realtime report.</li>
         </ol>
         <p>
           If nothing shows up after 2 minutes: disable any ad blocker and
@@ -106,7 +106,7 @@ export default function Ga4SetupPage() {
           exactly right (no typos, starts with <code>G-</code>).
         </p>
 
-        <h2 id="step-5">Step 5 — Link GA4 to Google Ads (important for bidding)</h2>
+        <h2 id="step-5">Step 5, Link GA4 to Google Ads (important for bidding)</h2>
         <p>
           Google Ads needs this link so it can see site behaviour data for
           smart bidding. Without it, GA4 runs fine but Ads can&apos;t use its
@@ -119,7 +119,7 @@ export default function Ga4SetupPage() {
           <li>Save.</li>
         </ol>
 
-        <h2 id="step-6">Step 6 — Mark key conversions in GA4</h2>
+        <h2 id="step-6">Step 6, Mark key conversions in GA4</h2>
         <p>
           GA4 automatically tracks some events, but you&apos;ll want to mark the
           ones that matter for your business as <strong>Key events</strong>
@@ -140,11 +140,11 @@ export default function Ga4SetupPage() {
           <li><strong>Explore → Path exploration</strong>: see the actual click paths users take through the site.</li>
         </ul>
 
-        <h2 id="bonus">Bonus — Search Console integration</h2>
+        <h2 id="bonus">Bonus, Search Console integration</h2>
         <p>
           In GA4 → Admin → Product links → Search Console links → Link. Connects
           your Search Console property (smart-space.ie) so GA4 reports include
-          organic search queries — shows you which keywords drive traffic AND
+          organic search queries, shows you which keywords drive traffic AND
           which of those visitors convert.
         </p>
 

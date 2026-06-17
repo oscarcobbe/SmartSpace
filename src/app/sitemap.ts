@@ -20,11 +20,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/services/single`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
     { url: `${BASE}/services/installation-only`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     { url: `${BASE}/services/free-consultation`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
-    // NOTE: /services/other-brands is intentionally NOT listed yet. The page
-    // exists in the repo but is not deployed to production (pending sign-off
-    // on its estimated Eufy pricing). Add this line in the SAME commit that
-    // ships the page, so the sitemap never points Google at a 404.
-    // { url: `${BASE}/services/other-brands`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
+    { url: `${BASE}/services/other-brands`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
+
+    // Eufy flow (supplied + installed; blue product pages mirroring the Ring flow)
+    { url: `${BASE}/services/eufy`, lastModified: now, changeFrequency: "weekly", priority: 0.85 },
+    { url: `${BASE}/services/eufy/single`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE}/services/eufy/bundles`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
 
     // Individual product detail pages (static-generated, one per curated handle)
     { url: `${BASE}/services/plus-video-doorbell`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
@@ -36,8 +37,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/services/plus-whole-home-bundle`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE}/services/pro-whole-home-bundle`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE}/services/eldercare-security-bundle`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE}/services/eufy-video-doorbell-e340`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE}/services/eufy-floodlight-cam-e340`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
 
-    // Local SEO — county index plus the 4 highest-volume county detail
+    // Local SEO, county index plus the 4 highest-volume county detail
     // pages (Dublin, Wicklow, Kildare, Meath). Each detail page targets
     // queries like "ring installer dublin" / "doorbell installation kildare"
     // that the single /areas page was too generic to win.
@@ -52,19 +55,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
 
-    // /ring-installation deliberately omitted — it's a paid-only landing
+    // /ring-installation deliberately omitted, it's a paid-only landing
     // page kept out of organic search to avoid cannibalising
     // /services/installation-only (same intent, same conversion path).
 
-    // FAQ — long-tail intent ("how does ring doorbell installation work",
+    // FAQ, long-tail intent ("how does ring doorbell installation work",
     // "what's needed for ring chime", etc.). Re-added after content
     // refresh to capture these queries.
     { url: `${BASE}/faq`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
 
-    // Blog — informational top-of-funnel content. Each post targets a
+    // Blog, informational top-of-funnel content. Each post targets a
     // distinct buyer-research query so they don't cannibalise each other.
     { url: `${BASE}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
     { url: `${BASE}/blog/ring-vs-eufy-doorbell-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${BASE}/blog/eufy-video-doorbell-e340-fitted-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${BASE}/blog/eufy-home-bundles-driveway-garden-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/blog/smart-camera-wifi-drops-irish-homes`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/blog/tapo-vs-eufy-vs-ring-budget-doorbell-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/blog/whole-home-security-beyond-front-door-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
@@ -73,7 +78,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/blog/ring-doorbell-installation-ireland-guide`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/blog/smart-doorbell-vs-traditional-intercom-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
 
-    // Legal — required by GDPR / ePrivacy now that the cookie banner fires
+    // Legal, required by GDPR / ePrivacy now that the cookie banner fires
     // ad_storage / ad_user_data signals. Low priority but indexable.
     { url: `${BASE}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${BASE}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },

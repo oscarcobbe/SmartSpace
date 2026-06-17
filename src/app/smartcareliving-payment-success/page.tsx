@@ -23,7 +23,7 @@ function PaymentSuccessContent() {
     if (typeof w === "undefined" || typeof w.gtag !== "function") return;
     fired.current = true;
     // transaction_id deduplicates the conversion in Google Ads if the
-    // user refreshes the page or navigates back — without it, every
+    // user refreshes the page or navigates back, without it, every
     // page load would count as a fresh sale.
     w.gtag("event", "conversion", {
       send_to: GADS_CONVERSION_TAG,
@@ -40,7 +40,7 @@ function PaymentSuccessContent() {
             Payment Received!
           </h1>
           <p className="text-gray-600 mb-2 text-lg">
-            Thank you — your payment has been processed successfully.
+            Thank you, your payment has been processed successfully.
           </p>
           <p className="text-gray-500 text-sm mb-6">
             You&apos;ll receive a receipt by email shortly. Our team will be in

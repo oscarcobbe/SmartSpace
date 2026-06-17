@@ -14,7 +14,7 @@
  * Why off-screen positioning instead of `display:none`: screen readers
  * skip `display:none` elements entirely. `position:absolute` with a
  * negative offset keeps the link in the accessibility tree but moves
- * it off the visible canvas — exactly what we want.
+ * it off the visible canvas, exactly what we want.
  *
  * Tap target is 44 × 44 minimum (Apple's HIG + WCAG 2.2 Target Size AA)
  * because Bluetooth-keyboard iPad users + VoiceOver users on iPhone
@@ -44,7 +44,7 @@
 .skip-link:focus-visible {
   left: 0;
   top: 0;
-  outline: 2px solid #1C1A18; /* brand dark — visible focus ring */
+  outline: 2px solid #1C1A18; /* brand dark, visible focus ring */
   outline-offset: 2px;
 }
 
@@ -67,7 +67,7 @@ body {
   font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
 }
 
-/* Refined heading typography — slightly tighter for premium feel */
+/* Refined heading typography, slightly tighter for premium feel */
 h1 { letter-spacing: -0.035em; }
 h2 { letter-spacing: -0.03em; }
 h3 { letter-spacing: -0.02em; }
@@ -146,7 +146,7 @@ p {
     background-clip: text;
   }
 
-  /* Layered premium shadow — diffuse like studio lighting */
+  /* Layered premium shadow, diffuse like studio lighting */
   .shadow-premium {
     box-shadow:
       0 1px 1px rgba(38, 34, 30, 0.02),
@@ -177,7 +177,7 @@ p {
     animation: glowPulse 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
-  /* Accessibility — disable decorative motion for users who request it.
+  /* Accessibility, disable decorative motion for users who request it.
      Covers all custom animations defined in this file: fade-up, btn-sheen,
      card-lift, pulse-glow. Critical per WCAG 2.1 AA. */
   @media (prefers-reduced-motion: reduce) {

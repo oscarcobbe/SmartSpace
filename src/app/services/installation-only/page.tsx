@@ -36,7 +36,7 @@ const services = [
   {
     icon: Wrench,
     title: "Full Installation",
-    description: "We mount and wire every device — doorbells, cameras, and floodlights. Clean, professional finish every time.",
+    description: "We mount and wire every device, doorbells, cameras, and floodlights. Clean, professional finish every time.",
   },
   {
     icon: Wifi,
@@ -57,7 +57,7 @@ const services = [
 
 // Aosu's PNG is a wide horizontal lockup (4.3:1) with no padding, so it
 // renders much wider than the others at any given height. h-7 lands it
-// at ~120px wide — in line with Eufy/Nest/Tapo. Tapo's heavy internal
+// at ~120px wide, in line with Eufy/Nest/Tapo. Tapo's heavy internal
 // PNG padding (67%) is why it needs h-28 to hit similar content size.
 const brands = [
   { name: "Ring", logo: "/Ring.png", className: "h-14", width: 284, height: 178 },
@@ -110,7 +110,7 @@ export default function InstallationOnlyPage() {
 
   // Friendly question labels for the dashboard / Stripe metadata. The raw
   // Shopify option names are verbose ("How Many Ring or Similar Products
-  // Are To Be Installed") — remap to the same short labels used in the UI.
+  // Are To Be Installed"), remap to the same short labels used in the UI.
   const FRIENDLY_LABELS: Record<string, string> = {
     "How Many Ring or Similar Products Are To Be Installed": "Number of devices",
     "Video Doorbell To Be Installed ? Is There An Existing Working Wired Doorbell At The Desired Location": "Existing doorbell wiring",
@@ -123,7 +123,7 @@ export default function InstallationOnlyPage() {
     checkoutConfig[friendly] = v;
   }
 
-  // Strict variant match — no silent fallback to variants[0]. The
+  // Strict variant match, no silent fallback to variants[0]. The
   // catalogue currently has variants for 1–5 devices but no 6-device
   // permutations, and the old `?? variants[0]` fallback was quietly
   // booking 6-device jobs at the 1-device price (€139). We surface
@@ -170,7 +170,7 @@ export default function InstallationOnlyPage() {
         </div>
       </section>
 
-      {/* Service explainer — reiterates the "Got A Device To Install?"
+      {/* Service explainer, reiterates the "Got A Device To Install?"
           framing from the homepage hero CTA so visitors landing here
           directly understand the offer in two seconds. */}
       <section className="py-12 lg:py-16 bg-gray-50 border-b border-gray-100">
@@ -179,7 +179,7 @@ export default function InstallationOnlyPage() {
             Already bought your device?<br className="hidden sm:inline" /> We&apos;ll install it for you.
           </h1>
           <p className="text-gray-600 text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
-            Mounting, wiring, app setup — done properly. From €139, with your
+            Mounting, wiring, app setup, done properly. From €139, with your
             exact total shown below before you book.
           </p>
         </div>
@@ -209,7 +209,7 @@ export default function InstallationOnlyPage() {
                 <div className="bg-gray-50 rounded-2xl p-6">
                   <div className="text-sm text-gray-500 mb-1">Total price</div>
                   <div className="text-3xl font-extrabold text-[#1a1a1a]">
-                    {price ? formatPrice(price.amount, price.currencyCode) : "—"}
+                    {price ? formatPrice(price.amount, price.currencyCode) : ", "}
                   </div>
                   <div className="text-xs text-gray-500 mt-1">Professional installation included</div>
                 </div>
@@ -268,7 +268,7 @@ export default function InstallationOnlyPage() {
                 })}
 
                 {/* If the chosen combination has no matching variant in
-                    the catalogue (e.g. 6 devices — no 6-device variants
+                    the catalogue (e.g. 6 devices, no 6-device variants
                     exist), we route to a quote instead of booking the
                     wrong job at variants[0]'s price. */}
                 {product && !hasMatchedVariant && (
@@ -294,7 +294,7 @@ export default function InstallationOnlyPage() {
                   </div>
                 )}
 
-                {/* Direct-to-Stripe — single-product page, no need to
+                {/* Direct-to-Stripe, single-product page, no need to
                     route through the cart drawer. Cuts the funnel from
                     3 clicks (Add → drawer → Checkout) to 1 (Book Now). */}
                 {product && hasMatchedVariant && (
@@ -319,7 +319,7 @@ export default function InstallationOnlyPage() {
 
               {/* Right: Booking Calendar */}
               <div>
-                {/* Customer-supplied install — 2-working-day lead. Faster
+                {/* Customer-supplied install, 2-working-day lead. Faster
                     than the 4-day stock default because there's no device
                     to source, just crew availability. */}
                 <BookingCalendar

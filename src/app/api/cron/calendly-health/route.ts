@@ -21,7 +21,7 @@ function safeBearerEqual(actual: string, expected: string): boolean {
  * Daily Calendly availability sanity check.
  *
  * Why this exists: a revoked or expired CALENDLY_PERSONAL_TOKEN causes
- * /api/calendar/availability to silently return [] for every date — the
+ * /api/calendar/availability to silently return [] for every date, the
  * booking page just shows "no slots available" forever and customers
  * bounce. There's no client-side or server-side error surfaced. This
  * cron checks the next 7 weekdays and emails Nigel if every single one
@@ -60,11 +60,11 @@ export async function GET(request: Request) {
   const checkDates = nextWeekdays(7);
   const results: { date: string; slots: number }[] = [];
 
-  // Check both event types — the booking page can fail if either token
+  // Check both event types, the booking page can fail if either token
   // path is broken even if the other is fine.
   for (const d of checkDates) {
     try {
-      // Default to consultation flow — that's what /booking exposes.
+      // Default to consultation flow, that's what /booking exposes.
       const slots = await getAvailableSlots(fmtDate(d), "consultation");
       results.push({ date: fmtDate(d), slots: slots.length });
     } catch (err) {
@@ -119,7 +119,7 @@ export async function GET(request: Request) {
           "1. Open https://calendly.com/event_types and confirm the consultation + installation event types still exist and are active.",
           "2. Open Calendly account settings → Integrations → API and reissue the personal access token if needed.",
           "3. Update CALENDLY_PERSONAL_TOKEN in Vercel env vars and redeploy.",
-          "4. Manually check the live booking page at https://smart-space.ie/booking — if slots are visible there, the cron alarm is a false positive (logs at https://vercel.com/oscar-5316s-projects/smart-space).",
+          "4. Manually check the live booking page at https://smart-space.ie/booking, if slots are visible there, the cron alarm is a false positive (logs at https://vercel.com/oscar-5316s-projects/smart-space).",
         ].join("\n"),
         html: `
           <h2 style="color:#b91c1c">⚠️ Booking calendar may be broken</h2>

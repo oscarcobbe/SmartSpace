@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 const SITE = "https://smart-space.ie";
 
 export const metadata: Metadata = {
-  title: "Installation Only — Ring, Eufy, Nest, Tapo & Aosu | Dublin & Leinster | Smart Space",
+  title: "Installation Only, Ring, Eufy, Nest, Tapo & Aosu | Dublin & Leinster | Smart Space",
   description:
     "Already bought a Ring, Eufy, Nest, Tapo or Aosu device? We'll install it across Dublin and Leinster. Mounting, wiring, app setup. From €139.",
   alternates: { canonical: "/services/installation-only" },
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
       "Professional Ring, Eufy, Nest, Tapo and Aosu installation across Dublin and Leinster. From €139.",
     url: `${SITE}/services/installation-only`,
     type: "website",
-    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Installation Only — Ring, Eufy, Nest, Tapo, Aosu — Smart Space" }],
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Installation Only, Ring, Eufy, Nest, Tapo, Aosu, Smart Space" }],
   },
   twitter: {
     card: "summary_large_image",

@@ -7,7 +7,7 @@ import { sendToCrm } from "@/lib/crm";
 import { sendSiteAlert } from "@/lib/site-alerts";
 
 
-// POST routes are inherently dynamic but explicit is better — without
+// POST routes are inherently dynamic but explicit is better, without
 // this, Next.js may try static optimization on a future major.
 export const dynamic = "force-dynamic";
 
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
       // console.error above will surface in Vercel logs. Cron health-check
       // would also catch this within 24h via the page sentinel checks,
       // though strictly speaking it'd only fire if the contact page
-      // *renders* broken — not if /api/contact returns 503.
+      // *renders* broken, not if /api/contact returns 503.
       return NextResponse.json(
         { error: "Email is not configured on the server." },
         { status: 503 }
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
 
     // Parse the body in its own try-block. Bots, scanners, and stray curls
     // POST empty or malformed JSON to /api/contact constantly. These should
-    // return a quiet 400 — NOT trigger the bottom-of-route sendSiteAlert
+    // return a quiet 400, NOT trigger the bottom-of-route sendSiteAlert
     // panic email, which is reserved for genuine infrastructure failures
     // (Resend down, Apps Script unreachable, etc.). Previously a single
     // empty-body POST would page Nigel.
@@ -76,11 +76,11 @@ export async function POST(request: Request) {
       subject?: string;
       message?: string;
       attribution?: AttributionRecord;
-      gclid?: string; // legacy — accept but prefer attribution.gclid
-      homepage_url?: string; // honeypot — see ContactForm.tsx
+      gclid?: string; // legacy, accept but prefer attribution.gclid
+      homepage_url?: string; // honeypot, see ContactForm.tsx
     };
 
-    // Honeypot — bots fill every input on the page. Real users can't see or
+    // Honeypot, bots fill every input on the page. Real users can't see or
     // interact with `homepage_url` (it's off-screen + aria-hidden +
     // tabindex=-1 + autocomplete=off). Non-empty value = bot. Return success
     // so the bot doesn't retry, but skip every side effect: no email, no
@@ -145,7 +145,7 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error("Resend error:", error);
-      // Alert Nigel immediately — every contact-form submission is now
+      // Alert Nigel immediately, every contact-form submission is now
       // failing. Without this, customers fill in the form, see a generic
       // error, and bounce without leaving a trace.
       await sendSiteAlert({
@@ -154,7 +154,7 @@ export async function POST(request: Request) {
         summary: "Contact form Resend send failed",
         details: [
           `The customer's submission was REJECTED by Resend.`,
-          `They saw a generic "Could not send email" error — and unless they retry,`,
+          `They saw a generic "Could not send email" error, and unless they retry,`,
           `their enquiry is lost. Worth following up on a fresh Resend incident page:`,
           `https://status.resend.com`,
           "",
@@ -173,24 +173,24 @@ export async function POST(request: Request) {
     }
 
     // ──────────────────────────────────────────────────────────────
-    // PARALLEL FAN-OUT — the four side effects below all run at once.
+    // PARALLEL FAN-OUT, the four side effects below all run at once.
     // Previously they were sequential awaits (auto-reply → logLead →
     // fireServerConversion → void sendToCrm) which cumulatively took
     // 6–13 seconds before the customer saw "Message Sent!". A 2026-05-18
     // mobile QA flagged the form-submit latency as the most likely cause
     // of the 26 → 3 funnel leak in GA4 (users bailing during the wait).
     //
-    // Now: Resend lead email (above) is the only sequential step — it's
+    // Now: Resend lead email (above) is the only sequential step, it's
     // the "did we capture the lead" check and Resend is fast (~500ms).
     // Everything downstream goes through Promise.allSettled so a single
     // failure can't block the other three, and the response goes out as
-    // soon as the slowest task finishes (typically logLead at 3–5s) —
+    // soon as the slowest task finishes (typically logLead at 3–5s),
     // total time roughly cut in half.
     //
     // Note: we MUST await this Promise.allSettled. Vercel kills the
     // serverless function the instant the response is returned, so a
     // bare `void` fire-and-forget silently drops ~30% of these calls.
-    // The `allSettled` is the right tool — it gives us "parallel but
+    // The `allSettled` is the right tool, it gives us "parallel but
     // still awaited" semantics.
     // ──────────────────────────────────────────────────────────────
 
@@ -207,7 +207,7 @@ export async function POST(request: Request) {
     // Build all four downstream tasks as promises, then await them
     // together. Errors are caught per-task so one failure doesn't kill
     // the others (Resend rejection during auto-reply was historically
-    // the most common — wrapping makes that explicit).
+    // the most common, wrapping makes that explicit).
     //
     // IMPORTANT: the Resend SDK resolves with `{ data, error }` on most
     // failure modes (sandbox restrictions, invalid recipient, rate limit
@@ -240,7 +240,7 @@ export async function POST(request: Request) {
         "Nigel and the Smart Space team",
         "smart-space.ie",
       ].join("\n"),
-      // 600px table layout, inline styles only — Gmail / Outlook / Apple
+      // 600px table layout, inline styles only, Gmail / Outlook / Apple
       // Mail all strip <style> blocks aggressively, so EVERY style must be
       // an inline attribute. Mirrors the SCL launch email template language
       // (ad-assets/email-outreach/04-smartcareliving-launch.html).
@@ -310,7 +310,7 @@ export async function POST(request: Request) {
 </html>`,
     }).then(async (result) => {
       // Resend's resolved-error path. SDK returns { data, error } and we
-      // have to check explicitly — a bare .catch() never sees this.
+      // have to check explicitly, a bare .catch() never sees this.
       if (result && "error" in result && result.error) {
         const reason = JSON.stringify(result.error);
         console.error("[contact] auto-reply email rejected by Resend:", reason);
@@ -321,7 +321,7 @@ export async function POST(request: Request) {
           details: [
             "The customer submitted the contact form successfully, but our auto-reply confirmation email was REJECTED by Resend.",
             "",
-            "The lead alert email to you still arrived — the lead is captured.",
+            "The lead alert email to you still arrived, the lead is captured.",
             "The customer just didn't get the immediate \"we've got your message\" confirmation.",
             "Worth a quick manual reply if the timing is sensitive.",
             "",
@@ -356,7 +356,7 @@ export async function POST(request: Request) {
           "The customer submitted the contact form successfully, but our auto-reply",
           "confirmation email threw an uncaught exception during send.",
           "",
-          "The lead alert email to you still arrived — the lead is captured.",
+          "The lead alert email to you still arrived, the lead is captured.",
           "",
           `Customer name:  ${customerName}`,
           `Customer email: ${customerEmail}`,
@@ -380,7 +380,7 @@ export async function POST(request: Request) {
     });
 
     const fireConversionTask = fireServerConversion({
-      gadsLabel: leadLabel, // Smart Space Lead — same label as ContactForm
+      gadsLabel: leadLabel, // Smart Space Lead, same label as ContactForm
       ga4EventName: "generate_lead",
       value: 10,
       currency: "EUR",
@@ -412,7 +412,7 @@ export async function POST(request: Request) {
     });
 
     // Wait for all four to settle. Ceiling is the slowest task, not the
-    // sum — typically 3–5s vs the old 6–13s. allSettled means one
+    // sum, typically 3–5s vs the old 6–13s. allSettled means one
     // failure doesn't block the response or the other tasks.
     const [autoReplyResult] = await Promise.all([
       autoReplyTask,
@@ -432,7 +432,7 @@ export async function POST(request: Request) {
     });
   } catch (e) {
     console.error("Contact API error:", e);
-    // Unexpected exception — alert Nigel. This is the catch-all for anything
+    // Unexpected exception, alert Nigel. This is the catch-all for anything
     // Resend, Sheets, CRM, or attribution that throws unexpectedly.
     await sendSiteAlert({
       category: "contact-form",

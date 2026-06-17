@@ -5,7 +5,7 @@ const SITE = "https://smart-space.ie";
 export const metadata: Metadata = {
   title: "Ring Eldercare Bundle Installation | Dublin & Leinster | Smart Space",
   description:
-    "Ring Eldercare Bundle — Video Doorbell and smart Wi-Fi keybox, professionally installed for elderly relatives and their carers. From €509.",
+    "Ring Eldercare Bundle, Video Doorbell and smart Wi-Fi keybox, professionally installed for elderly relatives and their carers. From €509.",
   alternates: { canonical: "/services/bundles/eldercare" },
   openGraph: {
     title: "Ring Eldercare Bundle | Dublin & Leinster Installation",

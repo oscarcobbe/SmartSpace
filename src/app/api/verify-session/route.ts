@@ -23,7 +23,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    // 10s ceiling — Stripe session GET typically completes in <500ms; a
+    // 10s ceiling, Stripe session GET typically completes in <500ms; a
     // hung call would otherwise pin this route up to the serverless
     // function limit and the success page would spin forever (and the
     // conversion never fires).
@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     const amount = typeof session.amount_total === "number" ? session.amount_total / 100 : 0;
     const currency = (session.currency ?? "eur").toUpperCase();
     // PII REMOVED. Previously this endpoint returned the customer's
-    // email + phone in the response — convenient for Enhanced
+    // email + phone in the response, convenient for Enhanced
     // Conversions on the success page, but it also meant anyone with
     // a session ID (which appears in the redirect URL, browser history,
     // any Referer header, screenshots of the success page) could fetch

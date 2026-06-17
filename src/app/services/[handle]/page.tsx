@@ -19,6 +19,8 @@ const CURATED_HANDLES = [
   "plus-whole-home-bundle",
   "pro-whole-home-bundle",
   "eldercare-security-bundle",
+  "eufy-video-doorbell-e340",
+  "eufy-floodlight-cam-e340",
 ];
 
 export function generateStaticParams() {
@@ -90,7 +92,17 @@ export default async function ServiceDetailPage({ params }: { params: { handle: 
   const features = getProductFeatures(product.handle, product.productType);
   const isService = product.productType === "Consultation" || product.productType === "Subscription";
   const isBundle = product.tags.includes("Bundle") || product.title.toLowerCase().includes("bundle");
-  const categoryBreadcrumb = isBundle
+  // Eufy products reuse this exact page; only the colour and the brand
+  // wording change (Ring -> Eufy). Everything else is shared with Ring.
+  const isEufy = product.tags.includes("Eufy");
+  const accent: "orange" | "blue" = isEufy ? "blue" : "orange";
+  const brandWord = isEufy ? "Eufy" : "Ring";
+  const ac = isEufy
+    ? { link: "hover:text-[#005d8e]", chimeBox: "bg-[#005d8e]/5 border-[#005d8e]/20", chimeIcon: "text-[#005d8e]", featBox: "bg-[#005d8e]/10 text-[#005d8e]", check: "text-[#005d8e]", btn: "bg-[#005d8e] hover:bg-[#004c75]" }
+    : { link: "hover:text-brand-500", chimeBox: "bg-brand-50 border-brand-100", chimeIcon: "text-brand-500", featBox: "bg-brand-50 text-brand-500", check: "text-brand-500", btn: "bg-brand-500 hover:bg-brand-600" };
+  const categoryBreadcrumb = isEufy
+    ? { href: "/services/eufy", title: "Eufy" }
+    : isBundle
     ? { href: "/services/bundles", title: "Bundles" }
     : categoryBreadcrumbs[product.productType] ?? null;
 
@@ -98,6 +110,9 @@ export default async function ServiceDetailPage({ params }: { params: { handle: 
   const relatedProducts = all
     .filter((r) => r.productType === product.productType && r.handle !== product.handle)
     .filter((r) => curatedSet.has(r.handle))
+    // Keep related products within the same brand so Ring never shows on a
+    // Eufy page (and vice-versa).
+    .filter((r) => r.tags.includes("Eufy") === isEufy)
     .slice(0, 4);
 
   // Service JSON-LD schema
@@ -118,7 +133,7 @@ export default async function ServiceDetailPage({ params }: { params: { handle: 
     },
   };
 
-  // Product JSON-LD — same data as Service but Product/Offer schema gets
+  // Product JSON-LD, same data as Service but Product/Offer schema gets
   // richer SERP treatment (price chip, availability, ratings) for product
   // pages. Both schemas can coexist on the same page.
   const productSchema = {
@@ -144,7 +159,7 @@ export default async function ServiceDetailPage({ params }: { params: { handle: 
     // product. Claiming 100 reviews per individual product was a Google
     // Ads policy violation (misleading structured data) and risked a
     // manual action. Site-wide rating lives on LocalBusiness schema in
-    // src/app/layout.tsx — the supported pattern.
+    // src/app/layout.tsx, the supported pattern.
   };
 
   const breadcrumbSchema = {
@@ -175,13 +190,13 @@ export default async function ServiceDetailPage({ params }: { params: { handle: 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Breadcrumbs */}
           <nav className="flex items-center gap-2 text-sm text-gray-500 mb-8 overflow-x-auto whitespace-nowrap scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
-            <Link href="/" className="hover:text-brand-500 transition-colors">Home</Link>
+            <Link href="/" className={`${ac.link} transition-colors`}>Home</Link>
             <span>/</span>
-            <Link href="/services" className="hover:text-brand-500 transition-colors">Services</Link>
+            <Link href="/services" className={`${ac.link} transition-colors`}>Services</Link>
             {categoryBreadcrumb && (
               <>
                 <span>/</span>
-                <Link href={categoryBreadcrumb.href} className="hover:text-brand-500 transition-colors">
+                <Link href={categoryBreadcrumb.href} className={`${ac.link} transition-colors`}>
                   {categoryBreadcrumb.title}
                 </Link>
               </>
@@ -192,16 +207,16 @@ export default async function ServiceDetailPage({ params }: { params: { handle: 
 
           {/* Chime notice */}
           {!(product.productType === "Security Cam" && !isBundle) && !isService && (
-            <div className="flex items-start gap-3 bg-brand-50 border border-brand-100 rounded-xl p-4 mb-10">
-              <Info className="h-5 w-5 text-brand-500 flex-shrink-0 mt-0.5" />
+            <div className={`flex items-start gap-3 rounded-xl border p-4 mb-10 ${ac.chimeBox}`}>
+              <Info className={`h-5 w-5 ${ac.chimeIcon} flex-shrink-0 mt-0.5`} />
               <p className="text-sm text-gray-700">
-                <strong>All doorbell installations include the supply and setup of a Ring Chime</strong> — so you never miss a visitor, even when you&apos;re away from your phone.
+                <strong>All doorbell installations include the supply and setup of a {brandWord} Chime</strong>, so you never miss a visitor, even when you&apos;re away from your phone.
               </p>
             </div>
           )}
 
-          {/* Hero — passes product to client component for interactive variant/cart state */}
-          <ProductHero product={product} shortDescription={features?.shortDescription} />
+          {/* Hero, passes product to client component for interactive variant/cart state */}
+          <ProductHero product={product} shortDescription={features?.shortDescription} accent={accent} />
 
           {/* Key Features */}
           {features && features.highlights.length > 0 && (
@@ -215,7 +230,7 @@ export default async function ServiceDetailPage({ params }: { params: { handle: 
                       key={i}
                       className="flex flex-col items-center gap-3 p-5 bg-white border border-gray-100 rounded-2xl hover:shadow-md transition-shadow"
                     >
-                      <div className="flex-shrink-0 w-10 h-10 bg-brand-50 text-brand-500 rounded-xl flex items-center justify-center">
+                      <div className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${ac.featBox}`}>
                         <Icon className="w-5 h-5" />
                       </div>
                       <span className="text-sm font-semibold text-[#1a1a1a] leading-snug">{text}</span>
@@ -261,17 +276,19 @@ export default async function ServiceDetailPage({ params }: { params: { handle: 
                 <div className="max-w-3xl mx-auto">
                   <h2 className="text-2xl sm:text-3xl font-extrabold mb-2">Supplied &amp; Fitted by Smart Space</h2>
                   <p className="text-white/70 mb-6">
-                    Let Dublin&apos;s #1 Ring installer handle everything — we serve all of Leinster and set up your new device for optimal performance.
+                    {isEufy
+                      ? "Let Dublin's trusted smart security installer handle everything, we serve all of Leinster and set up your new device for optimal performance."
+                      : "Let Dublin's #1 Ring installer handle everything, we serve all of Leinster and set up your new device for optimal performance."}
                   </p>
                   <div className="grid sm:grid-cols-2 gap-3 max-w-xl mx-auto">
                     {[
                       "Professional mounting & wiring",
                       "Wi-Fi signal optimisation",
-                      "Ring app setup & configuration",
+                      `${brandWord} app setup & configuration`,
                       "Motion zone tuning & walkthrough",
                     ].map((item) => (
                       <div key={item} className="flex items-center justify-center gap-2">
-                        <Check className="w-4 h-4 text-brand-500 flex-shrink-0" />
+                        <Check className={`w-4 h-4 ${ac.check} flex-shrink-0`} />
                         <span className="text-sm text-white/90">{item}</span>
                       </div>
                     ))}
@@ -299,7 +316,7 @@ export default async function ServiceDetailPage({ params }: { params: { handle: 
           <section className="mt-16 lg:mt-24 text-center bg-gray-50 rounded-2xl p-8 sm:p-12">
             <h2 className="text-2xl font-extrabold text-[#1a1a1a] mb-3">Need help choosing?</h2>
             <p className="text-gray-500 mb-6 max-w-lg mx-auto">
-              Our Ring experts are here to help you find the perfect security setup for your home.
+              Our {brandWord} experts are here to help you find the perfect security setup for your home.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
@@ -309,7 +326,7 @@ export default async function ServiceDetailPage({ params }: { params: { handle: 
                 <Phone className="w-4 h-4" />
                 01 513 0424
               </a>
-              <Link href="/contact" className="inline-flex items-center justify-center bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm px-8 py-3.5 rounded-full transition-colors">
+              <Link href="/contact" className={`inline-flex items-center justify-center ${ac.btn} text-white font-semibold text-sm px-8 py-3.5 rounded-full transition-colors`}>
                 Have a Question?
               </Link>
             </div>

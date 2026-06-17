@@ -1,5 +1,5 @@
 /**
- * Static product catalogue — frozen from Shopify on 2026-04-24.
+ * Static product catalogue, frozen from Shopify on 2026-04-24.
  *
  * The site no longer fetches products from Shopify at runtime. All product
  * data (titles, prices, variants, options, images) is imported from here.
@@ -1634,8 +1634,8 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
     "id": "gid://shopify/Product/15301446107459",
     "title": "Pro Whole Home Bundle",
     "handle": "pro-whole-home-bundle",
-    "description": "The pinnacle of professional home security, engineered for zero-compromise property protection. This flagship bundle delivers Pro HDR resolution across all three zones—front door, driveway, and rear garden—offering 10x Enhanced Zoom for surgical detail. Both Pro Floodlights utilize Radar-powered 3D Motion Detection and Bird's Eye View mapping to track an intruder's exact path across your entire property with pinpoint accuracy. Includes a Ring Chime. Bundle saves €100.",
-    "descriptionHtml": "<p>The pinnacle of professional home security, engineered for zero-compromise property protection. This flagship bundle delivers Pro HDR resolution across all three zones—front door, driveway, and rear garden—offering 10x Enhanced Zoom for surgical detail. Both Pro Floodlights utilize Radar-powered 3D Motion Detection and Bird's Eye View mapping to track an intruder's exact path across your entire property with pinpoint accuracy. Includes a Ring Chime. Bundle saves €100.</p>",
+    "description": "The pinnacle of professional home security, engineered for zero-compromise property protection. This flagship bundle delivers Pro HDR resolution across all three zones, front door, driveway, and rear garden, offering 10x Enhanced Zoom for surgical detail. Both Pro Floodlights utilize Radar-powered 3D Motion Detection and Bird's Eye View mapping to track an intruder's exact path across your entire property with pinpoint accuracy. Includes a Ring Chime. Bundle saves €100.",
+    "descriptionHtml": "<p>The pinnacle of professional home security, engineered for zero-compromise property protection. This flagship bundle delivers Pro HDR resolution across all three zones, front door, driveway, and rear garden, offering 10x Enhanced Zoom for surgical detail. Both Pro Floodlights utilize Radar-powered 3D Motion Detection and Bird's Eye View mapping to track an intruder's exact path across your entire property with pinpoint accuracy. Includes a Ring Chime. Bundle saves €100.</p>",
     "productType": "Bundle",
     "tags": [
       "Bundle",
@@ -2167,8 +2167,8 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
     "id": "gid://shopify/Product/15301577965891",
     "title": "Installation Only",
     "handle": "installation-only",
-    "description": "Already have a Ring, Eufy, Nest, Tapo, Aosu or similar smart home device? We will professionally install it for you. Same expert service, same price — regardless of brand. Includes professional mounting, wiring, app setup, and configuration.",
-    "descriptionHtml": "<p>Already have a Ring, Eufy, Nest, Tapo, Aosu or similar smart home device? We will professionally install it for you. Same expert service, same price — regardless of brand. Includes professional mounting, wiring, app setup, and configuration.</p>",
+    "description": "Already have a Ring, Eufy, Nest, Tapo, Aosu or similar smart home device? We will professionally install it for you. Same expert service, same price, regardless of brand. Includes professional mounting, wiring, app setup, and configuration.",
+    "descriptionHtml": "<p>Already have a Ring, Eufy, Nest, Tapo, Aosu or similar smart home device? We will professionally install it for you. Same expert service, same price, regardless of brand. Includes professional mounting, wiring, app setup, and configuration.</p>",
     "productType": "Installation",
     "tags": [
       "Installation",
@@ -4023,6 +4023,124 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
                 "name": "External Cameras - How Many Need New Power Cabling",
                 "value": "6"
               }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "gid://smart-space/Product/eufy-video-doorbell-e340",
+    "title": "Eufy Video Doorbell E340",
+    "handle": "eufy-video-doorbell-e340",
+    "description": "Dual-camera Eufy Video Doorbell E340. A 2K HDR camera for faces plus a second downward camera that watches parcels at the doorstep, with colour night vision and on-device AI alerts for people, parcels and vehicles. Eufy Chime included so it rings inside the house, and every recording is stored locally with no monthly subscription. Supplied and professionally installed.",
+    "descriptionHtml": "<p>Dual-camera Eufy Video Doorbell E340. A 2K HDR camera for faces plus a second downward camera that watches parcels at the doorstep, with colour night vision and on-device AI alerts for people, parcels and vehicles. Eufy Chime included so it rings inside the house, and every recording is stored locally with no monthly subscription. Supplied and professionally installed.</p>",
+    "productType": "Video Doorbell",
+    "tags": [
+      "Doorbell",
+      "Eufy",
+      "Single"
+    ],
+    "priceRange": {
+      "minVariantPrice": { "amount": "359.0", "currencyCode": "EUR" },
+      "maxVariantPrice": { "amount": "449.0", "currencyCode": "EUR" }
+    },
+    "compareAtPriceRange": {
+      "minVariantPrice": { "amount": "0.0", "currencyCode": "EUR" },
+      "maxVariantPrice": { "amount": "0.0", "currencyCode": "EUR" }
+    },
+    "options": [
+      {
+        "name": "Choose A Power Option",
+        "values": [
+          "Existing doorbell power",
+          "New power feed required"
+        ]
+      }
+    ],
+    "images": { "edges": [] },
+    "variants": {
+      "edges": [
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/eufy-doorbell-existing",
+            "title": "Existing doorbell power",
+            "availableForSale": true,
+            "price": { "amount": "359.0", "currencyCode": "EUR" },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              { "name": "Choose A Power Option", "value": "Existing doorbell power" }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/eufy-doorbell-newfeed",
+            "title": "New power feed required",
+            "availableForSale": true,
+            "price": { "amount": "449.0", "currencyCode": "EUR" },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              { "name": "Choose A Power Option", "value": "New power feed required" }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "gid://smart-space/Product/eufy-floodlight-cam-e340",
+    "title": "Eufy Floodlight Cam E340",
+    "handle": "eufy-floodlight-cam-e340",
+    "description": "Eufy Floodlight Cam E340. Dual 3K cameras with 360 degree pan-tilt and auto-tracking, paired with 2,000-lumen motion-activated floodlights to light up and follow movement across the whole driveway. Mains-powered, replacing an existing outdoor light point. No monthly subscription, recordings stored locally. Supplied and professionally installed.",
+    "descriptionHtml": "<p>Eufy Floodlight Cam E340. Dual 3K cameras with 360 degree pan-tilt and auto-tracking, paired with 2,000-lumen motion-activated floodlights to light up and follow movement across the whole driveway. Mains-powered, replacing an existing outdoor light point. No monthly subscription, recordings stored locally. Supplied and professionally installed.</p>",
+    "productType": "Security Cam",
+    "tags": [
+      "Camera",
+      "Eufy",
+      "Single"
+    ],
+    "priceRange": {
+      "minVariantPrice": { "amount": "369.0", "currencyCode": "EUR" },
+      "maxVariantPrice": { "amount": "459.0", "currencyCode": "EUR" }
+    },
+    "compareAtPriceRange": {
+      "minVariantPrice": { "amount": "0.0", "currencyCode": "EUR" },
+      "maxVariantPrice": { "amount": "0.0", "currencyCode": "EUR" }
+    },
+    "options": [
+      {
+        "name": "Will A New Power Source Be Required",
+        "values": [
+          "Existing power",
+          "New power required"
+        ]
+      }
+    ],
+    "images": { "edges": [] },
+    "variants": {
+      "edges": [
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/eufy-floodlight-existing",
+            "title": "Existing power",
+            "availableForSale": true,
+            "price": { "amount": "369.0", "currencyCode": "EUR" },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              { "name": "Will A New Power Source Be Required", "value": "Existing power" }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/eufy-floodlight-newpower",
+            "title": "New power required",
+            "availableForSale": true,
+            "price": { "amount": "459.0", "currencyCode": "EUR" },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              { "name": "Will A New Power Source Be Required", "value": "New power required" }
             ]
           }
         }

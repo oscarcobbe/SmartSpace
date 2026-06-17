@@ -1,7 +1,7 @@
 // Fire-and-forget client for the SmartCRM inbound webhook.
 //
 // Posts JSON with HMAC-SHA256 signature in `X-CRM-Signature` header.
-// All errors are swallowed and logged — the customer flow must never break
+// All errors are swallowed and logged, the customer flow must never break
 // because the CRM is down.
 //
 // Required env vars (Vercel project + .env.local):
@@ -37,7 +37,7 @@ export interface CrmLeadPayload {
 
 /**
  * Send a lead to SmartCRM. Always succeeds (errors are logged, not thrown).
- * Smart Space's brand is hard-coded here — every call from this site is
+ * Smart Space's brand is hard-coded here, every call from this site is
  * tagged smart-space.
  */
 export async function sendToCrm(payload: CrmLeadPayload): Promise<void> {
@@ -49,7 +49,7 @@ export async function sendToCrm(payload: CrmLeadPayload): Promise<void> {
   const url = process.env.CRM_INBOUND_URL?.trim();
   const secret = process.env.CRM_HMAC_SECRET?.trim();
   if (!url || !secret) {
-    // Not configured — totally fine, just skip.
+    // Not configured, totally fine, just skip.
     return;
   }
 
@@ -63,7 +63,7 @@ export async function sendToCrm(payload: CrmLeadPayload): Promise<void> {
         "X-CRM-Signature": signature,
       },
       body,
-      // 5s upper bound — don't block the user response on a slow CRM.
+      // 5s upper bound, don't block the user response on a slow CRM.
       signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) {
@@ -71,7 +71,7 @@ export async function sendToCrm(payload: CrmLeadPayload): Promise<void> {
       console.warn(`[crm] non-2xx response (${res.status}):`, text.slice(0, 200));
     }
   } catch (err) {
-    // Never throw — Nigel still got the email + the row hit the sheet.
+    // Never throw, Nigel still got the email + the row hit the sheet.
     console.warn("[crm] send failed (non-fatal):", err instanceof Error ? err.message : err);
   }
 }

@@ -2,7 +2,7 @@
  * Product catalogue API.
  *
  * Site used to fetch from Shopify's Storefront API at runtime. Decoupled
- * 2026-04-24 — product data now lives in src/data/productCatalogue.ts (a
+ * 2026-04-24, product data now lives in src/data/productCatalogue.ts (a
  * frozen snapshot of what was in Shopify). These function signatures stay
  * the same so every existing call-site keeps working.
  *

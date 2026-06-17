@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Sitewide tel: link click tracker — DUAL CHANNEL (client + server).
+ * Sitewide tel: link click tracker, DUAL CHANNEL (client + server).
  *
  * Why this exists: paid users frequently click-to-call instead of
  * submitting forms. Without this, every phone-call conversion that
@@ -37,7 +37,7 @@
 import { useEffect } from "react";
 import { getAttribution } from "@/lib/attribution";
 
-// .trim() guards against a trailing newline in the Vercel env var —
+// .trim() guards against a trailing newline in the Vercel env var,
 // a copy-paste artefact that previously made Google Ads reject every
 // phone-click conversion as an unknown label. See matching trim in
 // src/app/layout.tsx for the full story.
@@ -55,7 +55,7 @@ export default function PhoneClickTracker() {
       const href = anchor.getAttribute("href") || "";
       if (!href.startsWith("tel:")) return;
 
-      // Snapshot the page path BEFORE the dialer takes over — sendBeacon
+      // Snapshot the page path BEFORE the dialer takes over, sendBeacon
       // payload travels with the unload event.
       const page = window.location.pathname + window.location.search;
       const attribution = getAttribution() ?? undefined;
@@ -65,7 +65,7 @@ export default function PhoneClickTracker() {
       // but the browser guarantees the request reaches the server even
       // if the page is unloading (`tel:` link follow does count as an
       // unload on iOS). If sendBeacon isn't available (e.g. very old
-      // browsers), fall back to fetch with keepalive — same guarantee.
+      // browsers), fall back to fetch with keepalive, same guarantee.
       const body = JSON.stringify({ phone: PHONE, page, attribution });
       try {
         if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
@@ -77,7 +77,7 @@ export default function PhoneClickTracker() {
         } else {
           // Fallback: fetch with keepalive: true tells the browser to
           // keep the request alive even after the document unloads.
-          // Supported in Chromium/WebKit/Firefox — same semantic as
+          // Supported in Chromium/WebKit/Firefox, same semantic as
           // sendBeacon for our purposes.
           void fetch("/api/track/phone-click", {
             method: "POST",
@@ -85,7 +85,7 @@ export default function PhoneClickTracker() {
             body,
             keepalive: true,
           }).catch((err) => {
-            // Best-effort — the client gtag fires below are independent.
+            // Best-effort, the client gtag fires below are independent.
             // Logged (not swallowed silently) so we can see if every tap
             // is failing on a given browser / network path.
             console.warn("[phone-tracker] fetch fallback failed:", err);
@@ -104,12 +104,12 @@ export default function PhoneClickTracker() {
       // Enhanced Conversions match richer than the server-side gclid
       // alone. Google Ads dedupes against the server fire by
       // transaction_id (the server fire generates one; client fire
-      // currently doesn't — Google falls back to its own cookie-based
+      // currently doesn't, Google falls back to its own cookie-based
       // dedupe, which is good enough).
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const w = window as any;
       if (typeof w.gtag !== "function") {
-        console.warn("[phone-tracker] gtag not loaded — client fire skipped (server fire still went)");
+        console.warn("[phone-tracker] gtag not loaded, client fire skipped (server fire still went)");
         return;
       }
 

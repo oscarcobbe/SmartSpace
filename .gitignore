@@ -43,5 +43,8 @@ client_secret_*.json
 
 # customer PII — never commit
 customer-data/
+# internal marketing working files (reports, flyers, business cards, a customer
+# email export with PII). Local only, never commit to the repo.
+ad-assets/
 .claude/worktrees/
 .claude/scheduled_tasks.lock

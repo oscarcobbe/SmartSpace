@@ -26,7 +26,7 @@ export default async function EldercareBundlePage() {
     .map((p) => parseFloat(p.priceRange.minVariantPrice.amount))
     .filter((n) => Number.isFinite(n) && n > 0);
   // Fallback price aligned to the displayed "From €509" on
-  // /services/bundles (was 499 — schema lying about a €10 cheaper
+  // /services/bundles (was 499, schema lying about a €10 cheaper
   // price than the index page advertised).
   const lowPrice = prices.length ? Math.min(...prices).toString() : "509";
   const highPrice = prices.length ? Math.max(...prices).toString() : "509";
@@ -82,7 +82,7 @@ export default async function EldercareBundlePage() {
             Eldercare Bundle
           </h1>
           <p className="text-gray-700 max-w-2xl">
-            Our Plus Video Doorbell + Digital Lockbox — designed for elderly relatives and their carers. See who&apos;s at the door and provide secure key access.
+            Our Plus Video Doorbell + Digital Lockbox, designed for elderly relatives and their carers. See who&apos;s at the door and provide secure key access.
           </p>
         </div>
 
@@ -174,7 +174,7 @@ export default async function EldercareBundlePage() {
           </>
         )}
 
-        {/* Why this bundle for Dublin homes — unique long-form content
+        {/* Why this bundle for Dublin homes, unique long-form content
             block; this is the most-different-from-the-others bundle so
             the audience-specific framing matters most here. */}
         <section className="mt-16 lg:mt-20 max-w-3xl mx-auto text-center">

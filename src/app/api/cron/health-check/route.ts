@@ -10,26 +10,26 @@ export const runtime = "nodejs";
  *
  * Fires once a day (registered in /vercel.json) and probes every external
  * dependency + every critical public page. If anything is broken, sends
- * ONE aggregated alert email listing every failure — so a multi-system
+ * ONE aggregated alert email listing every failure, so a multi-system
  * outage doesn't generate 50 separate emails.
  *
  * What it checks (in order):
- *   1. Stripe API (`GET /v1/balance` with STRIPE_SECRET_KEY) — catches:
+ *   1. Stripe API (`GET /v1/balance` with STRIPE_SECRET_KEY), catches:
  *      revoked secret key, Stripe outage, billing issues.
- *   2. Google Apps Script read path (`doGet?token=...&limit=1`) — catches:
+ *   2. Google Apps Script read path (`doGet?token=...&limit=1`), catches:
  *      READ_TOKEN mismatch, deployment URL stale, Sheet renamed, daily
- *      quota exceeded. (Write path doesn't need probing — it's already
+ *      quota exceeded. (Write path doesn't need probing, it's already
  *      alerted on by `logLead` in src/lib/leads.ts.)
- *   3. Every critical public page returns HTTP 200 — catches: server
+ *   3. Every critical public page returns HTTP 200, catches: server
  *      component crash, broken deploy, missing imports, runtime errors
  *      in catalogue/data files. The page list deliberately covers every
  *      money-making path (services, bundles, contact, booking).
- *   4. /sitemap.xml returns 200 — silent sitemap failure is invisible
+ *   4. /sitemap.xml returns 200, silent sitemap failure is invisible
  *      until Google de-indexes the site weeks later.
  *
  * Auth: same `CRON_SECRET` bearer pattern as the other cron routes. Also
  * accepts `?force=true` from an admin (no-auth) for manual smoke testing
- * — returns the full report but does NOT send the alert email unless the
+ *, returns the full report but does NOT send the alert email unless the
  * normal auth check passed too.
  */
 
@@ -59,7 +59,7 @@ async function timedFetch(
   // Per-check timeout. Default 10s covers public pages + Stripe API
   // which should respond fast; raise for endpoints that legitimately
   // take longer to warm up (e.g. Apps Script doGet cold starts can
-  // routinely take 8-12s — the 18 May incident hit exactly that).
+  // routinely take 8-12s, the 18 May incident hit exactly that).
   timeoutMs: number = 10000
 ): Promise<CheckResult> {
   const start = Date.now();
@@ -74,7 +74,7 @@ async function timedFetch(
         signal: controller.signal,
         cache: "no-store",
         // Keep User-Agent stable so Vercel logs don't show a different agent
-        // than real browsers — easier debugging.
+        // than real browsers, easier debugging.
         headers: {
           "User-Agent": "smart-space-health-check/1.0",
           ...(init.headers ?? {}),
@@ -92,7 +92,7 @@ async function timedFetch(
       return {
         name,
         ok: false,
-        detail: `HTTP ${res.status} ${res.statusText} — ${failReason}`,
+        detail: `HTTP ${res.status} ${res.statusText}, ${failReason}`,
         durationMs,
       };
     }
@@ -111,9 +111,9 @@ async function timedFetch(
 function getBaseUrl(): string {
   // Always probe the canonical public domain. The inbound `host` header on
   // a Vercel cron invocation is the `*.vercel.app` deployment alias, which
-  // returns 401 to unauthenticated traffic — so using it produced a flood
+  // returns 401 to unauthenticated traffic, so using it produced a flood
   // of false 401 alerts on 2026-05-12. Env var wins, apex is the fallback.
-  // .trim() — same trailing-whitespace-from-Vercel risk as elsewhere.
+  // .trim(), same trailing-whitespace-from-Vercel risk as elsewhere.
   // If SITE_URL ends in a literal \n, every page probe below would fetch
   // `https://smart-space.ie\n/...` and we'd alert "every page is down".
   const fromEnv = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "").trim();
@@ -130,7 +130,7 @@ export async function GET(request: Request) {
 
   // Accept ?force=true so an operator can hit /api/cron/health-check?force=true
   // from a browser to see the JSON report without provisioning CRON_SECRET.
-  // Force-mode runs every check but never sends the email — auth-only.
+  // Force-mode runs every check but never sends the email, auth-only.
   const force = url.searchParams.get("force") === "true";
   if (!authorized && !force) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -139,7 +139,7 @@ export async function GET(request: Request) {
   const base = getBaseUrl();
   const results: CheckResult[] = [];
 
-  // 1. Stripe — a revoked key or Stripe outage is silent otherwise.
+  // 1. Stripe, a revoked key or Stripe outage is silent otherwise.
   // /v1/balance is the cheapest authenticated endpoint and returns 401
   // distinctively for bad keys.
   if (process.env.STRIPE_SECRET_KEY) {
@@ -158,7 +158,7 @@ export async function GET(request: Request) {
           try {
             const json = JSON.parse(body);
             if (!Array.isArray(json.available)) {
-              return `Unexpected balance payload — no .available array`;
+              return `Unexpected balance payload, no .available array`;
             }
             return null;
           } catch {
@@ -176,13 +176,13 @@ export async function GET(request: Request) {
     });
   }
 
-  // 2. Apps Script read path — catches READ_TOKEN drift, stale deployment URL,
+  // 2. Apps Script read path, catches READ_TOKEN drift, stale deployment URL,
   // exceeded daily quota.
   //
   // Apps Script cold starts can take 8-12s legitimately (the WRITE path's
   // logLead() hit the same problem on 18 May and was bumped to 12s + retry).
   // This READ probe gets 15s before aborting + one retry on cold-start
-  // aborts — by the second attempt the Apps Script instance is warm, so
+  // aborts, by the second attempt the Apps Script instance is warm, so
   // it usually returns in under a second.
   const sheetUrl = process.env.GOOGLE_SHEET_WEBHOOK_URL;
   const readToken = process.env.GOOGLE_SHEET_READ_TOKEN;
@@ -203,9 +203,9 @@ export async function GET(request: Request) {
     let sheetResult = await timedFetch("google-sheet-read", probe, {}, expect, 15000);
 
     // Retry once if the failure was a cold-start abort. The second hit is
-    // warm and almost always passes — same pattern as logLead's retry.
+    // warm and almost always passes, same pattern as logLead's retry.
     if (!sheetResult.ok && sheetResult.detail.includes("AbortError")) {
-      console.warn("[health] google-sheet-read first attempt aborted — retrying after 1.5s warm-up wait");
+      console.warn("[health] google-sheet-read first attempt aborted, retrying after 1.5s warm-up wait");
       await new Promise((r) => setTimeout(r, 1500));
       sheetResult = await timedFetch("google-sheet-read", probe, {}, expect, 12000);
     }
@@ -216,12 +216,12 @@ export async function GET(request: Request) {
       name: "google-sheet-read",
       ok: false,
       detail:
-        "GOOGLE_SHEET_WEBHOOK_URL or GOOGLE_SHEET_READ_TOKEN not set — the /admin/leads dashboard will be empty on this deploy",
+        "GOOGLE_SHEET_WEBHOOK_URL or GOOGLE_SHEET_READ_TOKEN not set, the /admin/leads dashboard will be empty on this deploy",
       durationMs: 0,
     });
   }
 
-  // 3. Public pages — must return 200 AND include a sentinel string we
+  // 3. Public pages, must return 200 AND include a sentinel string we
   // expect to render in the static markup. A 200 response from Next.js
   // with a partial render is the most common silent-failure mode for
   // App Router server components.
@@ -235,6 +235,9 @@ export async function GET(request: Request) {
     { path: "/services/bundles/whole-home", sentinel: /Whole Home/i },
     { path: "/services/bundles/driveway", sentinel: /Driveway/i },
     { path: "/services/free-consultation", sentinel: /Consultation/i },
+    { path: "/services/eufy", sentinel: /Eufy/i },
+    { path: "/services/eufy-video-doorbell-e340", sentinel: /Eufy Video Doorbell/i },
+    { path: "/services/eufy-floodlight-cam-e340", sentinel: /Floodlight Cam/i },
     { path: "/contact", sentinel: /Contact|message/i },
     { path: "/sitemap.xml", sentinel: /<urlset|<sitemap/i },
   ];
@@ -275,12 +278,12 @@ export async function GET(request: Request) {
       `${failed.length} of ${results.length} checks failed.`,
       "",
       "FAILURES:",
-      ...failed.map((r) => `  ❌ ${r.name} (${r.durationMs}ms) — ${r.detail}`),
+      ...failed.map((r) => `  ❌ ${r.name} (${r.durationMs}ms), ${r.detail}`),
       "",
       "PASSING:",
       ...results
         .filter((r) => r.ok)
-        .map((r) => `  ✅ ${r.name} (${r.durationMs}ms) — ${r.detail}`),
+        .map((r) => `  ✅ ${r.name} (${r.durationMs}ms), ${r.detail}`),
       "",
       "What to check first:",
       "  - Any 'page:' failures usually mean a server-component runtime error.",

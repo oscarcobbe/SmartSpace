@@ -19,6 +19,10 @@ export const ringStockImages: Record<string, string> = {
   "plus-whole-home-bundle": "/products/plus-wholehome-black-black.png",
   "pro-whole-home-bundle": "/products/pro-wholehome-black-black.png",
 
+  // Eufy single products (blue ProductHero flow, /services/eufy-*)
+  "eufy-video-doorbell-e340": "/products/eufy-doorbell-e340.png",
+  "eufy-floodlight-cam-e340": "/products/eufy-floodlight-e340.png",
+
   // Eldercare
   "eldercare-security-bundle": "/products/eldercare-bundle.png",
   "installation-only": "/products/installation.png",

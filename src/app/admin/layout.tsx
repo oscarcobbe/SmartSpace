@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Persistent admin shell — auth gate + sidebar that stays visible on
+ * Persistent admin shell, auth gate + sidebar that stays visible on
  * every /admin/* page so the menu is always one click away. No more
  * navigating back to a hub to switch tools.
  *
@@ -45,7 +45,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setError("");
     // Force a full re-render of children so they pick up the key from
     // sessionStorage on their next mount cycle. setAuthed(true) alone
-    // doesn't unmount/remount children — they'd still see no key in
+    // doesn't unmount/remount children, they'd still see no key in
     // their initial useEffect. window.location.reload guarantees a
     // clean state.
     window.location.reload();
@@ -59,8 +59,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   // Hide the public-site chrome on every admin page (header, footer,
-  // promo bar). Inlined as a <style> tag because the alternative —
-  // conditional rendering of Navbar/Footer based on the URL — would
+  // promo bar). Inlined as a <style> tag because the alternative,
+  // conditional rendering of Navbar/Footer based on the URL, would
   // require lifting state into the root layout, which is server-only.
   const hideSiteChrome = (
     <style>{`header, footer, header + div, .fixed.top-0.bg-brand-500 { display: none !important; }`}</style>
@@ -113,7 +113,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <>
       {hideSiteChrome}
       <div className="min-h-screen bg-gray-50 lg:flex">
-        {/* Sidebar — visible on every authed admin page. Mobile: stacked
+        {/* Sidebar, visible on every authed admin page. Mobile: stacked
             top bar with horizontal-scrolling tabs. Desktop: fixed left
             rail with full menu. */}
         <aside className="lg:w-60 lg:min-h-screen lg:fixed lg:inset-y-0 lg:left-0 bg-gray-900 text-gray-100">
@@ -153,7 +153,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             })}
           </nav>
 
-          {/* Sign-out (desktop) — pinned to bottom of sidebar */}
+          {/* Sign-out (desktop), pinned to bottom of sidebar */}
           <div className="hidden lg:block lg:absolute lg:bottom-0 lg:inset-x-0 px-5 py-4 border-t border-white/10">
             <button
               onClick={clearKey}
@@ -164,7 +164,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </aside>
 
-        {/* Content area — offset on desktop to account for fixed sidebar */}
+        {/* Content area, offset on desktop to account for fixed sidebar */}
         <main className="flex-1 lg:ml-60 min-h-screen">
           {children}
         </main>

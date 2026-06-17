@@ -20,7 +20,7 @@ import { alertTo } from "@/lib/business-constants";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// In-memory idempotency cache — event IDs processed in the last hour.
+// In-memory idempotency cache, event IDs processed in the last hour.
 // For multi-instance deployments, swap for Redis/Upstash.
 const processedEvents = new Map<string, number>();
 const IDEMPOTENCY_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -42,7 +42,7 @@ function escapeHtml(text: string) {
 
 /**
  * Send a notification email to the team about a paid order. Failure is
- * logged but never thrown — the webhook must respond 200 to Stripe even if
+ * logged but never thrown, the webhook must respond 200 to Stripe even if
  * email infrastructure is having a bad day, otherwise Stripe will retry the
  * webhook and we'll double-book Calendly.
  */
@@ -64,7 +64,7 @@ async function sendOrderNotification(params: {
   const from = process.env.RESEND_FROM_EMAIL;
   const to = alertTo();
   if (!apiKey || !from) {
-    console.warn("[stripe webhook] RESEND_API_KEY or RESEND_FROM_EMAIL missing — skipping order email");
+    console.warn("[stripe webhook] RESEND_API_KEY or RESEND_FROM_EMAIL missing, skipping order email");
     return;
   }
 
@@ -75,8 +75,8 @@ async function sendOrderNotification(params: {
       ? "⚠️ Calendly event creation FAILED, please book manually in Calendly."
       : "ℹ️ No booking date/slot in cart, Calendly was not attempted.";
 
-  const dateLabel = params.bookingLabel || params.bookingDate || "—";
-  const slotLabel = params.bookingSlot || "—";
+  const dateLabel = params.bookingLabel || params.bookingDate || ", ";
+  const slotLabel = params.bookingSlot || ", ";
   // Use formatEuro for consistency with the site's price display rules
   // (drop `.00` on whole-euro amounts). `params.currency` is unused here
   // because the site is EUR-only; if that ever changes, swap formatEuro
@@ -146,7 +146,7 @@ async function sendOrderNotification(params: {
   // the customer paying.
   //
   // Wrapped in its OWN try/catch. If this fails, we log loudly but do
-  // NOT throw — the internal Nigel alert above already fired and the
+  // NOT throw, the internal Nigel alert above already fired and the
   // webhook must still return 200 to Stripe (otherwise Stripe retries
   // and we double-book Calendly + double-email Nigel).
   //
@@ -189,7 +189,7 @@ async function sendOrderNotification(params: {
         `  Slot:    ${slotLabel}`,
         "",
         "What happens next",
-        "  1. We'll email you a quick prep checklist the night before, WiFi name and password, app account, anything we need ready when we arrive.",
+        "  1. Before we arrive, have your WiFi name and password and your app account ready, that's all we need from you on the day.",
         "  2. We arrive in your slot, install everything, walk you through the app, and train the family before we leave.",
         "  3. Any issue in the first 30 days, we come back free of charge.",
         "",
@@ -260,7 +260,7 @@ async function sendOrderNotification(params: {
               <div style="background:#f48222;color:#ffffff;width:28px;height:28px;border-radius:999px;text-align:center;font-weight:800;font-size:14px;line-height:28px;font-family:'Plus Jakarta Sans','Inter',Helvetica,Arial,sans-serif;">1</div>
             </td>
             <td valign="top" style="padding:0 0 14px 12px;font-size:15px;line-height:1.55;color:#3f3d3a;">
-              We'll email you a quick prep checklist the night before. WiFi name and password, app account, anything we need ready when we arrive.
+              Before we arrive, have your WiFi name and password and your app account ready. That's all we need from you on the day.
             </td>
           </tr>
           <tr>
@@ -331,14 +331,14 @@ async function sendOrderNotification(params: {
 }
 
 /**
- * Alert email for purchase ATTEMPTS that didn't complete — declined cards,
+ * Alert email for purchase ATTEMPTS that didn't complete, declined cards,
  * abandoned checkouts, async payment failures. Without this, a customer
  * whose card declines is invisible: the order never lands, so Nigel has
  * no idea they tried. The May 2026 incident (customer's card declined,
  * we only spotted it because Nigel happened to log into the Stripe
  * dashboard manually) is exactly what this guards against.
  *
- * Failure to send is logged but never thrown — webhook still returns 200.
+ * Failure to send is logged but never thrown, webhook still returns 200.
  */
 async function sendPurchaseAttemptAlert(params: {
   kind: "failed" | "expired" | "async_failed";
@@ -361,7 +361,7 @@ async function sendPurchaseAttemptAlert(params: {
   const from = process.env.RESEND_FROM_EMAIL;
   const to = alertTo();
   if (!apiKey || !from) {
-    console.warn("[stripe webhook] RESEND_API_KEY or RESEND_FROM_EMAIL missing — skipping purchase-attempt alert");
+    console.warn("[stripe webhook] RESEND_API_KEY or RESEND_FROM_EMAIL missing, skipping purchase-attempt alert");
     return;
   }
 
@@ -370,28 +370,28 @@ async function sendPurchaseAttemptAlert(params: {
   // because the site is EUR-only; if that ever changes, swap formatEuro
   // for an explicit currency-aware formatter.
   const formattedAmount = formatEuro(params.amount);
-  const dateLabel = params.bookingLabel || params.bookingDate || "—";
-  const slotLabel = params.bookingSlot || "—";
+  const dateLabel = params.bookingLabel || params.bookingDate || ", ";
+  const slotLabel = params.bookingSlot || ", ";
 
   let subject: string;
   let kindLabel: string;
   let urgencyLine: string;
   if (params.kind === "failed") {
     const reason = params.declineCode ? ` (${params.declineCode})` : "";
-    subject = `⚠️ FAILED PAYMENT — ${params.customerName} — ${formattedAmount}${reason}`;
+    subject = `⚠️ FAILED PAYMENT, ${params.customerName}, ${formattedAmount}${reason}`;
     kindLabel = "Payment FAILED";
     urgencyLine =
       "URGENT: Customer's card was declined. Call them now to suggest a different card before they give up on the booking.";
   } else if (params.kind === "expired") {
-    subject = `⏰ Abandoned Checkout — ${params.customerName} — ${formattedAmount}`;
+    subject = `⏰ Abandoned Checkout, ${params.customerName}, ${formattedAmount}`;
     kindLabel = "Checkout abandoned (24h timeout)";
     urgencyLine =
       "Customer reached the Stripe checkout page but never completed payment. Worth a follow-up call.";
   } else {
-    subject = `⚠️ ASYNC PAYMENT FAILED — ${params.customerName} — ${formattedAmount}`;
+    subject = `⚠️ ASYNC PAYMENT FAILED, ${params.customerName}, ${formattedAmount}`;
     kindLabel = "Async payment FAILED";
     urgencyLine =
-      "Customer's bank-transfer or delayed payment failed after checkout. They may not realise — call them.";
+      "Customer's bank-transfer or delayed payment failed after checkout. They may not realise, call them.";
   }
 
   const declineText = params.declineReason ? `Decline reason: ${params.declineReason}` : "";
@@ -414,9 +414,9 @@ async function sendPurchaseAttemptAlert(params: {
         urgencyLine,
         "",
         `Customer: ${params.customerName}`,
-        `Email: ${params.email || "—"}`,
-        `Phone: ${params.phone || "—"}`,
-        `Address: ${params.installationAddress || "—"}`,
+        `Email: ${params.email || ", "}`,
+        `Phone: ${params.phone || ", "}`,
+        `Address: ${params.installationAddress || ", "}`,
         "",
         `Product: ${params.productName}`,
         `Amount: ${formattedAmount}`,
@@ -432,9 +432,9 @@ async function sendPurchaseAttemptAlert(params: {
         <p style="color:#b91c1c;font-weight:bold;margin-top:0">${escapeHtml(urgencyLine)}</p>
         <hr/>
         <p><strong>Customer:</strong> ${escapeHtml(params.customerName)}</p>
-        <p><strong>Email:</strong> ${escapeHtml(params.email || "—")}</p>
-        <p><strong>Phone:</strong> ${escapeHtml(params.phone || "—")}</p>
-        <p><strong>Address:</strong> ${escapeHtml(params.installationAddress || "—")}</p>
+        <p><strong>Email:</strong> ${escapeHtml(params.email || ", ")}</p>
+        <p><strong>Phone:</strong> ${escapeHtml(params.phone || ", ")}</p>
+        <p><strong>Address:</strong> ${escapeHtml(params.installationAddress || ", ")}</p>
         <hr/>
         <p><strong>Product:</strong> ${escapeHtml(params.productName)}</p>
         <p><strong>Amount:</strong> ${escapeHtml(formattedAmount)}</p>
@@ -454,7 +454,7 @@ async function sendPurchaseAttemptAlert(params: {
 }
 
 /**
- * Common extractor — same field set the completed-checkout handler uses
+ * Common extractor, same field set the completed-checkout handler uses
  * to build customer/booking details out of a Checkout Session. Shared
  * with the new failure/abandonment handlers below.
  */
@@ -505,7 +505,7 @@ export async function POST(req: NextRequest) {
   const secretKey = process.env.STRIPE_SECRET_KEY;
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-  // Fail closed if either secret is missing — never process unsigned events
+  // Fail closed if either secret is missing, never process unsigned events
   if (!secretKey || !webhookSecret) {
     console.error("[stripe webhook] Missing STRIPE_SECRET_KEY or STRIPE_WEBHOOK_SECRET");
     return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
@@ -524,7 +524,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  // Idempotency — skip if we've already processed this event ID
+  // Idempotency, skip if we've already processed this event ID
   pruneProcessed();
   if (processedEvents.has(event.id)) {
     console.log(`[stripe webhook] duplicate event ${event.id} skipped`);
@@ -595,7 +595,7 @@ export async function POST(req: NextRequest) {
       } catch (err) {
         // /api/checkout truncates the JSON-encoded configuration to ~490 chars
         // to fit Stripe's metadata cap, which can produce invalid JSON. Log
-        // so we know we silently lost a customer's product Q&A — but don't
+        // so we know we silently lost a customer's product Q&A, but don't
         // throw, the order is still valid without it.
         console.warn(
           `[stripe webhook] failed to parse session.metadata.configuration for session=${sessionId}:`,
@@ -604,7 +604,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Log paid order to tracking sheet — must await; fire-and-forget gets
+    // Log paid order to tracking sheet, must await; fire-and-forget gets
     // killed by Vercel's serverless runtime when the webhook returns.
     await logLead({
       type: "Paid Order",
@@ -652,17 +652,17 @@ export async function POST(req: NextRequest) {
         console.error(`[stripe] calendly booking FAILED for session=${sessionId} date=${bookingDate} slot=${bookingSlot}`);
       }
     } else {
-      console.warn(`[stripe] no booking_date/booking_slot in session=${sessionId} metadata — Calendly skipped`);
+      console.warn(`[stripe] no booking_date/booking_slot in session=${sessionId} metadata, Calendly skipped`);
     }
 
     // Server-side conversion fire to Google Ads + GA4. Backstops the
-    // client-side gtag fire on /smartspace-payment-success — that fire is
+    // client-side gtag fire on /smartspace-payment-success, that fire is
     // unreliable due to adblockers, consent denials, and SPA navigation
     // killing JS before the pixel completes. transaction_id=sessionId
     // dedupes when both client + server fire.
     const [firstName, ...rest] = (customerName || "").trim().split(/\s+/);
     const lastName = rest.join(" ") || undefined;
-    // .trim() — see src/app/api/contact/route.ts for the rationale.
+    // .trim(), see src/app/api/contact/route.ts for the rationale.
     // Critical here: this is the money path. A trailing-newline env var
     // would have dropped every Stripe-purchase conversion silently.
     const paidLabel =
@@ -683,7 +683,7 @@ export async function POST(req: NextRequest) {
       extraParams: { product: productName, source: "stripe_webhook" },
     });
 
-    // Notify Nigel — runs after Calendly so we can include the outcome in
+    // Notify Nigel, runs after Calendly so we can include the outcome in
     // the email body (e.g. "Calendly failed, book manually").
     await sendOrderNotification({
       customerName,
@@ -701,7 +701,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Mirror to SmartCRM (fire-and-forget; never blocks the webhook).
-    // Previously absent on the paid-order path — meant every paying
+    // Previously absent on the paid-order path, meant every paying
     // customer was invisible to the CRM, while contact / booking /
     // free-consultation all mirrored correctly. Real money customers
     // are the most valuable record-set; biggest CRM-coverage hole.
@@ -736,14 +736,14 @@ export async function POST(req: NextRequest) {
     // manually before the customer gives up). No-op if TWILIO_* env vars
     // aren't set.
     //
-    // Format prioritises legibility over byte-count — at €0.05/segment
+    // Format prioritises legibility over byte-count, at €0.05/segment
     // and ≤10 SMS/day, total cost is <€20/month even at maximum volume.
     // iPhone Messages auto-detects the URL at the bottom and makes it
     // tap-to-open the dashboard.
     if (amountTotal >= 100 || calendlyStatus === "failed") {
       const lines: string[] = [
-        "Smart Space — new paid order",
-        `${formatEuro(amountTotal)} — ${customerName}`,
+        "Smart Space, new paid order",
+        `${formatEuro(amountTotal)}, ${customerName}`,
       ];
       if (phone) lines.push(phone);
       lines.push(""); // blank line
@@ -758,7 +758,7 @@ export async function POST(req: NextRequest) {
         lines.push("");
       }
 
-      // Spec from metadata.configuration — same data we just wrote to
+      // Spec from metadata.configuration, same data we just wrote to
       // the Sheet, reformatted as a bullet list. Tells Nigel before he
       // arrives whether new cabling is needed, how many devices, etc.
       if (configNote) {
@@ -770,7 +770,7 @@ export async function POST(req: NextRequest) {
       }
 
       if (calendlyStatus === "failed") {
-        lines.push("⚠️ CALENDLY FAILED — book manually");
+        lines.push("⚠️ CALENDLY FAILED, book manually");
         lines.push("");
       }
 
@@ -781,12 +781,12 @@ export async function POST(req: NextRequest) {
   } else if (event.type === "payment_intent.payment_failed") {
     // Card declined / 3DS failed / fraud rule blocked / etc. The customer
     // is most likely still on the Stripe checkout page and CAN retry with
-    // a different card — but they often don't bother. This alert is the
+    // a different card, but they often don't bother. This alert is the
     // single most important "save the booking" signal: if Nigel calls
     // them inside 5 minutes, conversion typically rescues. Beyond an hour
     // they've usually moved on.
     const pi = event.data.object as Stripe.PaymentIntent;
-    // The PI doesn't carry our metadata — we attach metadata to the
+    // The PI doesn't carry our metadata, we attach metadata to the
     // Checkout Session, not the PI. Look up the owning session so we
     // have customer name, phone, address, booking date/slot, product.
     let session: Stripe.Checkout.Session | undefined;
@@ -802,9 +802,9 @@ export async function POST(req: NextRequest) {
 
     if (!session) {
       // Direct PaymentIntent API calls (no Checkout) won't have a session.
-      // We don't currently use those — but log so we know if this changes.
+      // We don't currently use those, but log so we know if this changes.
       console.warn(
-        `[stripe webhook] payment_intent.payment_failed ${pi.id} — no Checkout session, skipping alert`
+        `[stripe webhook] payment_intent.payment_failed ${pi.id}, no Checkout session, skipping alert`
       );
     } else {
       const d = extractSessionDetails(session);
@@ -819,7 +819,7 @@ export async function POST(req: NextRequest) {
         email: d.email || piEmail,
         phone: d.phone || piPhone,
         productName: d.productName,
-        // Use PI amount as source of truth — session.amount_total can be
+        // Use PI amount as source of truth, session.amount_total can be
         // stale if Stripe updated the PI separately.
         amount: (pi.amount ?? 0) / 100,
         currency: (pi.currency ?? d.currency).toUpperCase(),
@@ -841,10 +841,10 @@ export async function POST(req: NextRequest) {
     const session = event.data.object as Stripe.Checkout.Session;
     const d = extractSessionDetails(session);
     if (!d.email && !d.phone) {
-      // No way to contact them — Stripe didn't capture any details before
+      // No way to contact them, Stripe didn't capture any details before
       // they bounced. Alert is pointless.
       console.log(
-        `[stripe webhook] checkout.session.expired ${session.id} — no contact info captured, skipping alert`
+        `[stripe webhook] checkout.session.expired ${session.id}, no contact info captured, skipping alert`
       );
     } else {
       await sendPurchaseAttemptAlert({
@@ -865,8 +865,8 @@ export async function POST(req: NextRequest) {
   } else if (event.type === "checkout.session.async_payment_failed") {
     // Async payment methods (SEPA debit, bank redirects, BACS, etc.) can
     // succeed at checkout time and then fail days later when the bank
-    // actually settles. We don't currently accept any of those — Stripe
-    // Checkout is card-only by default — but handle it for completeness
+    // actually settles. We don't currently accept any of those, Stripe
+    // Checkout is card-only by default, but handle it for completeness
     // so adding a payment method later doesn't silently swallow failures.
     const session = event.data.object as Stripe.Checkout.Session;
     const d = extractSessionDetails(session);
@@ -904,7 +904,7 @@ export async function POST(req: NextRequest) {
         `Event type:         ${event.type}`,
         `Event created:      ${new Date((event.created ?? 0) * 1000).toISOString()}`,
         "",
-        "The webhook returned 500 so Stripe will retry with exponential backoff —",
+        "The webhook returned 500 so Stripe will retry with exponential backoff,",
         "but if every retry hits the same throw, the customer's order won't be",
         "logged to the dashboard and Nigel won't get the order email until this is fixed.",
         "",

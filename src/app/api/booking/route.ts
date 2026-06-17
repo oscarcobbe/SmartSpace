@@ -9,7 +9,7 @@ import { sendSiteAlert } from "@/lib/site-alerts";
 import { alertTo } from "@/lib/business-constants";
 
 
-// POST routes are inherently dynamic but explicit is better — without
+// POST routes are inherently dynamic but explicit is better, without
 // this, Next.js may try static optimization on a future major.
 export const dynamic = "force-dynamic";
 
@@ -50,13 +50,13 @@ interface BookingBody {
   date?: string;
   timeSlot?: string;
   attribution?: AttributionRecord;
-  homepage_url?: string; // honeypot — see BookingCalendar.tsx
+  homepage_url?: string; // honeypot, see BookingCalendar.tsx
 }
 
 export async function POST(request: Request) {
   try {
     // Parse the body in its own try-block. Bots, scanners and stray curls
-    // POST malformed JSON constantly — those should 400 quietly rather than
+    // POST malformed JSON constantly, those should 400 quietly rather than
     // surface as 500s via sendSiteAlert at the bottom of the route.
     let raw: unknown;
     try {
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
     const body = raw as BookingBody;
     const { name, email, phone, subject, message, date, timeSlot, attribution, homepage_url } = body;
 
-    // Honeypot — same pattern as /api/contact and /api/subscribe.
+    // Honeypot, same pattern as /api/contact and /api/subscribe.
     // A bot filling every form field will populate the hidden input;
     // real users can't see it. Return success so the bot doesn't retry,
     // but skip every side effect (no Calendly booking, no email, no Sheet).
@@ -131,9 +131,9 @@ export async function POST(request: Request) {
 
     // 1. Create Calendly event (auto-syncs to Google Calendar via Calendly's
     //    integration, sends ICS invite to the customer). This is the only
-    //    blocking step — if it fails we abort so the user sees an error
+    //    blocking step, if it fails we abort so the user sees an error
     //    instead of a fake confirmation.
-    const productTitle = `Site Visit — ${subjectLabel}`;
+    const productTitle = `Site Visit, ${subjectLabel}`;
     const calendly = await createBookingEvent({
       date,
       timeSlot,
@@ -149,13 +149,13 @@ export async function POST(request: Request) {
       console.error(
         `[booking] Calendly booking failed for ${email} on ${date} ${timeSlot}`
       );
-      // Alert Nigel — every booking attempt is now dead-on-arrival. The
+      // Alert Nigel, every booking attempt is now dead-on-arrival. The
       // daily calendly-health cron will eventually catch a fully broken
       // token, but this fires the moment a real customer hits it.
       await sendSiteAlert({
         category: "booking",
         severity: "critical",
-        summary: "Booking submission FAILED — Calendly rejected the slot",
+        summary: "Booking submission FAILED, Calendly rejected the slot",
         details: [
           "A real customer just tried to book a site visit and got a 500.",
           "They saw 'We couldn't lock in that time slot' and probably bounced.",
@@ -170,11 +170,11 @@ export async function POST(request: Request) {
           "  1. CALENDLY_PERSONAL_TOKEN revoked or expired.",
           "  2. The event type URI in CALENDLY_CONSULTATION_EVENT_TYPE_URI was deleted.",
           "  3. The slot was already booked between the page load and the submit (race).",
-          "  4. Calendly API outage — check https://status.calendly.com",
+          "  4. Calendly API outage, check https://status.calendly.com",
           "",
           "Call the customer back manually: tap the phone number above.",
         ].join("\n"),
-        // Dedupe by date+slot so a genuine race condition doesn't fire 20× —
+        // Dedupe by date+slot so a genuine race condition doesn't fire 20×,
         // but a different customer on a different slot will fire fresh.
         dedupeKey: `booking:calendly-failed:${date}:${timeSlot}`,
       });
@@ -200,13 +200,13 @@ export async function POST(request: Request) {
           from,
           to: [to],
           replyTo: email.trim(),
-          subject: `New Site Visit Booking — ${name.trim()} — ${dateLabel}`,
+          subject: `New Site Visit Booking, ${name.trim()}, ${dateLabel}`,
           text: [
             `New booking via smart-space.ie`,
             "",
             `Name: ${name.trim()}`,
             `Email: ${email.trim()}`,
-            `Phone: ${phone?.trim() || "—"}`,
+            `Phone: ${phone?.trim() || ", "}`,
             `Topic: ${subjectLabel}`,
             "",
             `Date: ${dateLabel}`,
@@ -220,7 +220,7 @@ export async function POST(request: Request) {
             <h2>New Site Visit Booking</h2>
             <p><strong>Name:</strong> ${escapeHtml(name.trim())}</p>
             <p><strong>Email:</strong> ${escapeHtml(email.trim())}</p>
-            <p><strong>Phone:</strong> ${escapeHtml(phone?.trim() || "—")}</p>
+            <p><strong>Phone:</strong> ${escapeHtml(phone?.trim() || ", ")}</p>
             <p><strong>Topic:</strong> ${escapeHtml(subjectLabel)}</p>
             <hr />
             <p><strong>Date:</strong> ${escapeHtml(dateLabel)}</p>
@@ -237,11 +237,11 @@ export async function POST(request: Request) {
       }
     } else {
       console.warn(
-        "[booking] RESEND_API_KEY or RESEND_FROM_EMAIL missing — skipping notification email"
+        "[booking] RESEND_API_KEY or RESEND_FROM_EMAIL missing, skipping notification email"
       );
     }
 
-    // 3. Log to Google Sheet — must await; fire-and-forget gets killed by
+    // 3. Log to Google Sheet, must await; fire-and-forget gets killed by
     //    Vercel's serverless runtime when the response returns.
     await logLead({
       type: "Free Consultation",
@@ -258,14 +258,14 @@ export async function POST(request: Request) {
       source: "smart-space.ie/booking",
     });
 
-    // Server-side conversion fire — backstops booking/page.tsx's client-side
+    // Server-side conversion fire, backstops booking/page.tsx's client-side
     // gtag. Same reliability story as the contact form. Shared
     // `conversionId` (UUID) returned to the client → used as transaction_id
     // → Google Ads dedupes both fires into a single conversion.
     const conversionId = randomUUID();
     const [firstName, ...rest] = name.trim().split(/\s+/);
     const lastName = rest.join(" ") || undefined;
-    // .trim() — see src/app/api/contact/route.ts for the rationale.
+    // .trim(), see src/app/api/contact/route.ts for the rationale.
     const leadLabel =
       (process.env.NEXT_PUBLIC_GADS_LEAD_SEND_TO || "")
         .trim()
@@ -287,7 +287,7 @@ export async function POST(request: Request) {
     // Mirror to SmartCRM (fire-and-forget; never blocks the user response).
     void sendToCrm({
       source: "booking",
-      source_detail: `${subjectLabel} — ${dateLabel} ${slotLabel}`,
+      source_detail: `${subjectLabel}, ${dateLabel} ${slotLabel}`,
       name: name.trim(),
       email: email.trim(),
       phone: phone?.trim() || null,
@@ -311,7 +311,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, conversionId });
   } catch (err) {
     console.error("[booking] Failed to process booking:", err);
-    // Catch-all for any unexpected throw inside the booking flow — Calendly,
+    // Catch-all for any unexpected throw inside the booking flow, Calendly,
     // Resend, Sheets, or one of the conversion fires.
     await sendSiteAlert({
       category: "booking",

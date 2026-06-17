@@ -1,11 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, CalendarCheck } from "lucide-react";
 
 export default function Hero() {
   return (
     <section className="w-full bg-[#d4d4d4] h-[70vh] sm:h-screen relative overflow-hidden">
-      {/* Full-bleed desktop hero image from ring.com — LCP element on home,
+      {/* Full-bleed desktop hero image from ring.com, LCP element on home,
           so `priority` + next/image so it's served as AVIF/WebP at the
           right size for the viewport instead of a 1366×768 PNG. */}
       <Image
@@ -23,7 +22,7 @@ export default function Hero() {
       <div className="absolute inset-x-0 top-0 h-[72%] sm:h-48 bg-gradient-to-b from-white/95 via-white/85 to-transparent sm:from-white/70 sm:via-white/20 pointer-events-none z-[5]" />
       <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white/40 to-transparent pointer-events-none z-[5]" />
 
-      {/* Text — upper area */}
+      {/* Text, upper area */}
       <div className="absolute z-10 top-[25%] sm:top-[16%] left-0 right-0 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <div className="fade-up inline-flex items-center gap-2 bg-white/60 backdrop-blur-md border border-white/40 text-[#1a1a1a] text-[11px] font-semibold px-3 py-1.5 rounded-full uppercase tracking-[0.15em] mb-5 shadow-sm">
@@ -34,16 +33,16 @@ export default function Hero() {
             Expertly Installed.<br className="hidden sm:block" /> Perfectly Secured.
           </h1>
           <p className="fade-up-delay-2 text-[#3a352f] text-sm sm:text-lg max-w-lg mx-auto font-medium leading-relaxed">
-            Professional smart doorbell and security camera installation — Ring, Eufy, Nest, Tapo &amp; Aosu — across Dublin and all of Leinster. 5,000+ installations completed.
+            Professional smart doorbell and security camera installation for Ring, Eufy, Nest, Tapo &amp; Aosu, across Dublin and all of Leinster. 5,000+ installations completed.
           </p>
         </div>
       </div>
 
-      {/* Buttons — lower area. Two side-by-side CTAs:
+      {/* Buttons, lower area. Two side-by-side CTAs:
           - Primary (orange): Book Free Consultation → real conversion
             page with Calendly + form. The previous single CTA pointed
             to /services/bundles which is a relay tab with no conversion
-            mechanism — every paid click hitting the homepage was being
+            mechanism, every paid click hitting the homepage was being
             sent one click further from converting.
           - Secondary (white): "Got a device to install?" → routes the
             post-Amazon audience straight to /services/installation-only.
@@ -56,14 +55,13 @@ export default function Hero() {
           render breathes; padding is also tighter (px-6 sm:px-7 py-3,
           down from px-7 sm:px-9 py-3.5) so the two buttons take
           less horizontal real estate side-by-side on desktop. Touch
-          target is still ~44px tall — accessible. */}
+          target is still ~44px tall, accessible. */}
       <div className="fade-up-delay-3 absolute z-10 bottom-8 sm:bottom-20 lg:bottom-24 left-0 right-0 px-4">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 max-w-md sm:max-w-none mx-auto">
           <Link
             href="/services/free-consultation"
             className="btn-sheen group inline-flex items-center justify-center gap-2 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-600 text-white font-semibold text-sm px-6 sm:px-7 py-3 rounded-full transition-all shadow-[0_10px_40px_-5px_rgba(242,130,34,0.55)] hover:shadow-[0_20px_60px_-5px_rgba(242,130,34,0.7)] hover:-translate-y-0.5 pulse-glow whitespace-nowrap"
           >
-            <CalendarCheck className="relative z-10 w-4 h-4" />
             <span className="relative z-10">Book Complimentary Consultation</span>
           </Link>
           <Link
@@ -71,7 +69,15 @@ export default function Hero() {
             className="group inline-flex items-center justify-center gap-2 bg-white/90 backdrop-blur-sm hover:bg-white text-[#1C1A18] font-semibold text-sm px-6 sm:px-7 py-3 rounded-full border border-white/60 transition-all hover:-translate-y-0.5 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.25)] whitespace-nowrap"
           >
             <span>Got A Device To Install?</span>
-            <ArrowRight className="w-4 h-4 transition-transform duration-500 group-hover:translate-x-1" />
+          </Link>
+          {/* Eufy-blue CTA → the Eufy installation packages page. Uses Eufy's
+              own brand blue (#005D8E) so the Eufy entry points read as Eufy,
+              set apart from the orange Ring CTAs. */}
+          <Link
+            href="/services/eufy"
+            className="btn-sheen group inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#0a6ea3] to-[#005d8e] hover:from-[#005d8e] hover:to-[#004c75] text-white font-semibold text-sm px-6 sm:px-7 py-3 rounded-full transition-all shadow-[0_10px_40px_-5px_rgba(0,93,142,0.55)] hover:shadow-[0_20px_60px_-5px_rgba(0,93,142,0.7)] hover:-translate-y-0.5 whitespace-nowrap"
+          >
+            <span className="relative z-10">Eufy Options</span>
           </Link>
         </div>
       </div>

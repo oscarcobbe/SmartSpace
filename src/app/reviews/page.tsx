@@ -6,12 +6,12 @@ import { AGGREGATE_RATING, AGGREGATE_REVIEW_COUNT } from "@/lib/business-constan
 const SITE = "https://smart-space.ie";
 
 export const metadata: Metadata = {
-  title: "Reviews | Smart Space — Dublin's #1 Ring Installer",
+  title: "Reviews | Smart Space, Dublin's #1 Ring Installer",
   description:
     "See customer reviews for Smart Space. Rated 5 on Google. 5,000+ Ring installations across Dublin and Leinster.",
   alternates: { canonical: "/reviews" },
   openGraph: {
-    title: "Reviews | Smart Space — Dublin's #1 Ring Installer",
+    title: "Reviews | Smart Space, Dublin's #1 Ring Installer",
     description:
       "5 on Google · 5,000+ installations across Dublin and Leinster.",
     url: `${SITE}/reviews`,
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Reviews | Smart Space — Dublin's #1 Ring Installer",
+    title: "Reviews | Smart Space, Dublin's #1 Ring Installer",
     description:
       "5 on Google · 5,000+ installations across Dublin and Leinster.",
     images: ["/og-default.png"],
@@ -38,7 +38,7 @@ const googleReviews = [
   {
     author: "James O'Brien",
     rating: 5,
-    text: "Had the driveway bundle installed — doorbell and floodlight cam. Professional job, very tidy cabling, and they took the time to explain how everything works. Great value.",
+    text: "Had the driveway bundle installed, doorbell and floodlight cam. Professional job, very tidy cabling, and they took the time to explain how everything works. Great value.",
     date: "1 month ago",
     datePublished: "2026-03-22",
   },
@@ -52,14 +52,14 @@ const googleReviews = [
   {
     author: "David C.",
     rating: 5,
-    text: "Second time using Smart Space — they installed cameras at my office after doing my home. Same brilliant service both times. These guys know Ring inside out.",
+    text: "Second time using Smart Space, they installed cameras at my office after doing my home. Same brilliant service both times. These guys know Ring inside out.",
     date: "2 months ago",
     datePublished: "2026-02-20",
   },
   {
     author: "Aoife D.",
     rating: 5,
-    text: "Couldn't be happier. We had a whole home setup done — doorbell, two floodlights. The team were friendly, professional, and left everything spotless. Already recommended to neighbours.",
+    text: "Couldn't be happier. We had a whole home setup done, doorbell, two floodlights. The team were friendly, professional, and left everything spotless. Already recommended to neighbours.",
     date: "2 months ago",
     datePublished: "2026-02-10",
   },
@@ -87,12 +87,12 @@ function StarRating({ rating }: { rating: number }) {
 
 // JSON-LD limited to LocalBusiness aggregateRating only. The per-review
 // `Review` array used to ship to Google with author + reviewBody +
-// datePublished — Google's review-snippet policy explicitly forbids
+// datePublished, Google's review-snippet policy explicitly forbids
 // merchant-written reviews in structured data, and the published list
 // here is a curated set, not pulled live from Google. Keeping the
 // reviews on-page for users (still rendered visually below) but NOT
 // claiming them in structured markup avoids a manual-action risk.
-// LocalBusiness aggregateRating ALSO lives in src/app/layout.tsx — this
+// LocalBusiness aggregateRating ALSO lives in src/app/layout.tsx, this
 // is a duplicate; both are valid (Google de-dupes by @id) but consider
 // removing this block entirely once we confirm it.
 // AggregateRating values come from src/lib/business-constants.ts so this

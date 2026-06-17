@@ -28,7 +28,7 @@ function rateLimitOk(ip: string): boolean {
  * paid + the product they bought. Each Shopify variant is a unique
  * combination of options (number of devices / doorbell wiring / cameras
  * needing wiring) and has its own price, so the paid amount usually
- * narrows to a single variant — sometimes two when prices coincide.
+ * narrows to a single variant, sometimes two when prices coincide.
  *
  * Used only for orders that predate the metadata.configuration capture
  * (anything from before 2026-05-04). Returns an empty array if no match.
@@ -51,7 +51,7 @@ function recoverVariantFromPrice(productName: string, paidEuros: number): QA[] {
 
   if (candidates.length === 0) return [];
 
-  // Friendly relabel — keep dashboard tidy. Mirrors the FRIENDLY_LABELS
+  // Friendly relabel, keep dashboard tidy. Mirrors the FRIENDLY_LABELS
   // map used on the product pages so post-fix and pre-fix orders read
   // identically.
   const FRIENDLY: Record<string, string> = {
@@ -158,7 +158,7 @@ export async function GET(request: Request) {
   }
 
   const leads: Lead[] = [];
-  // Per-source error tracking — surfaced to the dashboard so admins know
+  // Per-source error tracking, surfaced to the dashboard so admins know
   // when a section is incomplete (e.g. Stripe API down, Calendly token
   // expired, Apps Script quota exhausted). Without this, partial failures
   // are silent and the admin makes decisions on incomplete data.
@@ -171,7 +171,7 @@ export async function GET(request: Request) {
       {
         headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}` },
         cache: "no-store",
-        // 10s ceiling — Stripe list usually <1s, but a hung call would
+        // 10s ceiling, Stripe list usually <1s, but a hung call would
         // otherwise pin the whole admin page render.
         signal: AbortSignal.timeout(10000),
       }
@@ -188,7 +188,7 @@ export async function GET(request: Request) {
       const addr = session.customer_details?.address;
       const addrParts = [addr?.line1, addr?.line2, addr?.city, addr?.postal_code].filter(Boolean);
       const installAddr = session.custom_fields?.find((f: { key: string; text?: { value: string } }) => f.key === "installation_address")?.text?.value;
-      const address = installAddr || addrParts.join(", ") || "—";
+      const address = installAddr || addrParts.join(", ") || ", ";
 
       // Build details: Stripe custom-fields + parsed metadata.configuration
       // (the JSON-encoded answers from the product page's variant selectors).
@@ -207,7 +207,7 @@ export async function GET(request: Request) {
             }
           }
         } catch {
-          // metadata isn't JSON — surface the raw string so we don't lose info
+          // metadata isn't JSON, surface the raw string so we don't lose info
           details.push({ question: "Configuration", answer: cfgRaw });
         }
       } else {
@@ -224,7 +224,7 @@ export async function GET(request: Request) {
         details.push(...recovered);
       }
       // Surface installation_address separately if it differs from the billing
-      // address — useful when the install site isn't where the bill goes.
+      // address, useful when the install site isn't where the bill goes.
       if (installAddr && installAddr.trim() && installAddr !== addrParts.join(", ")) {
         details.push({ question: "Installation address", answer: installAddr });
       }
@@ -232,14 +232,14 @@ export async function GET(request: Request) {
       leads.push({
         date: created.toLocaleString("en-GB", { timeZone: "Europe/Dublin", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false }),
         type: "Paid Order",
-        name: session.customer_details?.name || "—",
-        email: session.customer_details?.email || "—",
-        phone: session.customer_details?.phone || "—",
+        name: session.customer_details?.name || ", ",
+        email: session.customer_details?.email || ", ",
+        phone: session.customer_details?.phone || ", ",
         address,
         product: session.metadata?.product_name || "Order",
         amount: formatEuro(session.amount_total / 100),
-        bookingDate: session.metadata?.booking_label || session.metadata?.booking_date || "—",
-        bookingSlot: session.metadata?.booking_slot || "—",
+        bookingDate: session.metadata?.booking_label || session.metadata?.booking_date || ", ",
+        bookingSlot: session.metadata?.booking_slot || ", ",
         status: session.payment_status === "paid" ? "Paid" : session.payment_status,
         orderId: session.id,
         details: details.length ? details : undefined,
@@ -258,19 +258,19 @@ export async function GET(request: Request) {
   if (!calendlyToken) {
     sourceErrors.push({
       source: "Calendly (Installations + Consultations)",
-      message: "CALENDLY_PERSONAL_TOKEN env var not set — bookings won't load until token is added in Vercel.",
+      message: "CALENDLY_PERSONAL_TOKEN env var not set, bookings won't load until token is added in Vercel.",
     });
   } else {
     try {
       // Pull Calendly events in a window of [30 days ago, 90 days ahead].
       // The previous min_start_time=now silently dropped every booking from
-      // the dashboard the instant its start time passed — past customers
+      // the dashboard the instant its start time passed, past customers
       // disappeared while Nigel still needed visibility (follow-ups,
       // reviews, no-show reconciliation, "wait what was that job last
       // week"). 30-day past window covers the typical review-chase and
       // invoice-reconciliation cadence without bloating the response.
       // The Sheet writes from logLead() persist independently, so this
-      // is purely a dashboard-visibility fix — no data was lost.
+      // is purely a dashboard-visibility fix, no data was lost.
       const pastWindow = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
       const future = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
       const calRes = await fetch(
@@ -289,10 +289,10 @@ export async function GET(request: Request) {
 
       for (const event of calData.collection || []) {
         // Get invitee details
-        let inviteeName = "—";
-        let inviteeEmail = "—";
-        let inviteePhone = "—";
-        let inviteeAddress = "—";
+        let inviteeName = ", ";
+        let inviteeEmail = ", ";
+        let inviteePhone = ", ";
+        let inviteeAddress = ", ";
         let notes = "";
         const calendlyDetails: QA[] = [];
 
@@ -300,7 +300,7 @@ export async function GET(request: Request) {
           const invRes = await fetch(`${event.uri}/invitees`, {
             headers: { Authorization: `Bearer ${calendlyToken}` },
             cache: "no-store",
-            // 8s per-invitee ceiling — the outer loop fans out one of
+            // 8s per-invitee ceiling, the outer loop fans out one of
             // these per Calendly event so a single hung call could
             // otherwise serialise into a 90s admin-page render.
             signal: AbortSignal.timeout(8000),
@@ -308,12 +308,12 @@ export async function GET(request: Request) {
           const invData = await invRes.json();
           const inv = (invData.collection || [])[0];
           if (inv) {
-            inviteeName = inv.name || "—";
-            inviteeEmail = inv.email || "—";
+            inviteeName = inv.name || ", ";
+            inviteeEmail = inv.email || ", ";
             // Phone from text_reminder_number or parsed from Q&A
             const qaList: { answer: string }[] = inv.questions_and_answers || [];
             const phoneFromQA = qaList.map((q) => q.answer).join(" ").match(/Phone:\s*([^|]+)/i)?.[1]?.trim();
-            inviteePhone = inv.text_reminder_number || phoneFromQA || "—";
+            inviteePhone = inv.text_reminder_number || phoneFromQA || ", ";
             const qas: { question: string; answer: string }[] = inv.questions_and_answers || [];
             notes = qas.map((q) => q.answer).join("; ");
             // Surface every Q&A pair into details. Calendly often packs
@@ -334,25 +334,25 @@ export async function GET(request: Request) {
                   if (m) {
                     const label = m[1].trim();
                     const value = m[2].trim();
-                    // Skip the "Order: cs_xxx..." sub-field — that's the
+                    // Skip the "Order: cs_xxx..." sub-field, that's the
                     // internal Stripe session id passed through from
                     // createBookingEvent in lib/calendly.ts. Admin doesn't
                     // need to see it on the dashboard.
                     if (/^order$/i.test(label)) continue;
-                    // Split "Product: Plus Video Doorbell — New Cabling &
+                    // Split "Product: Plus Video Doorbell, New Cabling &
                     // Power Source Required" into separate Product + Cabling
                     // rows. The em-dash join is added in /api/checkout to fit
                     // the variant title into a single Stripe metadata field,
                     // but it reads as a confusing run-on for admins.
-                    if (/^product$/i.test(label) && / — /.test(value)) {
-                      const [productName, variant] = value.split(/ — /, 2);
+                    if (/^product$/i.test(label) && /, /.test(value)) {
+                      const [productName, variant] = value.split(/, /, 2);
                       calendlyDetails.push({ question: "Product", answer: productName.trim() });
                       if (variant) calendlyDetails.push({ question: "Cabling", answer: variant.trim() });
                       continue;
                     }
                     calendlyDetails.push({ question: label, answer: value });
                   } else {
-                    // Free-form trailing notes — keep them but mark generically
+                    // Free-form trailing notes, keep them but mark generically
                     calendlyDetails.push({ question: "Note", answer: sub });
                   }
                 }
@@ -360,7 +360,7 @@ export async function GET(request: Request) {
                 calendlyDetails.push({ question: q || "Note", answer: a });
               }
             }
-            // Extract address from Q&A — may be in question text OR embedded in answer as "Address: ..."
+            // Extract address from Q&A, may be in question text OR embedded in answer as "Address: ..."
             for (const qa of qas) {
               if (/address|eircode|location/i.test(qa.question)) {
                 inviteeAddress = qa.answer.replace(/^Address:\s*/i, "");
@@ -374,7 +374,7 @@ export async function GET(request: Request) {
             }
           }
         } catch (err) {
-          // Non-fatal per-event — one missing invitee shouldn't blank the
+          // Non-fatal per-event, one missing invitee shouldn't blank the
           // whole dashboard. Log so a recurring failure (e.g. Calendly
           // rate-limit) is visible in Vercel logs rather than silent.
           console.warn(
@@ -389,7 +389,7 @@ export async function GET(request: Request) {
         const isConsultation = event.name?.toLowerCase().includes("consultation");
 
         // Date-aware status. The 30-day past window means we now surface
-        // already-completed appointments — labelling them "Upcoming" would
+        // already-completed appointments, labelling them "Upcoming" would
         // be a lie and would also pollute the page.tsx Upcoming-tab filter
         // (`l.status === "Upcoming"`). Anything whose start_time has
         // passed gets "Completed"; future events stay "Upcoming".
@@ -403,12 +403,12 @@ export async function GET(request: Request) {
           email: inviteeEmail,
           phone: inviteePhone,
           address: inviteeAddress,
-          product: event.name || "—",
-          amount: isConsultation ? "Complimentary" : "—",
+          product: event.name || ", ",
+          amount: isConsultation ? "Complimentary" : ", ",
           bookingDate: startStr,
           bookingSlot: `${start.toLocaleString("en-GB", { timeZone: "Europe/Dublin", hour: "2-digit", minute: "2-digit", hour12: false })} – ${new Date(event.end_time).toLocaleString("en-GB", { timeZone: "Europe/Dublin", hour: "2-digit", minute: "2-digit", hour12: false })}`,
           status: calendlyStatus,
-          orderId: notes || "—",
+          orderId: notes || ", ",
           details: calendlyDetails.length ? calendlyDetails : undefined,
         });
       }
@@ -431,13 +431,13 @@ export async function GET(request: Request) {
       source: "Google Sheet (Contact Enquiries)",
       message: !sheetUrl
         ? "GOOGLE_SHEET_WEBHOOK_URL env var not set."
-        : "GOOGLE_SHEET_READ_TOKEN env var not set — Apps Script doGet() will reject the read.",
+        : "GOOGLE_SHEET_READ_TOKEN env var not set, Apps Script doGet() will reject the read.",
     });
   } else {
     try {
       // Fetch ALL types from the Sheet so the dashboard can surface manual
       // entries (phone orders Nigel takes by phone and writes directly into
-      // the Sheet, recovery rows, etc.) — not just contact form enquiries.
+      // the Sheet, recovery rows, etc.), not just contact form enquiries.
       // Stripe-paid orders (orderId starts cs_*) are skipped here because
       // they're already loaded from the Stripe API above; including them
       // would double-count revenue.
@@ -467,7 +467,7 @@ export async function GET(request: Request) {
         const errorName = (sheetRes as any).errorName as string;
         if (errorName === "AbortError" || errorName === "TimeoutError") {
           console.warn(
-            "[admin] sheet read first attempt aborted (likely Apps Script cold start) — retrying after 1.5s"
+            "[admin] sheet read first attempt aborted (likely Apps Script cold start), retrying after 1.5s"
           );
           await new Promise((r) => setTimeout(r, 1500));
           sheetRes = await fetch(url, {
@@ -476,7 +476,7 @@ export async function GET(request: Request) {
             signal: AbortSignal.timeout(12000),
           });
         } else {
-          // Non-abort throw — rethrow so the outer try/catch records it
+          // Non-abort throw, rethrow so the outer try/catch records it
           // as a source error and the dashboard surfaces the actual cause.
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           throw (sheetRes as any).error;
@@ -510,7 +510,7 @@ export async function GET(request: Request) {
             // Skip if Stripe API already gave us this order
             if (orderId && /^cs_(live|test)_/.test(orderId) && stripeOrderIds.has(orderId)) continue;
             // If it's a Stripe-style ID that ISN'T in the Stripe set, the
-            // Stripe fetch likely errored — let the Sheet row stand in.
+            // Stripe fetch likely errored, let the Sheet row stand in.
 
             // Dedupe manual entries by composite key
             const dedupeKey = `${String(r.name || "").trim().toLowerCase()}|${r.amount}|${r.bookingDate}`;
@@ -521,18 +521,18 @@ export async function GET(request: Request) {
             if (r.notes) manualDetails.push({ question: "Notes", answer: String(r.notes) });
 
             leads.push({
-              date: String(r.date || "—"),
+              date: String(r.date || ", "),
               type: "Paid Order",
-              name: String(r.name || "—"),
-              email: String(r.email || "—"),
-              phone: String(r.phone || "—"),
-              address: String(r.address || "—"),
-              product: String(r.product || "—"),
-              amount: r.amount ? formatEuro(Number(r.amount)) : "—",
-              bookingDate: String(r.bookingDate || "—"),
-              bookingSlot: String(r.bookingSlot || "—"),
+              name: String(r.name || ", "),
+              email: String(r.email || ", "),
+              phone: String(r.phone || ", "),
+              address: String(r.address || ", "),
+              product: String(r.product || ", "),
+              amount: r.amount ? formatEuro(Number(r.amount)) : ", ",
+              bookingDate: String(r.bookingDate || ", "),
+              bookingSlot: String(r.bookingSlot || ", "),
               status: String(r.status || "New"),
-              orderId: orderId || "—",
+              orderId: orderId || ", ",
               details: manualDetails.length ? manualDetails : undefined,
             });
             continue;
@@ -541,7 +541,7 @@ export async function GET(request: Request) {
           if (rowType !== "Contact Enquiry") continue;
 
           // Apps Script returns the Date column already formatted in Dublin
-          // time (dd/MM/yyyy HH:mm) — pass through as-is.
+          // time (dd/MM/yyyy HH:mm), pass through as-is.
           // Sheet's "notes" column is typically "<Subject>: <Message>" from
           // /api/contact (e.g. "Installation Enquiry: I have an old ..."). Split
           // it back out so the dashboard shows topic + message as separate rows.
@@ -567,7 +567,7 @@ export async function GET(request: Request) {
           if (r.gclid) contactDetails.push({ question: "Google Ads click", answer: "Yes" });
 
           // Show the parsed Topic in the Product column instead of the
-          // useless generic "Contact form" — Nigel now sees the subject
+          // useless generic "Contact form", Nigel now sees the subject
           // line at-a-glance without having to expand the row. Also append
           // a short snippet of the message body so the table row carries
           // enough context to triage without a click.
@@ -578,13 +578,13 @@ export async function GET(request: Request) {
             : "";
           const productLabel = parsedTopic
             ? messageSnippet
-              ? `${parsedTopic} — ${messageSnippet}`
+              ? `${parsedTopic}, ${messageSnippet}`
               : parsedTopic
             : "Contact form";
 
           // Sheet-side status is rarely populated for contact rows. Default
           // to "Awaiting reply" rather than "New" so the badge actually
-          // communicates the next action — Nigel still owes them a reply.
+          // communicates the next action, Nigel still owes them a reply.
           // If Nigel ever updates the Sheet row's Status column to
           // "Replied" or "Closed", that wins. (Updating from the dashboard
           // UI is a separate piece of work, not in scope here.)
@@ -592,18 +592,18 @@ export async function GET(request: Request) {
           const statusLabel = sheetStatus || "Awaiting reply";
 
           leads.push({
-            date: String(r.date || "—"),
+            date: String(r.date || ", "),
             type: "Contact Enquiry",
-            name: String(r.name || "—"),
-            email: String(r.email || "—"),
-            phone: String(r.phone || "—"),
-            address: String(r.address || "—"),
+            name: String(r.name || ", "),
+            email: String(r.email || ", "),
+            phone: String(r.phone || ", "),
+            address: String(r.address || ", "),
             product: productLabel,
-            amount: r.amount ? formatEuro(Number(r.amount)) : "—",
-            bookingDate: "—",
-            bookingSlot: "—",
+            amount: r.amount ? formatEuro(Number(r.amount)) : ", ",
+            bookingDate: ", ",
+            bookingSlot: ", ",
             status: statusLabel,
-            orderId: String(r.notes || "—"),
+            orderId: String(r.notes || ", "),
             details: contactDetails.length ? contactDetails : undefined,
           });
         }
@@ -622,12 +622,12 @@ export async function GET(request: Request) {
   }
 
   // 4. Fetch Stripe balance for the "upcoming payout" card.
-  //    Sum of balance.available + balance.pending in EUR — funds Stripe
+  //    Sum of balance.available + balance.pending in EUR, funds Stripe
   //    is holding that haven't yet swept to the bank. Fails soft: an
   //    error pushes a sourceError row but doesn't break leads.
   //
   //    NOTE: the second revenue card on the dashboard ("Upcoming work
-  //    value") is computed client-side from the leads array — it sums
+  //    value") is computed client-side from the leads array, it sums
   //    amounts for every lead with status="Upcoming" regardless of
   //    whether Stripe has been paid yet. So we don't fetch payouts
   //    here anymore.
@@ -648,7 +648,7 @@ export async function GET(request: Request) {
         .filter((b) => b.currency === "eur")
         .reduce((s, b) => s + b.amount / 100, 0);
     // Both `available` and `pending` are funds Stripe is holding for us
-    // that haven't reached the bank yet — treat them as one "upcoming"
+    // that haven't reached the bank yet, treat them as one "upcoming"
     // bucket from Nigel's perspective.
     stripeUpcomingPayout = sumEur(balance.available) + sumEur(balance.pending);
   } catch (err) {
@@ -659,21 +659,21 @@ export async function GET(request: Request) {
     });
   }
 
-  // Cross-reference: a Calendly Installation row carries amount "—" because
-  // Calendly doesn't know the price — the customer paid Stripe, not Calendly.
+  // Cross-reference: a Calendly Installation row carries amount ", " because
+  // Calendly doesn't know the price, the customer paid Stripe, not Calendly.
   // The matching Stripe Paid Order has the real amount. Copy it across so
   // the expanded-card "Payment" field autofills with what they actually paid,
   // rather than the placeholder em-dash. Match by email (lowercased, since
   // Stripe sometimes lowercases the input). If multiple Stripe orders exist
-  // for the same email, take the highest amount (defensive — a customer who
+  // for the same email, take the highest amount (defensive, a customer who
   // bought twice has two valid amounts; the bigger one is the install we care
   // about). The same logic was previously only run client-side for the
-  // "Upcoming" list, leaving the expanded detail view showing "—".
+  // "Upcoming" list, leaving the expanded detail view showing ", ".
   const paidByEmail = new Map<string, { eur: number; formatted: string }>();
   for (const l of leads) {
     if (l.type !== "Paid Order") continue;
     const emailKey = (l.email || "").trim().toLowerCase();
-    if (!emailKey || emailKey === "—") continue;
+    if (!emailKey || emailKey === ", ") continue;
     const eur = parseFloat(String(l.amount).replace(/[^0-9.]/g, ""));
     if (!Number.isFinite(eur) || eur <= 0) continue;
     const prev = paidByEmail.get(emailKey);
@@ -681,11 +681,11 @@ export async function GET(request: Request) {
   }
   for (const l of leads) {
     if (l.type !== "Installation") continue;
-    if (l.amount !== "—") continue;
+    if (l.amount !== ", ") continue;
     const emailKey = (l.email || "").trim().toLowerCase();
     const match = paidByEmail.get(emailKey);
     if (match) {
-      // Only copy the amount across — do NOT overwrite l.status.
+      // Only copy the amount across, do NOT overwrite l.status.
       // The "Upcoming" view in page.tsx filters by `status === "Upcoming"`,
       // so flipping to "Paid" hides the booking from that view (which is
       // wrong: it's still an upcoming installation that happens to have a

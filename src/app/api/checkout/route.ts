@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getProductByHandle } from "@/lib/shopify";
 import type { AttributionRecord } from "@/lib/leads";
 
-// POST routes are inherently dynamic but explicit is better — without
+// POST routes are inherently dynamic but explicit is better, without
 // this, Next.js may try static optimization on a future major.
 export const dynamic = "force-dynamic";
 
@@ -39,7 +39,7 @@ interface ResolvedItem {
 
 /**
  * Resolve every cart item against Shopify's Storefront API. NEVER trusts the
- * client-submitted name — uses Shopify's canonical title. Verifies the
+ * client-submitted name, uses Shopify's canonical title. Verifies the
  * submitted price is within the product's variant price range (with a small
  * tolerance for rounding). Fails the whole checkout if any product is unknown
  * or the price is out of range.
@@ -60,7 +60,7 @@ async function resolveItems(items: CartItem[]): Promise<ResolvedItem[]> {
     }
 
     // Resolve the matched variant from the customer's selectedOptions
-    // first — both for variant title AND for an authoritative price.
+    // first, both for variant title AND for an authoritative price.
     // The previous validation accepted any price within ±5% of the
     // ENTIRE PRODUCT min/max range, which meant a Plus-tier (€299)
     // submission for a product whose Pro tier is €499 would still be
@@ -110,7 +110,7 @@ async function resolveItems(items: CartItem[]): Promise<ResolvedItem[]> {
       (matchedVariantPrice !== undefined ? matchedVariantPrice : item.price) * 100
     );
 
-    const lineItemTitle = variantTitle ? `${product.title} — ${variantTitle}` : product.title;
+    const lineItemTitle = variantTitle ? `${product.title}, ${variantTitle}` : product.title;
 
     resolved.push({
       id: item.productId,
@@ -147,7 +147,7 @@ export async function POST(request: Request) {
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: "No items provided" }, { status: 400 });
     }
-    // Cap cart size — the largest legitimate Smart Space cart booked
+    // Cap cart size, the largest legitimate Smart Space cart booked
     // anyone's seen is 4 line items (whole-home bundle plus extras).
     // Higher than that is either a bug or an attacker probing the route.
     if (items.length > 20) {
@@ -230,7 +230,7 @@ export async function POST(request: Request) {
       params.append(`line_items[${i}][quantity]`, String(item.quantity));
     });
 
-    // 10s ceiling — Stripe's session create normally completes in <1s,
+    // 10s ceiling, Stripe's session create normally completes in <1s,
     // but a stalled call would otherwise pin the serverless function up
     // to its 10s timeout, after which the user sees a generic 500 and
     // we lose the conversion. Surfacing a clean 502 lets the client

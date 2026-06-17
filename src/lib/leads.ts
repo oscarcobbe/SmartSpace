@@ -1,9 +1,9 @@
 /**
- * Lead tracking — POSTs every booking, order, and enquiry to a Google Apps
+ * Lead tracking, POSTs every booking, order, and enquiry to a Google Apps
  * Script webhook, which appends a row to the "Smart Space Leads" sheet.
  *
  * Requires env var:
- *   GOOGLE_SHEET_WEBHOOK_URL — the deployed Apps Script web-app URL
+ *   GOOGLE_SHEET_WEBHOOK_URL, the deployed Apps Script web-app URL
  *
  * The expected payload shape matches google-apps-script.js (doPost).
  */
@@ -39,7 +39,7 @@ export interface LeadRecord {
 
 /**
  * Last-resort alert email when the Apps Script Sheet write fails. Without
- * this, a failed `logLead` is completely silent — the customer's flow
+ * this, a failed `logLead` is completely silent, the customer's flow
  * continues, the order/contact succeeds, but Nigel's dashboard never
  * shows the lead. Resend is also our only push channel, so this stops
  * "lead vanished entirely" from being possible.
@@ -50,7 +50,7 @@ async function sendLeadLogFailureAlert(record: LeadRecord, reason: string): Prom
   const to = alertTo();
   if (!apiKey || !from) return; // can't alert if mail isn't wired up
 
-  // Best-effort. We don't await chain into the caller's flow — the customer
+  // Best-effort. We don't await chain into the caller's flow, the customer
   // already got their success page; this is purely Nigel-facing.
   try {
     const { Resend } = await import("resend");
@@ -59,14 +59,14 @@ async function sendLeadLogFailureAlert(record: LeadRecord, reason: string): Prom
     await resend.emails.send({
       from,
       to: [to],
-      subject: `[ALERT] Lead-log write failed — ${record.type} from ${record.name ?? record.email ?? "(unknown)"}`,
+      subject: `[ALERT] Lead-log write failed, ${record.type} from ${record.name ?? record.email ?? "(unknown)"}`,
       text:
-        `The Sheet write FAILED. The customer's flow still completed — they got their confirmation — but the dashboard will NOT show this lead unless you add it manually.\n\n` +
+        `The Sheet write FAILED. The customer's flow still completed, they got their confirmation, but the dashboard will NOT show this lead unless you add it manually.\n\n` +
         `Reason: ${reason}\n\n` +
         `Lead payload (paste this into the Sheet by hand if needed):\n${payloadJson}`,
       html: `
         <h2 style="color:#b91c1c">⚠️ Lead-log write failed</h2>
-        <p>The customer's flow still completed — they got their confirmation — but the dashboard will NOT show this lead unless you add it manually.</p>
+        <p>The customer's flow still completed, they got their confirmation, but the dashboard will NOT show this lead unless you add it manually.</p>
         <p><strong>Reason:</strong> ${reason}</p>
         <p><strong>Most likely causes:</strong> Apps Script daily quota exceeded, deployment URL changed, or Sheet renamed.</p>
         <hr/>
@@ -75,7 +75,7 @@ async function sendLeadLogFailureAlert(record: LeadRecord, reason: string): Prom
     });
   } catch (err) {
     // If the alert email itself fails, we've truly run out of channels
-    // — log loudly so it's at least in Vercel runtime logs.
+    //, log loudly so it's at least in Vercel runtime logs.
     console.error("[leads] CRITICAL: lead-log alert email also failed:", err);
   }
 }
@@ -84,7 +84,7 @@ async function sendLeadLogFailureAlert(record: LeadRecord, reason: string): Prom
  * Log a lead/order via the Apps Script webhook.
  *
  * Internally swallows all errors (logs to console + emails Nigel an alert
- * on failure) so callers can safely `await` it without a try/catch — the
+ * on failure) so callers can safely `await` it without a try/catch, the
  * user flow will not break if the Apps Script is slow or down. Awaiting
  * matters: in Vercel serverless functions, fire-and-forget fetches are
  * abandoned when the response returns, which silently drops ~30% of
@@ -92,12 +92,12 @@ async function sendLeadLogFailureAlert(record: LeadRecord, reason: string): Prom
  */
 export async function logLead(record: LeadRecord): Promise<void> {
   // .trim() defends against trailing-newline contamination of the env var
-  // (the same class of bug as the GADS_CALL_LABEL post-mortem) — without
+  // (the same class of bug as the GADS_CALL_LABEL post-mortem), without
   // it, a copy-paste newline in Vercel would 404 the Apps Script endpoint
   // and every lead would silently fail to log.
   const url = process.env.GOOGLE_SHEET_WEBHOOK_URL?.trim();
   if (!url) {
-    console.warn("[leads] GOOGLE_SHEET_WEBHOOK_URL not set — skipping lead log");
+    console.warn("[leads] GOOGLE_SHEET_WEBHOOK_URL not set, skipping lead log");
     await sendLeadLogFailureAlert(record, "GOOGLE_SHEET_WEBHOOK_URL env var not set");
     return;
   }
@@ -139,7 +139,7 @@ export async function logLead(record: LeadRecord): Promise<void> {
         const respBody = await res.text().catch(() => "");
         return {
           ok: false,
-          reason: `Apps Script returned HTTP ${res.status} ${res.statusText} — ${respBody.slice(0, 200)}`,
+          reason: `Apps Script returned HTTP ${res.status} ${res.statusText}, ${respBody.slice(0, 200)}`,
         };
       }
       return { ok: true };
@@ -147,7 +147,7 @@ export async function logLead(record: LeadRecord): Promise<void> {
       const reason =
         err instanceof Error
           ? `${err.name}: ${err.message}` +
-            (err.name === "AbortError" ? ` (Apps Script took >${timeoutMs / 1000}s — likely cold start or quota issue)` : "")
+            (err.name === "AbortError" ? ` (Apps Script took >${timeoutMs / 1000}s, likely cold start or quota issue)` : "")
           : String(err);
       return { ok: false, reason };
     } finally {
@@ -155,14 +155,14 @@ export async function logLead(record: LeadRecord): Promise<void> {
     }
   }
 
-  // Attempt 1 — typical request, 12s ceiling.
+  // Attempt 1, typical request, 12s ceiling.
   let result = await attempt(12000);
 
   // Retry once on cold-start aborts. By the second attempt the Apps Script
   // instance is warm so the second call usually finishes in <1s. Add a short
   // delay before retrying so the Apps Script side has time to fully warm up.
   if (!result.ok && result.reason.startsWith("AbortError")) {
-    console.warn("[leads] first attempt timed out — retrying after 1.5s warm-up wait");
+    console.warn("[leads] first attempt timed out, retrying after 1.5s warm-up wait");
     await new Promise((r) => setTimeout(r, 1500));
     result = await attempt(10000);
   }

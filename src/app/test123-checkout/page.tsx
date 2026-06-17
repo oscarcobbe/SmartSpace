@@ -16,7 +16,7 @@ export default function TestCheckoutPage() {
     <div className="pt-32 lg:pt-36 pb-16">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-8">
-          <p className="text-sm font-bold text-red-600">TEST PAGE — Not linked anywhere on the site</p>
+          <p className="text-sm font-bold text-red-600">TEST PAGE, Not linked anywhere on the site</p>
           <p className="text-xs text-red-500 mt-1">This page tests the booking + Stripe checkout flow using a €0 product.</p>
         </div>
 

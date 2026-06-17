@@ -37,7 +37,7 @@ export async function generateMetadata({
       description: `${c.extended.teaser} Free home consultation, written quote, fitted within the week.`,
       url: `${SITE}/areas/${c.slug}`,
       type: "website",
-      images: [{ url: "/og-default.png", width: 1200, height: 630, alt: `Ring Installer ${c.name} — Smart Space` }],
+      images: [{ url: "/og-default.png", width: 1200, height: 630, alt: `Ring Installer ${c.name}, Smart Space` }],
     },
     twitter: {
       card: "summary_large_image",
@@ -186,10 +186,10 @@ export default async function CountyPage({
           </p>
         </section>
 
-        {/* Original short copy block — keeps the page rich on county-named keywords */}
+        {/* Original short copy block, keeps the page rich on county-named keywords */}
         <section className="mb-12 bg-brand-50/40 border border-brand-100 rounded-2xl p-6 sm:p-8">
           <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 mb-4">
-            Smart Space in {c.name} — the short version
+            Smart Space in {c.name}, the short version
           </h2>
           <p className="text-gray-700 leading-relaxed">{c.copy}</p>
         </section>
@@ -213,9 +213,9 @@ export default async function CountyPage({
             {[
               { href: "/services/doorbell", label: "Ring Video Doorbells (Plus & Pro)" },
               { href: "/services/camera", label: "Ring Floodlight Cams (Plus & Pro)" },
-              { href: "/services/bundles/driveway", label: "Driveway Bundle — doorbell + floodlight" },
-              { href: "/services/bundles/whole-home", label: "Whole Home Bundle — multi-camera" },
-              { href: "/services/bundles/eldercare", label: "Eldercare Bundle — doorbell + lockbox" },
+              { href: "/services/bundles/driveway", label: "Driveway Bundle, doorbell + floodlight" },
+              { href: "/services/bundles/whole-home", label: "Whole Home Bundle, multi-camera" },
+              { href: "/services/bundles/eldercare", label: "Eldercare Bundle, doorbell + lockbox" },
               { href: "/services/installation-only", label: "Installation-only · €139 · Ring, Eufy, Nest, Tapo, Aosu" },
             ].map((s) => (
               <li key={s.href}>
@@ -236,7 +236,7 @@ export default async function CountyPage({
         {/* FAQ */}
         <section className="mb-12">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-6">
-            {c.name} Ring installation — frequently asked
+            {c.name} Ring installation, frequently asked
           </h2>
           <div className="space-y-5">
             {ext.faqs.map((f) => (

@@ -1,24 +1,24 @@
 /**
- * Twilio SMS — second push channel for high-value events.
+ * Twilio SMS, second push channel for high-value events.
  *
  * Why this exists: Resend is currently the ONLY way Nigel hears about new
  * leads/orders. If Resend goes down, his inbox spam-filters our domain, or
  * Gmail is having a bad day, an order can come in and Nigel finds out only
  * when the customer phones up confused. SMS is the cheapest second channel
- * — Twilio EU SIM, ~€0.05 per SMS, hits an iPhone in <5 seconds.
+ *, Twilio EU SIM, ~€0.05 per SMS, hits an iPhone in <5 seconds.
  *
  * Set up:
- *   TWILIO_ACCOUNT_SID    — from Twilio console
- *   TWILIO_AUTH_TOKEN     — from Twilio console
- *   TWILIO_FROM_NUMBER    — purchased Twilio number (e.g. +353xxxxxxxxx)
- *   TWILIO_TO_NUMBER      — Nigel's phone (E.164: +35389...)
+ *   TWILIO_ACCOUNT_SID  , from Twilio console
+ *   TWILIO_AUTH_TOKEN   , from Twilio console
+ *   TWILIO_FROM_NUMBER  , purchased Twilio number (e.g. +353xxxxxxxxx)
+ *   TWILIO_TO_NUMBER    , Nigel's phone (E.164: +35389...)
  *
  * Without ALL four env vars set, sendSms() is a graceful no-op (logs once,
- * returns immediately) — so deploying this code without a Twilio account
+ * returns immediately), so deploying this code without a Twilio account
  * doesn't break anything. Set the four vars, redeploy, and it activates.
  *
  * Usage: only fire on events where the SMS is genuinely warranted (not
- * every contact form — too noisy). Recommended:
+ * every contact form, too noisy). Recommended:
  *   - Paid order ≥ €100 (sendOrderNotification → also fire SMS)
  *   - Calendly booking creation failure (so Nigel knows to manually book)
  *   - logLead Sheet write failure (so he knows the lead wasn't recorded)
@@ -42,7 +42,7 @@ export async function sendSms(body: string): Promise<boolean> {
   if (!ACCOUNT_SID || !AUTH_TOKEN || !FROM || !TO) {
     if (!warnedAboutMissingConfig) {
       console.warn(
-        "[sms] Twilio env vars not set (TWILIO_ACCOUNT_SID, _AUTH_TOKEN, _FROM_NUMBER, _TO_NUMBER) — sendSms() is a no-op."
+        "[sms] Twilio env vars not set (TWILIO_ACCOUNT_SID, _AUTH_TOKEN, _FROM_NUMBER, _TO_NUMBER), sendSms() is a no-op."
       );
       warnedAboutMissingConfig = true;
     }
@@ -73,7 +73,7 @@ export async function sendSms(body: string): Promise<boolean> {
       return false;
     }
     const data = (await res.json().catch(() => ({}))) as { sid?: string };
-    console.log(`[sms] sent — sid=${data.sid ?? "?"} body="${trimmed.slice(0, 40)}..."`);
+    console.log(`[sms] sent, sid=${data.sid ?? "?"} body="${trimmed.slice(0, 40)}..."`);
     return true;
   } catch (err) {
     console.error("[sms] send failed:", err);

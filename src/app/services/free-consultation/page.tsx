@@ -33,7 +33,7 @@ const benefits = [
   {
     icon: Home,
     title: "Home Survey",
-    description: "We visit your home and assess your property for the best camera and doorbell placements — no guesswork.",
+    description: "We visit your home and assess your property for the best camera and doorbell placements, no guesswork.",
   },
   {
     icon: MessageCircle,
@@ -43,7 +43,7 @@ const benefits = [
   {
     icon: ClipboardCheck,
     title: "Personalised Quote",
-    description: "Receive a detailed, written quote tailored to your home — covering exactly what you need and nothing you don't.",
+    description: "Receive a detailed, written quote tailored to your home, covering exactly what you need and nothing you don't.",
   },
   {
     icon: Lightbulb,
@@ -104,7 +104,7 @@ export default function FreeConsultationPage() {
       if (data.success) {
         // Stash identity data in sessionStorage for the success page's
         // Enhanced Conversions hash. Previously these were on the URL
-        // (?e=…&p=…) — that exposed PII in browser history, Vercel
+        // (?e=…&p=…), that exposed PII in browser history, Vercel
         // access logs, and any Referer header on outbound clicks from
         // the success page. sessionStorage is per-tab and cleared on
         // close. The success page reads it once and clears it.
@@ -114,7 +114,7 @@ export default function FreeConsultationPage() {
             JSON.stringify({ email: email.trim(), phone: phone.trim() })
           );
         } catch {
-          /* private mode / blocked storage — non-fatal */
+          /* private mode / blocked storage, non-fatal */
         }
         window.location.href = `/smartspace-payment-success?free=true`;
       } else {
@@ -139,7 +139,7 @@ export default function FreeConsultationPage() {
               Book Your Consultation
             </h1>
             <p className="text-gray-500 text-lg max-w-xl mx-auto">
-              Choose a day and time that suits you — we&apos;ll be there.
+              Choose a day and time that suits you, we&apos;ll be there.
             </p>
           </div>
 
@@ -249,7 +249,7 @@ export default function FreeConsultationPage() {
 
             {/* Right: Booking Calendar */}
             <div>
-              {/* Free 30-min consultation — 2-working-day lead. No stock to
+              {/* Free 30-min consultation, 2-working-day lead. No stock to
                   source and no install crew to dispatch, just a site visit,
                   so this is faster than the 4-day stock default. */}
               <BookingCalendar

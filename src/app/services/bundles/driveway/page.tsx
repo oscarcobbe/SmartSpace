@@ -167,7 +167,7 @@ export default async function DrivewayBundlePage() {
           </div>
         )}
 
-        {/* Why this bundle for Dublin homes — unique long-form content
+        {/* Why this bundle for Dublin homes, unique long-form content
             block to give Google a real signal that this page is distinct
             from the Whole Home and Eldercare bundles. Real install
             specifics from the Smart Space install log. */}
@@ -223,7 +223,7 @@ export default async function DrivewayBundlePage() {
             <div className="max-w-3xl mx-auto">
               <h2 className="text-2xl sm:text-3xl font-extrabold mb-2">Supplied &amp; Fitted by Smart Space</h2>
               <p className="text-white/70 mb-6">
-                Let Dublin&apos;s #1 Ring installer handle everything — we serve all of Leinster and set up your new system for optimal performance.
+                Let Dublin&apos;s #1 Ring installer handle everything, we serve all of Leinster and set up your new system for optimal performance.
               </p>
               <div className="grid sm:grid-cols-2 gap-3 max-w-xl mx-auto">
                 {[

@@ -9,7 +9,7 @@ const SITE = "https://smart-space.ie";
 export const metadata: Metadata = {
   title: "Areas We Cover | Ring Installation Across Leinster | Smart Space",
   description:
-    "Smart Space installs Ring doorbells and cameras across all 12 counties of Leinster — Dublin, Wicklow, Kildare, Meath, Louth, Wexford and more.",
+    "Smart Space installs Ring doorbells and cameras across all 12 counties of Leinster, Dublin, Wicklow, Kildare, Meath, Louth, Wexford and more.",
   alternates: { canonical: "/areas" },
   openGraph: {
     title: "Ring Installation Across Leinster | Smart Space",
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
       "We cover all 12 counties of Leinster with professional Ring doorbell and camera installation.",
     url: `${SITE}/areas`,
     type: "website",
-    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Ring Installation Areas — Smart Space (Leinster)" }],
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Ring Installation Areas, Smart Space (Leinster)" }],
   },
   twitter: {
     card: "summary_large_image",

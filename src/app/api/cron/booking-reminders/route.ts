@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 // ────────────────────────────────────────────────────────────────────────────
-// PAUSED — 2026-06-10. Oscar asked to stop automated reminders until he
+// PAUSED, 2026-06-10. Oscar asked to stop automated reminders until he
 // can talk to Nigel about whether to keep them. The vercel.json cron entry
 // has also been removed so this route doesn't fire on schedule. Flip
 // REMINDERS_PAUSED back to false AND re-add the cron entry to /vercel.json:
@@ -24,7 +24,7 @@ const REMINDERS_PAUSED = true;
  * Day-before booking reminder.
  *
  * Replaces the manual reminder Nigel currently sends every evening. Runs at
- * 17:00 UTC daily — which is 18:00 Dublin in summer and 17:00 Dublin in
+ * 17:00 UTC daily, which is 18:00 Dublin in summer and 17:00 Dublin in
  * winter. Either way the email lands the evening before the booking which
  * is the only thing that matters for the customer (the manual flow he runs
  * isn't precisely 18:00 either).
@@ -36,7 +36,7 @@ const REMINDERS_PAUSED = true;
  *   1. Compute tomorrow's Dublin date.
  *   2. Query Calendly /scheduled_events for ALL active events whose
  *      start_time is in that window (covers both consultation and
- *      installation event types — we don't need to filter by event_type
+ *      installation event types, we don't need to filter by event_type
  *      URI because we email both kinds, just with different prep copy).
  *   3. For each event, fetch the invitee to get name/email/phone/Q&A.
  *   4. Idempotency: skip if a "Booking Reminder" row with this event URI
@@ -86,7 +86,7 @@ function tomorrowDublinWindow(): { dateStr: string; startIso: string; endIso: st
   const m = parseInt(parts.find((p) => p.type === "month")?.value || "0", 10);
   const d = parseInt(parts.find((p) => p.type === "day")?.value || "0", 10);
 
-  // Tomorrow in Dublin's calendar — let JS Date roll the month/year for us
+  // Tomorrow in Dublin's calendar, let JS Date roll the month/year for us
   // by building from UTC and adding a day.
   const tomorrow = new Date(Date.UTC(y, m - 1, d));
   tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
@@ -130,7 +130,7 @@ function dublinOffsetMinutesForDate(dateStr: string): number {
 
 /**
  * Pretty slot label like "10:00 – 12:00" in Dublin time. Uses an en dash (–)
- * not an em dash (—) per the brand voice rules.
+ * not an em dash (, ) per the brand voice rules.
  */
 function formatSlot(startIso: string, endIso: string): string {
   const fmt = new Intl.DateTimeFormat("en-GB", {
@@ -159,7 +159,7 @@ interface CalendlyInvitee {
 /**
  * Returns the set of Calendly event URIs that already have a Booking
  * Reminder row in the Sheet, so we can skip them. Reads via the same Apps
- * Script doGet path the admin dashboard uses. Failures are non-fatal — we
+ * Script doGet path the admin dashboard uses. Failures are non-fatal, we
  * fall back to "no known sends" which preserves the email-once invariant
  * only via best effort. The trade-off: a Sheet read outage one day would
  * cause double-sends on the second run, which is annoying but recoverable.
@@ -172,7 +172,7 @@ async function fetchSentEventUris(): Promise<Set<string>> {
   const sheetUrl = process.env.GOOGLE_SHEET_WEBHOOK_URL?.trim();
   const readToken = process.env.GOOGLE_SHEET_READ_TOKEN?.trim();
   if (!sheetUrl || !readToken) {
-    console.warn("[cron/booking-reminders] Sheet env vars not set — skipping idempotency check");
+    console.warn("[cron/booking-reminders] Sheet env vars not set, skipping idempotency check");
     return out;
   }
   try {
@@ -183,7 +183,7 @@ async function fetchSentEventUris(): Promise<Set<string>> {
       signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) {
-      console.warn(`[cron/booking-reminders] Sheet read HTTP ${res.status} — proceeding without dedupe`);
+      console.warn(`[cron/booking-reminders] Sheet read HTTP ${res.status}, proceeding without dedupe`);
       return out;
     }
     const data = await res.json();
@@ -193,7 +193,7 @@ async function fetchSentEventUris(): Promise<Set<string>> {
       if (orderId) out.add(orderId);
     }
   } catch (err) {
-    console.warn("[cron/booking-reminders] Sheet read failed — proceeding without dedupe:", err);
+    console.warn("[cron/booking-reminders] Sheet read failed, proceeding without dedupe:", err);
   }
   return out;
 }
@@ -332,7 +332,7 @@ function buildEmailHtml(opts: {
  * but we accept up to ~2 segments (320 chars) before Twilio splits and bills
  * twice. Matches Nigel's manual SMS phrasing as closely as we can fit.
  *
- * Install vs consultation gets different prep cues — installs need the
+ * Install vs consultation gets different prep cues, installs need the
  * Wi-Fi + app + passwords reminder; consultations are just "be home".
  */
 function buildSmsText(opts: { firstName: string; slot: string; isConsultation: boolean }): string {
@@ -409,7 +409,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // PAUSED kill-switch — see comment at top of file. Even if someone
+  // PAUSED kill-switch, see comment at top of file. Even if someone
   // manually triggers the route with valid auth (or the vercel.json cron
   // entry is accidentally re-added), no reminders go out until
   // REMINDERS_PAUSED is flipped back to false.
@@ -427,7 +427,7 @@ export async function GET(request: Request) {
     await sendSiteAlert({
       category: "booking-reminders",
       severity: "error",
-      summary: "Booking reminders cron cannot run — CALENDLY_PERSONAL_TOKEN missing",
+      summary: "Booking reminders cron cannot run, CALENDLY_PERSONAL_TOKEN missing",
       details: "Set CALENDLY_PERSONAL_TOKEN in Vercel env vars and redeploy. Until then, day-before reminders won't go out.",
     });
     return NextResponse.json({ error: "Calendly not configured" }, { status: 500 });
@@ -436,7 +436,7 @@ export async function GET(request: Request) {
     await sendSiteAlert({
       category: "booking-reminders",
       severity: "error",
-      summary: "Booking reminders cron cannot run — Resend not configured",
+      summary: "Booking reminders cron cannot run, Resend not configured",
       details: "Set RESEND_API_KEY and RESEND_FROM_EMAIL in Vercel env vars.",
     });
     return NextResponse.json({ error: "Resend not configured" }, { status: 500 });
@@ -444,7 +444,7 @@ export async function GET(request: Request) {
 
   const { dateStr, startIso, endIso } = tomorrowDublinWindow();
 
-  // Resolve our Calendly user URI — mirrors the pattern in recover-bookings,
+  // Resolve our Calendly user URI, mirrors the pattern in recover-bookings,
   // which means we don't have to hard-code the UUID and rotation works.
   let userUri: string;
   try {
@@ -470,7 +470,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Calendly auth failed" }, { status: 502 });
   }
 
-  // Fetch tomorrow's events for both event types in a single query — Calendly
+  // Fetch tomorrow's events for both event types in a single query, Calendly
   // returns all active events for the user in the time window regardless of
   // event_type, which is what we want.
   let events: CalendlyEvent[];
@@ -500,7 +500,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Calendly fetch failed" }, { status: 502 });
   }
 
-  // Nothing on tomorrow — silent success.
+  // Nothing on tomorrow, silent success.
   if (events.length === 0) {
     return NextResponse.json({ ok: true, date: dateStr, sent: 0, skipped: 0, failed: 0, total: 0 });
   }
@@ -515,7 +515,7 @@ export async function GET(request: Request) {
   const twilioSid = process.env.TWILIO_ACCOUNT_SID;
   const twilioToken = process.env.TWILIO_AUTH_TOKEN;
   // Either a direct From number (E.164) or a Messaging Service SID (MGxxxx).
-  // We support either — twilio-node accepts both via the same `from` field
+  // We support either, twilio-node accepts both via the same `from` field
   // when passing a number, or `messagingServiceSid` when passing the MG SID.
   const twilioFromNumber = process.env.TWILIO_PHONE_NUMBER;
   const twilioMessagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
@@ -523,7 +523,7 @@ export async function GET(request: Request) {
   const twilioReady = twilioClient && (twilioFromNumber || twilioMessagingServiceSid);
   if (!twilioReady) {
     console.warn(
-      "[cron/booking-reminders] Twilio not configured — SMS will be skipped. " +
+      "[cron/booking-reminders] Twilio not configured, SMS will be skipped. " +
         "Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and one of TWILIO_PHONE_NUMBER " +
         "or TWILIO_MESSAGING_SERVICE_SID to enable.",
     );
@@ -545,7 +545,7 @@ export async function GET(request: Request) {
     }
 
     // Fetch invitee for this event. One missing invitee shouldn't kill the
-    // whole run — just count it as a failure and keep going so the rest
+    // whole run, just count it as a failure and keep going so the rest
     // still go out.
     let invitee: CalendlyInvitee | undefined;
     try {

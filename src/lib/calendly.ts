@@ -14,7 +14,7 @@ export const TIME_SLOTS = [
 ];
 
 // Available booking days: Monday (1) through Thursday (4). Friday was
-// removed sitewide on 2026-06-02 — internal-use day for stock prep,
+// removed sitewide on 2026-06-02, internal-use day for stock prep,
 // admin, and route batching; not offered to customers.
 export const AVAILABLE_DAYS = [1, 2, 3, 4];
 
@@ -64,10 +64,10 @@ export function isDateBlocked(date: string | Date): boolean {
  * "working day" semantic. The customer-facing calendar then further
  * filters to AVAILABLE_DAYS (Mon-Thu only since Friday was blocked
  * sitewide on 2026-06-02). So if this function returns a Friday, the
- * calendar will skip to the following Monday — the floor date never
+ * calendar will skip to the following Monday, the floor date never
  * lands on a Friday slot.
  *
- * Default 4 matches the BookingCalendar default — appropriate for any
+ * Default 4 matches the BookingCalendar default, appropriate for any
  * flow that involves stock (product purchase + install). Installation-
  * only and free consultation flows pass 2 explicitly because no stock
  * is sourced for those visits.
@@ -100,7 +100,7 @@ function getEventTypeUri(kind: EventKind): string | undefined {
  * Maps Calendly's available start times back to our fixed TIME_SLOTS.
  */
 export async function getAvailableSlots(dateStr: string, kind: EventKind = "installation"): Promise<typeof TIME_SLOTS> {
-  // Sitewide calendar blackout — return no slots on blocked dates without
+  // Sitewide calendar blackout, return no slots on blocked dates without
   // even calling Calendly. Covers both the availability API and the reserve
   // re-check, since both go through here.
   if (isDateBlocked(dateStr)) return [];
@@ -124,7 +124,7 @@ export async function getAvailableSlots(dateStr: string, kind: EventKind = "inst
           "Content-Type": "application/json",
         },
         cache: "no-store",
-        // 6s ceiling — Calendly's API normally responds under 1s. Without
+        // 6s ceiling, Calendly's API normally responds under 1s. Without
         // this, a stalled API call would block the Vercel serverless
         // function up to its 10s timeout, after which the user would see
         // "couldn't lock in that slot" and bounce.
@@ -188,7 +188,7 @@ export async function createBookingEvent(params: {
 }): Promise<{ eventId: string } | null> {
   const kind = params.kind ?? "installation";
 
-  // Sitewide calendar blackout — refuse to create a booking on a blocked
+  // Sitewide calendar blackout, refuse to create a booking on a blocked
   // date even if a request bypasses the UI + availability/reserve checks.
   if (isDateBlocked(params.date)) {
     console.error(`[calendly] Refusing booking on blocked date ${params.date}`);
@@ -198,7 +198,7 @@ export async function createBookingEvent(params: {
   const eventTypeUri = getEventTypeUri(kind);
 
   if (!CALENDLY_TOKEN || !eventTypeUri) {
-    console.error(`[calendly] Cannot create booking — not configured for ${kind}`);
+    console.error(`[calendly] Cannot create booking, not configured for ${kind}`);
     return null;
   }
 
@@ -207,7 +207,7 @@ export async function createBookingEvent(params: {
     if (!slot) throw new Error(`Invalid time slot: ${params.timeSlot}`);
 
     // Look up the exact Calendly available start time for this slot.
-    // 6s ceiling — same budget as getAvailableSlots; without it a hung
+    // 6s ceiling, same budget as getAvailableSlots; without it a hung
     // call would block until the route's outer timeout, after which the
     // user sees "couldn't lock in that slot" instead of a clean retry.
     const availableRes = await fetch(
@@ -254,7 +254,7 @@ export async function createBookingEvent(params: {
 
     // Format phone to E.164 for Calendly (convert Irish local to +353).
     // Bug fix: previously a number that already started with "353" (no
-    // plus, e.g. "353871234567" — the way iOS sometimes returns
+    // plus, e.g. "353871234567", the way iOS sometimes returns
     // contacts) was being prefixed AGAIN, producing "+353353871234567"
     // which Calendly rejects for SMS reminders.
     let formattedPhone: string | undefined;
@@ -271,14 +271,14 @@ export async function createBookingEvent(params: {
       } else if (/^\d+$/.test(digits)) {
         formattedPhone = "+353" + digits;
       } else {
-        // Unknown format — drop rather than send a malformed E.164.
+        // Unknown format, drop rather than send a malformed E.164.
         formattedPhone = undefined;
       }
     }
 
     const res = await fetch("https://api.calendly.com/invitees", {
       method: "POST",
-      // 8s ceiling — bookings need a slightly longer budget than slot
+      // 8s ceiling, bookings need a slightly longer budget than slot
       // lookups since Calendly creates calendar events + sends emails.
       // If exceeded, the Stripe webhook caller surfaces "calendlyStatus
       // = failed" and SMS-alerts Nigel to book manually.

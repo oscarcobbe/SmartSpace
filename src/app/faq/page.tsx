@@ -34,8 +34,8 @@ const INCLUDES = [
 const HOW_IT_WORKS = [
   { n: 1, title: "Book a complimentary consultation online or on the phone." },
   { n: 2, title: "We visit for a complimentary consultation, walk the house with you, and send a written quote the same day." },
-  { n: 3, title: "You approve. We book the install — usually within a week." },
-  { n: 4, title: "We install, configure and hand over — typically in 30 minutes to 3 hours." },
+  { n: 3, title: "You approve. We book the install, usually within a week." },
+  { n: 4, title: "We install, configure and hand over, typically in 30 minutes to 3 hours." },
   { n: 5, title: "You get a follow-up call at 30 days to make sure everything's perfect." },
 ];
 

@@ -10,6 +10,26 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "eufy-video-doorbell-e340-fitted-ireland",
+    title: "The Eufy Video Doorbell E340, Fitted: An Irish Installer's Take",
+    description:
+      "We supply and fit the Eufy Video Doorbell E340 across Dublin and Leinster. Here is what the dual camera, the local storage and the no-subscription promise actually mean once it is on your wall, and the two power situations that decide your price.",
+    datePublished: "2026-06-17",
+    dateModified: "2026-06-17",
+    readingTime: "8 min read",
+    category: "Specialist Opinion",
+  },
+  {
+    slug: "eufy-home-bundles-driveway-garden-ireland",
+    title: "Covering the Whole Property with Eufy: Driveway, Garden and the Bits People Forget",
+    description:
+      "A doorbell covers the front door and nothing else. Here is how we cover a whole Irish property with Eufy, the Floodlight Cam, the S380 HomeBase and the three bundles we fit most, all with footage kept at home and no monthly fee.",
+    datePublished: "2026-06-17",
+    dateModified: "2026-06-17",
+    readingTime: "9 min read",
+    category: "Buying Guide",
+  },
+  {
     slug: "ring-vs-eufy-doorbell-ireland",
     title: "Ring vs Eufy: An Irish Installer's Honest Take in 2026",
     description:

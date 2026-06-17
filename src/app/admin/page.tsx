@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 /**
- * /admin redirects to /admin/leads — the dashboard is the default
+ * /admin redirects to /admin/leads, the dashboard is the default
  * landing page. The persistent sidebar in src/app/admin/layout.tsx
  * makes every other tool one click away from there.
  *

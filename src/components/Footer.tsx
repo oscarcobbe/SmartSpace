@@ -28,7 +28,7 @@ export default function Footer() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 text-center lg:text-left">
           {/* Brand */}
           <div className="col-span-2 lg:col-span-1 flex flex-col items-center lg:items-start">
-            <Link href="/" className="mb-4 block" aria-label="Smart Space — home">
+            <Link href="/" className="mb-4 block" aria-label="Smart Space, home">
               <Image
                 src="/Logo1.png"
                 alt="Smart Space"

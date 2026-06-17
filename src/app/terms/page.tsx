@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Terms & Conditions | Smart Space",
   description:
-    "Terms of service for Smart Space — the conditions under which we provide Ring camera and video-doorbell installation services across Dublin and Leinster.",
+    "Terms of service for Smart Space, the conditions under which we provide Ring camera and video-doorbell installation services across Dublin and Leinster.",
   alternates: { canonical: "https://smart-space.ie/terms" },
   robots: { index: true, follow: true },
 };
@@ -77,7 +77,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-bold text-gray-900 mt-8 mb-3">4. Cancellation and rescheduling</h2>
             <p>
-              You can reschedule or cancel any booking up to 24 hours before the appointment at no charge — use the
+              You can reschedule or cancel any booking up to 24 hours before the appointment at no charge, use the
               link in your Calendly confirmation email or call us. Cancellations within 24 hours may incur a €60
               call-out charge if travel has already commenced.
             </p>
@@ -138,7 +138,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-bold text-gray-900 mt-8 mb-3">9. Refunds</h2>
             <p>
-              Free consultations are, well, free — nothing to refund. For paid installations, you can cancel for a
+              Free consultations are, well, free, nothing to refund. For paid installations, you can cancel for a
               full refund up to 24 hours before your appointment. After installation is complete, you have 14 days to
               raise any workmanship issue under section 6 above and we will fix it at no charge. Cash refunds after a
               completed installation are at our discretion and reviewed on a case-by-case basis.

@@ -33,7 +33,7 @@ export interface Attribution {
  * we don't overwrite it.
  * If the current URL DOES have a new gclid or utm, we treat that as a new
  * session and overwrite. This matches how most ad platforms prefer to
- * attribute — the most recent paid click wins.
+ * attribute, the most recent paid click wins.
  */
 export function captureAttribution(): void {
   if (typeof window === "undefined") return;
@@ -80,7 +80,7 @@ export function captureAttribution(): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
   } catch {
-    // ignore — not critical
+    // ignore, not critical
   }
 }
 
@@ -101,7 +101,7 @@ export function getAttribution(): Attribution | null {
   }
 }
 
-/** Convenience — just the gclid, for legacy call-sites */
+/** Convenience, just the gclid, for legacy call-sites */
 export function getStoredGclid(): string | null {
   return getAttribution()?.gclid ?? null;
 }

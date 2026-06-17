@@ -35,10 +35,23 @@ function displayTitle(title: string): string {
 interface Props {
   product: ShopifyProduct;
   shortDescription: string | undefined;
+  /** Accent colour theme. Eufy products pass "blue"; default is Ring orange. */
+  accent?: "orange" | "blue";
 }
 
-export default function ProductHero({ product, shortDescription }: Props) {
+export default function ProductHero({ product, shortDescription, accent = "orange" }: Props) {
   const handle = product.handle;
+  // Accent theming only. The configurator layout/behaviour is identical to
+  // Ring; Eufy products pass accent="blue" so just the colours change.
+  const isBlue = accent === "blue";
+  const ac = {
+    thumb: isBlue ? "border-[#005d8e] ring-1 ring-[#005d8e]/30" : "border-brand-500 ring-1 ring-brand-500/30",
+    typePill: isBlue ? "bg-[#005d8e]/10 text-[#005d8e]" : "bg-brand-500/10 text-brand-500",
+    swatch: isBlue ? "border-[#005d8e] ring-2 ring-[#005d8e]/30" : "border-brand-500 ring-2 ring-brand-500/30",
+    pill: isBlue ? "border-[#005d8e] bg-[#005d8e]/5 text-[#005d8e]" : "border-brand-500 bg-brand-500/5 text-brand-500",
+    focus: isBlue ? "focus:border-[#005d8e]" : "focus:border-brand-500",
+    icon: isBlue ? "text-[#005d8e]" : "text-brand-500",
+  };
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [bookingSelection, setBookingSelection] = useState<{ date: string; timeSlot: string; dateLabel: string; slotLabel: string } | null>(null);
@@ -128,11 +141,11 @@ export default function ProductHero({ product, shortDescription }: Props) {
                 aria-pressed={selectedImage === i}
                 className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-transparent p-1.5 border-2 transition-all ${
                   selectedImage === i
-                    ? "border-brand-500 ring-1 ring-brand-500/30"
+                    ? ac.thumb
                     : "border-transparent hover:border-gray-200"
                 }`}
               >
-                {/* Decorative — parent button carries the accessible name */}
+                {/* Decorative, parent button carries the accessible name */}
                 <div className="relative w-full h-full">
                   <Image src={img} alt="" fill sizes="80px" className="object-contain" />
                 </div>
@@ -145,7 +158,7 @@ export default function ProductHero({ product, shortDescription }: Props) {
       {/* Right: Product Info */}
       <div className="flex flex-col">
         {product.productType && (
-          <span className="inline-block w-fit bg-brand-500/10 text-brand-500 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-3">
+          <span className={`inline-block w-fit ${ac.typePill} text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-3`}>
             {product.productType}
           </span>
         )}
@@ -224,7 +237,7 @@ export default function ProductHero({ product, shortDescription }: Props) {
                             key={val}
                             onClick={() => setSelectedOptions((prev) => ({ ...prev, [option.name]: val }))}
                             className={`w-10 h-10 rounded-full border-2 transition-all relative overflow-hidden ${
-                              isSelected ? "border-brand-500 ring-2 ring-brand-500/30" : "border-gray-200 hover:border-gray-400"
+                              isSelected ? ac.swatch : "border-gray-200 hover:border-gray-400"
                             }`}
                             style={mixed ? undefined : { backgroundColor: hex }}
                             title={val}
@@ -252,7 +265,7 @@ export default function ProductHero({ product, shortDescription }: Props) {
                           onClick={() => setSelectedOptions((prev) => ({ ...prev, [option.name]: val }))}
                           className={`px-4 py-2 rounded-full text-sm font-medium border-2 transition-all ${
                             selectedVal === val
-                              ? "border-brand-500 bg-brand-500/5 text-brand-500"
+                              ? ac.pill
                               : "border-gray-200 text-gray-600 hover:border-gray-300"
                           }`}
                         >
@@ -265,7 +278,7 @@ export default function ProductHero({ product, shortDescription }: Props) {
                       id={fieldId}
                       value={selectedVal}
                       onChange={(e) => setSelectedOptions((prev) => ({ ...prev, [option.name]: e.target.value }))}
-                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-none transition-colors"
+                      className={`w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium text-gray-700 ${ac.focus} focus:outline-none transition-colors`}
                     >
                       {option.values.map((val) => (
                         <option key={val} value={val}>{val}</option>
@@ -278,7 +291,7 @@ export default function ProductHero({ product, shortDescription }: Props) {
           </div>
         )}
 
-        {/* Booking Calendar — uses BookingCalendar's 4-working-day default
+        {/* Booking Calendar, uses BookingCalendar's 4-working-day default
             (stock flows: cameras, doorbells, bundles). Installation-only,
             free consultation, and /ring-installation pass leadDays={2}
             explicitly because no stock is sourced for those visits. */}
@@ -287,6 +300,7 @@ export default function ProductHero({ product, shortDescription }: Props) {
             <BookingCalendar
               compact
               onSelectionChange={setBookingSelection}
+              accent={accent}
             />
           </div>
         )}
@@ -306,19 +320,20 @@ export default function ProductHero({ product, shortDescription }: Props) {
             bookingSlot={bookingSelection?.timeSlot}
             bookingLabel={bookingSelection ? `${bookingSelection.dateLabel} ${bookingSelection.slotLabel}` : undefined}
             configuration={effectiveOptions}
+            accent={accent}
           />
         </div>
 
         {/* Trust Strip */}
         <div className="grid grid-cols-2 gap-3 p-4 bg-gray-50 rounded-2xl">
           {[
-            { icon: Shield, text: "Dublin's #1 Ring Installer" },
+            { icon: Shield, text: isBlue ? "Dublin's Trusted Installer" : "Dublin's #1 Ring Installer" },
             { icon: Star, text: "5-Star Google Rating" },
             { icon: Wrench, text: "5,000+ Installations" },
             { icon: Award, text: "SME Winner 2025" },
           ].map(({ icon: Icon, text }) => (
             <div key={text} className="flex items-center gap-2">
-              <Icon className="w-4 h-4 text-brand-500 flex-shrink-0" />
+              <Icon className={`w-4 h-4 ${ac.icon} flex-shrink-0`} />
               <span className="text-xs font-medium text-gray-600">{text}</span>
             </div>
           ))}

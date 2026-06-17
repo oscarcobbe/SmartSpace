@@ -9,7 +9,7 @@ export default function MailingList() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  // Honeypot — see hidden input below. Bots fill every field; real
+  // Honeypot, see hidden input below. Bots fill every field; real
   // users can't see this one. /api/subscribe drops any submission where
   // this value is non-empty.
   const honeypotRef = useRef<HTMLInputElement>(null);
@@ -23,7 +23,7 @@ export default function MailingList() {
       const res = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // Pass `consent: true` along with the email — required by the
+        // Pass `consent: true` along with the email, required by the
         // /api/subscribe route under GDPR. The button is disabled if
         // the consent box is unchecked, so this should always be true,
         // but we send it explicitly for transparency.
@@ -36,7 +36,7 @@ export default function MailingList() {
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         // Previously this `catch` swallowed every error and showed a
-        // false "Thanks for subscribing!" — users thought they were
+        // false "Thanks for subscribing!", users thought they were
         // signed up when the request had actually failed. Now we
         // surface the real reason.
         setError(data.error ?? "Something went wrong. Please try again.");
@@ -80,7 +80,7 @@ export default function MailingList() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-3">
-              {/* Honeypot — hidden anti-spam field. Mirrors the pattern in
+              {/* Honeypot, hidden anti-spam field. Mirrors the pattern in
                   ContactForm.tsx: off-screen, tab-skip, screen-reader-skip,
                   no autofill. /api/subscribe treats any non-empty value
                   here as a bot submission and drops it. */}

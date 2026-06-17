@@ -1,5 +1,5 @@
 /**
- * Price formatting helpers — drop `.00` on whole-euro amounts but keep
+ * Price formatting helpers, drop `.00` on whole-euro amounts but keep
  * cents when they're non-zero.
  *
  *   299    → "€299"

@@ -3,7 +3,7 @@
  *
  * Used by every Smart Space tracked-QR redirect endpoint
  * (/r/card for review cards, /r/install for installer business cards,
- * and any future /r/* short links — flyers, posters, vehicle decals).
+ * and any future /r/* short links, flyers, posters, vehicle decals).
  *
  * The flow is always the same: customer scans a QR → hits /r/<name> on
  * smart-space.ie → we log everything we can capture server-side without
@@ -21,7 +21,7 @@ import { logLead } from "@/lib/leads";
 export interface TrackQrScanOptions {
   /**
    * The URL we 302-redirect the customer to after logging. Customer
-   * never sees Smart Space — they tap the QR and end up here.
+   * never sees Smart Space, they tap the QR and end up here.
    */
   destination: string;
   /**
@@ -41,12 +41,12 @@ export interface TrackQrScanOptions {
 /**
  * Handle a QR scan request: log everything we can capture, then redirect.
  *
- * Designed to NEVER throw. If the Sheet write fails we still redirect —
+ * Designed to NEVER throw. If the Sheet write fails we still redirect,
  * the customer is mid-journey, we cannot break their flow.
  *
  * Reads optional query params from the request URL:
- *   ?s=<storeSlug>      — per-store tracking for multi-batch print runs
- *   ?v=<variantSlug>    — per-design tracking (v1 vs v2 etc)
+ *   ?s=<storeSlug>    , per-store tracking for multi-batch print runs
+ *   ?v=<variantSlug>  , per-design tracking (v1 vs v2 etc)
  */
 export async function trackQrScan(
   request: Request,
@@ -56,7 +56,7 @@ export async function trackQrScan(
   const store = url.searchParams.get("s")?.trim() || null;
   const variant = url.searchParams.get("v")?.trim() || null;
 
-  // Vercel injects these headers on every request — free, no extra calls.
+  // Vercel injects these headers on every request, free, no extra calls.
   // See https://vercel.com/docs/edge-network/headers for the full list.
   const headers = request.headers;
   const ua = headers.get("user-agent") || "(no user-agent)";
@@ -69,7 +69,7 @@ export async function trackQrScan(
   const timezone = headers.get("x-vercel-ip-timezone") || "";
   const acceptLanguage = headers.get("accept-language") || "";
 
-  // Daily-salted IP hash — gives us same-day repeat-scan dedupe without
+  // Daily-salted IP hash, gives us same-day repeat-scan dedupe without
   // storing raw IPs. The salt rotates every UTC midnight so longitudinal
   // tracking past 24h is impossible.
   const rawIp =
@@ -113,7 +113,7 @@ export async function trackQrScan(
     `ua=${ua.slice(0, 200)}`,
   ];
 
-  // Await the log so we guarantee delivery — Vercel kills lambdas the
+  // Await the log so we guarantee delivery, Vercel kills lambdas the
   // moment the response returns, which silently drops ~30% of fire-and-
   // forget Apps Script writes (see leads.ts comment). A ~300-800ms server
   // hop is imperceptible to a customer mid-QR-scan.
@@ -135,7 +135,7 @@ export async function trackQrScan(
   return NextResponse.redirect(destination, {
     status: 302,
     headers: {
-      // The redirect itself must not be cached — every scan must hit our
+      // The redirect itself must not be cached, every scan must hit our
       // server so it counts. Without no-store, mobile browsers and CDNs
       // happily memoize a redirect for hours.
       "Cache-Control": "no-store, max-age=0, must-revalidate",
@@ -144,7 +144,7 @@ export async function trackQrScan(
 }
 
 /**
- * SHA-256 of (raw IP + today's UTC date) — first 12 hex chars.
+ * SHA-256 of (raw IP + today's UTC date), first 12 hex chars.
  * Lets Nigel dedupe scans from the same source within a single day
  * without storing PII. After 24h the salt rotates and the same IP
  * produces a different fingerprint, so we cannot reconstruct a longer
@@ -160,7 +160,7 @@ function dailyHash(raw: string): string {
 
 /**
  * Map a user-agent string to a coarse device class for the leads sheet.
- * Not perfect, not security-critical — purely to give Nigel a quick read
+ * Not perfect, not security-critical, purely to give Nigel a quick read
  * of "is everyone scanning on iPhone or are Androids in the mix too?"
  */
 function inferDevice(ua: string): string {
@@ -178,7 +178,7 @@ function inferDevice(ua: string): string {
   return "Other/unknown";
 }
 
-/** Coarse browser detection — good enough for "Safari vs Chrome split". */
+/** Coarse browser detection, good enough for "Safari vs Chrome split". */
 function inferBrowser(ua: string): string {
   const s = ua.toLowerCase();
   // Order matters: Edge spoofs Chrome which spoofs Safari. Test most-
@@ -195,19 +195,19 @@ function inferBrowser(ua: string): string {
 
 /** OS + version when we can extract it cleanly. */
 function inferOs(ua: string): string {
-  // iOS — "iPhone OS 17_1_2" → "iOS 17.1.2"
+  // iOS, "iPhone OS 17_1_2" → "iOS 17.1.2"
   const ios = ua.match(/iPhone OS (\d+)[_\.](\d+)(?:[_\.](\d+))?/);
   if (ios) return `iOS ${ios[1]}.${ios[2]}${ios[3] ? `.${ios[3]}` : ""}`;
-  // iPad — "CPU OS 17_1 like Mac OS X"
+  // iPad, "CPU OS 17_1 like Mac OS X"
   const ipad = ua.match(/CPU OS (\d+)[_\.](\d+)/);
   if (ipad && ua.includes("iPad")) return `iPadOS ${ipad[1]}.${ipad[2]}`;
-  // Android — "Android 14"
+  // Android, "Android 14"
   const android = ua.match(/Android (\d+(?:\.\d+)?)/);
   if (android) return `Android ${android[1]}`;
-  // macOS — "Mac OS X 10_15_7"
+  // macOS, "Mac OS X 10_15_7"
   const mac = ua.match(/Mac OS X (\d+)[_\.](\d+)(?:[_\.](\d+))?/);
   if (mac) return `macOS ${mac[1]}.${mac[2]}${mac[3] ? `.${mac[3]}` : ""}`;
-  // Windows — "Windows NT 10.0"
+  // Windows, "Windows NT 10.0"
   if (ua.includes("Windows NT 10.0")) return "Windows 10/11";
   if (ua.includes("Windows NT 6.3")) return "Windows 8.1";
   if (ua.includes("Windows NT 6.1")) return "Windows 7";

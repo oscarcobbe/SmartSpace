@@ -53,7 +53,7 @@ type ServerFireResult = {
 };
 
 const GADS_ACCOUNT = "AW-17978501655";
-// .trim() — see src/components/ContactForm.tsx for the rationale.
+// .trim(), see src/components/ContactForm.tsx for the rationale.
 // Without this, the diagnostic page would say "conversion fired" even
 // when Google Ads rejected the label as malformed (trailing newline),
 // silently misleading anyone using the test page to verify the pipeline.
@@ -77,7 +77,7 @@ type ConsentSnapshot = {
 function readConsent(): ConsentSnapshot | null {
   if (typeof window === "undefined") return null;
   // gtag/Google's tag stores the current consent state on
-  // window.google_tag_data.ics — undocumented but stable for years.
+  // window.google_tag_data.ics, undocumented but stable for years.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const gd = (window as any).google_tag_data;
   if (!gd?.ics?.entries) return null;
@@ -121,7 +121,7 @@ export default function ConversionTestPage() {
     const w = window as any;
     if (typeof w.gtag !== "function") {
       setResults((r) => [
-        { at: new Date().toLocaleTimeString(), type, sendTo: "—", txnId: "—", acked: false, error: "window.gtag not loaded" },
+        { at: new Date().toLocaleTimeString(), type, sendTo: ", ", txnId: ", ", acked: false, error: "window.gtag not loaded" },
         ...r,
       ]);
       return;
@@ -173,13 +173,13 @@ export default function ConversionTestPage() {
   }
 
   /**
-   * Server-side fire — hits /api/admin/test-conversion, which mirrors what
+   * Server-side fire, hits /api/admin/test-conversion, which mirrors what
    * fireServerConversion() does in /api/contact + /api/webhooks/stripe but
    * captures the URL Google was hit with + Google's response status.
    *
    * Use this to confirm the SERVER path works independently of the gtag
    * one above. The gtag path is the optimistic best case (consent granted,
-   * no adblocker, page survived) — server path is what every real form
+   * no adblocker, page survived), server path is what every real form
    * submit and Stripe purchase relies on.
    */
   async function fireServerSide(type: "lead" | "payment" | "free_consult" | "call") {
@@ -207,7 +207,7 @@ export default function ConversionTestPage() {
           {
             at: new Date().toLocaleTimeString(),
             type,
-            label: "—",
+            label: ", ",
             adsStatus: null,
             adsBodyPreview: null,
             ga4Configured: false,
@@ -243,7 +243,7 @@ export default function ConversionTestPage() {
         {
           at: new Date().toLocaleTimeString(),
           type,
-          label: "—",
+          label: ", ",
           adsStatus: null,
           adsBodyPreview: null,
           ga4Configured: false,
@@ -281,28 +281,28 @@ export default function ConversionTestPage() {
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-gray-500">Consent — ad_storage</dt>
+              <dt className="text-xs text-gray-500">Consent, ad_storage</dt>
               <dd className={`font-mono ${consent?.ad_storage === "granted" ? "text-emerald-600" : "text-amber-600"}`}>
-                {consent?.ad_storage ?? "—"}
+                {consent?.ad_storage ?? ", "}
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-gray-500">Consent — ad_user_data</dt>
+              <dt className="text-xs text-gray-500">Consent, ad_user_data</dt>
               <dd className={`font-mono ${consent?.ad_user_data === "granted" ? "text-emerald-600" : "text-amber-600"}`}>
-                {consent?.ad_user_data ?? "—"}
+                {consent?.ad_user_data ?? ", "}
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-gray-500">Consent — analytics_storage</dt>
+              <dt className="text-xs text-gray-500">Consent, analytics_storage</dt>
               <dd className={`font-mono ${consent?.analytics_storage === "granted" ? "text-emerald-600" : "text-amber-600"}`}>
-                {consent?.analytics_storage ?? "—"}
+                {consent?.analytics_storage ?? ", "}
               </dd>
             </div>
             <div className="sm:col-span-2">
               <dt className="text-xs text-gray-500">Stored attribution (gclid + utm)</dt>
               <dd className="font-mono text-xs text-gray-700 break-all">
                 {attribution
-                  ? `gclid=${attribution.gclid ?? "—"} | utm_source=${attribution.utmSource ?? "—"} | utm_campaign=${attribution.utmCampaign ?? "—"} | landing=${attribution.landingPage ?? "—"}`
+                  ? `gclid=${attribution.gclid ?? ", "} | utm_source=${attribution.utmSource ?? ", "} | utm_campaign=${attribution.utmCampaign ?? ", "} | landing=${attribution.landingPage ?? ", "}`
                   : "no attribution stored (visit the site via a paid-ad URL with ?gclid=… to test capture)"}
               </dd>
             </div>
@@ -379,7 +379,7 @@ export default function ConversionTestPage() {
           </div>
         </div>
 
-        {/* Server-side fire buttons — bypass gtag entirely, hit Google
+        {/* Server-side fire buttons, bypass gtag entirely, hit Google
             directly from our server. This is the path that /api/contact +
             Stripe webhook + /api/track/phone-click all use under the hood. */}
         <div className="bg-white rounded-xl shadow-sm p-5 mb-4 border border-purple-100">
@@ -387,7 +387,7 @@ export default function ConversionTestPage() {
           <p className="text-xs text-gray-500 mb-3">
             Mirrors what <code>/api/contact</code> + Stripe webhook + phone-click endpoint do.
             Shows the exact URL Google was hit with + Google&apos;s response code. Use this when
-            forms/Stripe purchases aren&apos;t showing up in Google Ads — proves the server fire
+            forms/Stripe purchases aren&apos;t showing up in Google Ads, proves the server fire
             is reaching Google. (Auth: admin key, same as the leads dashboard.)
           </p>
           <div className="grid sm:grid-cols-2 gap-2">
@@ -446,7 +446,7 @@ export default function ConversionTestPage() {
                       <div className="mb-1">
                         <span className="text-gray-500">Google Ads pixel:</span>{" "}
                         <span className={r.adsStatus === 200 ? "text-emerald-700" : "text-red-700"}>
-                          HTTP {r.adsStatus ?? "—"}
+                          HTTP {r.adsStatus ?? ", "}
                         </span>
                         {r.adsBodyPreview && (
                           <span className="text-gray-500 ml-2">body: {r.adsBodyPreview}</span>
@@ -456,14 +456,14 @@ export default function ConversionTestPage() {
                         <span className="text-gray-500">GA4 Measurement Protocol:</span>{" "}
                         {r.ga4Configured ? (
                           <span className={r.ga4Status === 204 || r.ga4Status === 200 ? "text-emerald-700" : "text-red-700"}>
-                            HTTP {r.ga4Status ?? "—"}
+                            HTTP {r.ga4Status ?? ", "}
                             {r.ga4Body && r.ga4Body.length > 0 && (
                               <span className="text-gray-500 ml-2">{r.ga4Body.slice(0, 60)}</span>
                             )}
                           </span>
                         ) : (
                           <span className="text-amber-700">
-                            ⚠ not configured — set GA4_API_SECRET in Vercel to enable
+                            ⚠ not configured, set GA4_API_SECRET in Vercel to enable
                           </span>
                         )}
                       </div>
@@ -476,7 +476,7 @@ export default function ConversionTestPage() {
             <p className="text-xs text-gray-500 mt-3">
               <strong>Important:</strong> Google&apos;s URL pixel ALWAYS returns 200, even if the
               conversion action is paused/deleted or set to &quot;don&apos;t include&quot;. A 200
-              here only proves the ping reached Google — not that it was counted. Check Google Ads
+              here only proves the ping reached Google, not that it was counted. Check Google Ads
               → Tools → Conversions → Diagnostics within 6-12 hours to confirm.
             </p>
           </div>
@@ -527,7 +527,7 @@ export default function ConversionTestPage() {
               <strong>Conversion action exists?</strong> Google Ads → Tools → Conversions → check the
               action with the label shown above. If the label was recreated, copy the new label and
               paste it into the matching <code>NEXT_PUBLIC_GADS_*_SEND_TO</code> env var in Vercel
-              (no code redeploy needed — it&apos;s read at request time).
+              (no code redeploy needed, it&apos;s read at request time).
             </li>
             <li>
               <strong>GA4 ↔ Google Ads link active?</strong> Google Ads → Tools → Linked accounts →

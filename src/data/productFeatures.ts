@@ -9,12 +9,60 @@ export interface ProductFeatureSet {
   specs: Record<string, string>;
 }
 
-// Per-handle curated data — matches Shopify product handles
+// Per-handle curated data, matches Shopify product handles
 const featuresByHandle: Record<string, ProductFeatureSet> = {
+  // ── Eufy single products (blue ProductHero flow). Eufy-accurate specs so
+  //    they override the generic by-type fallback. ──
+  "eufy-video-doorbell-e340": {
+    shortDescription:
+      "Dual-camera Eufy video doorbell. A 2K HDR head-on camera plus a second downward camera that watches parcels at the doorstep, with colour night vision and on-device AI alerts for people, parcels and vehicles. Eufy Chime included, and every recording stored locally with no monthly fee.",
+    highlights: [
+      "2K HDR Dual Cameras",
+      "Package / Doorstep View",
+      "Colour Night Vision",
+      "On-Device AI Detection",
+      "Eufy Chime Included",
+      "Local Storage, No Subscription",
+    ],
+    specs: {
+      "Video Resolution": "2K HDR (2048×1536)",
+      "Cameras": "Dual lens, head-on plus downward package view",
+      "Night Vision": "Colour night vision",
+      "AI Detection": "On-device person, parcel and vehicle alerts",
+      "Power": "Hardwired to existing doorbell feed (mains)",
+      "Chime": "Eufy Chime included",
+      "Storage": "Local, no monthly subscription",
+      "Connectivity": "Wi-Fi, dual-band 2.4 / 5 GHz",
+      "Weather Rating": "IP65",
+    },
+  },
+  "eufy-floodlight-cam-e340": {
+    shortDescription:
+      "Dual 3K cameras on a 360 degree pan-tilt head that auto-tracks movement, with 2,000-lumen motion-activated floodlights to light up and follow anyone across the driveway. Mains-powered, no monthly subscription, recordings stored locally.",
+    highlights: [
+      "Dual 3K Cameras",
+      "360° Pan & Tilt Auto-Tracking",
+      "2,000-lumen Floodlights",
+      "Colour Night Vision",
+      "On-Device AI Detection",
+      "Local Storage, No Subscription",
+    ],
+    specs: {
+      "Video Resolution": "3K dual-camera",
+      "Pan & Tilt": "360° with motion auto-tracking",
+      "Floodlights": "2,000 lumens, motion-activated",
+      "Night Vision": "Colour night vision",
+      "AI Detection": "On-device person and vehicle alerts",
+      "Power": "Hardwired (mains), replaces an outdoor light point",
+      "Storage": "Local, no monthly subscription",
+      "Connectivity": "Wi-Fi, dual-band 2.4 / 5 GHz",
+      "Weather Rating": "IP65",
+    },
+  },
   // ── New lineup: Video Doorbells ──
   "plus-video-doorbell": {
     // All specs below match Ring's official product page (Wired Video
-    // Doorbell Plus, 2nd Gen) — verified against ring.com/eu/en, not
+    // Doorbell Plus, 2nd Gen), verified against ring.com/eu/en, not
     // inferred from product name.
     shortDescription:
       "Get 2K (1920×1920) image clarity with our reimagined wired doorbell. Features include 3D Motion Detection, real-time Live View, Two-Way Talk, and Low-Light Sight with Adaptive Night Vision. Hardwired into your home's power for constant, reliable security.",
@@ -38,7 +86,7 @@ const featuresByHandle: Record<string, ProductFeatureSet> = {
   },
   "pro-video-doorbell": {
     // Specs match Ring's Wired Video Doorbell Pro (3rd Gen) on
-    // ring.com/eu/en. The 4K claim is verified — Ring lists this model
+    // ring.com/eu/en. The 4K claim is verified, Ring lists this model
     // as 4K (2880×2880).
     shortDescription:
       "Our most advanced wired doorbell features 4K (2880×2880) video, 3D Motion Detection (radar-powered), and Audio+ two-way talk. Low-Light Sight with Adaptive Night Vision keeps every visitor visible day or night.",
@@ -87,9 +135,9 @@ const featuresByHandle: Record<string, ProductFeatureSet> = {
   },
   "pro-floodlight-cam": {
     // Specs match Ring's Floodlight Cam Pro (2nd Gen) on ring.com/eu/en.
-    // 4K claim is verified — Ring lists this model as 4K (3840×2160).
+    // 4K claim is verified, Ring lists this model as 4K (3840×2160).
     shortDescription:
-      "Our most advanced floodlight camera with 4K (3840×2160) video, radar-powered 3D Motion Detection on an aerial map, and Audio+ two-way talk. 2000-lumen floodlights plus an 85dB siren light up and deter intruders — day or night, driveway or back garden.",
+      "Our most advanced floodlight camera with 4K (3840×2160) video, radar-powered 3D Motion Detection on an aerial map, and Audio+ two-way talk. 2000-lumen floodlights plus an 85dB siren light up and deter intruders, day or night, driveway or back garden.",
     highlights: [
       "4K HD video (3840×2160)",
       "Wide Field of View (140°×85°)",
@@ -163,7 +211,7 @@ const featuresByHandle: Record<string, ProductFeatureSet> = {
   },
   "pro-whole-home-bundle": {
     // Bundles a Wired Video Doorbell Pro (4K) with TWO Floodlight Cam
-    // Pro units (4K each). All three devices 4K — Ring's highest tier.
+    // Pro units (4K each). All three devices 4K, Ring's highest tier.
     shortDescription:
       "The ultimate whole-home security setup. The Ring Video Doorbell Pro at your entrance paired with two Floodlight Cam Pro units gives 4K image quality coverage of the front door, driveway, and back garden. 3D Motion Detection pinpoints activity on an aerial map. 4,000 lumens of floodlighting and 85dB sirens deter intruders day and night. Includes a Ring Chime. Bundle saves €100.",
     highlights: [
@@ -193,7 +241,7 @@ const featuresByHandle: Record<string, ProductFeatureSet> = {
   // ── Legacy handles (kept for existing Shopify references) ──
   "basic-video-doorbell-mains-or-battery-powered": {
     shortDescription:
-      "See, hear, and speak to visitors from anywhere with the Ring Battery Video Doorbell. Wire-free installation means you can set it up in minutes — no electrician needed. Enjoy 1080p HD video, advanced motion detection, and instant phone alerts for complete peace of mind at your front door.",
+      "See, hear, and speak to visitors from anywhere with the Ring Battery Video Doorbell. Wire-free installation means you can set it up in minutes, no electrician needed. Enjoy 1080p HD video, advanced motion detection, and instant phone alerts for complete peace of mind at your front door.",
     highlights: [
       "1080p HD video with enhanced colour night vision",
       "Two-way talk with noise cancellation",

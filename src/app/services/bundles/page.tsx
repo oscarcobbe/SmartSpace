@@ -8,12 +8,12 @@ const SITE = "https://smart-space.ie";
 export const metadata: Metadata = {
   title: "Ring Home Bundles | Smart Space",
   description:
-    "Save more with Ring bundles. Driveway, Whole Home, and Eldercare packages — all professionally supplied and installed across Leinster.",
+    "Save more with Ring bundles. Driveway, Whole Home, and Eldercare packages, all professionally supplied and installed across Leinster.",
   alternates: { canonical: "/services/bundles" },
   openGraph: {
     title: "Ring Home Bundles | Smart Space",
     description:
-      "Save more with Ring bundles. Driveway, Whole Home, and Eldercare packages — professionally supplied and installed across Leinster.",
+      "Save more with Ring bundles. Driveway, Whole Home, and Eldercare packages, professionally supplied and installed across Leinster.",
     url: `${SITE}/services/bundles`,
     type: "website",
     images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Ring Home Bundles by Smart Space" }],
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Ring Home Bundles | Smart Space",
     description:
-      "Save more with Ring bundles. Driveway, Whole Home, and Eldercare packages — professionally supplied and installed across Leinster.",
+      "Save more with Ring bundles. Driveway, Whole Home, and Eldercare packages, professionally supplied and installed across Leinster.",
     images: ["/og-default.png"],
   },
 };
@@ -100,7 +100,7 @@ export default function BundlesPage() {
           </h1>
           <p className="text-gray-500 text-lg max-w-2xl mx-auto">
             Save more with our professionally installed Ring bundles. Everything
-            supplied, fitted, and configured — ready to protect your home.
+            supplied, fitted, and configured, ready to protect your home.
           </p>
         </div>
 

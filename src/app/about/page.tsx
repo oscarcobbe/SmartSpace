@@ -15,7 +15,7 @@ export const metadata: Metadata = {
       "Dublin's only 5-star Ring installer. 5,000+ installations across Dublin and Leinster.",
     url: `${SITE}/about`,
     type: "website",
-    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "About Smart Space — Dublin's #1 Ring Installer" }],
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "About Smart Space, Dublin's #1 Ring Installer" }],
   },
   twitter: {
     card: "summary_large_image",
@@ -76,7 +76,7 @@ export default function AboutPage() {
                   professional-grade security that&apos;s easy to use and beautifully designed.
                 </p>
                 <p>
-                  As Dublin&apos;s #1 Ring installer — now serving all of Leinster — we don&apos;t just
+                  As Dublin&apos;s #1 Ring installer, now serving all of Leinster, we don&apos;t just
                   sell products. We deliver a complete service: helping you choose the right
                   setup for your home, professional installation, and ongoing support.
                 </p>
@@ -145,7 +145,7 @@ export default function AboutPage() {
               {
                 title: "Professional Installation",
                 description:
-                  "We handle everything — from mounting and wiring to Wi-Fi setup and app configuration. Your Ring system, installed right the first time.",
+                  "We handle everything, from mounting and wiring to Wi-Fi setup and app configuration. Your Ring system, installed right the first time.",
               },
               {
                 title: "Ongoing Support",

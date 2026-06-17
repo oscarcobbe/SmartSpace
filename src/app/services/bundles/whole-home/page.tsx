@@ -78,7 +78,7 @@ export default async function WholeHomeBundlePage() {
             Whole Home Bundle
           </h1>
           <p className="text-gray-500 max-w-2xl">
-            Video Doorbell + 2x Floodlight Cams (front &amp; rear) — complete coverage for your entire home.
+            Video Doorbell + 2x Floodlight Cams (front &amp; rear), complete coverage for your entire home.
           </p>
         </div>
 
@@ -153,7 +153,7 @@ export default async function WholeHomeBundlePage() {
           </div>
         )}
 
-        {/* Why this bundle for Dublin homes — unique long-form content
+        {/* Why this bundle for Dublin homes, unique long-form content
             block to differentiate from Driveway and Eldercare. */}
         <section className="mt-16 lg:mt-20 max-w-3xl mx-auto text-center">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4">
@@ -196,7 +196,7 @@ export default async function WholeHomeBundlePage() {
             <div className="max-w-3xl mx-auto">
               <h2 className="text-2xl sm:text-3xl font-extrabold mb-2">Supplied &amp; Fitted by Smart Space</h2>
               <p className="text-white/70 mb-6">
-                Let Dublin&apos;s #1 Ring installer handle everything — we serve all of Leinster and set up your new system for optimal performance.
+                Let Dublin&apos;s #1 Ring installer handle everything, we serve all of Leinster and set up your new system for optimal performance.
               </p>
               <div className="grid sm:grid-cols-2 gap-3 max-w-xl mx-auto">
                 {[

@@ -1,7 +1,7 @@
 export const FAQS = [
   {
     q: "Do you install alarms?",
-    a: "No — we install Ring doorbells, cameras, smart lighting and smart locks. If you specifically need a monitored alarm system, we'll point you to a trusted partner.",
+    a: "No, we install Ring doorbells, cameras, smart lighting and smart locks. If you specifically need a monitored alarm system, we'll point you to a trusted partner.",
   },
   {
     q: "How long does a typical install take?",
@@ -9,7 +9,7 @@ export const FAQS = [
   },
   {
     q: "Is there a monthly subscription?",
-    a: "The hardware install is a one-off cost. Ring's optional cloud recording (Ring Protect) is a separate subscription paid directly to Ring — we'll walk you through your options during the consultation.",
+    a: "The hardware install is a one-off cost. Ring's optional cloud recording (Ring Protect) is a separate subscription paid directly to Ring, we'll walk you through your options during the consultation.",
   },
   {
     q: "Can you work with cameras I already bought?",
@@ -17,7 +17,7 @@ export const FAQS = [
   },
   {
     q: "Will having this affect my home insurance?",
-    a: "Several Irish insurers offer premium reductions for properly installed home security. We'd recommend checking with your provider — happy to supply an install specification if they ask.",
+    a: "Several Irish insurers offer premium reductions for properly installed home security. We'd recommend checking with your provider, happy to supply an install specification if they ask.",
   },
   {
     q: "What if something stops working after you leave?",
@@ -25,7 +25,7 @@ export const FAQS = [
   },
   {
     q: "Do you cover all of Leinster?",
-    a: "Yes. We're based in Dublin but cover all 12 counties of Leinster — Dublin, Wicklow, Kildare, Meath, Louth, Wexford, Carlow, Kilkenny, Laois, Offaly, Westmeath and Longford.",
+    a: "Yes. We're based in Dublin but cover all 12 counties of Leinster, Dublin, Wicklow, Kildare, Meath, Louth, Wexford, Carlow, Kilkenny, Laois, Offaly, Westmeath and Longford.",
   },
   {
     q: "How much does a Ring install cost?",

@@ -4,22 +4,22 @@
  * Every "something is broken, Nigel needs to know" email in the app should
  * go through this. Why: without a single chokepoint we'd be (a) duplicating
  * Resend wiring in every route, (b) unable to rate-limit, and (c) unable to
- * dedupe — a wedged Stripe key would fire one alert per request until Nigel
+ * dedupe, a wedged Stripe key would fire one alert per request until Nigel
  * intervened, drowning the inbox.
  *
  * Three layers of defence against noise:
  *   1. In-memory dedup keyed on `dedupeKey` (default = subject). Same key
- *      seen within DEDUPE_WINDOW_MS is dropped. The map is process-local —
+ *      seen within DEDUPE_WINDOW_MS is dropped. The map is process-local,
  *      Vercel cold starts reset it, which is fine: a fresh Lambda firing
  *      "the site is broken" once is still useful, just not 50× per minute.
  *   2. Per-process cap: at most MAX_ALERTS_PER_WINDOW emails per window,
  *      regardless of dedupe key. Catches the case where many different
  *      things break at once (e.g. all pages 500 → many distinct dedupe
  *      keys, still one underlying root cause).
- *   3. Resend errors are swallowed + logged, never thrown — alerts must
+ *   3. Resend errors are swallowed + logged, never thrown, alerts must
  *      never break the caller's user-facing flow.
  *
- * Required env vars (all already used elsewhere — no new setup needed):
+ * Required env vars (all already used elsewhere, no new setup needed):
  *   RESEND_API_KEY, RESEND_FROM_EMAIL, CONTACT_TO_EMAIL (defaults to
  *   nigel@smart-space.ie).
  */
@@ -64,7 +64,7 @@ export interface SiteAlertParams {
   category: string;
   /** Severity prefix appears in the subject line. */
   severity?: SiteAlertSeverity;
-  /** One-line human summary — used as the email subject body and the dedupe key fallback. */
+  /** One-line human summary, used as the email subject body and the dedupe key fallback. */
   summary: string;
   /** Optional detailed plain-text body. Markdown-style bullet lists render fine. */
   details?: string;
@@ -81,7 +81,7 @@ export interface SendSiteAlertResult {
 
 /**
  * Send an alert email. Returns a result object describing what happened
- * (sent, deduped, rate-limited, etc.) — never throws.
+ * (sent, deduped, rate-limited, etc.), never throws.
  */
 export async function sendSiteAlert(params: SiteAlertParams): Promise<SendSiteAlertResult> {
   const apiKey = process.env.RESEND_API_KEY;
@@ -90,7 +90,7 @@ export async function sendSiteAlert(params: SiteAlertParams): Promise<SendSiteAl
 
   if (!apiKey || !from) {
     console.warn(
-      `[site-alerts] RESEND_API_KEY or RESEND_FROM_EMAIL missing — skipping alert: ${params.summary}`
+      `[site-alerts] RESEND_API_KEY or RESEND_FROM_EMAIL missing, skipping alert: ${params.summary}`
     );
     return { sent: false, reason: "missing-env" };
   }
@@ -107,7 +107,7 @@ export async function sendSiteAlert(params: SiteAlertParams): Promise<SendSiteAl
 
   if (processAlertTimestamps.length >= MAX_ALERTS_PER_WINDOW) {
     console.warn(
-      `[site-alerts] rate-limited — already sent ${MAX_ALERTS_PER_WINDOW} alerts in last ${PROCESS_WINDOW_MS}ms. Skipping: ${dedupeKey}`
+      `[site-alerts] rate-limited, already sent ${MAX_ALERTS_PER_WINDOW} alerts in last ${PROCESS_WINDOW_MS}ms. Skipping: ${dedupeKey}`
     );
     return { sent: false, reason: "rate-limited" };
   }
@@ -129,13 +129,13 @@ export async function sendSiteAlert(params: SiteAlertParams): Promise<SendSiteAl
     "",
     params.details ?? "(no further detail)",
     "",
-    "—",
+    ", ",
     `Admin:  ${dashboardUrl}`,
     `Logs:   ${logsUrl}`,
     "",
     "This alert is deduped for 1 hour and capped at 10 emails per 15 minutes per process,",
     "so if multiple things are breaking simultaneously you may not see every individual",
-    "failure here — check the admin dashboard and Vercel logs.",
+    "failure here, check the admin dashboard and Vercel logs.",
   ].join("\n");
   const html = `
     <div style="font-family:system-ui,-apple-system,sans-serif;line-height:1.6;color:#1a1a1a;max-width:640px">
@@ -155,7 +155,7 @@ export async function sendSiteAlert(params: SiteAlertParams): Promise<SendSiteAl
         <a href="${logsUrl}" style="color:#16a34a;font-weight:600">Open Vercel logs</a>
       </p>
       <p style="font-size:11px;color:#9ca3af;margin-top:24px;line-height:1.5">
-        Deduped for 1 hour and capped at 10 emails per 15 minutes per process —
+        Deduped for 1 hour and capped at 10 emails per 15 minutes per process,
         if many things are breaking at once you may not see every failure here.
         Check the admin dashboard and Vercel logs for the full picture.
       </p>

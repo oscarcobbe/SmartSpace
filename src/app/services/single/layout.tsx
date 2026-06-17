@@ -5,7 +5,7 @@ const SITE = "https://smart-space.ie";
 export const metadata: Metadata = {
   title: "Single Ring Device Installation | Dublin & Leinster | Smart Space",
   description:
-    "Choose a Ring Video Doorbell (from €329) or External Camera (from €299) — professionally supplied and installed across Dublin and Leinster.",
+    "Choose a Ring Video Doorbell (from €329) or External Camera (from €299), professionally supplied and installed across Dublin and Leinster.",
   alternates: { canonical: "/services/single" },
   openGraph: {
     title: "Single Ring Device Installation | Dublin & Leinster",
