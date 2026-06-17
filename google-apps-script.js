@@ -546,9 +546,10 @@ function round2_(n) { return Math.round(n * 100) / 100; }
  */
 var LEAD_TYPES = ["Free Consultation", "Contact Enquiry", "Paid Order", "Newsletter Signup"];
 
-// >>> SET THIS to what one lead is worth to you (avg job value × close rate).
-// Placeholder until you confirm your real number.
-var VALUE_PER_LEAD = 150;
+// >>> What one lead is worth on average (avg job value × close rate).
+// Set to €250 on 2026-06-17 (Oscar). Paid Order rows ignore this and use
+// their real Amount. Change this one number any time to re-value leads.
+var VALUE_PER_LEAD = 250;
 
 function buildAdsVsOrganicLeadsWeekly() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
