@@ -518,3 +518,89 @@ function mondayOf_(d) {
 }
 
 function round2_(n) { return Math.round(n * 100) / 100; }
+
+/**
+ * Week-on-week LEAD COUNT: Google Ads vs Organic.
+ *
+ * Companion to buildAdsVsOrganicWeekly. Most installer sales close offline
+ * (no Stripe "Paid Order" row), so order VALUE is often empty — this counts
+ * inbound LEADS instead, which the sheet captures in full. A lead is any row
+ * whose Type is in LEAD_TYPES below; split by GCLID present (Google Ads) vs
+ * blank (organic/direct), bucketed by week (Mon-Sun, Dublin).
+ *
+ * Run from the editor: pick `buildAdsVsOrganicLeadsWeekly` > Run.
+ * Writes a refreshable tab "Ads vs Organic leads (weekly)" with a chart.
+ *
+ * Note: QR Scan and Booking Reminder rows are deliberately excluded — they
+ * are passive/system events, never carry a GCLID, and are not inbound leads.
+ */
+var LEAD_TYPES = ["Free Consultation", "Contact Enquiry", "Paid Order", "Newsletter Signup"];
+
+function buildAdsVsOrganicLeadsWeekly() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Leads") || ss.getActiveSheet();
+  var data = sheet.getDataRange().getValues();
+  if (data.length < 2) { Logger.log("No data rows."); return; }
+
+  var headers = data[0];
+  function col(label) {
+    var i = headers.indexOf(label);
+    if (i < 0) throw new Error("Missing column header: " + label);
+    return i;
+  }
+  var cType = col("Type"), cGclid = col("GCLID"), cDate = col("Date");
+  var leadSet = {};
+  LEAD_TYPES.forEach(function (t) { leadSet[t] = true; });
+
+  var weeks = {}; // 'yyyy-MM-dd' (Monday) -> {ads, org}
+  for (var r = 1; r < data.length; r++) {
+    var row = data[r];
+    if (!leadSet[String(row[cType]).trim()]) continue;
+    var d = parseSheetDate_(row[cDate]);
+    if (!d) continue;
+    var key = Utilities.formatDate(mondayOf_(d), "Europe/Dublin", "yyyy-MM-dd");
+    if (!weeks[key]) weeks[key] = { ads: 0, org: 0 };
+    if (String(row[cGclid]).trim() !== "") weeks[key].ads++;
+    else weeks[key].org++;
+  }
+
+  var keys = Object.keys(weeks).sort();
+  var out = [["Week starting", "Ads leads", "Organic leads", "Total leads", "Ads % of leads"]];
+  var tA = 0, tO = 0;
+  keys.forEach(function (k) {
+    var w = weeks[k];
+    var tot = w.ads + w.org;
+    out.push([k, w.ads, w.org, tot, tot ? Math.round(w.ads / tot * 100) + "%" : "0%"]);
+    tA += w.ads; tO += w.org;
+  });
+  var grand = tA + tO;
+  out.push(["TOTAL", tA, tO, grand, grand ? Math.round(tA / grand * 100) + "%" : "0%"]);
+
+  var name = "Ads vs Organic leads (weekly)";
+  var rep = ss.getSheetByName(name);
+  if (rep) { rep.clear(); rep.getCharts().forEach(function (c) { rep.removeChart(c); }); }
+  else { rep = ss.insertSheet(name); }
+
+  rep.getRange(1, 1, out.length, out[0].length).setValues(out);
+  rep.getRange(1, 1, 1, out[0].length).setFontWeight("bold").setBackground("#1a1a1a").setFontColor("#ffffff");
+  rep.getRange(out.length, 1, 1, out[0].length).setFontWeight("bold").setBackground("#fef4eb");
+  rep.setFrozenRows(1);
+  [140, 90, 110, 90, 110].forEach(function (wd, i) { rep.setColumnWidth(i + 1, wd); });
+
+  if (keys.length >= 1) {
+    var chart = rep.newChart()
+      .asLineChart()
+      .addRange(rep.getRange(1, 1, keys.length + 1, 1))   // Week starting
+      .addRange(rep.getRange(1, 2, keys.length + 1, 1))   // Ads leads
+      .addRange(rep.getRange(1, 3, keys.length + 1, 1))   // Organic leads
+      .setMergeStrategy(Charts.ChartMergeStrategy.MERGE_COLUMNS)
+      .setNumHeaders(1)
+      .setOption("title", "Leads per week: Google Ads vs Organic")
+      .setOption("legend", { position: "bottom" })
+      .setOption("colors", ["#f48222", "#1C1A18"])
+      .setPosition(2, out[0].length + 2, 0, 0)
+      .build();
+    rep.insertChart(chart);
+  }
+  Logger.log("Built '" + name + "' across " + keys.length + " week(s). Ads " + tA + " vs Organic " + tO + " leads.");
+}
