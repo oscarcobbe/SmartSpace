@@ -630,3 +630,39 @@ function buildAdsVsOrganicLeadsWeekly() {
   }
   Logger.log("Built '" + name + "' across " + keys.length + " week(s). Ads " + tA + " leads / EUR " + round2_(tAv) + " vs Organic " + tO + " leads / EUR " + round2_(tOv) + " (at EUR " + VALUE_PER_LEAD + "/lead).");
 }
+
+/**
+ * SIMPLE total: real money made from customers who came via Google Ads.
+ *
+ * Sums the Amount column for every row that has a GCLID (= clicked a Google
+ * ad). No dates, no weekly buckets, no estimate — just actual order amounts.
+ * Rows with no amount (consultations, enquiries) contribute 0, so this is
+ * effectively "total order revenue from ad-driven customers".
+ *
+ * Run from the editor: pick `totalRevenueFromAds` > Run, then read the log.
+ */
+function totalRevenueFromAds() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Leads") || ss.getActiveSheet();
+  var data = sheet.getDataRange().getValues();
+  if (data.length < 2) { Logger.log("No data rows."); return; }
+
+  var headers = data[0];
+  function col(label) {
+    var i = headers.indexOf(label);
+    if (i < 0) throw new Error("Missing column header: " + label);
+    return i;
+  }
+  var cGclid = col("GCLID"), cAmount = col("Amount");
+
+  var adsTotal = 0, adsCount = 0, otherTotal = 0, otherCount = 0;
+  for (var r = 1; r < data.length; r++) {
+    var amt = parseFloat(String(data[r][cAmount]).replace(/[^0-9.\-]/g, "")) || 0;
+    if (amt <= 0) continue;
+    if (String(data[r][cGclid]).trim() !== "") { adsTotal += amt; adsCount++; }
+    else { otherTotal += amt; otherCount++; }
+  }
+
+  Logger.log("TOTAL made from Google Ads customers (gclid present): EUR " + round2_(adsTotal) + " across " + adsCount + " order(s).");
+  Logger.log("(For comparison — no gclid / organic+other: EUR " + round2_(otherTotal) + " across " + otherCount + " order(s).)");
+}
