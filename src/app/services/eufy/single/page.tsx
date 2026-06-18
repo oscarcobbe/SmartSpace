@@ -26,7 +26,7 @@ const choices = [
     title: "Eufy Video Doorbell",
     description: "See, hear, and speak to anyone at your door, plus a second camera watching the doorstep.",
     price: "From €359",
-    image: "/products/eufy-doorbell-e340.png",
+    image: "/products/eufy-doorbell-e340-with-chime.png",
     href: "/services/eufy-video-doorbell-e340",
   },
   {

@@ -58,7 +58,7 @@ const eufyProducts: EufyProduct[] = [
   {
     name: "Eufy Video Doorbell E340",
     tagline: "Dual camera. Sees the face at the door and the parcel on the ground.",
-    image: "/products/eufy-doorbell-e340.png",
+    image: "/products/eufy-doorbell-e340-with-chime.png",
     badge: "Eufy",
     price: 359,
     cta: "View Options",
