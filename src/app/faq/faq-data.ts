@@ -28,6 +28,10 @@ export const FAQS = [
     a: "Yes. We're based in Dublin but cover all 12 counties of Leinster, Dublin, Wicklow, Kildare, Meath, Louth, Wexford, Carlow, Kilkenny, Laois, Offaly, Westmeath and Longford.",
   },
   {
+    q: "Do you supply and install Eufy?",
+    a: "Yes. As well as installing Eufy kit you bought yourself, we now supply and fit the full Eufy range, the Video Doorbell E340 from €359, the Floodlight Cam E340 from €369, and home bundles, all with footage stored locally and no monthly subscription. Supplied and professionally installed across Dublin and Leinster.",
+  },
+  {
     q: "How much does a Ring install cost?",
     a: "Installation-only starts at €139. A single Ring Video Doorbell (supplied and installed) starts at €329. An External Camera (supplied and installed) starts at €299. Bundles start at €509. See our Services page for full pricing.",
   },

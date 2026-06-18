@@ -239,7 +239,9 @@ export default function Post() {
           <Link href="/services/free-consultation">complimentary consultation</Link>. No
           hard sell, we&apos;ll recommend the right camera count and brands for your
           needs, and you can decide whether you want us to install or whether you&apos;d
-          rather do it yourself.
+          rather do it yourself. If you want Eufy specifically, we now supply and fit the full{" "}
+          <Link href="/services/eufy" className="text-brand-500 hover:underline">Eufy range</Link>{" "}
+          too, doorbell, cameras and bundles, footage kept local and no monthly fee.
         </p>
       </BlogLayout>
     </>

@@ -30,9 +30,9 @@ export const metadata: Metadata = {
   // Homepage title only; each page below sets its own complete title.
   title: "Smart Space | Dublin's #1 Ring Installer",
   description:
-    "Dublin's only 5-star Ring installer. Professional Ring doorbell and security camera installation across Dublin and Leinster. 5,000+ installations, SME Winner 2025.",
+    "Dublin's only 5-star Ring installer. Professional Ring doorbell and security camera installation across Dublin and Leinster, and now Eufy supplied and installed with no monthly subscription. 5,000+ installations, SME Winner 2025.",
   keywords:
-    "Ring installer Dublin, Ring doorbell installation Dublin, Ring camera Dublin, Ring installer Leinster, smart home Dublin, security camera installation Ireland",
+    "Ring installer Dublin, Ring doorbell installation Dublin, Ring camera Dublin, Ring installer Leinster, Eufy installer Dublin, Eufy supplied and installed Ireland, smart home Dublin, security camera installation Ireland",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     siteName: "Smart Space",
     title: "Smart Space | Dublin's #1 Ring Installer",
     description:
-      "Professional Ring doorbell and security camera installation across Dublin and Leinster. 5,000+ installations, SME Winner 2025.",
+      "Professional Ring doorbell and security camera installation across Dublin and Leinster, plus Eufy supplied and installed. 5,000+ installations, SME Winner 2025.",
     locale: "en_IE",
     images: [
       {

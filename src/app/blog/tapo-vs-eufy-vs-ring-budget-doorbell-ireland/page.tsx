@@ -201,7 +201,9 @@ export default function Post() {
             complimentary consultation
           </Link>{" "}
           is for. We charge the same install fee regardless of which brand you pick, so we&apos;ve
-          no reason to push you up the price chart.
+          no reason to push you up the price chart. And if you settle on Eufy, we now supply and fit
+          it outright too, see the{" "}
+          <Link href="/services/eufy" className="text-brand-500 hover:underline">Eufy range</Link>.
         </p>
       </BlogLayout>
     </>

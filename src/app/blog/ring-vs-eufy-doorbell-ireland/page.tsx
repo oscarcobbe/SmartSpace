@@ -220,6 +220,15 @@ export default function Post() {
           footage stored at home rather than in the cloud, and refuse to pay any monthly fee at all.
         </p>
         <p>
+          One thing that has changed recently: we now supply and fit Eufy ourselves, not just install
+          kit you bought elsewhere. If you want the dual-camera{" "}
+          <Link href="/services/eufy-video-doorbell-e340" className="text-brand-500 hover:underline">Eufy Video Doorbell E340</Link>{" "}
+          or a full{" "}
+          <Link href="/services/eufy" className="text-brand-500 hover:underline">Eufy system</Link>{" "}
+          supplied, installed and configured in one visit, that is a single job with us now, with the
+          footage stored locally and no monthly fee.
+        </p>
+        <p>
           And if you&apos;re still not sure, that&apos;s exactly what the{" "}
           <Link href="/services/free-consultation" className="text-brand-500 hover:underline">
             complimentary consultation
