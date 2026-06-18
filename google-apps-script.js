@@ -165,7 +165,10 @@ function doPost(e) {
   // Format timestamp to Dublin time
   var timestamp = data.timestamp || new Date().toISOString();
   var date = new Date(timestamp);
-  var formatted = Utilities.formatDate(date, "Europe/Dublin", "dd/MM/yyyy HH:mm");
+  // ISO yyyy-MM-dd HH:mm, locale-proof: Google Sheets can never reinterpret it
+  // as US MM/dd (the bug that scattered weekly-report dates into the future).
+  // It also sorts chronologically as plain text.
+  var formatted = Utilities.formatDate(date, "Europe/Dublin", "yyyy-MM-dd HH:mm");
 
   // Map each column (in order) to its value from the payload.
   // "date" and "status" are derived; every other key matches a field on the payload.
@@ -507,10 +510,14 @@ function buildAdsVsOrganicWeekly() {
 }
 
 function parseSheetDate_(v) {
-  if (Object.prototype.toString.call(v) === "[object Date]") return v;
+  if (Object.prototype.toString.call(v) === "[object Date]") return isNaN(v.getTime()) ? null : v;
   var s = String(v).trim();
-  var m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/); // doPost writes dd/MM/yyyy HH:mm
-  if (m) return new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10));
+  // ISO yyyy-MM-dd [HH:mm] (the format doPost writes now, unambiguous).
+  var iso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2}))?/);
+  if (iso) return new Date(+iso[1], +iso[2] - 1, +iso[3], +(iso[4] || 0), +(iso[5] || 0));
+  // Legacy dd/MM/yyyy [HH:mm] text rows.
+  var m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T](\d{1,2}):(\d{2}))?/);
+  if (m) return new Date(+m[3], +m[2] - 1, +m[1], +(m[4] || 0), +(m[5] || 0));
   var d = new Date(s);
   return isNaN(d.getTime()) ? null : d;
 }
