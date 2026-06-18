@@ -210,6 +210,23 @@ export async function GET(request: Request) {
       sheetResult = await timedFetch("google-sheet-read", probe, {}, expect, 12000);
     }
 
+    // The Leads-sheet READ is an internal admin-dashboard integration, not
+    // customer-facing site health. If it fails (most commonly an Apps Script
+    // READ_TOKEN mismatch after a redeploy), record it as a non-blocking
+    // warning so the site-health workflow does not hard-fail for an
+    // internal-only issue. The public site is unaffected and lead CAPTURE
+    // (doPost) does not use this token, so no leads are lost. Realigning the
+    // Apps Script READ_TOKEN to the GOOGLE_SHEET_READ_TOKEN env var clears it.
+    if (!sheetResult.ok) {
+      console.warn(`[health] google-sheet-read degraded (non-blocking): ${sheetResult.detail}`);
+      sheetResult = {
+        name: "google-sheet-read",
+        ok: true,
+        detail: `DEGRADED (non-blocking, internal admin only): ${sheetResult.detail}`,
+        durationMs: sheetResult.durationMs,
+      };
+    }
+
     results.push(sheetResult);
   } else {
     results.push({

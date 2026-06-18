@@ -745,3 +745,91 @@ function repairLeadsSheet() {
              "Check: the GCLID column should show click IDs (or be blank), and Phone should show phone numbers. " +
              "Now redeploy the web app (Manage deployments > New version), then re-run the reports.");
 }
+
+/**
+ * Organize the Leads sheet by category, chronological within each.
+ *
+ * Groups every row by its Type into a fixed, business-sensible order
+ * (Contact Enquiry, then Free Consultation, then Paid Order, then the rest)
+ * and sorts each group oldest-to-newest. The header row is left untouched and
+ * NO data is ever deleted, rows are only reordered.
+ *
+ * Run it manually any time the sheet looks jumbled: pick organizeLeadsByCategory
+ * in the function dropdown and press Run. Or run setupAutoOrganize() once to
+ * keep it grouped automatically every few hours (new website leads append at
+ * the bottom until the next organize runs, so the auto trigger is the
+ * set-and-forget option).
+ */
+var CATEGORY_ORDER = [
+  "Contact Enquiry",
+  "Free Consultation",
+  "Paid Order",
+  "Newsletter Signup",
+  "QR Scan",
+  "Booking Reminder",
+];
+
+function organizeLeadsByCategory() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Leads");
+  if (!sheet) { throw new Error("No sheet named 'Leads' found."); }
+
+  var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
+  if (lastRow < 3) { return; }  // 0 or 1 data row, nothing to group
+
+  // Resolve Type and Date columns by header so this survives column moves.
+  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  var typeCol = headers.indexOf("Type");
+  var dateCol = headers.indexOf("Date");
+  if (typeCol === -1) { typeCol = 1; }  // fallback to the known layout
+  if (dateCol === -1) { dateCol = 0; }
+
+  var range = sheet.getRange(2, 1, lastRow - 1, lastCol);
+  var rows = range.getValues();
+
+  function catRank(type) {
+    var i = CATEGORY_ORDER.indexOf(String(type).trim());
+    return i === -1 ? CATEGORY_ORDER.length : i;  // unknown types sort last
+  }
+
+  // doPost writes Date as "dd/MM/yyyy HH:mm" (Europe/Dublin), which the JS
+  // Date constructor cannot parse reliably, so parse it explicitly.
+  function timeOf(v) {
+    if (Object.prototype.toString.call(v) === "[object Date]") { return v.getTime(); }
+    var s = String(v).trim();
+    var m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})[ T]+(\d{1,2}):(\d{2})/);
+    if (m) { return new Date(+m[3], +m[2] - 1, +m[1], +m[4], +m[5]).getTime(); }
+    var t = new Date(s).getTime();
+    return isNaN(t) ? 0 : t;
+  }
+
+  rows.sort(function (a, b) {
+    var ra = catRank(a[typeCol]);
+    var rb = catRank(b[typeCol]);
+    if (ra !== rb) { return ra - rb; }            // group by category
+    var ta = timeOf(a[dateCol]);
+    var tb = timeOf(b[dateCol]);
+    if (ta !== tb) { return ta - tb; }            // oldest first within a category
+    return String(a[typeCol]).localeCompare(String(b[typeCol]));
+  });
+
+  range.setValues(rows);
+  SpreadsheetApp.flush();
+  Logger.log("Organized " + rows.length + " leads by category, chronological within each.");
+}
+
+/**
+ * Install a time trigger so organizeLeadsByCategory runs automatically every
+ * 6 hours, keeping the Leads sheet grouped without manual runs. Run once.
+ * Safe to re-run, it clears any existing trigger for this function first.
+ */
+function setupAutoOrganize() {
+  var triggers = ScriptApp.getProjectTriggers();
+  for (var i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === "organizeLeadsByCategory") {
+      ScriptApp.deleteTrigger(triggers[i]);
+    }
+  }
+  ScriptApp.newTrigger("organizeLeadsByCategory").timeBased().everyHours(6).create();
+  Logger.log("Auto-organize installed: the Leads sheet will regroup every 6 hours.");
+}
