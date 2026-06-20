@@ -137,25 +137,31 @@ function _rGather(sheet) {
   return leads;
 }
 
+// Now linked to the Customer Tracker: each customer's paid Amount rolls into
+// their week, split by Ads vs Organic, so you see spend AND income side by side.
 function _rWeekly(ss, leads) {
   var wk = {};
   leads.forEach(function (l) {
-    if (!wk[l.week]) wk[l.week] = { ads: 0, org: 0 };
-    if (l.source === "Google Ads") wk[l.week].ads++; else wk[l.week].org++;
+    if (!wk[l.week]) wk[l.week] = { ads: 0, org: 0, adInc: 0, orgInc: 0 };
+    var num = parseFloat(String(l.amount).replace(/[^0-9.]/g, ""));
+    var inc = (!isNaN(num) && num > 0 && num < 100000) ? num : 0; // real money only
+    if (l.source === "Google Ads") { wk[l.week].ads++; wk[l.week].adInc += inc; }
+    else { wk[l.week].org++; wk[l.week].orgInc += inc; }
   });
   var set = {};
   Object.keys(wk).forEach(function (k) { set[k] = true; });
   Object.keys(_R_AD_DATA).forEach(function (k) { set[k] = true; });
   var weeks = Object.keys(set).sort();
 
-  var out = [["Week starting", "Ad spend (EUR)", "Ad clicks", "Ad leads", "Organic leads", "Total leads", "Cost / ad lead (EUR)"]];
-  var tS = 0, tC = 0, tA = 0, tO = 0;
+  var out = [["Week starting", "Ad spend (EUR)", "Ad leads", "Ad income (EUR)", "Net from ads (EUR)", "Organic leads", "Organic income (EUR)"]];
+  var tS = 0, tA = 0, tAI = 0, tO = 0, tOI = 0;
   weeks.forEach(function (k) {
-    var a = wk[k] || { ads: 0, org: 0 }, ad = _R_AD_DATA[k] || { spend: 0, clicks: 0 };
-    out.push([k, _rRound(ad.spend), ad.clicks, a.ads, a.org, a.ads + a.org, a.ads > 0 ? _rRound(ad.spend / a.ads) : ""]);
-    tS += ad.spend; tC += ad.clicks; tA += a.ads; tO += a.org;
+    var a = wk[k] || { ads: 0, org: 0, adInc: 0, orgInc: 0 };
+    var spend = (_R_AD_DATA[k] || { spend: 0 }).spend;
+    out.push([k, _rRound(spend), a.ads, _rRound(a.adInc), _rRound(a.adInc - spend), a.org, _rRound(a.orgInc)]);
+    tS += spend; tA += a.ads; tAI += a.adInc; tO += a.org; tOI += a.orgInc;
   });
-  out.push(["TOTAL", _rRound(tS), tC, tA, tO, tA + tO, tA > 0 ? _rRound(tS / tA) : ""]);
+  out.push(["TOTAL", _rRound(tS), tA, _rRound(tAI), _rRound(tAI - tS), tO, _rRound(tOI)]);
 
   var rep = ss.getSheetByName("Weekly Ad Performance");
   if (rep) rep.clear(); else rep = ss.insertSheet("Weekly Ad Performance");
@@ -163,12 +169,15 @@ function _rWeekly(ss, leads) {
   rep.getRange(1, 1, 1, out[0].length).setFontWeight("bold").setBackground("#1a1a1a").setFontColor("#ffffff");
   rep.getRange(out.length, 1, 1, out[0].length).setFontWeight("bold").setBackground("#fef4eb");
   rep.setFrozenRows(1);
-  [120, 120, 90, 90, 110, 90, 150].forEach(function (w, i) { rep.setColumnWidth(i + 1, w); });
+  [120, 120, 80, 120, 130, 100, 130].forEach(function (w, i) { rep.setColumnWidth(i + 1, w); });
   if (out.length > 1) {
-    rep.getRange(2, 2, out.length - 1, 1).setNumberFormat("#,##0.00");
-    rep.getRange(2, 7, out.length - 1, 1).setNumberFormat("#,##0.00");
+    [2, 4, 5, 7].forEach(function (c) { rep.getRange(2, c, out.length - 1, 1).setNumberFormat("#,##0.00"); });
+    for (var r = 2; r <= out.length; r++) {
+      var net = out[r - 1][4];
+      if (typeof net === "number" && net !== 0) rep.getRange(r, 5).setFontColor(net > 0 ? "#137333" : "#c5221f");
+    }
   }
-  rep.getRange(out.length + 2, 1).setValue("Ad spend + clicks are your real weekly Google Ads figures. Ad vs Organic leads split by whether a Google click id was captured on the lead. Organic costs nothing.");
+  rep.getRange(out.length + 2, 1).setValue("Ad spend = your real weekly Google Ads cost. Ad/Organic income = what those customers actually paid (the Amount column in the Customer Tracker). Net from ads = ad income minus ad spend (your weekly return). Income only appears where a paid amount is recorded against the customer, so record each sale's value to see true ROI.");
   rep.getRange(out.length + 2, 1).setFontColor("#888888").setFontStyle("italic");
 }
 
