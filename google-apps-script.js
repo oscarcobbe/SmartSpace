@@ -760,6 +760,14 @@ function buildAdsVsOrganicLeadsWeekly() {
   rep.setFrozenRows(1);
   [140, 90, 110, 130, 150, 140, 110].forEach(function (wd, i) { rep.setColumnWidth(i + 1, wd); });
 
+  // Force the formats explicitly so a stray inherited percentage format can
+  // never render a euro value (250) as "25000%". Columns D,E,F are euro
+  // amounts; only column G (Ads share) is a percentage. Data + TOTAL rows.
+  if (out.length > 1) {
+    rep.getRange(2, 4, out.length - 1, 3).setNumberFormat("#,##0"); // D,E,F euro values
+    rep.getRange(2, 7, out.length - 1, 1).setNumberFormat("0%");    // G  ads % of value
+  }
+
   // Note under the table so nobody mistakes the estimate for booked revenue.
   rep.getRange(out.length + 2, 1).setValue("Estimated value = Paid Order rows use real Amount; all other leads valued at EUR " + VALUE_PER_LEAD + " each (edit VALUE_PER_LEAD in the script).");
   rep.getRange(out.length + 2, 1).setFontColor("#888888").setFontStyle("italic");
