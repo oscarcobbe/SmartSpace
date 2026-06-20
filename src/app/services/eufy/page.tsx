@@ -33,7 +33,7 @@ export const metadata: Metadata = {
 const packages = [
   {
     name: "A Single Eufy Video Doorbell Or Camera",
-    price: "From €359",
+    price: "From €394",
     features: [
       "Professional installation included",
       "Eufy Chime included with doorbells",
@@ -45,7 +45,7 @@ const packages = [
   },
   {
     name: "Eufy Home Bundles",
-    price: "From €519",
+    price: "From €554",
     popular: true,
     features: [
       "Multiple Eufy devices supplied & installed",

@@ -9,7 +9,7 @@ const SITE = "https://smart-space.ie";
 export const metadata: Metadata = {
   title: "Eufy Home Bundles | Dublin & Leinster | Smart Space",
   description:
-    "Eufy security bundles supplied and professionally installed across Dublin and Leinster: Driveway / Garden from €853, Whole Home from €1,198, Eldercare from €519. No monthly subscription.",
+    "Eufy security bundles supplied and professionally installed across Dublin and Leinster: Driveway / Garden from €903, Whole Home from €1,248, Eldercare from €554. No monthly subscription.",
   alternates: { canonical: "/services/eufy/bundles" },
   openGraph: {
     title: "Eufy Home Bundles | Smart Space",
@@ -27,7 +27,7 @@ const bundles = [
     tagline: "Front door and driveway, fully covered.",
     image: "/products/eufy-bundle-driveway.png",
     href: "/services/eufy-driveway-bundle",
-    price: 853,
+    price: 903,
     features: [
       "Video Doorbell E340 at the door plus a Floodlight Cam on the drive",
       "Eufy S380 HomeBase for local recording and storage",
@@ -40,7 +40,7 @@ const bundles = [
     tagline: "Front, drive and rear. The full perimeter.",
     image: "/products/eufy-bundle-wholehome.png",
     href: "/services/eufy-whole-home-bundle",
-    price: 1198,
+    price: 1248,
     features: [
       "Video Doorbell E340 plus two Floodlight Cams (front and rear)",
       "Eufy S380 HomeBase for local recording and storage",
@@ -53,7 +53,7 @@ const bundles = [
     tagline: "A loud plug-in chime indoors, with everything stored locally.",
     image: "/products/eufy-eldercare-bundle.png",
     href: "/services/eufy-eldercare-bundle",
-    price: 519,
+    price: 554,
     features: [
       "Video Doorbell E340 with a plug-in Chime and the S380 HomeBase",
       "Loud indoor Chime rings the moment someone is at the door",
@@ -74,7 +74,7 @@ const SERVICE_SCHEMA = {
     { "@type": "AdministrativeArea", name: "Dublin" },
     { "@type": "AdministrativeArea", name: "Leinster" },
   ],
-  offers: { "@type": "AggregateOffer", lowPrice: "519", highPrice: "1198", priceCurrency: "EUR", offerCount: bundles.length },
+  offers: { "@type": "AggregateOffer", lowPrice: "554", highPrice: "1248", priceCurrency: "EUR", offerCount: bundles.length },
 };
 
 const BREADCRUMB_SCHEMA = {

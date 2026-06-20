@@ -10,7 +10,7 @@ const BLUE = "#005d8e";
 export const metadata: Metadata = {
   title: "Single Eufy Device Installation | Dublin & Leinster | Smart Space",
   description:
-    "Choose a Eufy Video Doorbell (from €359) or an external camera (from €369), supplied and professionally installed across Dublin and Leinster. No subscription.",
+    "Choose a Eufy Video Doorbell (from €394) or an external camera (from €404), supplied and professionally installed across Dublin and Leinster. No subscription.",
   alternates: { canonical: "/services/eufy/single" },
   openGraph: {
     title: "Single Eufy Device Installation | Smart Space",
@@ -25,14 +25,14 @@ const choices = [
   {
     title: "Eufy Video Doorbell",
     description: "See, hear, and speak to anyone at your door, plus a second camera watching the doorstep.",
-    price: "From €359",
+    price: "From €394",
     image: "/products/eufy-doorbell-e340-with-chime.png",
     href: "/services/eufy-video-doorbell-e340",
   },
   {
     title: "Eufy External Camera",
     description: "Dual-camera floodlight on a 360° pan-tilt head for full driveway, garden and side-passage coverage.",
-    price: "From €369",
+    price: "From €404",
     image: "/products/eufy-floodlight-e340.png",
     href: "/services/eufy-floodlight-cam-e340",
   },

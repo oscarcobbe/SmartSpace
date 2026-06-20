@@ -4042,8 +4042,8 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
       "Single"
     ],
     "priceRange": {
-      "minVariantPrice": { "amount": "359.0", "currencyCode": "EUR" },
-      "maxVariantPrice": { "amount": "449.0", "currencyCode": "EUR" }
+      "minVariantPrice": { "amount": "394.0", "currencyCode": "EUR" },
+      "maxVariantPrice": { "amount": "484.0", "currencyCode": "EUR" }
     },
     "compareAtPriceRange": {
       "minVariantPrice": { "amount": "0.0", "currencyCode": "EUR" },
@@ -4066,7 +4066,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "id": "gid://smart-space/ManualVariant/eufy-doorbell-existing",
             "title": "Existing doorbell power",
             "availableForSale": true,
-            "price": { "amount": "359.0", "currencyCode": "EUR" },
+            "price": { "amount": "394.0", "currencyCode": "EUR" },
             "compareAtPrice": null,
             "selectedOptions": [
               { "name": "Choose A Power Option", "value": "Existing doorbell power" }
@@ -4078,7 +4078,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "id": "gid://smart-space/ManualVariant/eufy-doorbell-newfeed",
             "title": "New power feed required",
             "availableForSale": true,
-            "price": { "amount": "449.0", "currencyCode": "EUR" },
+            "price": { "amount": "484.0", "currencyCode": "EUR" },
             "compareAtPrice": null,
             "selectedOptions": [
               { "name": "Choose A Power Option", "value": "New power feed required" }
@@ -4101,8 +4101,8 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
       "Single"
     ],
     "priceRange": {
-      "minVariantPrice": { "amount": "369.0", "currencyCode": "EUR" },
-      "maxVariantPrice": { "amount": "459.0", "currencyCode": "EUR" }
+      "minVariantPrice": { "amount": "404.0", "currencyCode": "EUR" },
+      "maxVariantPrice": { "amount": "494.0", "currencyCode": "EUR" }
     },
     "compareAtPriceRange": {
       "minVariantPrice": { "amount": "0.0", "currencyCode": "EUR" },
@@ -4125,7 +4125,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "id": "gid://smart-space/ManualVariant/eufy-floodlight-existing",
             "title": "Existing power",
             "availableForSale": true,
-            "price": { "amount": "369.0", "currencyCode": "EUR" },
+            "price": { "amount": "404.0", "currencyCode": "EUR" },
             "compareAtPrice": null,
             "selectedOptions": [
               { "name": "Will A New Power Source Be Required", "value": "Existing power" }
@@ -4137,7 +4137,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "id": "gid://smart-space/ManualVariant/eufy-floodlight-newpower",
             "title": "New power required",
             "availableForSale": true,
-            "price": { "amount": "459.0", "currencyCode": "EUR" },
+            "price": { "amount": "494.0", "currencyCode": "EUR" },
             "compareAtPrice": null,
             "selectedOptions": [
               { "name": "Will A New Power Source Be Required", "value": "New power required" }
@@ -4156,8 +4156,8 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
     "productType": "Bundle",
     "tags": ["Bundle", "Eufy"],
     "priceRange": {
-      "minVariantPrice": { "amount": "853.0", "currencyCode": "EUR" },
-      "maxVariantPrice": { "amount": "1013.0", "currencyCode": "EUR" }
+      "minVariantPrice": { "amount": "903.0", "currencyCode": "EUR" },
+      "maxVariantPrice": { "amount": "1063.0", "currencyCode": "EUR" }
     },
     "compareAtPriceRange": {
       "minVariantPrice": { "amount": "0.0", "currencyCode": "EUR" },
@@ -4174,7 +4174,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "id": "gid://smart-space/ManualVariant/eufy-driveway-existing",
             "title": "Existing doorbell power",
             "availableForSale": true,
-            "price": { "amount": "853.0", "currencyCode": "EUR" },
+            "price": { "amount": "903.0", "currencyCode": "EUR" },
             "compareAtPrice": null,
             "selectedOptions": [ { "name": "Choose A Power Option", "value": "Existing doorbell power" } ]
           }
@@ -4184,7 +4184,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "id": "gid://smart-space/ManualVariant/eufy-driveway-newfeed",
             "title": "New power feed required",
             "availableForSale": true,
-            "price": { "amount": "1013.0", "currencyCode": "EUR" },
+            "price": { "amount": "1063.0", "currencyCode": "EUR" },
             "compareAtPrice": null,
             "selectedOptions": [ { "name": "Choose A Power Option", "value": "New power feed required" } ]
           }
@@ -4201,8 +4201,8 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
     "productType": "Bundle",
     "tags": ["Bundle", "Eufy"],
     "priceRange": {
-      "minVariantPrice": { "amount": "1198.0", "currencyCode": "EUR" },
-      "maxVariantPrice": { "amount": "1428.0", "currencyCode": "EUR" }
+      "minVariantPrice": { "amount": "1248.0", "currencyCode": "EUR" },
+      "maxVariantPrice": { "amount": "1478.0", "currencyCode": "EUR" }
     },
     "compareAtPriceRange": {
       "minVariantPrice": { "amount": "0.0", "currencyCode": "EUR" },
@@ -4219,7 +4219,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "id": "gid://smart-space/ManualVariant/eufy-wholehome-existing",
             "title": "Existing doorbell power",
             "availableForSale": true,
-            "price": { "amount": "1198.0", "currencyCode": "EUR" },
+            "price": { "amount": "1248.0", "currencyCode": "EUR" },
             "compareAtPrice": null,
             "selectedOptions": [ { "name": "Choose A Power Option", "value": "Existing doorbell power" } ]
           }
@@ -4229,7 +4229,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "id": "gid://smart-space/ManualVariant/eufy-wholehome-newfeed",
             "title": "New power feed required",
             "availableForSale": true,
-            "price": { "amount": "1428.0", "currencyCode": "EUR" },
+            "price": { "amount": "1478.0", "currencyCode": "EUR" },
             "compareAtPrice": null,
             "selectedOptions": [ { "name": "Choose A Power Option", "value": "New power feed required" } ]
           }
@@ -4246,8 +4246,8 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
     "productType": "Bundle",
     "tags": ["Bundle", "Eufy"],
     "priceRange": {
-      "minVariantPrice": { "amount": "519.0", "currencyCode": "EUR" },
-      "maxVariantPrice": { "amount": "609.0", "currencyCode": "EUR" }
+      "minVariantPrice": { "amount": "554.0", "currencyCode": "EUR" },
+      "maxVariantPrice": { "amount": "644.0", "currencyCode": "EUR" }
     },
     "compareAtPriceRange": {
       "minVariantPrice": { "amount": "0.0", "currencyCode": "EUR" },
@@ -4264,7 +4264,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "id": "gid://smart-space/ManualVariant/eufy-eldercare-existing",
             "title": "Existing doorbell power",
             "availableForSale": true,
-            "price": { "amount": "519.0", "currencyCode": "EUR" },
+            "price": { "amount": "554.0", "currencyCode": "EUR" },
             "compareAtPrice": null,
             "selectedOptions": [ { "name": "Choose A Power Option", "value": "Existing doorbell power" } ]
           }
@@ -4274,7 +4274,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "id": "gid://smart-space/ManualVariant/eufy-eldercare-newfeed",
             "title": "New power feed required",
             "availableForSale": true,
-            "price": { "amount": "609.0", "currencyCode": "EUR" },
+            "price": { "amount": "644.0", "currencyCode": "EUR" },
             "compareAtPrice": null,
             "selectedOptions": [ { "name": "Choose A Power Option", "value": "New power feed required" } ]
           }

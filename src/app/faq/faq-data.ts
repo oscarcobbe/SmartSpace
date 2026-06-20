@@ -29,7 +29,7 @@ export const FAQS = [
   },
   {
     q: "Do you supply and install Eufy?",
-    a: "Yes. As well as installing Eufy kit you bought yourself, we now supply and fit the full Eufy range, the Video Doorbell E340 from €359, the Floodlight Cam E340 from €369, and home bundles, all with footage stored locally and no monthly subscription. Supplied and professionally installed across Dublin and Leinster.",
+    a: "Yes. As well as installing Eufy kit you bought yourself, we now supply and fit the full Eufy range, the Video Doorbell E340 from €394, the Floodlight Cam E340 from €404, and home bundles, all with footage stored locally and no monthly subscription. Supplied and professionally installed across Dublin and Leinster.",
   },
   {
     q: "How much does a Ring install cost?",

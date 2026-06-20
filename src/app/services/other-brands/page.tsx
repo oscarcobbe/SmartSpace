@@ -9,12 +9,12 @@ const SITE = "https://smart-space.ie";
 export const metadata: Metadata = {
   title: "Eufy Doorbells, Cameras & Bundles, Supplied + Installed | Dublin & Leinster | Smart Space",
   description:
-    "Eufy video doorbells, floodlight cameras and security bundles, supplied and professionally installed across Dublin and Leinster. No monthly subscription. From €359.",
+    "Eufy video doorbells, floodlight cameras and security bundles, supplied and professionally installed across Dublin and Leinster. No monthly subscription. From €394.",
   alternates: { canonical: "/services/other-brands" },
   openGraph: {
     title: "Eufy, Supplied + Installed | Smart Space",
     description:
-      "Eufy doorbells, cameras and security bundles, supplied and professionally installed across Dublin and Leinster. No subscription. From €359.",
+      "Eufy doorbells, cameras and security bundles, supplied and professionally installed across Dublin and Leinster. No subscription. From €394.",
     url: `${SITE}/services/other-brands`,
     type: "website",
     images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Eufy, Supplied + Installed, Smart Space" }],
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Eufy, Supplied + Installed | Smart Space",
     description:
-      "Eufy doorbells, cameras and security bundles, supplied and professionally installed across Dublin and Leinster. No subscription. From €359.",
+      "Eufy doorbells, cameras and security bundles, supplied and professionally installed across Dublin and Leinster. No subscription. From €394.",
     images: ["/og-default.png"],
   },
 };
@@ -33,11 +33,11 @@ export const metadata: Metadata = {
  * mains-powered, existing-power configuration (the cheapest, real "From"
  * entry point). Source of truth: Oscar's Eufy Pricing June 2026 sheet.
  *
- *   Video Doorbell E340 + Chime ............ €359  (new VD power €449)
- *   Floodlight Cam E340 .................... €369  (new power €459)
- *   Driveway / Garden Bundle .............. €853  (up to €1,013 w/ new power)
- *   Whole Home Bundle ..................... €1,198 (up to €1,428 w/ new power)
- *   Eldercare Bundle (E340 + Chime + Screen) €519 (new VD power €609)
+ *   Video Doorbell E340 + Chime ............ €394  (new VD power €484)
+ *   Floodlight Cam E340 .................... €404  (new power €494)
+ *   Driveway / Garden Bundle .............. €903  (up to €1,063 w/ new power)
+ *   Whole Home Bundle ..................... €1,248 (up to €1,478 w/ new power)
+ *   Eldercare Bundle (E340 + Chime + Screen) €554 (new VD power €644)
  *
  * New cabling / new power feed adds €70–€90, quoted at the consultation.
  * Installation-only on a customer-supplied Eufy = same as Ring (€139), see
@@ -60,7 +60,7 @@ const eufyProducts: EufyProduct[] = [
     tagline: "Dual camera. Sees the face at the door and the parcel on the ground.",
     image: "/products/eufy-doorbell-e340-with-chime.png",
     badge: "Eufy",
-    price: 359,
+    price: 394,
     cta: "View Options",
     ctaHref: "/services/eufy-video-doorbell-e340",
     features: [
@@ -75,7 +75,7 @@ const eufyProducts: EufyProduct[] = [
     tagline: "Light up and track movement across the whole drive.",
     image: "/products/eufy-floodlight-e340.png",
     badge: "Eufy",
-    price: 369,
+    price: 404,
     cta: "View Options",
     ctaHref: "/services/eufy-floodlight-cam-e340",
     features: [
@@ -90,7 +90,7 @@ const eufyProducts: EufyProduct[] = [
     tagline: "Front door and driveway, fully covered.",
     image: "/products/eufy-bundle-driveway.png",
     badge: "Eufy Bundle",
-    price: 853,
+    price: 903,
     cta: "View Options",
     ctaHref: "/services/eufy-driveway-bundle",
     features: [
@@ -105,7 +105,7 @@ const eufyProducts: EufyProduct[] = [
     tagline: "Front, drive and rear. The full perimeter.",
     image: "/products/eufy-bundle-wholehome.png",
     badge: "Eufy Bundle",
-    price: 1198,
+    price: 1248,
     cta: "View Options",
     ctaHref: "/services/eufy-whole-home-bundle",
     features: [
@@ -120,7 +120,7 @@ const eufyProducts: EufyProduct[] = [
     tagline: "A loud plug-in chime indoors, with everything stored locally.",
     image: "/products/eufy-eldercare-bundle.png",
     badge: "Eufy Bundle",
-    price: 519,
+    price: 554,
     cta: "View Options",
     ctaHref: "/services/eufy-eldercare-bundle",
     features: [
@@ -150,8 +150,8 @@ const SERVICE_SCHEMA = {
   ],
   offers: {
     "@type": "AggregateOffer",
-    lowPrice: "359",
-    highPrice: "1198",
+    lowPrice: "394",
+    highPrice: "1248",
     priceCurrency: "EUR",
     offerCount: eufyProducts.length,
   },
