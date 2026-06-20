@@ -174,18 +174,19 @@ function _rWeekly(ss, leads) {
 
 function _rTracker(ss, leads) {
   var sorted = leads.slice().sort(function (a, b) { return b.date.getTime() - a.date.getTime(); });
-  var out = [["Date", "Customer", "Source", "Type", "Amount (EUR)"]];
+  // Amount is dropped on purpose: the sheet's amount column is part of the
+  // mis-aligned data, so it reads garbage. Real order values come back in once
+  // the columns are realigned. Type already shows who is a paying customer.
+  var out = [["Date", "Customer", "Source", "Type"]];
   sorted.forEach(function (l) {
-    var dg = String(l.amount).replace(/[^0-9]/g, ""), num = parseFloat(String(l.amount).replace(/[^0-9.]/g, ""));
-    var amt = (!isNaN(num) && num > 0 && dg.length <= 4) ? num : (/complimentary|^free$/i.test(l.amount) ? "Free" : "");
-    out.push([Utilities.formatDate(l.date, "Europe/Dublin", "yyyy-MM-dd"), l.name, l.source, l.type, amt]);
+    out.push([Utilities.formatDate(l.date, "Europe/Dublin", "yyyy-MM-dd"), l.name, l.source, l.type]);
   });
   var rep = ss.getSheetByName("Customer Tracker");
   if (rep) rep.clear(); else rep = ss.insertSheet("Customer Tracker");
   rep.getRange(1, 1, out.length, out[0].length).setValues(out);
   rep.getRange(1, 1, 1, out[0].length).setFontWeight("bold").setBackground("#1a1a1a").setFontColor("#ffffff");
   rep.setFrozenRows(1);
-  [110, 210, 110, 150, 110].forEach(function (w, i) { rep.setColumnWidth(i + 1, w); });
+  [110, 220, 120, 160].forEach(function (w, i) { rep.setColumnWidth(i + 1, w); });
   for (var r = 0; r < sorted.length; r++) {
     var cell = rep.getRange(r + 2, 3);
     if (sorted[r].source === "Google Ads") cell.setBackground("#cce5ff").setFontColor("#004085");
