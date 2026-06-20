@@ -85,6 +85,33 @@ export default function Hero() {
           </Link>
         </div>
       </div>
+
+      {/* MOBILE ONLY (sm:hidden): compact brand pills, higher up on the hero
+          image. The full three-button block above is desktop-only (hidden
+          sm:block). On mobile we show short pills so they don't crowd the hero,
+          renamed to the brand hubs: Ring Services and Eufy Services. */}
+      <div className="sm:hidden fade-up-delay-3 absolute z-10 bottom-[40%] left-0 right-0 px-4">
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <Link
+            href="/services"
+            className="btn-sheen inline-flex items-center justify-center bg-gradient-to-r from-brand-500 to-brand-600 text-white font-semibold text-xs px-4 py-2 rounded-full shadow-[0_8px_30px_-6px_rgba(242,130,34,0.6)] whitespace-nowrap"
+          >
+            Ring Services
+          </Link>
+          <Link
+            href="/services/installation-only"
+            className="inline-flex items-center justify-center bg-white/90 backdrop-blur-sm text-[#1C1A18] font-semibold text-xs px-4 py-2 rounded-full border border-white/60 shadow-[0_6px_20px_-8px_rgba(0,0,0,0.25)] whitespace-nowrap"
+          >
+            Got A Device To Install?
+          </Link>
+          <Link
+            href="/services/eufy"
+            className="btn-sheen inline-flex items-center justify-center bg-gradient-to-r from-[#0a6ea3] to-[#005d8e] text-white font-semibold text-xs px-4 py-2 rounded-full shadow-[0_8px_30px_-6px_rgba(0,93,142,0.6)] whitespace-nowrap"
+          >
+            Eufy Services
+          </Link>
+        </div>
+      </div>
     </section>
   );
 }

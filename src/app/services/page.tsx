@@ -34,7 +34,6 @@ const serviceCategories = [
     href: "/services/bundles/whole-home",
     filter: (p: ShopifyProduct) => p.handle === "pro-whole-home-bundle",
     staticImage: "/products/pro-wholehome-black-black.png",
-    imageClass: "max-h-[70%] max-w-[70%]",
   },
   {
     title: "Eldercare Bundle",
@@ -141,7 +140,7 @@ export default async function ServicesPage() {
                       alt={cat.title}
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      className={`${cat.imageClass || ""} object-contain group-hover:scale-105 transition-transform duration-300`}
+                      className="object-contain group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
                     <div className="text-gray-300 text-sm">No image</div>
