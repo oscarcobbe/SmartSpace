@@ -150,6 +150,157 @@ function writeRepairLog_(ss, changes) {
   sheet.setFrozenRows(1);
 }
 
+// ============================================================================
+// >>> CLEAN + FIX. Pick `cleanAndFixLeads` in the dropdown, press Run.     <<<
+// ============================================================================
+//
+// Verified against the Gmail lead notifications: the smart-space site had NO
+// real customer leads before late April 2026 (April was setup tests + bot
+// spam). So this function, safely and reversibly:
+//   1. Backs up the Leads tab first.
+//   2. MOVES (never deletes) test rows + bot-spam rows to a "Quarantine" tab.
+//   3. Un-swaps any lead date that lands outside the real window (before
+//      1 Apr 2026, or in the future) - those are guaranteed day/month swaps.
+//   4. Regroups by category and rebuilds the report from the cleaned data.
+// Check the Quarantine tab after; anything real in there is one copy-paste back.
+var LEADS_START = "2026-04-01"; // first real lead month (Gmail-verified)
+
+function cleanAndFixLeads() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Leads");
+  if (!sheet) throw new Error("No 'Leads' tab found.");
+  var log = [];
+
+  var stamp = Utilities.formatDate(new Date(), "Europe/Dublin", "yyyy-MM-dd HHmmss");
+  sheet.copyTo(ss).setName("Leads (backup " + stamp + ")");
+  log.push("Backup saved as 'Leads (backup " + stamp + ")'.");
+
+  if (ss.getSpreadsheetLocale() !== "en_IE") {
+    try { ss.setSpreadsheetLocale("en_IE"); } catch (e) { ss.setSpreadsheetLocale("en_GB"); }
+  }
+
+  var lastRow = sheet.getLastRow(), lastCol = sheet.getLastColumn();
+  if (lastRow < 2) { Logger.log("No data rows."); return; }
+  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  var iName = headers.indexOf("Name"), iEmail = headers.indexOf("Email");
+  var data = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+
+  var junkRowNums = [], junkData = [];
+  data.forEach(function (row, idx) {
+    var name = iName >= 0 ? String(row[iName] || "") : "";
+    var email = iEmail >= 0 ? String(row[iEmail] || "") : "";
+    if (isJunkRow_(name, email)) { junkRowNums.push(idx + 2); junkData.push(row); }
+  });
+
+  // Safety: refuse to gut nearly everything (catches a bad pattern before harm).
+  if (junkRowNums.length > data.length * 0.9) {
+    throw new Error("Aborted for safety: " + junkRowNums.length + "/" + data.length +
+      " rows flagged as junk (over 90%). That looks like a matching bug, not reality. " +
+      "Nothing was changed. Send me a screenshot of the Leads Name + Email columns.");
+  }
+
+  var q = ss.getSheetByName("Quarantine (test + spam)"); if (q) ss.deleteSheet(q);
+  q = ss.insertSheet("Quarantine (test + spam)");
+  q.getRange(1, 1, 1, lastCol).setValues([headers])
+    .setFontWeight("bold").setBackground("#1a1a1a").setFontColor("#ffffff");
+  if (junkData.length) q.getRange(2, 1, junkData.length, lastCol).setValues(junkData);
+  q.setFrozenRows(1);
+
+  junkRowNums.sort(function (a, b) { return b - a; })
+             .forEach(function (rn) { sheet.deleteRow(rn); });
+  log.push("Moved " + junkRowNums.length + " test/spam rows to 'Quarantine (test + spam)'.");
+
+  var changes = repairDatesWindowed_(sheet);
+  writeChangeLog_(ss, "Date Repair Log", ["Row", "Column", "Before", "After"], changes,
+                  changes.length ? null : "No out-of-window dates found.");
+  log.push(changes.length + " corrupted date(s) un-swapped (see 'Date Repair Log').");
+
+  organizeLeadsByCategory();
+  try { buildAdsVsOrganicLeadsWeekly(); } catch (e) { log.push("Report: " + e.message); }
+  var zero = ss.getSheetByName("Ads vs Organic (weekly)"); if (zero) ss.deleteSheet(zero);
+
+  SpreadsheetApp.flush();
+  var summary = "CLEAN + FIX COMPLETE\n - " + log.join("\n - ") +
+    "\n\nCheck the 'Quarantine (test + spam)' tab. Anything real in there copies straight back. " +
+    "Then redeploy: Deploy > Manage deployments > New version.";
+  Logger.log(summary);
+  try { SpreadsheetApp.getUi().alert(summary); } catch (e) {}
+  return summary;
+}
+
+function isoOf_(d) {
+  var hasTime = d.getHours() !== 0 || d.getMinutes() !== 0;
+  return Utilities.formatDate(d, "Europe/Dublin", hasTime ? "yyyy-MM-dd HH:mm" : "yyyy-MM-dd");
+}
+
+// Conservative, high-confidence test/spam classifier. When unsure, KEEPS the row.
+function isJunkRow_(name, email) {
+  var e = String(email || "").trim().toLowerCase();
+  var n = String(name || "").trim();
+  if (/@smart-space\.ie$/.test(e)) return true;                    // staff, never a customer
+  if (/@testcustomer\.ie$/.test(e)) return true;
+  if (/\+claudetest/.test(e)) return true;
+  if (/^(oscarcobbe2017(\+[^@]*)?@icloud\.com|oscar@gmail\.com|cobbenigel@gmail\.com)$/.test(e)) return true;
+  if (/^(conversion test|webhook test|final test|diagnostics test|debug|zz test.*|claude test.*|test|free consultation|oscar cobbe|nigel cobbe|oscar)$/i.test(n)) return true;
+  if (/^[A-Za-z]{12,}$/.test(n) && /[a-z]/.test(n) && /[A-Z]/.test(n)) return true; // bot gibberish name
+  var local = e.split("@")[0] || "";
+  if ((local.match(/\./g) || []).length >= 4) return true;          // bot gibberish email
+  return false;
+}
+
+// Like repairDates_, but treats anything OUTSIDE [1 Apr 2026 .. today] on the
+// lead Date column as a guaranteed day/month swap and transposes it back.
+function repairDatesWindowed_(sheet) {
+  var lastRow = sheet.getLastRow(), lastCol = sheet.getLastColumn();
+  if (lastRow < 2) return [];
+  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  var startMs = new Date(2026, 3, 1).getTime();
+  var now = new Date();
+  var endMs = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).getTime();
+  var changes = [];
+  var plan = [
+    { col: headers.indexOf("Date") + 1, swap: true },
+    { col: headers.indexOf("Booking Date") + 1, swap: false },
+  ].filter(function (p) { return p.col >= 1; });
+
+  plan.forEach(function (p) {
+    var rng = sheet.getRange(2, p.col, lastRow - 1, 1);
+    var vals = rng.getValues(), out = [];
+    for (var r = 0; r < vals.length; r++) {
+      var v = vals[r][0];
+      if (v === "" || v === null) { out.push([v]); continue; }
+      var d = parseSheetDate_(v);
+      if (!d) { out.push([v]); continue; }
+      var before = (Object.prototype.toString.call(v) === "[object Date]") ? isoOf_(d) : String(v).trim();
+      var fixed = d, note = "";
+      if (p.swap && (d.getTime() < startMs || d.getTime() > endMs)) {
+        var sw = new Date(d.getFullYear(), d.getDate() - 1, d.getMonth() + 1, d.getHours(), d.getMinutes());
+        if (!isNaN(sw.getTime()) && sw.getTime() >= startMs && sw.getTime() <= endMs) {
+          fixed = sw; note = "  (day/month un-swapped)";
+        }
+      }
+      var iso = isoOf_(fixed);
+      out.push([iso]);
+      if (before !== iso) changes.push([r + 2, headers[p.col - 1], before, iso + note]);
+    }
+    rng.setNumberFormat("@");
+    rng.setValues(out);
+  });
+  return changes;
+}
+
+function writeChangeLog_(ss, tabName, header, rows, emptyNote) {
+  var ex = ss.getSheetByName(tabName); if (ex) ss.deleteSheet(ex);
+  var s = ss.insertSheet(tabName);
+  s.getRange(1, 1, 1, header.length).setValues([header])
+    .setFontWeight("bold").setBackground("#1a1a1a").setFontColor("#ffffff");
+  if (rows && rows.length) s.getRange(2, 1, rows.length, header.length).setValues(rows);
+  else if (emptyNote) s.getRange(2, 1).setValue(emptyNote);
+  s.setFrozenRows(1);
+  s.setColumnWidth(Math.min(3, header.length), 210);
+  s.setColumnWidth(header.length, 240);
+}
+
 // Column list in order. Used by both setupHeaders and doPost.
 var COLUMNS = [
   { key: "date",          label: "Date",          width: 140 },
