@@ -7,7 +7,7 @@ const serviceLinks = [
   { href: "/services/camera", label: "Floodlight Camera" },
   { href: "/services/bundles/driveway", label: "Driveway Bundle" },
   { href: "/services/bundles/whole-home", label: "Whole Home Bundle" },
-  { href: "/services/bundles/eldercare", label: "Eldercare Bundle" },
+  { href: "/services/eldercare-security-bundle", label: "Eldercare Bundle" },
   { href: "/services/installation-only", label: "Installation Only" },
   { href: "/services/free-consultation", label: "Free Consultation" },
 ];

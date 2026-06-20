@@ -133,7 +133,7 @@ export default function Post() {
             </tr>
             <tr>
               <td>Smart doorbell + smart lock</td>
-              <td>From €509, see <Link href="/services/bundles/eldercare">Eldercare Bundle</Link></td>
+              <td>From €509, see <Link href="/services/eldercare-security-bundle">Eldercare Bundle</Link></td>
               <td>5–8 years</td>
             </tr>
           </tbody>
@@ -219,7 +219,7 @@ export default function Post() {
           The older person presses the doorbell, everyone gets notified, and family members
           can answer the door remotely. The carer arrives, enters the keybox code on their
           phone, collects the key, and lets themselves in, no more keys hidden under plant
-          pots. See the <Link href="/services/bundles/eldercare">Eldercare Bundle</Link>{" "}
+          pots. See the <Link href="/services/eldercare-security-bundle">Eldercare Bundle</Link>{" "}
           for the full setup.
         </p>
 

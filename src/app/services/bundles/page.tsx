@@ -72,7 +72,7 @@ const bundles = [
       "Remote carer management via app",
       "Ideal for elderly relatives",
     ],
-    href: "/services/bundles/eldercare",
+    href: "/services/eldercare-security-bundle",
   },
 ];
 

@@ -228,7 +228,7 @@ export default function Post() {
           <li>
             <strong>Elderly relative&apos;s home anywhere in Leinster.</strong> Ring
             Video Doorbell + smart Wi-Fi keybox for carer access. Around €509, see the{" "}
-            <Link href="/services/bundles/eldercare">Eldercare Bundle</Link>.
+            <Link href="/services/eldercare-security-bundle">Eldercare Bundle</Link>.
           </li>
         </ul>
 

@@ -16,7 +16,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/services/bundles`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     { url: `${BASE}/services/bundles/driveway`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     { url: `${BASE}/services/bundles/whole-home`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
-    { url: `${BASE}/services/bundles/eldercare`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     { url: `${BASE}/services/single`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
     { url: `${BASE}/services/installation-only`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     { url: `${BASE}/services/free-consultation`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },

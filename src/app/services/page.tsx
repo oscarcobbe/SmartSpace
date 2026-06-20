@@ -39,7 +39,7 @@ const serviceCategories = [
   {
     title: "Eldercare Bundle",
     description: "Doorbell + smart keybox for elderly relatives and carer access.",
-    href: "/services/bundles/eldercare",
+    href: "/services/eldercare-security-bundle",
     filter: (p: ShopifyProduct) => p.handle === "eldercare-security-bundle",
     staticImage: "/products/eldercare-bundle.png",
   },
@@ -60,7 +60,7 @@ const SERVICE_INDEX = [
   { name: "Floodlight Camera Installation", url: `${SITE}/services/camera` },
   { name: "Driveway Bundle", url: `${SITE}/services/bundles/driveway` },
   { name: "Whole Home Bundle", url: `${SITE}/services/bundles/whole-home` },
-  { name: "Eldercare Bundle", url: `${SITE}/services/bundles/eldercare` },
+  { name: "Eldercare Bundle", url: `${SITE}/services/eldercare-security-bundle` },
   { name: "Other Brands (Eufy Supplied & Installed)", url: `${SITE}/services/other-brands` },
   { name: "Single Device Installation", url: `${SITE}/services/single` },
   { name: "Installation Only (Customer Device)", url: `${SITE}/services/installation-only` },

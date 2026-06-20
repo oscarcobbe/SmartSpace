@@ -215,7 +215,7 @@ export default async function CountyPage({
               { href: "/services/camera", label: "Ring Floodlight Cams (Plus & Pro)" },
               { href: "/services/bundles/driveway", label: "Driveway Bundle, doorbell + floodlight" },
               { href: "/services/bundles/whole-home", label: "Whole Home Bundle, multi-camera" },
-              { href: "/services/bundles/eldercare", label: "Eldercare Bundle, doorbell + lockbox" },
+              { href: "/services/eldercare-security-bundle", label: "Eldercare Bundle, doorbell + lockbox" },
               { href: "/services/installation-only", label: "Installation-only · €139 · Ring, Eufy, Nest, Tapo, Aosu" },
             ].map((s) => (
               <li key={s.href}>
