@@ -56,7 +56,11 @@ export default function Hero() {
           down from px-7 sm:px-9 py-3.5) so the two buttons take
           less horizontal real estate side-by-side on desktop. Touch
           target is still ~44px tall, accessible. */}
-      <div className="fade-up-delay-3 absolute z-10 bottom-8 sm:bottom-20 lg:bottom-24 left-0 right-0 px-4">
+      {/* Hidden on mobile (hidden sm:block): on small screens these three
+          CTAs render in their own block on the home page, between the reviews
+          section and "Our Packages", so they don't crowd the hero. Desktop
+          (sm and up) is unchanged. */}
+      <div className="fade-up-delay-3 absolute z-10 bottom-8 sm:bottom-20 lg:bottom-24 left-0 right-0 px-4 hidden sm:block">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 max-w-md sm:max-w-none mx-auto">
           <Link
             href="/services/free-consultation"

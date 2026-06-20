@@ -40,6 +40,7 @@ const packages = [
       "App setup & configuration",
       "Motion zone tuning",
       "No monthly subscription, storage stays local",
+      "SD Memory Card Included",
     ],
     href: "/services/eufy/single",
   },
@@ -54,6 +55,7 @@ const packages = [
       "Complete app configuration & linked devices",
       "User walkthrough on the day",
       "No monthly subscription",
+      "SD Memory Card Included",
     ],
     href: "/services/eufy/bundles",
   },
@@ -66,6 +68,7 @@ const packages = [
       "Professional mounting & wiring",
       "App setup & configuration",
       "Wi-Fi signal check",
+      "SD Memory Card Included",
     ],
     href: "/services/installation-only",
   },
@@ -110,6 +113,10 @@ export default function EufyPackagesPage() {
             </h1>
             <p className="text-ink-soft text-base sm:text-lg max-w-xl mx-auto">
               Supplied, professionally installed, and configured. No monthly subscription, every recording stays local.
+            </p>
+            <p className="text-[#005d8e] text-base sm:text-lg max-w-xl mx-auto mt-3">
+              Require solar-powered Eufy options? Please call us or{" "}
+              <Link href="/contact" className="font-semibold hover:underline">contact us</Link>.
             </p>
           </div>
 

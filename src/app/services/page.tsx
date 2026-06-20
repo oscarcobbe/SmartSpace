@@ -101,7 +101,7 @@ export default async function ServicesPage() {
         {/* Header */}
         <div className="text-center mb-14">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4">
-            Our Services
+            Our Ring Services
           </h1>
           <p className="text-gray-500 text-lg max-w-2xl mx-auto">
             Everything supplied, professionally installed, and configured. Choose the service that fits your home.
@@ -116,7 +116,7 @@ export default async function ServicesPage() {
             href="/services/eufy"
             className="inline-flex items-center justify-center bg-gradient-to-r from-[#0a6ea3] to-[#005d8e] hover:from-[#005d8e] hover:to-[#004c75] text-white font-bold text-sm sm:text-base px-7 py-3 rounded-full transition-all shadow-[0_10px_30px_-8px_rgba(0,93,142,0.5)] hover:shadow-[0_16px_45px_-8px_rgba(0,93,142,0.65)] hover:-translate-y-0.5"
           >
-            Our Eufy Services
+            Or View Our Eufy Services
           </Link>
         </div>
 

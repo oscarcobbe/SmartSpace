@@ -24,14 +24,14 @@ export const metadata: Metadata = {
 const choices = [
   {
     title: "Eufy Video Doorbell",
-    description: "See, hear, and speak to anyone at your door, plus a second camera watching the doorstep.",
+    description: "See, hear, and speak to anyone at your door, plus a second camera watching the doorstep. 64GB SD Card Included.",
     price: "From €394",
     image: "/products/eufy-doorbell-e340-with-chime.png",
     href: "/services/eufy-video-doorbell-e340",
   },
   {
     title: "Eufy External Camera",
-    description: "Dual-camera floodlight on a 360° pan-tilt head for full driveway, garden and side-passage coverage.",
+    description: "Dual-camera floodlight on a 360° pan-tilt head for full driveway, garden and side-passage coverage. 64GB SD Card Included.",
     price: "From €404",
     image: "/products/eufy-floodlight-e340.png",
     href: "/services/eufy-floodlight-cam-e340",

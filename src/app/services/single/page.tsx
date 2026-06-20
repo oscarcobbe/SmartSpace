@@ -109,7 +109,7 @@ export default function SingleDevicePage() {
         </div>
 
         {/* Long-form content for SEO + decision support */}
-        <section className="mt-20 max-w-3xl mx-auto">
+        <section className="mt-20 max-w-3xl mx-auto text-center">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4">
             Choosing between a doorbell and a camera
           </h2>

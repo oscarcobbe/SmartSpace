@@ -4151,8 +4151,8 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
     "id": "gid://smart-space/Product/eufy-driveway-bundle",
     "title": "Eufy Driveway / Garden Bundle",
     "handle": "eufy-driveway-bundle",
-    "description": "Eufy Driveway / Garden Bundle. The Video Doorbell E340 at the front door plus a Floodlight Cam E340 on the drive, recording locally to an S380 HomeBase. Front door and the most-used approach to the house covered together. Supplied and professionally installed, no monthly subscription.",
-    "descriptionHtml": "<p>Eufy Driveway / Garden Bundle. The Video Doorbell E340 at the front door plus a Floodlight Cam E340 on the drive, recording locally to an S380 HomeBase. Front door and the most-used approach to the house covered together. Supplied and professionally installed, no monthly subscription.</p>",
+    "description": "Eufy Driveway / Garden Bundle. The Video Doorbell E340 at the front door plus a Floodlight Cam E340 on the drive, recording locally to an S380 HomeBase. Front door and the most-used approach to the house covered together. Supplied and professionally installed, no monthly subscription. Includes a 128GB microSD card.",
+    "descriptionHtml": "<p>Eufy Driveway / Garden Bundle. The Video Doorbell E340 at the front door plus a Floodlight Cam E340 on the drive, recording locally to an S380 HomeBase. Front door and the most-used approach to the house covered together. Supplied and professionally installed, no monthly subscription. Includes a 128GB microSD card.</p>",
     "productType": "Bundle",
     "tags": ["Bundle", "Eufy"],
     "priceRange": {
@@ -4196,8 +4196,8 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
     "id": "gid://smart-space/Product/eufy-whole-home-bundle",
     "title": "Eufy Whole Home Bundle",
     "handle": "eufy-whole-home-bundle",
-    "description": "Eufy Whole Home Bundle. The Video Doorbell E340 plus two Floodlight Cams (front and rear) recording locally to an S380 HomeBase, for whole-perimeter coverage in one visit. Supplied and professionally installed, no monthly subscription.",
-    "descriptionHtml": "<p>Eufy Whole Home Bundle. The Video Doorbell E340 plus two Floodlight Cams (front and rear) recording locally to an S380 HomeBase, for whole-perimeter coverage in one visit. Supplied and professionally installed, no monthly subscription.</p>",
+    "description": "Eufy Whole Home Bundle. The Video Doorbell E340 plus two Floodlight Cams (front and rear) recording locally to an S380 HomeBase, for whole-perimeter coverage in one visit. Supplied and professionally installed, no monthly subscription. Includes a 128GB microSD card.",
+    "descriptionHtml": "<p>Eufy Whole Home Bundle. The Video Doorbell E340 plus two Floodlight Cams (front and rear) recording locally to an S380 HomeBase, for whole-perimeter coverage in one visit. Supplied and professionally installed, no monthly subscription. Includes a 128GB microSD card.</p>",
     "productType": "Bundle",
     "tags": ["Bundle", "Eufy"],
     "priceRange": {
@@ -4241,8 +4241,8 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
     "id": "gid://smart-space/Product/eufy-eldercare-bundle",
     "title": "Eufy Eldercare Bundle",
     "handle": "eufy-eldercare-bundle",
-    "description": "Eufy Eldercare Bundle. The Video Doorbell E340 with a plug-in Chime and the S380 HomeBase, set up to be as simple as possible: the Chime rings loudly indoors with no phone needed, and everything records at home. Built for older relatives and the family who help them. Supplied and professionally installed, no monthly subscription.",
-    "descriptionHtml": "<p>Eufy Eldercare Bundle. The Video Doorbell E340 with a plug-in Chime and the S380 HomeBase, set up to be as simple as possible: the Chime rings loudly indoors with no phone needed, and everything records at home. Built for older relatives and the family who help them. Supplied and professionally installed, no monthly subscription.</p>",
+    "description": "Eufy Eldercare Bundle. The Video Doorbell E340 with a plug-in Chime and a Smart Wi-Fi Keysafe, set up to be as simple as possible: the Chime rings loudly indoors with no phone needed, and the doorbell records locally to its own 64GB card. Built for older relatives and the family who help them. Supplied and professionally installed, no monthly subscription. Includes a 64GB microSD card.",
+    "descriptionHtml": "<p>Eufy Eldercare Bundle. The Video Doorbell E340 with a plug-in Chime and a Smart Wi-Fi Keysafe, set up to be as simple as possible: the Chime rings loudly indoors with no phone needed, and the doorbell records locally to its own 64GB card. Built for older relatives and the family who help them. Supplied and professionally installed, no monthly subscription. Includes a 64GB microSD card.</p>",
     "productType": "Bundle",
     "tags": ["Bundle", "Eufy"],
     "priceRange": {

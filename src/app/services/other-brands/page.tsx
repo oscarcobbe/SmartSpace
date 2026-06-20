@@ -37,7 +37,7 @@ export const metadata: Metadata = {
  *   Floodlight Cam E340 .................... €404  (new power €494)
  *   Driveway / Garden Bundle .............. €903  (up to €1,063 w/ new power)
  *   Whole Home Bundle ..................... €1,248 (up to €1,478 w/ new power)
- *   Eldercare Bundle (E340 + Chime + Screen) €554 (new VD power €644)
+ *   Eldercare Bundle (E340 + Chime + Keysafe) €554 (new VD power €644)
  *
  * New cabling / new power feed adds €70–€90, quoted at the consultation.
  * Installation-only on a customer-supplied Eufy = same as Ring (€139), see
@@ -124,10 +124,10 @@ const eufyProducts: EufyProduct[] = [
     cta: "View Options",
     ctaHref: "/services/eufy-eldercare-bundle",
     features: [
-      "Video Doorbell E340 with a plug-in Chime and the S380 HomeBase",
+      "Video Doorbell E340 with a plug-in Chime and the Smart Wi-Fi Keysafe",
       "Loud indoor Chime rings the moment someone is at the door",
       "Built for older relatives and the family who help them",
-      "Recordings stored locally on the HomeBase, no monthly subscription",
+      "Records locally to the doorbell's own 64GB card, no monthly subscription",
     ],
   },
 ];

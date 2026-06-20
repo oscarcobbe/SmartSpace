@@ -33,6 +33,7 @@ const bundles = [
       "Eufy S380 HomeBase for local recording and storage",
       "Driveway / Garden coverage, professionally installed",
       "No monthly subscription",
+      "128GB SD Card Included",
     ],
   },
   {
@@ -46,6 +47,7 @@ const bundles = [
       "Eufy S380 HomeBase for local recording and storage",
       "Whole-perimeter coverage in one visit",
       "No monthly subscription",
+      "128GB SD Card Included",
     ],
   },
   {
@@ -55,10 +57,11 @@ const bundles = [
     href: "/services/eufy-eldercare-bundle",
     price: 554,
     features: [
-      "Video Doorbell E340 with a plug-in Chime and the S380 HomeBase",
+      "Video Doorbell E340 with a plug-in Chime and a Smart Wi-Fi Keysafe",
       "Loud indoor Chime rings the moment someone is at the door",
       "Built for older relatives and the family who help them",
-      "Recordings stored locally on the HomeBase, no monthly subscription",
+      "Records locally to the doorbell's own 64GB card, no monthly subscription",
+      "64GB SD Card Included",
     ],
   },
 ];
