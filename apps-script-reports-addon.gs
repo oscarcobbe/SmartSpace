@@ -216,3 +216,88 @@ function _rDiagnose(sheet) {
     String(headers[gcol]) + "' header (should read GCLID). Reports are still correct. " +
     "Tell me this line and I will realign the raw column safely.");
 }
+
+// ===========================================================================
+// >>> COLUMN REALIGN. Add this below the block above, Save, run `fixColumns`. <<<
+// ===========================================================================
+// Backs up the Leads tab first, then moves the real gclid data under the GCLID
+// header and lines every column up with its label. After it runs, the reports
+// read the gclid + amount from their proper columns, so they are exact.
+var _R_NEW_HEADERS = ["Date","Type","Name","Email","GCLID","Phone","Address","Product","Amount","Currency","Booking Date","Booking Slot","Order ID","Source","Notes","Status","Landing Page","Referrer","UTM Source","UTM Medium","UTM Campaign","UTM Content","UTM Term"];
+
+function fixColumns() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Leads");
+  if (!sheet) throw new Error("No 'Leads' tab found.");
+  var stamp = Utilities.formatDate(new Date(), "Europe/Dublin", "yyyy-MM-dd HHmmss");
+  sheet.copyTo(ss).setName("Leads (backup " + stamp + ")");
+
+  var lastRow = sheet.getLastRow(), lastCol = sheet.getLastColumn();
+  if (lastRow < 2) throw new Error("No data rows.");
+  var sample = sheet.getRange(2, 1, Math.min(lastRow - 1, 300), lastCol).getValues();
+  var counts = []; for (var c = 0; c < lastCol; c++) counts[c] = 0;
+  sample.forEach(function (row) {
+    for (var c = 0; c < lastCol; c++) {
+      var v = String(row[c] || "").trim();
+      if (v.length >= 30 && /^[A-Za-z0-9_-]+$/.test(v) &&
+          !/^(cs|pi|ch|in|sub|cus|pm|re|tr|po|seti|prod|price)_/.test(v)) counts[c]++;
+    }
+  });
+  var gcol = -1, gmax = 0;
+  for (var k = 0; k < lastCol; k++) if (counts[k] > gmax) { gmax = counts[k]; gcol = k; }
+  if (gmax === 0) throw new Error("Could not find the gclid column (no click-ids in the data). Backup made, nothing moved.");
+
+  var g1 = gcol + 1;
+  if (g1 !== 5) sheet.moveColumns(sheet.getRange(1, g1, sheet.getMaxRows(), 1), 5);
+
+  var n = Math.min(_R_NEW_HEADERS.length, sheet.getLastColumn());
+  sheet.getRange(1, 1, 1, n).setValues([_R_NEW_HEADERS.slice(0, n)]);
+  sheet.getRange(1, 1, 1, sheet.getLastColumn()).setFontWeight("bold").setBackground("#1a1a1a").setFontColor("#ffffff");
+  sheet.setFrozenRows(1);
+  SpreadsheetApp.flush();
+
+  // Reports off the now-aligned columns: gclid = col 5 (idx 4), amount = col 9 (idx 8).
+  var data = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues();
+  var LT = { "Free Consultation": 1, "Contact Enquiry": 1, "Paid Order": 1, "Newsletter Signup": 1 };
+  var leads = [];
+  data.forEach(function (row) {
+    var type = String(row[1] || "").trim();
+    if (!LT[type]) return;
+    if (_rIsJunk(row[2], row[3])) return;
+    var d = _rParseDate(row[0]); if (!d) return; d = _rFixDate(d);
+    leads.push({
+      date: d, week: Utilities.formatDate(_rMonday(d), "Europe/Dublin", "yyyy-MM-dd"),
+      name: String(row[2] || "").trim(), type: type,
+      source: (String(row[4] || "").trim().length >= 20) ? "Google Ads" : "Organic",
+      amount: String(row[8] || "").trim(),
+    });
+  });
+  _rWeekly(ss, leads);
+  _rTrackerAmt(ss, leads);
+
+  var msg = "Columns realigned + reports rebuilt from " + leads.length + " leads. The gclid data is now under the GCLID header (column E). Backup saved as 'Leads (backup " +
+    stamp + ")'. CHECK: column E should show click-ids, Phone should show phone numbers. If it looks wrong, delete the Leads tab and rename the backup to Leads. Then redeploy the web app.";
+  Logger.log(msg);
+  try { SpreadsheetApp.getUi().alert(msg); } catch (e) {}
+}
+
+function _rTrackerAmt(ss, leads) {
+  var sorted = leads.slice().sort(function (a, b) { return b.date.getTime() - a.date.getTime(); });
+  var out = [["Date", "Customer", "Source", "Type", "Amount (EUR)"]];
+  sorted.forEach(function (l) {
+    var num = parseFloat(String(l.amount).replace(/[^0-9.]/g, ""));
+    var amt = (!isNaN(num) && num > 0 && num < 100000) ? num : (/complimentary|^free$/i.test(l.amount) ? "Free" : "");
+    out.push([Utilities.formatDate(l.date, "Europe/Dublin", "yyyy-MM-dd"), l.name, l.source, l.type, amt]);
+  });
+  var rep = ss.getSheetByName("Customer Tracker");
+  if (rep) rep.clear(); else rep = ss.insertSheet("Customer Tracker");
+  rep.getRange(1, 1, out.length, out[0].length).setValues(out);
+  rep.getRange(1, 1, 1, out[0].length).setFontWeight("bold").setBackground("#1a1a1a").setFontColor("#ffffff");
+  rep.setFrozenRows(1);
+  [110, 210, 110, 150, 110].forEach(function (w, i) { rep.setColumnWidth(i + 1, w); });
+  for (var r = 0; r < sorted.length; r++) {
+    var cell = rep.getRange(r + 2, 3);
+    if (sorted[r].source === "Google Ads") cell.setBackground("#cce5ff").setFontColor("#004085");
+    else cell.setBackground("#e2e3e5").setFontColor("#383d41");
+  }
+}
