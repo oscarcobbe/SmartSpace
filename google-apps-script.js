@@ -21,7 +21,11 @@
 //   2. MOVES (never deletes) test rows + bot-spam rows to a "Quarantine" tab.
 //   3. Un-swaps any lead date that lands outside the real window (before
 //      1 Apr 2026, or in the future) - those are guaranteed day/month swaps.
-//   4. Regroups by category and rebuilds the report from the cleaned data.
+//   4. Builds two clean tabs: "Weekly Ad Performance" (real Google Ads spend
+//      vs organic, per week) and "Customer Tracker" (every lead with its
+//      source and value, newest first).
+//   5. Diagnoses the GCLID/Status column mix-up and logs the exact layout.
+//      The reports are correct either way because the gclid is read per-row.
 // Check the Quarantine tab after; anything real in there is one copy-paste back.
 var LEADS_START = "2026-04-01"; // first real lead month (Gmail-verified)
 
@@ -76,8 +80,16 @@ function cleanAndFixLeads() {
   log.push(changes.length + " corrupted date(s) un-swapped (see 'Date Repair Log').");
 
   organizeLeadsByCategory();
-  try { buildAdsVsOrganicLeadsWeekly(); } catch (e) { log.push("Report: " + e.message); }
-  var zero = ss.getSheetByName("Ads vs Organic (weekly)"); if (zero) ss.deleteSheet(zero);
+  diagnoseGclid_(sheet, log);
+  var leads = gatherLeads_(sheet);
+  try { buildWeeklyAdPerformance_(ss, leads); log.push("Built 'Weekly Ad Performance' (real ad spend vs organic)."); }
+  catch (e) { log.push("Weekly report failed: " + e.message); }
+  try { buildCustomerTracker_(ss, leads); log.push("Built 'Customer Tracker' (" + leads.length + " leads)."); }
+  catch (e) { log.push("Tracker failed: " + e.message); }
+  // Remove the old/confusing estimate-based report tabs.
+  ["Ads vs Organic (weekly)", "Ads vs Organic leads (weekly)"].forEach(function (nm) {
+    var t = ss.getSheetByName(nm); if (t) ss.deleteSheet(t);
+  });
 
   SpreadsheetApp.flush();
   var summary = "CLEAN + FIX COMPLETE\n - " + log.join("\n - ") +
@@ -159,6 +171,169 @@ function writeChangeLog_(ss, tabName, header, rows, emptyNote) {
   s.setFrozenRows(1);
   s.setColumnWidth(Math.min(3, header.length), 210);
   s.setColumnWidth(header.length, 240);
+}
+
+// ---------------------------------------------------------------------------
+// Real Google Ads spend + clicks per week (Monday start), from your Google Ads
+// "Time series" export (2026-02-23 to 2026-06-20). Update these when you pull a
+// fresh export; weeks not listed count as zero spend. Organic always costs 0.
+var WEEKLY_AD_DATA = {
+  "2026-04-13": { spend: 133.69, clicks: 88 },
+  "2026-04-20": { spend: 217.42, clicks: 127 },
+  "2026-04-27": { spend: 49.11,  clicks: 34 },
+  "2026-05-04": { spend: 81.98,  clicks: 56 },
+  "2026-05-11": { spend: 127.99, clicks: 68 },
+  "2026-05-18": { spend: 120.20, clicks: 60 },
+  "2026-05-25": { spend: 98.63,  clicks: 49 },
+  "2026-06-01": { spend: 117.77, clicks: 58 },
+  "2026-06-08": { spend: 121.12, clicks: 46 },
+  "2026-06-15": { spend: 145.03, clicks: 40 },
+};
+
+// Returns the Google click ID (gclid) found anywhere in a row, or "". Scans
+// every cell so it works even if the GCLID column is mislabelled or out of
+// place: a long alphanumeric token, not a Stripe id, no @/space/URL characters.
+function rowGclid_(row) {
+  for (var i = 0; i < row.length; i++) {
+    var v = String(row[i] || "").trim();
+    if (v.length >= 30 && /^[A-Za-z0-9_-]+$/.test(v) &&
+        !/^(cs|pi|ch|in|sub|cus|pm|re|tr|po|seti|prod|price)_/.test(v)) return v;
+  }
+  return "";
+}
+
+// Best-effort detection of the Amount column by content (small money values or
+// "Complimentary"), so it survives the column mis-alignment. -1 if not found.
+function detectAmountCol_(sample, lastCol) {
+  var best = -1, bestHits = 0;
+  for (var c = 0; c < lastCol; c++) {
+    var hits = 0, tot = 0;
+    for (var i = 0; i < sample.length; i++) {
+      var v = String(sample[i][c] || "").trim();
+      if (!v) continue;
+      tot++;
+      if (/complimentary|^free$/i.test(v)) { hits++; continue; }
+      var digits = v.replace(/[^0-9]/g, "");
+      var num = parseFloat(v.replace(/[^0-9.]/g, ""));
+      if (!isNaN(num) && num > 0 && num < 10000 && digits.length <= 4) hits++;
+    }
+    if (tot >= 3 && hits / tot > 0.5 && hits > bestHits) { bestHits = hits; best = c; }
+  }
+  return best;
+}
+
+// Pull real leads into objects {date, week, name, type, source, amount}.
+// Date/Type/Name are columns 1-3 (identical in every layout); source comes from
+// rowGclid_ (per-row, layout-proof); amount from detectAmountCol_.
+function gatherLeads_(sheet) {
+  var lastRow = sheet.getLastRow(), lastCol = sheet.getLastColumn();
+  if (lastRow < 2) return [];
+  var data = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+  var amtCol = detectAmountCol_(data, lastCol);
+  var leadSet = {};
+  LEAD_TYPES.forEach(function (t) { leadSet[t] = true; });
+  var leads = [];
+  data.forEach(function (row) {
+    var type = String(row[1] || "").trim();
+    if (!leadSet[type]) return;
+    var d = parseSheetDate_(row[0]);
+    if (!d) return;
+    leads.push({
+      date: d,
+      week: Utilities.formatDate(mondayOf_(d), "Europe/Dublin", "yyyy-MM-dd"),
+      name: String(row[2] || "").trim(),
+      type: type,
+      source: rowGclid_(row) ? "Google Ads" : "Organic",
+      amount: amtCol >= 0 ? String(row[amtCol] || "").trim() : "",
+    });
+  });
+  return leads;
+}
+
+// Tab 1: weekly real ad spend vs organic, with cost per ad-driven lead.
+function buildWeeklyAdPerformance_(ss, leads) {
+  var wk = {};
+  leads.forEach(function (l) {
+    if (!wk[l.week]) wk[l.week] = { ads: 0, org: 0 };
+    if (l.source === "Google Ads") wk[l.week].ads++; else wk[l.week].org++;
+  });
+  var weekSet = {};
+  Object.keys(wk).forEach(function (k) { weekSet[k] = true; });
+  Object.keys(WEEKLY_AD_DATA).forEach(function (k) { weekSet[k] = true; });
+  var weeks = Object.keys(weekSet).sort();
+
+  var out = [["Week starting", "Ad spend (EUR)", "Ad clicks", "Ad leads", "Organic leads", "Total leads", "Cost / ad lead (EUR)"]];
+  var tS = 0, tC = 0, tA = 0, tO = 0;
+  weeks.forEach(function (k) {
+    var a = wk[k] || { ads: 0, org: 0 };
+    var ad = WEEKLY_AD_DATA[k] || { spend: 0, clicks: 0 };
+    out.push([k, round2_(ad.spend), ad.clicks, a.ads, a.org, a.ads + a.org, a.ads > 0 ? round2_(ad.spend / a.ads) : ""]);
+    tS += ad.spend; tC += ad.clicks; tA += a.ads; tO += a.org;
+  });
+  out.push(["TOTAL", round2_(tS), tC, tA, tO, tA + tO, tA > 0 ? round2_(tS / tA) : ""]);
+
+  var rep = ss.getSheetByName("Weekly Ad Performance");
+  if (rep) { rep.clear(); } else { rep = ss.insertSheet("Weekly Ad Performance"); }
+  rep.getRange(1, 1, out.length, out[0].length).setValues(out);
+  rep.getRange(1, 1, 1, out[0].length).setFontWeight("bold").setBackground("#1a1a1a").setFontColor("#ffffff");
+  rep.getRange(out.length, 1, 1, out[0].length).setFontWeight("bold").setBackground("#fef4eb");
+  rep.setFrozenRows(1);
+  [120, 120, 90, 90, 110, 90, 150].forEach(function (w, i) { rep.setColumnWidth(i + 1, w); });
+  if (out.length > 1) {
+    rep.getRange(2, 2, out.length - 1, 1).setNumberFormat("#,##0.00");
+    rep.getRange(2, 7, out.length - 1, 1).setNumberFormat("#,##0.00");
+  }
+  rep.getRange(out.length + 2, 1).setValue("Ad spend + clicks are your real weekly Google Ads figures. Ad vs Organic leads are split by whether a Google click ID was captured on the lead. Organic costs nothing.");
+  rep.getRange(out.length + 2, 1).setFontColor("#888888").setFontStyle("italic");
+}
+
+// Tab 2: every lead, newest first, with its source and value - easy to scan.
+function buildCustomerTracker_(ss, leads) {
+  var sorted = leads.slice().sort(function (a, b) { return b.date.getTime() - a.date.getTime(); });
+  var out = [["Date", "Customer", "Source", "Type", "Amount (EUR)"]];
+  sorted.forEach(function (l) {
+    var digits = String(l.amount).replace(/[^0-9]/g, "");
+    var num = parseFloat(String(l.amount).replace(/[^0-9.]/g, ""));
+    var amt = (!isNaN(num) && num > 0 && digits.length <= 4) ? num
+            : (/complimentary|^free$/i.test(l.amount) ? "Free" : "");
+    out.push([Utilities.formatDate(l.date, "Europe/Dublin", "yyyy-MM-dd"), l.name, l.source, l.type, amt]);
+  });
+  var rep = ss.getSheetByName("Customer Tracker");
+  if (rep) { rep.clear(); } else { rep = ss.insertSheet("Customer Tracker"); }
+  rep.getRange(1, 1, out.length, out[0].length).setValues(out);
+  rep.getRange(1, 1, 1, out[0].length).setFontWeight("bold").setBackground("#1a1a1a").setFontColor("#ffffff");
+  rep.setFrozenRows(1);
+  [110, 210, 110, 150, 110].forEach(function (w, i) { rep.setColumnWidth(i + 1, w); });
+  for (var r = 0; r < sorted.length; r++) {
+    var cell = rep.getRange(r + 2, 3);
+    if (sorted[r].source === "Google Ads") cell.setBackground("#cce5ff").setFontColor("#004085");
+    else cell.setBackground("#e2e3e5").setFontColor("#383d41");
+  }
+}
+
+// Diagnoses the GCLID/Status column mix-up. Reports stay correct regardless,
+// because source is read per-row. Logs the exact layout for a safe realign.
+function diagnoseGclid_(sheet, log) {
+  var lastRow = sheet.getLastRow(), lastCol = sheet.getLastColumn();
+  if (lastRow < 2) return;
+  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  var sample = sheet.getRange(2, 1, Math.min(lastRow - 1, 100), lastCol).getValues();
+  var counts = []; for (var c = 0; c < lastCol; c++) counts[c] = 0;
+  sample.forEach(function (row) {
+    for (var c = 0; c < lastCol; c++) {
+      var v = String(row[c] || "").trim();
+      if (v.length >= 30 && /^[A-Za-z0-9_-]+$/.test(v) &&
+          !/^(cs|pi|ch|in|sub|cus|pm|re|tr|po|seti|prod|price)_/.test(v)) counts[c]++;
+    }
+  });
+  var gcol = -1, gmax = 0;
+  for (var k = 0; k < lastCol; k++) { if (counts[k] > gmax) { gmax = counts[k]; gcol = k; } }
+  var gclidHeader = headers.indexOf("GCLID");
+  if (gmax === 0) { log.push("GCLID check: no Google click IDs in the data yet (organic-only)."); return; }
+  if (gcol === gclidHeader) { log.push("GCLID check: correctly aligned under the GCLID header."); return; }
+  log.push("GCLID check: click-ID data is in column " + (gcol + 1) + " under the '" +
+    String(headers[gcol]) + "' header (should read 'GCLID'). Reports are still correct (gclid read per-row). " +
+    "Tell me this line and I will realign the raw column safely.");
 }
 
 // Column list in order. Used by both setupHeaders and doPost.
