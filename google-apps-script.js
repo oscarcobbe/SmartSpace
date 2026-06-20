@@ -10,6 +10,146 @@
  * missing columns without touching existing rows.
  */
 
+// ============================================================================
+// >>> ONE-CLICK REPAIR. Pick `fixEverythingNow` in the dropdown, press Run. <<<
+// ============================================================================
+//
+// This single function fixes the whole sheet, in order, and is safe to run as
+// many times as you like:
+//   1. Takes a full BACKUP of the Leads tab first, so nothing can be lost.
+//   2. Forces the spreadsheet Locale to Ireland, so day-first dates can never
+//      again be misread as US month-first (the root cause of the wrong dates).
+//   3. Normalises every date to locale-proof ISO text, and un-swaps any
+//      lead date stored in the future (a guaranteed misparse). Every change is
+//      written to a "Date Repair Log" tab so you can see exactly what moved.
+//   4. Regroups the sheet by category, oldest-to-newest within each.
+//   5. Rebuilds the weekly Ads-vs-Organic LEADS report.
+//   6. Deletes the always-empty "Ads vs Organic (weekly)" value tab.
+//
+// After it finishes, redeploy the web app once so new website leads are written
+// in the new format too: Deploy > Manage deployments > (pencil) > New version.
+function fixEverythingNow() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Leads");
+  if (!sheet) throw new Error("No 'Leads' tab found. Open the leads spreadsheet and run this again.");
+  var log = [];
+
+  // 1. Backup -----------------------------------------------------------------
+  var stamp = Utilities.formatDate(new Date(), "Europe/Dublin", "yyyy-MM-dd HHmmss");
+  var backup = sheet.copyTo(ss);
+  backup.setName("Leads (backup " + stamp + ")");
+  log.push("Backup saved as 'Leads (backup " + stamp + ")'. Delete it once you are happy.");
+
+  // 2. Locale -----------------------------------------------------------------
+  if (ss.getSpreadsheetLocale() !== "en_IE") {
+    try { ss.setSpreadsheetLocale("en_IE"); } catch (e) { ss.setSpreadsheetLocale("en_GB"); }
+    log.push("Locale set to Ireland. Day-first dates are now read correctly.");
+  } else {
+    log.push("Locale already Ireland.");
+  }
+
+  // 3. Dates ------------------------------------------------------------------
+  var changes = repairDates_(sheet);
+  writeRepairLog_(ss, changes);
+  log.push("Dates normalised to ISO. " + changes.length + " cell(s) changed (see 'Date Repair Log').");
+
+  // 4. Organise ---------------------------------------------------------------
+  organizeLeadsByCategory();
+  log.push("Sheet regrouped by category, oldest-to-newest within each.");
+
+  // 5. Rebuild the leads report -----------------------------------------------
+  try { buildAdsVsOrganicLeadsWeekly(); log.push("Weekly Ads-vs-Organic leads report rebuilt."); }
+  catch (err) { log.push("Report rebuild skipped: " + err.message); }
+
+  // 6. Delete the always-zero value tab ---------------------------------------
+  var zero = ss.getSheetByName("Ads vs Organic (weekly)");
+  if (zero) { ss.deleteSheet(zero); log.push("Deleted the empty 'Ads vs Organic (weekly)' value tab."); }
+  else { log.push("No empty value tab to delete (already gone)."); }
+
+  SpreadsheetApp.flush();
+  var summary = "FIX COMPLETE\n - " + log.join("\n - ") +
+                "\n\nLast step: redeploy the web app (Deploy > Manage deployments > New version).";
+  Logger.log(summary);
+  try { SpreadsheetApp.getUi().alert(summary); } catch (e) {} // no UI when run headless; log still has it
+  return summary;
+}
+
+// Normalise the Date + Booking Date columns to locale-proof ISO text.
+// The "Date" column is when a lead came in, so it can NEVER be in the future:
+// a future value there is a guaranteed day/month swap, which we undo. The
+// "Booking Date" column is an appointment and CAN be in the future, so it is
+// only reformatted, never swapped (so real future bookings are left intact).
+// Returns the list of corrections for the repair log.
+function repairDates_(sheet) {
+  var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
+  if (lastRow < 2) return [];
+
+  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  var now = new Date();
+  var endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+  var changes = [];
+
+  var plan = [
+    { col: headers.indexOf("Date") + 1, swapFuture: true },
+    { col: headers.indexOf("Booking Date") + 1, swapFuture: false },
+  ].filter(function (p) { return p.col >= 1; });
+  if (!plan.length) plan = [{ col: 1, swapFuture: true }];
+
+  plan.forEach(function (p) {
+    var rng = sheet.getRange(2, p.col, lastRow - 1, 1);
+    var values = rng.getValues();
+    var out = [];
+    for (var r = 0; r < values.length; r++) {
+      var v = values[r][0];
+      if (v === "" || v === null) { out.push([v]); continue; }
+      var d = parseSheetDate_(v);
+      if (!d) { out.push([v]); continue; } // unparseable: leave exactly as-is
+
+      var corrected = d, swapped = false;
+      if (p.swapFuture && d.getTime() > endOfToday.getTime()) {
+        var sw = new Date(d.getFullYear(), d.getDate() - 1, d.getMonth() + 1, d.getHours(), d.getMinutes());
+        if (!isNaN(sw.getTime()) && sw.getTime() <= endOfToday.getTime()) { corrected = sw; swapped = true; }
+      }
+      var hasTime = corrected.getHours() !== 0 || corrected.getMinutes() !== 0;
+      var iso = Utilities.formatDate(corrected, "Europe/Dublin", hasTime ? "yyyy-MM-dd HH:mm" : "yyyy-MM-dd");
+      var before = (Object.prototype.toString.call(v) === "[object Date]")
+        ? Utilities.formatDate(v, "Europe/Dublin", "yyyy-MM-dd HH:mm") : String(v).trim();
+
+      out.push([iso]);
+      if (before !== iso) {
+        changes.push({
+          row: r + 2,
+          col: headers[p.col - 1] || ("col " + p.col),
+          before: before,
+          after: iso + (swapped ? "  (day/month un-swapped)" : ""),
+        });
+      }
+    }
+    rng.setNumberFormat("@"); // force plain text so Sheets can never re-interpret it
+    rng.setValues(out);
+  });
+  return changes;
+}
+
+// Write a "Date Repair Log" tab listing every date cell fixEverythingNow changed.
+function writeRepairLog_(ss, changes) {
+  var existing = ss.getSheetByName("Date Repair Log");
+  if (existing) ss.deleteSheet(existing);
+  var sheet = ss.insertSheet("Date Repair Log");
+  sheet.getRange(1, 1, 1, 4).setValues([["Row", "Column", "Before", "After"]])
+       .setFontWeight("bold").setBackground("#1a1a1a").setFontColor("#ffffff");
+  if (changes.length) {
+    sheet.getRange(2, 1, changes.length, 4).setValues(
+      changes.map(function (c) { return [c.row, c.col, c.before, c.after]; })
+    );
+  } else {
+    sheet.getRange(2, 1).setValue("No date cells needed correcting.");
+  }
+  sheet.setColumnWidth(3, 210); sheet.setColumnWidth(4, 270);
+  sheet.setFrozenRows(1);
+}
+
 // Column list in order. Used by both setupHeaders and doPost.
 var COLUMNS = [
   { key: "date",          label: "Date",          width: 140 },
@@ -799,15 +939,11 @@ function organizeLeadsByCategory() {
     return i === -1 ? CATEGORY_ORDER.length : i;  // unknown types sort last
   }
 
-  // doPost writes Date as "dd/MM/yyyy HH:mm" (Europe/Dublin), which the JS
-  // Date constructor cannot parse reliably, so parse it explicitly.
+  // Parse the Date cell robustly: ISO yyyy-MM-dd (what doPost now writes),
+  // legacy dd/MM/yyyy text, or a real Date object all resolve correctly.
   function timeOf(v) {
-    if (Object.prototype.toString.call(v) === "[object Date]") { return v.getTime(); }
-    var s = String(v).trim();
-    var m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})[ T]+(\d{1,2}):(\d{2})/);
-    if (m) { return new Date(+m[3], +m[2] - 1, +m[1], +m[4], +m[5]).getTime(); }
-    var t = new Date(s).getTime();
-    return isNaN(t) ? 0 : t;
+    var d = parseSheetDate_(v);
+    return d ? d.getTime() : 0;
   }
 
   rows.sort(function (a, b) {
