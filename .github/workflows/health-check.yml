@@ -1,7 +1,7 @@
 name: Site health check
 
 # Every 30 minutes (UTC). GitHub may delay by a few minutes during high-load
-# periods — that's expected and fine for a health probe.
+# periods, that's expected and fine for a health probe.
 #
 # In addition to this, /api/cron/health-check still runs daily at 07:45 UTC
 # from Vercel (vercel.json) as a belt-and-braces fallback. If GitHub Actions
