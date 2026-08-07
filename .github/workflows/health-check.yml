@@ -25,9 +25,10 @@ jobs:
   probe:
     name: Probe /api/cron/health-check
     runs-on: ubuntu-latest
-    # Hard ceiling so a hung endpoint doesn't pin a runner for an hour and
-    # eat GitHub Actions minutes from the monthly quota.
-    timeout-minutes: 3
+    # Hard ceiling so a hung endpoint doesn't pin a runner and eat GitHub
+    # Actions minutes. 6 min leaves headroom for two 90s probe attempts plus
+    # the 20s retry pause, so a single slow cold start can't trip the ceiling.
+    timeout-minutes: 6
     steps:
       - name: Hit the health-check endpoint
         env:
@@ -37,50 +38,64 @@ jobs:
           #   Value: same string as the CRON_SECRET env var in Vercel
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
-          set -euo pipefail
+          set -uo pipefail
 
           if [ -z "${CRON_SECRET:-}" ]; then
             echo "::error::CRON_SECRET repository secret is not set."
-            echo "::error::Add it under Settings → Secrets and variables → Actions."
+            echo "::error::Add it under Settings, Secrets and variables, Actions."
             echo "::error::Use the same value as the CRON_SECRET env var in Vercel."
             exit 1
           fi
 
-          # Single combined response so we can inspect both HTTP code and body.
-          # --max-time 90 caps any one probe at well under the timeout-minutes
-          # ceiling above. --silent + --show-error suppresses cURL's progress
-          # meter but still surfaces transport errors (DNS, TLS, etc.) clearly.
-          response=$(curl --silent --show-error \
-            --max-time 90 \
-            --header "Authorization: Bearer ${CRON_SECRET}" \
-            --header "User-Agent: github-actions-health-check/1.0" \
-            --write-out "\n__HTTP_CODE__:%{http_code}" \
-            https://smart-space.ie/api/cron/health-check)
+          # One probe of the endpoint. Prints the body to the log and returns 0
+          # only when the site is healthy (HTTP 2xx and the JSON body is not
+          # ok:false). --max-time 90 caps a single slow probe; --show-error
+          # surfaces transport errors (DNS, TLS) clearly.
+          probe() {
+            local response http_code body
+            response=$(curl --silent --show-error \
+              --max-time 90 \
+              --header "Authorization: Bearer ${CRON_SECRET}" \
+              --header "User-Agent: github-actions-health-check/1.0" \
+              --write-out "\n__HTTP_CODE__:%{http_code}" \
+              https://smart-space.ie/api/cron/health-check) || return 1
 
-          http_code=$(printf '%s\n' "$response" | awk -F: '/^__HTTP_CODE__:/ {print $2}')
-          body=$(printf '%s\n' "$response" | sed '/^__HTTP_CODE__:/d')
+            http_code=$(printf '%s\n' "$response" | awk -F: '/^__HTTP_CODE__:/ {print $2}')
+            body=$(printf '%s\n' "$response" | sed '/^__HTTP_CODE__:/d')
 
-          echo "HTTP ${http_code:-?}"
-          echo "----- response body (first 4KB) -----"
-          printf '%s\n' "$body" | head -c 4000
-          echo
-          echo "----- end body -----"
+            echo "HTTP ${http_code:-?}"
+            echo "----- response body (first 4KB) -----"
+            printf '%s\n' "$body" | head -c 4000
+            echo
+            echo "----- end body -----"
 
-          # Fail #1: transport-level / non-2xx response
-          if [ -z "${http_code:-}" ] || [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
-            echo "::error::Endpoint returned HTTP ${http_code:-NO_RESPONSE} — site is unhealthy."
-            exit 1
+            if [ -z "${http_code:-}" ] || [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+              echo "Endpoint returned HTTP ${http_code:-NO_RESPONSE}."
+              return 1
+            fi
+            if printf '%s\n' "$body" | grep -q '"ok":false'; then
+              return 1
+            fi
+            return 0
+          }
+
+          # Try up to twice. A single miss is almost always a transient cold
+          # start, or a GitHub-queued run hitting the site mid-deploy, not a
+          # real outage, so retry once after a short pause before alerting. A
+          # genuine failure still fails on the second attempt, and the endpoint
+          # itself already Resend-alerts nigel@smart-space.ie on real failures.
+          if probe; then
+            echo "OK: site is healthy."
+            exit 0
           fi
 
-          # Fail #2: endpoint returned 200 but the JSON body says ok=false
-          # (i.e. one of the probed pages / Stripe / Apps Script failed).
-          # The endpoint itself fires a Resend alert to nigel@smart-space.ie
-          # via sendSiteAlert() before returning, so failing the workflow
-          # here is just belt-and-braces (GitHub also emails on failure).
-          if printf '%s\n' "$body" | grep -q '"ok":false'; then
-            failed_count=$(printf '%s\n' "$body" | grep -oE '"failed":[0-9]+' | head -1 || true)
-            echo "::error::Health endpoint reports failures (${failed_count:-unknown count}) — see body above."
-            exit 1
+          echo "First probe did not pass, retrying in 20s (transient slowness / cold start)..."
+          sleep 20
+
+          if probe; then
+            echo "OK: site is healthy on retry."
+            exit 0
           fi
 
-          echo "✓ Site is healthy."
+          echo "::error::Health check failed on two consecutive attempts, site may be unhealthy."
+          exit 1
