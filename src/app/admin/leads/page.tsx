@@ -86,6 +86,55 @@ export default function AdminLeadsPage() {
   const [view, setView] = useState<DashView>("upcoming");
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
 
+  // Send-payment-link panel state.
+  const [spName, setSpName] = useState("");
+  const [spEmail, setSpEmail] = useState("");
+  const [spUrl, setSpUrl] = useState("");
+  const [spSending, setSpSending] = useState(false);
+  const [spStatus, setSpStatus] = useState<{ ok: boolean; msg: string } | null>(null);
+
+  const sendPaymentLink = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      const adminKey = key || sessionStorage.getItem("admin_key") || "";
+      if (!adminKey) {
+        setSpStatus({ ok: false, msg: "Session expired , sign in again." });
+        return;
+      }
+      setSpSending(true);
+      setSpStatus(null);
+      try {
+        const res = await fetch("/api/admin/send-payment-link", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${adminKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: spEmail, name: spName, paymentUrl: spUrl }),
+        });
+        const data = (await res.json().catch(() => ({}))) as {
+          ok?: boolean;
+          error?: string;
+        };
+        if (res.ok && data.ok) {
+          setSpStatus({ ok: true, msg: `Sent to ${spEmail}.` });
+          setSpName("");
+          setSpEmail("");
+          setSpUrl("");
+        } else if (res.status === 401) {
+          setSpStatus({ ok: false, msg: "Not authorised , sign out and back in." });
+        } else {
+          setSpStatus({ ok: false, msg: data.error || `Could not send (${res.status}).` });
+        }
+      } catch {
+        setSpStatus({ ok: false, msg: "Network error , check your connection." });
+      } finally {
+        setSpSending(false);
+      }
+    },
+    [key, spEmail, spName, spUrl],
+  );
+
   const fetchLeads = useCallback(async (adminKey: string) => {
     setLoading(true);
     setError("");
@@ -255,6 +304,65 @@ export default function AdminLeadsPage() {
             ))}
           </div>
         )}
+
+        {/* Send a Stripe payment link + terms to a customer.
+            Links are bespoke per job, so Nigel pastes the one he just
+            created in Stripe rather than picking from a catalogue. */}
+        <div className="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm border-l-4 border-l-orange-500">
+          <div className="flex flex-wrap items-baseline gap-2 mb-3">
+            <span className="text-sm font-bold text-gray-900">Send payment link</span>
+            <span className="text-xs text-gray-500">
+              Paste the Stripe link for this job , customer gets it with the terms attached
+            </span>
+          </div>
+          <form
+            onSubmit={sendPaymentLink}
+            className="flex flex-wrap gap-2 items-center"
+            autoComplete="off"
+          >
+            <input
+              type="text"
+              value={spName}
+              onChange={(e) => setSpName(e.target.value)}
+              placeholder="First name (optional)"
+              className="flex-none w-40 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+            />
+            <input
+              type="email"
+              value={spEmail}
+              onChange={(e) => setSpEmail(e.target.value)}
+              placeholder="Customer email"
+              required
+              className="flex-1 min-w-[200px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+            />
+            <input
+              type="url"
+              value={spUrl}
+              onChange={(e) => setSpUrl(e.target.value)}
+              placeholder="https://buy.stripe.com/..."
+              required
+              className="flex-1 min-w-[240px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+            />
+            <button
+              type="submit"
+              disabled={spSending}
+              className="rounded-lg bg-orange-600 px-5 py-2 text-sm font-semibold text-white hover:bg-orange-700 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {spSending ? "Sending…" : "Send"}
+            </button>
+          </form>
+          {spStatus && (
+            <div
+              className={`mt-2 text-sm font-medium ${
+                spStatus.ok ? "text-green-700" : "text-red-700"
+              }`}
+              role="status"
+              aria-live="polite"
+            >
+              {spStatus.msg}
+            </div>
+          )}
+        </div>
 
         {/* View tabs */}
         <div className="inline-flex bg-gray-100 rounded-full p-1 mb-6">
