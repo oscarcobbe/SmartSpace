@@ -90,8 +90,22 @@ export default function AdminLeadsPage() {
   const [spName, setSpName] = useState("");
   const [spEmail, setSpEmail] = useState("");
   const [spUrl, setSpUrl] = useState("");
+  const [spDate, setSpDate] = useState("");
+  const [spTime, setSpTime] = useState("");
+  const [spProduct, setSpProduct] = useState("");
+  const [spSpec, setSpSpec] = useState("");
   const [spSending, setSpSending] = useState(false);
   const [spStatus, setSpStatus] = useState<{ ok: boolean; msg: string } | null>(null);
+
+  // Send-booking-link panel state. Pre-filled with the live consultation
+  // booking page, whose calendar is conflict-checked against Nigel's Google
+  // Calendar, so a slot the customer picks is always genuinely free.
+  const BOOKING_URL_DEFAULT = "https://www.smartcareliving.ie/book-consultation";
+  const [blName, setBlName] = useState("");
+  const [blEmail, setBlEmail] = useState("");
+  const [blUrl, setBlUrl] = useState(BOOKING_URL_DEFAULT);
+  const [blSending, setBlSending] = useState(false);
+  const [blStatus, setBlStatus] = useState<{ ok: boolean; msg: string } | null>(null);
 
   const sendPaymentLink = useCallback(
     async (e: React.FormEvent) => {
@@ -110,7 +124,16 @@ export default function AdminLeadsPage() {
             Authorization: `Bearer ${adminKey}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ email: spEmail, name: spName, paymentUrl: spUrl }),
+          body: JSON.stringify({
+            mode: "payment",
+            email: spEmail,
+            name: spName,
+            paymentUrl: spUrl,
+            date: spDate,
+            time: spTime,
+            product: spProduct,
+            spec: spSpec,
+          }),
         });
         const data = (await res.json().catch(() => ({}))) as {
           ok?: boolean;
@@ -121,6 +144,10 @@ export default function AdminLeadsPage() {
           setSpName("");
           setSpEmail("");
           setSpUrl("");
+          setSpDate("");
+          setSpTime("");
+          setSpProduct("");
+          setSpSpec("");
         } else if (res.status === 401) {
           setSpStatus({ ok: false, msg: "Not authorised , sign out and back in." });
         } else {
@@ -132,7 +159,54 @@ export default function AdminLeadsPage() {
         setSpSending(false);
       }
     },
-    [key, spEmail, spName, spUrl],
+    [key, spEmail, spName, spUrl, spDate, spTime, spProduct, spSpec],
+  );
+
+  const sendBookingLink = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      const adminKey = key || sessionStorage.getItem("admin_key") || "";
+      if (!adminKey) {
+        setBlStatus({ ok: false, msg: "Session expired , sign in again." });
+        return;
+      }
+      setBlSending(true);
+      setBlStatus(null);
+      try {
+        const res = await fetch("/api/admin/send-payment-link", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${adminKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            mode: "booking",
+            email: blEmail,
+            name: blName,
+            paymentUrl: blUrl,
+          }),
+        });
+        const data = (await res.json().catch(() => ({}))) as {
+          ok?: boolean;
+          error?: string;
+        };
+        if (res.ok && data.ok) {
+          setBlStatus({ ok: true, msg: `Sent to ${blEmail}.` });
+          setBlName("");
+          setBlEmail("");
+          setBlUrl(BOOKING_URL_DEFAULT);
+        } else if (res.status === 401) {
+          setBlStatus({ ok: false, msg: "Not authorised , sign out and back in." });
+        } else {
+          setBlStatus({ ok: false, msg: data.error || `Could not send (${res.status}).` });
+        }
+      } catch {
+        setBlStatus({ ok: false, msg: "Network error , check your connection." });
+      } finally {
+        setBlSending(false);
+      }
+    },
+    [key, blEmail, blName, blUrl],
   );
 
   const fetchLeads = useCallback(async (adminKey: string) => {
@@ -315,41 +389,73 @@ export default function AdminLeadsPage() {
               Paste the Stripe link for this job , customer gets it with the terms attached
             </span>
           </div>
-          <form
-            onSubmit={sendPaymentLink}
-            className="flex flex-wrap gap-2 items-center"
-            autoComplete="off"
-          >
-            <input
-              type="text"
-              value={spName}
-              onChange={(e) => setSpName(e.target.value)}
-              placeholder="First name (optional)"
-              className="flex-none w-40 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-            />
-            <input
-              type="email"
-              value={spEmail}
-              onChange={(e) => setSpEmail(e.target.value)}
-              placeholder="Customer email"
-              required
-              className="flex-1 min-w-[200px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-            />
-            <input
-              type="url"
-              value={spUrl}
-              onChange={(e) => setSpUrl(e.target.value)}
-              placeholder="https://buy.stripe.com/..."
-              required
-              className="flex-1 min-w-[240px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-            />
-            <button
-              type="submit"
-              disabled={spSending}
-              className="rounded-lg bg-orange-600 px-5 py-2 text-sm font-semibold text-white hover:bg-orange-700 disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {spSending ? "Sending…" : "Send"}
-            </button>
+          <form onSubmit={sendPaymentLink} className="space-y-2" autoComplete="off">
+            <div className="flex flex-wrap gap-2">
+              <input
+                type="text"
+                value={spName}
+                onChange={(e) => setSpName(e.target.value)}
+                placeholder="First name (optional)"
+                className="flex-none w-40 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+              />
+              <input
+                type="email"
+                value={spEmail}
+                onChange={(e) => setSpEmail(e.target.value)}
+                placeholder="Customer email"
+                required
+                className="flex-1 min-w-[200px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+              />
+              <input
+                type="url"
+                value={spUrl}
+                onChange={(e) => setSpUrl(e.target.value)}
+                placeholder="https://buy.stripe.com/..."
+                required
+                className="flex-1 min-w-[240px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+              />
+            </div>
+            {/* Job summary , appears above the pay button in the email and is
+                mirrored onto the Stripe checkout page. */}
+            <div className="flex flex-wrap gap-2">
+              <input
+                type="text"
+                value={spDate}
+                onChange={(e) => setSpDate(e.target.value)}
+                placeholder="Date (e.g. Tue 26 August)"
+                className="flex-none w-48 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+              />
+              <input
+                type="text"
+                value={spTime}
+                onChange={(e) => setSpTime(e.target.value)}
+                placeholder="Time (e.g. 10:00)"
+                className="flex-none w-36 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+              />
+              <input
+                type="text"
+                value={spProduct}
+                onChange={(e) => setSpProduct(e.target.value)}
+                placeholder="Product (e.g. Ring Pro Floodlight Cam)"
+                className="flex-1 min-w-[220px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <input
+                type="text"
+                value={spSpec}
+                onChange={(e) => setSpSpec(e.target.value)}
+                placeholder="Spec (e.g. Black, replaces existing light)"
+                className="flex-1 min-w-[240px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+              />
+              <button
+                type="submit"
+                disabled={spSending}
+                className="rounded-lg bg-orange-600 px-5 py-2 text-sm font-semibold text-white hover:bg-orange-700 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {spSending ? "Sending…" : "Send payment link"}
+              </button>
+            </div>
           </form>
           {spStatus && (
             <div
@@ -360,6 +466,59 @@ export default function AdminLeadsPage() {
               aria-live="polite"
             >
               {spStatus.msg}
+            </div>
+          )}
+        </div>
+
+        {/* Send a booking link. Pre-filled with the consultation page, whose
+            calendar is conflict-checked against Nigel's Google Calendar. */}
+        <div className="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm border-l-4 border-l-teal-500">
+          <div className="flex flex-wrap items-baseline gap-2 mb-3">
+            <span className="text-sm font-bold text-gray-900">Send booking link</span>
+            <span className="text-xs text-gray-500">
+              Customer picks their own slot , live availability, synced to Google Calendar
+            </span>
+          </div>
+          <form onSubmit={sendBookingLink} className="flex flex-wrap gap-2" autoComplete="off">
+            <input
+              type="text"
+              value={blName}
+              onChange={(e) => setBlName(e.target.value)}
+              placeholder="First name (optional)"
+              className="flex-none w-40 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+            />
+            <input
+              type="email"
+              value={blEmail}
+              onChange={(e) => setBlEmail(e.target.value)}
+              placeholder="Customer email"
+              required
+              className="flex-1 min-w-[200px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+            />
+            <input
+              type="url"
+              value={blUrl}
+              onChange={(e) => setBlUrl(e.target.value)}
+              required
+              className="flex-1 min-w-[260px] rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-600 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+            />
+            <button
+              type="submit"
+              disabled={blSending}
+              className="rounded-lg bg-teal-600 px-5 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {blSending ? "Sending…" : "Send booking link"}
+            </button>
+          </form>
+          {blStatus && (
+            <div
+              className={`mt-2 text-sm font-medium ${
+                blStatus.ok ? "text-green-700" : "text-red-700"
+              }`}
+              role="status"
+              aria-live="polite"
+            >
+              {blStatus.msg}
             </div>
           )}
         </div>
