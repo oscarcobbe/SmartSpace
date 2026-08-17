@@ -90,10 +90,6 @@ export default function AdminLeadsPage() {
   const [spName, setSpName] = useState("");
   const [spEmail, setSpEmail] = useState("");
   const [spUrl, setSpUrl] = useState("");
-  const [spDate, setSpDate] = useState("");
-  const [spTime, setSpTime] = useState("");
-  const [spProduct, setSpProduct] = useState("");
-  const [spSpec, setSpSpec] = useState("");
   const [spSending, setSpSending] = useState(false);
   const [spStatus, setSpStatus] = useState<{ ok: boolean; msg: string } | null>(null);
 
@@ -129,10 +125,6 @@ export default function AdminLeadsPage() {
             email: spEmail,
             name: spName,
             paymentUrl: spUrl,
-            date: spDate,
-            time: spTime,
-            product: spProduct,
-            spec: spSpec,
           }),
         });
         const data = (await res.json().catch(() => ({}))) as {
@@ -144,10 +136,6 @@ export default function AdminLeadsPage() {
           setSpName("");
           setSpEmail("");
           setSpUrl("");
-          setSpDate("");
-          setSpTime("");
-          setSpProduct("");
-          setSpSpec("");
         } else if (res.status === 401) {
           setSpStatus({ ok: false, msg: "Not authorised , sign out and back in." });
         } else {
@@ -159,7 +147,7 @@ export default function AdminLeadsPage() {
         setSpSending(false);
       }
     },
-    [key, spEmail, spName, spUrl, spDate, spTime, spProduct, spSpec],
+    [key, spEmail, spName, spUrl],
   );
 
   const sendBookingLink = useCallback(
@@ -382,80 +370,44 @@ export default function AdminLeadsPage() {
         {/* Send a Stripe payment link + terms to a customer.
             Links are bespoke per job, so Nigel pastes the one he just
             created in Stripe rather than picking from a catalogue. */}
-        <div className="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm border-l-4 border-l-orange-500">
+        <div className="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
           <div className="flex flex-wrap items-baseline gap-2 mb-3">
             <span className="text-sm font-bold text-gray-900">Send payment link</span>
             <span className="text-xs text-gray-500">
-              Paste the Stripe link for this job , customer gets it with the terms attached
+              Paste the Stripe link , order details and total are read from the link itself
             </span>
           </div>
-          <form onSubmit={sendPaymentLink} className="space-y-2" autoComplete="off">
-            <div className="flex flex-wrap gap-2">
-              <input
-                type="text"
-                value={spName}
-                onChange={(e) => setSpName(e.target.value)}
-                placeholder="First name (optional)"
-                className="flex-none w-40 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-              />
-              <input
-                type="email"
-                value={spEmail}
-                onChange={(e) => setSpEmail(e.target.value)}
-                placeholder="Customer email"
-                required
-                className="flex-1 min-w-[200px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-              />
-              <input
-                type="url"
-                value={spUrl}
-                onChange={(e) => setSpUrl(e.target.value)}
-                placeholder="https://buy.stripe.com/..."
-                required
-                className="flex-1 min-w-[240px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-              />
-            </div>
-            {/* Job summary , appears above the pay button in the email and is
-                mirrored onto the Stripe checkout page. */}
-            <div className="flex flex-wrap gap-2">
-              <input
-                type="text"
-                value={spDate}
-                onChange={(e) => setSpDate(e.target.value)}
-                placeholder="Date (e.g. Tue 26 August)"
-                className="flex-none w-48 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-              />
-              <input
-                type="text"
-                value={spTime}
-                onChange={(e) => setSpTime(e.target.value)}
-                placeholder="Time (e.g. 10:00)"
-                className="flex-none w-36 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-              />
-              <input
-                type="text"
-                value={spProduct}
-                onChange={(e) => setSpProduct(e.target.value)}
-                placeholder="Product (e.g. Ring Pro Floodlight Cam)"
-                className="flex-1 min-w-[220px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-              />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <input
-                type="text"
-                value={spSpec}
-                onChange={(e) => setSpSpec(e.target.value)}
-                placeholder="Spec (e.g. Black, replaces existing light)"
-                className="flex-1 min-w-[240px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-              />
-              <button
-                type="submit"
-                disabled={spSending}
-                className="rounded-lg bg-orange-600 px-5 py-2 text-sm font-semibold text-white hover:bg-orange-700 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {spSending ? "Sending…" : "Send payment link"}
-              </button>
-            </div>
+          <form onSubmit={sendPaymentLink} className="flex flex-wrap gap-2" autoComplete="off">
+            <input
+              type="text"
+              value={spName}
+              onChange={(e) => setSpName(e.target.value)}
+              placeholder="First name (optional)"
+              className="flex-none w-40 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+            />
+            <input
+              type="email"
+              value={spEmail}
+              onChange={(e) => setSpEmail(e.target.value)}
+              placeholder="Customer email"
+              required
+              className="flex-1 min-w-[200px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+            />
+            <input
+              type="url"
+              value={spUrl}
+              onChange={(e) => setSpUrl(e.target.value)}
+              placeholder="https://buy.stripe.com/..."
+              required
+              className="flex-1 min-w-[240px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+            />
+            <button
+              type="submit"
+              disabled={spSending}
+              className="rounded-lg bg-orange-600 px-5 py-2 text-sm font-semibold text-white hover:bg-orange-700 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {spSending ? "Sending…" : "Send"}
+            </button>
           </form>
           {spStatus && (
             <div
@@ -472,7 +424,7 @@ export default function AdminLeadsPage() {
 
         {/* Send a booking link. Pre-filled with the consultation page, whose
             calendar is conflict-checked against Nigel's Google Calendar. */}
-        <div className="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm border-l-4 border-l-teal-500">
+        <div className="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
           <div className="flex flex-wrap items-baseline gap-2 mb-3">
             <span className="text-sm font-bold text-gray-900">Send booking link</span>
             <span className="text-xs text-gray-500">
