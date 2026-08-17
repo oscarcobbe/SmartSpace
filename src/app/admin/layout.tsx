@@ -27,28 +27,60 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [authed, setAuthed] = useState<boolean | null>(null);
   const [keyInput, setKeyInput] = useState("");
   const [error, setError] = useState("");
+  const [checking, setChecking] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
     const stored = sessionStorage.getItem("admin_key");
     setAuthed(!!stored);
+    // If a page kicked us back here because the key stopped working mid
+    // session, say so instead of silently showing a blank login.
+    if (sessionStorage.getItem("admin_key_expired")) {
+      sessionStorage.removeItem("admin_key_expired");
+      setError("Your session expired, please sign in again.");
+    }
   }, []);
 
-  function handleAuth(e: FormEvent) {
+  async function handleAuth(e: FormEvent) {
     e.preventDefault();
-    if (!keyInput.trim()) {
+    const k = keyInput.trim();
+    if (!k) {
       setError("Enter the admin key");
       return;
     }
-    sessionStorage.setItem("admin_key", keyInput.trim());
-    setAuthed(true);
+    setChecking(true);
     setError("");
-    // Force a full re-render of children so they pick up the key from
-    // sessionStorage on their next mount cycle. setAuthed(true) alone
-    // doesn't unmount/remount children, they'd still see no key in
-    // their initial useEffect. window.location.reload guarantees a
-    // clean state.
-    window.location.reload();
+    try {
+      // Verify the key BEFORE storing it, so a wrong key shows an error
+      // here instead of storing junk, loading the dashboard, hitting a 401
+      // and bouncing back (the old "lag out"). ?verify=1 is a fast check.
+      const res = await fetch("/api/admin/leads?verify=1", {
+        headers: { Authorization: `Bearer ${k}` },
+        cache: "no-store",
+      });
+      if (res.status === 401) {
+        setError("Incorrect admin key.");
+        setChecking(false);
+        return;
+      }
+      if (res.status === 429) {
+        setError("Too many attempts, wait a minute and try again.");
+        setChecking(false);
+        return;
+      }
+      if (!res.ok) {
+        setError("Something went wrong, please try again.");
+        setChecking(false);
+        return;
+      }
+      // Verified. Store it and reload so the admin pages mount with the key.
+      sessionStorage.setItem("admin_key", k);
+      setAuthed(true);
+      window.location.reload();
+    } catch {
+      setError("Could not reach the server, check your connection.");
+      setChecking(false);
+    }
   }
 
   function clearKey() {
@@ -88,8 +120,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <h1 className="text-xl font-bold text-gray-900 mb-1">Smart Space Admin</h1>
             <p className="text-xs text-gray-500 mb-4">Enter the admin key to access internal tools.</p>
             {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
+            {/* Hidden username so the browser / iCloud Keychain saves this as a
+                proper credential and can autofill it behind Face ID or Touch ID
+                on the next visit. */}
+            <input type="text" name="username" autoComplete="username" value="smartspace-admin" readOnly hidden />
             <input
               type="password"
+              name="password"
+              autoComplete="current-password"
               value={keyInput}
               onChange={(e) => setKeyInput(e.target.value)}
               placeholder="Admin key"
@@ -98,9 +136,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             />
             <button
               type="submit"
-              className="w-full bg-gray-900 text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition-colors"
+              disabled={checking}
+              className="w-full bg-gray-900 text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-60"
             >
-              Continue
+              {checking ? "Checking..." : "Continue"}
             </button>
           </form>
         </div>

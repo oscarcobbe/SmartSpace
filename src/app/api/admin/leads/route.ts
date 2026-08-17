@@ -157,6 +157,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Lightweight verify mode for the login gate: confirm the key is valid
+  // (past the 401 above) without the heavy Stripe/Calendly/Sheet fetch below,
+  // so the password form can show "incorrect key" instantly.
+  if (searchParams.get("verify") === "1") {
+    return NextResponse.json({ ok: true });
+  }
+
   const leads: Lead[] = [];
   // Per-source error tracking, surfaced to the dashboard so admins know
   // when a section is incomplete (e.g. Stripe API down, Calendly token

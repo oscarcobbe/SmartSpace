@@ -95,9 +95,11 @@ export default function AdminLeadsPage() {
         cache: "no-store",
       });
       if (res.status === 401) {
-        // Key is stale or wrong. Clear it and reload so the layout's
-        // password gate kicks back in.
+        // Key stopped working mid-session. Clear it, flag it, and reload so
+        // the layout's password gate kicks back in WITH an explanation
+        // instead of a silent bounce.
         sessionStorage.removeItem("admin_key");
+        sessionStorage.setItem("admin_key_expired", "1");
         window.location.reload();
         return;
       }
