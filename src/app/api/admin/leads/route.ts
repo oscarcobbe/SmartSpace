@@ -117,6 +117,11 @@ interface Lead {
   bookingDate: string;
   bookingSlot: string;
   status: string;
+  // True when this lead is a future-dated booking that belongs in the
+  // Upcoming view: a Calendly event that has not happened yet, OR a paid
+  // order whose install date is still ahead. Lets the Upcoming tab include
+  // site-booked and emergency paid orders, not only Calendly rows.
+  upcoming?: boolean;
   orderId: string;
   /**
    * Question/answer pairs the customer provided at conversion time.
@@ -248,6 +253,15 @@ export async function GET(request: Request) {
         bookingDate: session.metadata?.booking_label || session.metadata?.booking_date || "-",
         bookingSlot: session.metadata?.booking_slot || "-",
         status: session.payment_status === "paid" ? "Paid" : session.payment_status,
+        // A paid order whose booking date is still ahead is an upcoming job
+        // (a site booking, or an emergency booking Nigel set by hand), so it
+        // should show in the Upcoming tab even though its status is Paid.
+        upcoming: (() => {
+          const iso = String(session.metadata?.booking_date || "");
+          const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
+          if (!m) return false;
+          return new Date(+m[1], +m[2] - 1, +m[3], 23, 59, 59).getTime() >= Date.now();
+        })(),
         orderId: session.id,
         details: details.length ? details : undefined,
       });
@@ -415,6 +429,7 @@ export async function GET(request: Request) {
           bookingDate: startStr,
           bookingSlot: `${start.toLocaleString("en-GB", { timeZone: "Europe/Dublin", hour: "2-digit", minute: "2-digit", hour12: false })} – ${new Date(event.end_time).toLocaleString("en-GB", { timeZone: "Europe/Dublin", hour: "2-digit", minute: "2-digit", hour12: false })}`,
           status: calendlyStatus,
+          upcoming: !isPast,
           orderId: notes || "-",
           details: calendlyDetails.length ? calendlyDetails : undefined,
         });

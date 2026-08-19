@@ -35,6 +35,9 @@ interface Lead {
   bookingDate: string;
   bookingSlot: string;
   status: string;
+  /** True for future-dated bookings that belong in the Upcoming tab
+      (Calendly future events, and paid orders whose install date is ahead). */
+  upcoming?: boolean;
   orderId: string;
   /** Customer's answers to product/booking/contact-form questions. */
   details?: { question: string; answer: string }[];
@@ -288,7 +291,7 @@ export default function AdminLeadsPage() {
   const upcomingValueSeen = new Set<string>();
   let upcomingWorkValue = 0;
   for (const lead of leads) {
-    if (lead.status !== "Upcoming") continue;
+    if (lead.status !== "Upcoming" && !lead.upcoming) continue;
     const nameKey = norm(lead.name);
     const emailKey = norm(lead.email);
     const dedupeKey = nameKey && nameKey !== "-" ? `n:${nameKey}` : emailKey ? `e:${emailKey}` : "";
@@ -559,8 +562,24 @@ export default function AdminLeadsPage() {
 
         {/* ── Upcoming View ── */}
         {view === "upcoming" && (() => {
+          // Emails that already have a Calendly future appointment, so a paid
+          // order for the same customer is not listed twice.
+          const calEmails = new Set(
+            leads
+              .filter((l) => l.status === "Upcoming" && l.email && l.email !== "-")
+              .map((l) => l.email.trim().toLowerCase())
+          );
           const upcoming = leads
-            .filter((l) => l.status === "Upcoming")
+            .filter((l) => {
+              if (l.status === "Upcoming") return true; // Calendly future events
+              if (l.upcoming) {
+                // Paid order with a future install date. Skip if a Calendly
+                // row for the same customer already covers it.
+                const em = (l.email || "").trim().toLowerCase();
+                return !(em && em !== "-" && calEmails.has(em));
+              }
+              return false;
+            })
             .filter((l) =>
               !search || [l.name, l.email, l.phone, l.address, l.product].join(" ").toLowerCase().includes(search.toLowerCase())
             );
