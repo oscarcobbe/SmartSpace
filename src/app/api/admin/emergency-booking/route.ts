@@ -166,7 +166,9 @@ export async function POST(req: Request) {
   params.append("line_items[0][price_data][currency]", "eur");
   params.append("line_items[0][price_data][unit_amount]", String(cents));
   params.append("line_items[0][price_data][product_data][name]", productName.slice(0, 250));
-  params.append("line_items[0][price_data][product_data][description]", descLines.join("\n").slice(0, 900));
+  // Stripe collapses newlines in the description to spaces, so join with a
+  // middot to keep the booked slot and each spec cleanly separated on one line.
+  params.append("line_items[0][price_data][product_data][description]", descLines.join(" · ").slice(0, 900));
   params.append("line_items[0][quantity]", "1");
 
   let url = "";
