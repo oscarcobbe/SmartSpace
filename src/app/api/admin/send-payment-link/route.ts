@@ -274,7 +274,7 @@ export async function POST(request: Request) {
 
   const tail = isBooking
     ? `<p style="font-size:14px;line-height:1.65;color:#5c6673;margin:0 0 24px;">
-    The consultation is complimentary, with no obligation and no card required. Allow up to two hours.
+    The consultation is complimentary, with no obligation and no card required. Allow up to 30 minutes.
   </p>`
     : `<p style="font-size:13px;line-height:1.6;color:#8a94a0;margin:0 0 24px;">
     Payment is handled by Stripe. We never see or store your card details. Completing
@@ -327,7 +327,7 @@ export async function POST(request: Request) {
     parsed.toString(),
     "",
     isBooking
-      ? "The consultation is complimentary, with no obligation and no card required."
+      ? "The consultation is complimentary, with no obligation and no card required. Allow up to 30 minutes."
       : `Payment is handled by Stripe. Completing payment accepts our terms and conditions (${TERMS_URL}).`,
     "",
     "Questions? Reply to this email or call 01 513 0424.",
