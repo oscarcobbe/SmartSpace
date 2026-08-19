@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { formatEuro } from "@/lib/format";
+import { PRODUCT_CATALOGUE } from "@/data/productCatalogue";
 import { RefreshCw, Search, Filter, Calendar, MapPin, Phone, Mail, User, ChevronDown, ChevronUp, ExternalLink, CreditCard, Clock, Package, Route } from "lucide-react";
 
 /**
@@ -106,6 +107,20 @@ export default function AdminLeadsPage() {
   const [blSending, setBlSending] = useState(false);
   const [blStatus, setBlStatus] = useState<{ ok: boolean; msg: string } | null>(null);
 
+  // Emergency-booking panel state. Nigel specs a product + a fixed slot that
+  // bypasses the public calendar; on submit it creates one Stripe pay-and-book
+  // link and emails it. Once paid it lands in Upcoming via the usual webhook.
+  const [ebName, setEbName] = useState("");
+  const [ebEmail, setEbEmail] = useState("");
+  const [ebProduct, setEbProduct] = useState("");
+  const [ebOpts, setEbOpts] = useState<Record<string, string>>({});
+  const [ebPrice, setEbPrice] = useState("");
+  const [ebDate, setEbDate] = useState("");
+  const [ebSlot, setEbSlot] = useState("10:00-12:00");
+  const [ebAddress, setEbAddress] = useState("");
+  const [ebSending, setEbSending] = useState(false);
+  const [ebResult, setEbResult] = useState<{ ok: boolean; msg: string; url?: string } | null>(null);
+
   const sendPaymentLink = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -198,6 +213,111 @@ export default function AdminLeadsPage() {
       }
     },
     [key, blEmail, blName, blUrl],
+  );
+
+  // Auto-fill the price from the catalogue whenever the product or its options
+  // change and a full variant match is found. Nigel can still type over it.
+  useEffect(() => {
+    const prod = PRODUCT_CATALOGUE.find((p) => p.handle === ebProduct);
+    if (!prod) return;
+    const variants = prod.variants?.edges ?? [];
+    let price: string | null = null;
+    for (const { node } of variants) {
+      const so = node.selectedOptions ?? [];
+      if (so.length && so.every((o) => ebOpts[o.name] === o.value)) {
+        price = node.price?.amount ?? null;
+        break;
+      }
+    }
+    if (price == null && variants.length === 1) price = variants[0].node.price?.amount ?? null;
+    if (price != null) setEbPrice(String(parseFloat(price)));
+  }, [ebProduct, ebOpts]);
+
+  const createEmergencyBooking = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      const adminKey = key || sessionStorage.getItem("admin_key") || "";
+      if (!adminKey) {
+        setEbResult({ ok: false, msg: "Session expired , sign in again." });
+        return;
+      }
+      const prod = PRODUCT_CATALOGUE.find((p) => p.handle === ebProduct);
+      if (!prod) {
+        setEbResult({ ok: false, msg: "Pick a product." });
+        return;
+      }
+      const options = prod.options ?? [];
+      const missing = options.find((o) => !ebOpts[o.name]);
+      if (missing) {
+        setEbResult({ ok: false, msg: `Choose an option for "${missing.name}".` });
+        return;
+      }
+      const amount = parseFloat(ebPrice);
+      if (!Number.isFinite(amount) || amount <= 0) {
+        setEbResult({ ok: false, msg: "Enter a price." });
+        return;
+      }
+      if (!ebDate) {
+        setEbResult({ ok: false, msg: "Pick a date." });
+        return;
+      }
+      const optValues = options.map((o) => ebOpts[o.name]).filter(Boolean);
+      const productName = `${prod.title}${optValues.length ? ` - ${optValues.join(" / ")}` : ""}`;
+      const specs = options
+        .filter((o) => ebOpts[o.name])
+        .map((o) => ({ question: o.name, answer: ebOpts[o.name] }));
+      let bookingLabel: string;
+      try {
+        const d = new Date(`${ebDate}T00:00:00`);
+        bookingLabel = `${d.toLocaleDateString("en-IE", { weekday: "short", day: "numeric", month: "short" })}${ebSlot ? `, ${ebSlot}` : ""}`;
+      } catch {
+        bookingLabel = `${ebDate}${ebSlot ? ` ${ebSlot}` : ""}`;
+      }
+      setEbSending(true);
+      setEbResult(null);
+      try {
+        const res = await fetch("/api/admin/emergency-booking", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${adminKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: ebName,
+            email: ebEmail,
+            productName,
+            amount,
+            date: ebDate,
+            slot: ebSlot,
+            bookingLabel,
+            address: ebAddress,
+            specs,
+          }),
+        });
+        const data = (await res.json().catch(() => ({}))) as {
+          ok?: boolean;
+          url?: string;
+          sent?: boolean;
+          error?: string;
+        };
+        if (res.ok && data.ok) {
+          setEbResult({
+            ok: true,
+            msg: data.sent ? `Sent to ${ebEmail}.` : "Link created , email did not send, copy it below.",
+            url: data.url,
+          });
+          setEbName("");
+          setEbEmail("");
+          setEbAddress("");
+        } else if (res.status === 401) {
+          setEbResult({ ok: false, msg: "Not authorised , sign out and back in." });
+        } else {
+          setEbResult({ ok: false, msg: data.error || `Could not create (${res.status}).` });
+        }
+      } catch {
+        setEbResult({ ok: false, msg: "Network error , check your connection." });
+      } finally {
+        setEbSending(false);
+      }
+    },
+    [key, ebName, ebEmail, ebProduct, ebOpts, ebPrice, ebDate, ebSlot, ebAddress],
   );
 
   const fetchLeads = useCallback(async (adminKey: string) => {
@@ -474,6 +594,137 @@ export default function AdminLeadsPage() {
               aria-live="polite"
             >
               {blStatus.msg}
+            </div>
+          )}
+        </div>
+
+        {/* Emergency / custom booking: spec a product + a fixed date and time
+            (bypasses the calendar and its blocks), generate ONE pay-and-book
+            link and email it. On payment it lands in Upcoming automatically. */}
+        <div className="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-wrap items-baseline gap-2 mb-3">
+            <span className="text-sm font-bold text-gray-900">Emergency booking</span>
+            <span className="text-xs text-gray-500">
+              Spec a product and set any date/time , generates a pay-and-book link that ignores the calendar
+            </span>
+          </div>
+          <form onSubmit={createEmergencyBooking} className="flex flex-col gap-2" autoComplete="off">
+            <div className="flex flex-wrap gap-2">
+              <input
+                type="text"
+                value={ebName}
+                onChange={(e) => setEbName(e.target.value)}
+                placeholder="First name (optional)"
+                className="flex-none w-40 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              />
+              <input
+                type="email"
+                value={ebEmail}
+                onChange={(e) => setEbEmail(e.target.value)}
+                placeholder="Customer email"
+                required
+                className="flex-1 min-w-[200px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <select
+                value={ebProduct}
+                onChange={(e) => {
+                  setEbProduct(e.target.value);
+                  setEbOpts({});
+                }}
+                required
+                className="flex-1 min-w-[200px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              >
+                <option value="">Choose a product…</option>
+                {PRODUCT_CATALOGUE.map((p) => (
+                  <option key={p.handle} value={p.handle}>
+                    {p.title}
+                  </option>
+                ))}
+              </select>
+              {(PRODUCT_CATALOGUE.find((p) => p.handle === ebProduct)?.options ?? []).map((opt) => (
+                <select
+                  key={opt.name}
+                  value={ebOpts[opt.name] ?? ""}
+                  onChange={(e) => setEbOpts((prev) => ({ ...prev, [opt.name]: e.target.value }))}
+                  required
+                  className="flex-1 min-w-[180px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                >
+                  <option value="">{opt.name}…</option>
+                  {opt.values.map((v) => (
+                    <option key={v} value={v}>
+                      {v}
+                    </option>
+                  ))}
+                </select>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <div className="relative flex-none w-32">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">€</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={ebPrice}
+                  onChange={(e) => setEbPrice(e.target.value)}
+                  placeholder="Price"
+                  required
+                  className="w-full rounded-lg border border-gray-300 py-2 pl-7 pr-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                />
+              </div>
+              <input
+                type="date"
+                value={ebDate}
+                onChange={(e) => setEbDate(e.target.value)}
+                required
+                className="flex-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              />
+              <select
+                value={ebSlot}
+                onChange={(e) => setEbSlot(e.target.value)}
+                className="flex-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              >
+                {["08:00-10:00", "10:00-12:00", "12:00-14:00", "14:00-16:00", "16:00-18:00", "18:00-20:00"].map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="text"
+                value={ebAddress}
+                onChange={(e) => setEbAddress(e.target.value)}
+                placeholder="Address / notes (optional)"
+                className="flex-1 min-w-[160px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              />
+              <button
+                type="submit"
+                disabled={ebSending}
+                className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {ebSending ? "Creating…" : "Create & send"}
+              </button>
+            </div>
+          </form>
+          {ebResult && (
+            <div
+              className={`mt-2 text-sm font-medium ${ebResult.ok ? "text-green-700" : "text-red-700"}`}
+              role="status"
+              aria-live="polite"
+            >
+              {ebResult.msg}
+              {ebResult.url && (
+                <a
+                  href={ebResult.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-2 break-all font-normal text-indigo-600 underline"
+                >
+                  {ebResult.url}
+                </a>
+              )}
             </div>
           )}
         </div>
