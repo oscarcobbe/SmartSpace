@@ -153,9 +153,20 @@ export async function POST(req: Request) {
     );
     params.append("metadata[configuration]", cfg.slice(0, 490));
   }
+  // Show the booked slot + the spec breakdown right under the price on the
+  // Stripe checkout page (Stripe renders the line-item description there), so
+  // the customer sees exactly what they are paying for and when it is booked.
+  const descLines: string[] = [`Booked for ${bookingLabel}`];
+  if (Array.isArray(body.specs)) {
+    for (const s of body.specs) {
+      if (s && s.question && s.answer) descLines.push(`${String(s.question)}: ${String(s.answer)}`);
+    }
+  }
+  if (address) descLines.push(`Install: ${address}`);
   params.append("line_items[0][price_data][currency]", "eur");
   params.append("line_items[0][price_data][unit_amount]", String(cents));
   params.append("line_items[0][price_data][product_data][name]", productName.slice(0, 250));
+  params.append("line_items[0][price_data][product_data][description]", descLines.join("\n").slice(0, 900));
   params.append("line_items[0][quantity]", "1");
 
   let url = "";
