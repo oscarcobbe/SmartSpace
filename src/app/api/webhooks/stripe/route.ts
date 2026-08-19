@@ -639,7 +639,14 @@ export async function POST(req: NextRequest) {
     });
 
     let calendlyStatus: "created" | "failed" | "skipped" = "skipped";
-    if (bookingDate && bookingSlot) {
+    // Emergency bookings (from /api/admin/emergency-booking) carry a hand-set
+    // slot that deliberately ignores the calendar, so we must NOT create a
+    // Calendly event for them. The Paid Order is still logged above and shows
+    // in the dashboard + Upcoming; it just never touches Calendly.
+    const isEmergencyBooking = session.metadata?.emergency === "1";
+    if (isEmergencyBooking) {
+      console.log(`[stripe] emergency booking session=${sessionId}, Calendly intentionally skipped (manual slot)`);
+    } else if (bookingDate && bookingSlot) {
       const result = await createBookingEvent({
         date: bookingDate,
         timeSlot: bookingSlot,
