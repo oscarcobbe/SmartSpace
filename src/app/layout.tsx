@@ -176,8 +176,26 @@ export default function RootLayout({
       <head>
         {/* Font is now loaded via next/font (self-hosted, no render-blocking
             external CSS, no preconnect needed). See `jakarta` constant. */}
-        {/* Google Ads + GA4 global tag (both use gtag.js) */}
-        <script async src={`https://www.googletagmanager.com/gtag/js?id=${GTAG_ID}`} />
+        {/* Google Ads + GA4 global tag (both use gtag.js).
+
+            Loaded with the GA4 id where one is set, not the Ads id.
+            Google's documented order is to load with the measurement id
+            and configure the conversion id after it, and this was the
+            other way round. Both config calls below are unchanged, so
+            Ads conversions are unaffected.
+
+            Worth recording why this was looked at. From 21 July 2026 the
+            GA4 property received no browser events at all while
+            server-side conversions kept arriving. The cause was at
+            Google's end: gtag/js for the measurement id G-JR2WXNSLEL
+            returned 404 while the sister site's id returned 508KB of
+            container, even though Google's own admin API listed the
+            stream as live and unmodified since April. A new data stream
+            was created and served immediately. The old one is left in
+            place rather than deleted, because sources disagree on
+            whether deleting a stream removes its history and there is
+            nothing to gain by finding out on a live account. */}
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA4_ID || GTAG_ID}`} />
         <script
           dangerouslySetInnerHTML={{
             __html: [
