@@ -218,16 +218,48 @@ export default function RootLayout({
               // These two MUST be set BEFORE the consent default below.
               "gtag('set', 'url_passthrough', true);",
               "gtag('set', 'ads_data_redaction', true);",
+              // ── The stored decision, applied before the first hit ──
+              // A returning visitor who already accepted was having every
+              // subsequent first-page-view counted as a refusal. The banner
+              // re-applies their choice, but it is a React component: the
+              // effect that does it runs after hydration, and gtag has sent
+              // the page_view long before that. So analytics_storage was
+              // denied at the only moment that mattered, on every visit, for
+              // everybody.
+              //
+              // What that looked like in the property: 1 to 7 users a day,
+              // zero sessions, zero page views, for a site running paid
+              // search. GA4 cannot form a session or record a page view from
+              // a cookieless ping, and this property will never hit the
+              // volume Google needs before it models the gap.
+              //
+              // Read here, synchronously, before the consent default, so a
+              // visitor who consented last week is counted this week.
+              "var ssStored = null;",
+              "try {",
+              "  var ssRaw = localStorage.getItem('ss_consent');",
+              "  if (ssRaw) {",
+              "    var ssSaved = JSON.parse(ssRaw);",
+              // Same twelve month window the banner enforces. Expired means
+              // undecided, not granted.
+              "    if (ssSaved && Date.now() - ssSaved.decidedAt < 31536000000) ssStored = ssSaved.decision;",
+              "  }",
+              "} catch (e) {}",
+              "var ssGrant = ssStored === 'granted' ? 'granted' : 'denied';",
               // ── Consent Mode v2 default (REQUIRED for EEA/UK ad processing) ──
               // Default everything to denied. CookieBanner.tsx fires
               // gtag('consent','update',…) once the user makes a choice.
               // This MUST run before any gtag('config',…) call.
               "gtag('consent', 'default', {",
-              "  ad_storage: 'denied',",
-              "  ad_user_data: 'denied',",
-              "  ad_personalization: 'denied',",
-              "  analytics_storage: 'denied',",
-              "  wait_for_update: 500",
+              "  ad_storage: ssGrant,",
+              "  ad_user_data: ssGrant,",
+              "  ad_personalization: ssGrant,",
+              "  analytics_storage: ssGrant,",
+              // 500ms was shorter than the banner took to appear, so a
+              // first-time visitor's page_view was always sent before there
+              // was anything on screen to consent to. Two seconds is the
+              // upper end of what Google documents and still imperceptible.
+              "  wait_for_update: 2000",
               "});",
               // Google Ads
               "gtag('config', " + JSON.stringify(GTAG_ID) + ", { allow_enhanced_conversions: true });",

@@ -73,13 +73,22 @@ export default function CookieBanner() {
   useEffect(() => {
     const stored = loadStored();
     if (stored) {
-      // Re-apply the stored decision on every page load so consent state
-      // survives the gtag.js re-bootstrap that happens on hard navigations.
+      // A backstop rather than the mechanism. layout.tsx reads the same key
+      // synchronously and sets the consent default from it before gtag
+      // sends anything, which is the only place it can be applied in time:
+      // this effect runs after hydration and the page_view has already
+      // gone. It stays because the inline read is inside a try/catch and a
+      // browser that refuses localStorage there should still end up with
+      // the right state for everything after the first hit.
       fireConsentUpdate(stored.decision);
       return;
     }
-    // Small delay so the banner doesn't flash before the page paints
-    const t = window.setTimeout(() => setVisible(true), 600);
+    // Shown on the next frame rather than after 600ms. The delay was there
+    // to stop the banner flashing before paint, and it cost more than it
+    // saved: gtag waits for a consent update and then gives up, so a
+    // banner that is not on screen yet is a banner nobody can answer in
+    // time.
+    const t = window.setTimeout(() => setVisible(true), 0);
     return () => window.clearTimeout(t);
   }, []);
 
