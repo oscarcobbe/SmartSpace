@@ -54,6 +54,39 @@ function fireConsentUpdate(decision: Decision) {
       ad_personalization: "granted",
       analytics_storage: "granted",
     });
+
+    /*
+     * Send the page view again, now that it can actually be recorded.
+     *
+     * This is the line that was missing, and without it the property
+     * recorded essentially nothing for months.
+     *
+     * The sequence for a first-time visitor: the page loads with consent
+     * defaulted to denied, gtag holds the page_view for the two seconds
+     * wait_for_update allows, nobody reads and answers a banner in two
+     * seconds, so the hit goes out cookieless with gcs=G100. GA4 cannot
+     * form a session or count a page view from a cookieless ping. It only
+     * feeds behavioural modelling, and modelling needs a traffic
+     * threshold this property will never reach.
+     *
+     * Then the visitor accepts at eight seconds. Consent updates to
+     * granted, every later hit is fine, and the page view they came for
+     * is already gone. gtag does not resend it. On a site where most
+     * visits are a single page, that is the whole visit.
+     *
+     * Measured on the live site before changing anything: the collect
+     * call carried tid=G-N8886QEJ70, en=page_view and gcs=G100, which is
+     * the browser confirming it in the request itself. The property showed
+     * one to seven users a day, zero sessions and zero page views.
+     *
+     * This cannot double count. The banner only renders when there is no
+     * stored decision, so reaching this line means the page really did
+     * load denied and the first hit really was wasted.
+     */
+    w.gtag("event", "page_view", {
+      page_location: window.location.href,
+      page_title: document.title,
+    });
   } else {
     // Reject = leave everything denied (the default), but explicitly send
     // an update so Google Ads knows the user actively refused (vs. just
