@@ -105,3 +105,23 @@ export function getAttribution(): Attribution | null {
 export function getStoredGclid(): string | null {
   return getAttribution()?.gclid ?? null;
 }
+
+/**
+ * Read the GA4 client id + session id from the first-party _ga cookies that
+ * gtag.js sets once analytics consent is granted. Passing these to the
+ * server-side purchase event lets GA4 stitch the sale to the visitor's real
+ * session and marketing channel, instead of dumping the revenue in
+ * (not set)/Unassigned. Returns undefined when no cookie exists (e.g. consent
+ * not granted), in which case the server keeps its previous fallback.
+ */
+export function getGaIds(): { clientId?: string; sessionId?: string } {
+  if (typeof document === "undefined") return {};
+  const c = document.cookie || "";
+  // _ga = GA1.1.<clientId>  where clientId is two dot-joined numbers.
+  const ga = c.match(/(?:^|;\s*)_ga=GA\d+\.\d+\.(\d+\.\d+)/);
+  // _ga_<streamId> session cookie. GS2 prefixes the session id with 's' and
+  // uses $-delimited fields (GS2.1.s<sessionId>$o1$...); GS1 used a plain
+  // number (GS1.1.<sessionId>.<...>). Allow both with an optional 's'.
+  const ses = c.match(/(?:^|;\s*)_ga_[A-Z0-9]+=GS\d+\.\d+\.s?(\d+)/);
+  return { clientId: ga ? ga[1] : undefined, sessionId: ses ? ses[1] : undefined };
+}

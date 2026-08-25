@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useCart } from "@/context/CartContext";
-import { getAttribution } from "@/lib/attribution";
+import { getAttribution, getGaIds } from "@/lib/attribution";
 import { X, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 
 export default function CartDrawer() {
@@ -29,6 +29,7 @@ export default function CartDrawer() {
     setCheckoutError(null);
     try {
       const attribution = getAttribution() ?? undefined;
+      const ga = getGaIds();
 
       // If all items are free (e.g. free consultation), skip Stripe and book directly
       const isFree = items.every((i) => i.price === 0);
@@ -36,7 +37,7 @@ export default function CartDrawer() {
         const res = await fetch("/api/checkout/free", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ items, attribution }),
+          body: JSON.stringify({ items, attribution, gaClientId: ga.clientId, gaSessionId: ga.sessionId }),
         });
         const data = await res.json();
         if (data.success) {
@@ -51,7 +52,7 @@ export default function CartDrawer() {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items, attribution }),
+        body: JSON.stringify({ items, attribution, gaClientId: ga.clientId, gaSessionId: ga.sessionId }),
       });
       const data = await res.json();
       if (data.url) {

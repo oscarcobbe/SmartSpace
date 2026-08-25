@@ -556,6 +556,8 @@ export async function POST(req: NextRequest) {
     const currency: string = (session.currency ?? "eur").toUpperCase();
     const sessionId: string = session.id;
     const gclid: string = (session.metadata?.gclid as string) ?? "";
+    const gaClientId = (session.metadata?.ga_client_id as string) || undefined;
+    const gaSessionId = (session.metadata?.ga_session_id as string) || undefined;
 
     const bookingDate = session.metadata?.booking_date;
     const bookingSlot = session.metadata?.booking_slot;
@@ -688,6 +690,8 @@ export async function POST(req: NextRequest) {
       value: amountTotal,
       currency,
       transactionId: sessionId,
+      clientId: gaClientId,
+      sessionId: gaSessionId,
       gclid: gclid || undefined,
       email: email || undefined,
       phone: phone || undefined,
