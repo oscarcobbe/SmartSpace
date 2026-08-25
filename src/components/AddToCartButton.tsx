@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useCart } from "@/context/CartContext";
-import { getAttribution } from "@/lib/attribution";
+import { getAttribution, getGaIds } from "@/lib/attribution";
 import { ShoppingBag, Check, Loader2, ArrowRight } from "lucide-react";
 
 interface AddToCartButtonProps {
@@ -72,6 +72,7 @@ export default function AddToCartButton({
       // with this single item + attribution and redirect to Stripe.
       try {
         const attribution = getAttribution() ?? undefined;
+        const ga = getGaIds();
         const res = await fetch("/api/checkout", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -90,6 +91,8 @@ export default function AddToCartButton({
               },
             ],
             attribution,
+            gaClientId: ga.clientId,
+            gaSessionId: ga.sessionId,
           }),
         });
         const data = await res.json();

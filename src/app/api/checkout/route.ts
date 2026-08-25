@@ -23,6 +23,9 @@ interface CheckoutBody {
   items: CartItem[];
   attribution?: AttributionRecord;
   gclid?: string; // legacy
+  /** GA4 client + session id from the _ga cookies, for server-side attribution. */
+  gaClientId?: string;
+  gaSessionId?: string;
 }
 
 interface ResolvedItem {
@@ -141,7 +144,7 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    const { items, attribution, gclid: legacyGclid } = parsed;
+    const { items, attribution, gclid: legacyGclid, gaClientId, gaSessionId } = parsed;
     const gclid = attribution?.gclid ?? legacyGclid ?? "";
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -180,6 +183,11 @@ export async function POST(request: Request) {
     params.append("custom_fields[0][optional]", "true");
     params.append("allow_promotion_codes", "true");
     params.append("metadata[gclid]", gclid);
+    // GA4 client + session id (from the _ga cookies, sent by the browser at
+    // checkout) so the server-side purchase event attributes to the real
+    // session/channel instead of (not set)/Unassigned.
+    if (gaClientId) params.append("metadata[ga_client_id]", String(gaClientId));
+    if (gaSessionId) params.append("metadata[ga_session_id]", String(gaSessionId));
     // Attach additional attribution as Stripe metadata so the Stripe webhook
     // can log it to the leads sheet once payment completes.
     if (attribution?.landingPage) params.append("metadata[landing_page]", attribution.landingPage);

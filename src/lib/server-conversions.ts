@@ -48,6 +48,12 @@ export interface ServerConversionInput {
   currency?: string;
   /** Stripe session id / order id, dedupes the conversion across retries. */
   transactionId?: string;
+  /** The visitor's real GA4 client id (from the _ga cookie, captured at
+   *  checkout). Lets GA4 stitch a server-fired purchase to the browser session
+   *  and its channel, instead of dropping it in (not set)/Unassigned. */
+  clientId?: string;
+  /** The visitor's GA4 session id (from the _ga_<stream> cookie). */
+  sessionId?: string;
   /** Carried through from URL → localStorage → checkout metadata; null if user came from organic. */
   gclid?: string;
   /** Used both to dedupe and for Enhanced Conversions matching. */
@@ -100,9 +106,15 @@ async function fireGA4(input: ServerConversionInput): Promise<void> {
     if (input.currency) params.currency = input.currency;
     if (input.transactionId) params.transaction_id = input.transactionId;
     if (input.gclid) params.gclid = input.gclid;
+    // session_id + a nonzero engagement time let GA4 attach the purchase to the
+    // originating session, so channel attribution matches the browser session.
+    if (input.sessionId) {
+      params.session_id = input.sessionId;
+      params.engagement_time_msec = 1;
+    }
 
     const body = {
-      client_id: input.transactionId ?? randomUUID(),
+      client_id: input.clientId || input.transactionId || randomUUID(),
       user_id: sha_email, // stable user_id for cross-device join when available
       user_data: Object.keys(userData).length ? userData : undefined,
       events: [
