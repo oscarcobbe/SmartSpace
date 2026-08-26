@@ -4157,36 +4157,69 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
     "tags": ["Bundle", "Eufy"],
     "priceRange": {
       "minVariantPrice": { "amount": "903.0", "currencyCode": "EUR" },
-      "maxVariantPrice": { "amount": "1063.0", "currencyCode": "EUR" }
+      "maxVariantPrice": { "amount": "1073.0", "currencyCode": "EUR" }
     },
     "compareAtPriceRange": {
       "minVariantPrice": { "amount": "0.0", "currencyCode": "EUR" },
       "maxVariantPrice": { "amount": "0.0", "currencyCode": "EUR" }
     },
     "options": [
-      { "name": "Choose A Power Option", "values": ["Existing doorbell power", "New power feed required"] }
+      { "name": "Choose A Power Option", "values": ["Existing doorbell power", "New power feed required"] },
+      { "name": "Will A New Power Source Be Required For The Floodlight ?", "values": ["No", "Yes"] }
     ],
     "images": { "edges": [] },
     "variants": {
       "edges": [
         {
           "node": {
-            "id": "gid://smart-space/ManualVariant/eufy-driveway-existing",
-            "title": "Existing doorbell power",
+            "id": "gid://smart-space/ManualVariant/eufy-driveway-existing-no",
+            "title": "Existing doorbell power / No",
             "availableForSale": true,
             "price": { "amount": "903.0", "currencyCode": "EUR" },
             "compareAtPrice": null,
-            "selectedOptions": [ { "name": "Choose A Power Option", "value": "Existing doorbell power" } ]
+            "selectedOptions": [
+              { "name": "Choose A Power Option", "value": "Existing doorbell power" },
+              { "name": "Will A New Power Source Be Required For The Floodlight ?", "value": "No" }
+            ]
           }
         },
         {
           "node": {
-            "id": "gid://smart-space/ManualVariant/eufy-driveway-newfeed",
-            "title": "New power feed required",
+            "id": "gid://smart-space/ManualVariant/eufy-driveway-existing-yes",
+            "title": "Existing doorbell power / Yes",
             "availableForSale": true,
-            "price": { "amount": "1063.0", "currencyCode": "EUR" },
+            "price": { "amount": "973.0", "currencyCode": "EUR" },
             "compareAtPrice": null,
-            "selectedOptions": [ { "name": "Choose A Power Option", "value": "New power feed required" } ]
+            "selectedOptions": [
+              { "name": "Choose A Power Option", "value": "Existing doorbell power" },
+              { "name": "Will A New Power Source Be Required For The Floodlight ?", "value": "Yes" }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/eufy-driveway-newfeed-no",
+            "title": "New power feed required / No",
+            "availableForSale": true,
+            "price": { "amount": "1003.0", "currencyCode": "EUR" },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              { "name": "Choose A Power Option", "value": "New power feed required" },
+              { "name": "Will A New Power Source Be Required For The Floodlight ?", "value": "No" }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/eufy-driveway-newfeed-yes",
+            "title": "New power feed required / Yes",
+            "availableForSale": true,
+            "price": { "amount": "1073.0", "currencyCode": "EUR" },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              { "name": "Choose A Power Option", "value": "New power feed required" },
+              { "name": "Will A New Power Source Be Required For The Floodlight ?", "value": "Yes" }
+            ]
           }
         }
       ]
@@ -4202,36 +4235,95 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
     "tags": ["Bundle", "Eufy"],
     "priceRange": {
       "minVariantPrice": { "amount": "1248.0", "currencyCode": "EUR" },
-      "maxVariantPrice": { "amount": "1478.0", "currencyCode": "EUR" }
+      "maxVariantPrice": { "amount": "1488.0", "currencyCode": "EUR" }
     },
     "compareAtPriceRange": {
       "minVariantPrice": { "amount": "0.0", "currencyCode": "EUR" },
       "maxVariantPrice": { "amount": "0.0", "currencyCode": "EUR" }
     },
     "options": [
-      { "name": "Choose A Power Option", "values": ["Existing doorbell power", "New power feed required"] }
+      { "name": "Choose A Power Option", "values": ["Existing doorbell power", "New power feed required"] },
+      { "name": "New Power Sources Required For Floodlights", "values": ["0", "1", "2"] }
     ],
     "images": { "edges": [] },
     "variants": {
       "edges": [
         {
           "node": {
-            "id": "gid://smart-space/ManualVariant/eufy-wholehome-existing",
-            "title": "Existing doorbell power",
+            "id": "gid://smart-space/ManualVariant/eufy-wholehome-existing-0",
+            "title": "Existing doorbell power / 0",
             "availableForSale": true,
             "price": { "amount": "1248.0", "currencyCode": "EUR" },
             "compareAtPrice": null,
-            "selectedOptions": [ { "name": "Choose A Power Option", "value": "Existing doorbell power" } ]
+            "selectedOptions": [
+              { "name": "Choose A Power Option", "value": "Existing doorbell power" },
+              { "name": "New Power Sources Required For Floodlights", "value": "0" }
+            ]
           }
         },
         {
           "node": {
-            "id": "gid://smart-space/ManualVariant/eufy-wholehome-newfeed",
-            "title": "New power feed required",
+            "id": "gid://smart-space/ManualVariant/eufy-wholehome-existing-1",
+            "title": "Existing doorbell power / 1",
             "availableForSale": true,
-            "price": { "amount": "1478.0", "currencyCode": "EUR" },
+            "price": { "amount": "1318.0", "currencyCode": "EUR" },
             "compareAtPrice": null,
-            "selectedOptions": [ { "name": "Choose A Power Option", "value": "New power feed required" } ]
+            "selectedOptions": [
+              { "name": "Choose A Power Option", "value": "Existing doorbell power" },
+              { "name": "New Power Sources Required For Floodlights", "value": "1" }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/eufy-wholehome-existing-2",
+            "title": "Existing doorbell power / 2",
+            "availableForSale": true,
+            "price": { "amount": "1388.0", "currencyCode": "EUR" },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              { "name": "Choose A Power Option", "value": "Existing doorbell power" },
+              { "name": "New Power Sources Required For Floodlights", "value": "2" }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/eufy-wholehome-newfeed-0",
+            "title": "New power feed required / 0",
+            "availableForSale": true,
+            "price": { "amount": "1348.0", "currencyCode": "EUR" },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              { "name": "Choose A Power Option", "value": "New power feed required" },
+              { "name": "New Power Sources Required For Floodlights", "value": "0" }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/eufy-wholehome-newfeed-1",
+            "title": "New power feed required / 1",
+            "availableForSale": true,
+            "price": { "amount": "1418.0", "currencyCode": "EUR" },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              { "name": "Choose A Power Option", "value": "New power feed required" },
+              { "name": "New Power Sources Required For Floodlights", "value": "1" }
+            ]
+          }
+        },
+        {
+          "node": {
+            "id": "gid://smart-space/ManualVariant/eufy-wholehome-newfeed-2",
+            "title": "New power feed required / 2",
+            "availableForSale": true,
+            "price": { "amount": "1488.0", "currencyCode": "EUR" },
+            "compareAtPrice": null,
+            "selectedOptions": [
+              { "name": "Choose A Power Option", "value": "New power feed required" },
+              { "name": "New Power Sources Required For Floodlights", "value": "2" }
+            ]
           }
         }
       ]

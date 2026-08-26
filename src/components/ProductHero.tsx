@@ -111,6 +111,10 @@ export default function ProductHero({ product, shortDescription, accent = "orang
     "Spotlight Cam Colour": { label: "Spotlight Cam Colour" },
     "Floodlight Cam Colour": { label: "Floodlight Cam Colour" },
     "Number of Floodlight Cams Required & How Many Require New Power Sources": { label: "Floodlight Cams & Power Sources", help: "Select how many floodlight cams you need and how many require new wiring" },
+    // Bundle-level floodlight power. The trailing "?" is stripped before lookup,
+    // so the key here has none. Both Ring and Eufy bundles use these names.
+    "Will A New Power Source Be Required For The Floodlight": { label: "Floodlight Cam Power Source", help: "Will the floodlight cam go where there is already a working light or power point, or does it need new wiring?" },
+    "New Power Sources Required For Floodlights": { label: "Floodlight Cams Needing New Power", help: "How many of the two floodlight cams need new wiring? Pick 0 if both replace existing working lights." },
   };
 
   return (

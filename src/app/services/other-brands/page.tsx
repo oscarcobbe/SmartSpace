@@ -35,7 +35,7 @@ export const metadata: Metadata = {
  *
  *   Video Doorbell E340 + Chime ............ €394  (new VD power €484)
  *   Floodlight Cam E340 .................... €404  (new power €494)
- *   Driveway / Garden Bundle .............. €903  (up to €1,063 w/ new power)
+ *   Driveway / Garden Bundle .............. €903  (up to €1,073 w/ new power)
  *   Whole Home Bundle ..................... €1,248 (up to €1,478 w/ new power)
  *   Eldercare Bundle (E340 + Chime + Keysafe) €554 (new VD power €644)
  *
