@@ -4102,7 +4102,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
     ],
     "priceRange": {
       "minVariantPrice": { "amount": "404.0", "currencyCode": "EUR" },
-      "maxVariantPrice": { "amount": "474.0", "currencyCode": "EUR" }
+      "maxVariantPrice": { "amount": "494.0", "currencyCode": "EUR" }
     },
     "compareAtPriceRange": {
       "minVariantPrice": { "amount": "0.0", "currencyCode": "EUR" },
@@ -4137,7 +4137,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "id": "gid://smart-space/ManualVariant/eufy-floodlight-newpower",
             "title": "New power required",
             "availableForSale": true,
-            "price": { "amount": "474.0", "currencyCode": "EUR" },
+            "price": { "amount": "494.0", "currencyCode": "EUR" },
             "compareAtPrice": null,
             "selectedOptions": [
               { "name": "Will A New Power Source Be Required", "value": "New power required" }
