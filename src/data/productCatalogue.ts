@@ -4043,7 +4043,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
     ],
     "priceRange": {
       "minVariantPrice": { "amount": "394.0", "currencyCode": "EUR" },
-      "maxVariantPrice": { "amount": "484.0", "currencyCode": "EUR" }
+      "maxVariantPrice": { "amount": "494.0", "currencyCode": "EUR" }
     },
     "compareAtPriceRange": {
       "minVariantPrice": { "amount": "0.0", "currencyCode": "EUR" },
@@ -4078,7 +4078,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "id": "gid://smart-space/ManualVariant/eufy-doorbell-newfeed",
             "title": "New power feed required",
             "availableForSale": true,
-            "price": { "amount": "484.0", "currencyCode": "EUR" },
+            "price": { "amount": "494.0", "currencyCode": "EUR" },
             "compareAtPrice": null,
             "selectedOptions": [
               { "name": "Choose A Power Option", "value": "New power feed required" }
@@ -4102,7 +4102,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
     ],
     "priceRange": {
       "minVariantPrice": { "amount": "404.0", "currencyCode": "EUR" },
-      "maxVariantPrice": { "amount": "494.0", "currencyCode": "EUR" }
+      "maxVariantPrice": { "amount": "474.0", "currencyCode": "EUR" }
     },
     "compareAtPriceRange": {
       "minVariantPrice": { "amount": "0.0", "currencyCode": "EUR" },
@@ -4137,7 +4137,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "id": "gid://smart-space/ManualVariant/eufy-floodlight-newpower",
             "title": "New power required",
             "availableForSale": true,
-            "price": { "amount": "494.0", "currencyCode": "EUR" },
+            "price": { "amount": "474.0", "currencyCode": "EUR" },
             "compareAtPrice": null,
             "selectedOptions": [
               { "name": "Will A New Power Source Be Required", "value": "New power required" }
@@ -4339,7 +4339,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
     "tags": ["Bundle", "Eufy"],
     "priceRange": {
       "minVariantPrice": { "amount": "554.0", "currencyCode": "EUR" },
-      "maxVariantPrice": { "amount": "644.0", "currencyCode": "EUR" }
+      "maxVariantPrice": { "amount": "654.0", "currencyCode": "EUR" }
     },
     "compareAtPriceRange": {
       "minVariantPrice": { "amount": "0.0", "currencyCode": "EUR" },
@@ -4366,7 +4366,7 @@ export const PRODUCT_CATALOGUE: ShopifyProduct[] = [
             "id": "gid://smart-space/ManualVariant/eufy-eldercare-newfeed",
             "title": "New power feed required",
             "availableForSale": true,
-            "price": { "amount": "644.0", "currencyCode": "EUR" },
+            "price": { "amount": "654.0", "currencyCode": "EUR" },
             "compareAtPrice": null,
             "selectedOptions": [ { "name": "Choose A Power Option", "value": "New power feed required" } ]
           }

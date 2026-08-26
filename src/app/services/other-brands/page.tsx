@@ -33,13 +33,14 @@ export const metadata: Metadata = {
  * mains-powered, existing-power configuration (the cheapest, real "From"
  * entry point). Source of truth: Oscar's Eufy Pricing June 2026 sheet.
  *
- *   Video Doorbell E340 + Chime ............ €394  (new VD power €484)
- *   Floodlight Cam E340 .................... €404  (new power €494)
+ *   Video Doorbell E340 + Chime ............ €394  (new VD power €494)
+ *   Floodlight Cam E340 .................... €404  (new power €474)
  *   Driveway / Garden Bundle .............. €903  (up to €1,073 w/ new power)
- *   Whole Home Bundle ..................... €1,248 (up to €1,478 w/ new power)
- *   Eldercare Bundle (E340 + Chime + Keysafe) €554 (new VD power €644)
+ *   Whole Home Bundle ..................... €1,248 (up to €1,488 w/ new power)
+ *   Eldercare Bundle (E340 + Chime + Keysafe) €554 (new VD power €654)
  *
- * New cabling / new power feed adds €70–€90, quoted at the consultation.
+ * Power adds match Ring exactly: €100 for a new doorbell feed, €70 for each
+ * new floodlight power source. Quoted at the consultation.
  * Installation-only on a customer-supplied Eufy = same as Ring (€139), see
  * /services/installation-only. Solar units are quoted individually.
  */
@@ -247,7 +248,8 @@ export default function OtherBrandsPage() {
           <div className="mt-10 max-w-2xl mx-auto text-center">
             <p className="text-sm text-gray-400">
               Prices shown are the mains-powered, existing-power setup. If a new power feed or
-              cabling is needed it&apos;s quoted up front (typically €70 to €90), in writing,
+              cabling is needed it&apos;s quoted up front (€70 for each new floodlight power
+              source, €100 for a new doorbell feed), in writing,
               before any work starts. Solar cameras are quoted individually to your property.
             </p>
             <p className="mt-4 text-sm text-gray-500">
