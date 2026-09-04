@@ -24,6 +24,27 @@ const GADS_LEAD_SEND_TO =
 // Sending it as `transaction_id` lets Google Ads dedupe this client-side
 // fire against the matching server-side fire, same id → counted once.
 function fireContactConversion(email: string, phone: string, conversionId?: string) {
+  /*
+   * No server-issued id, no fire.
+   *
+   * /api/contact answers a honeypot hit with { success: true, id: "honeypot" }
+   * and no conversionId, deliberately, so a bot does not retry. It skips every
+   * side effect: no email, no sheet write, no server conversion. The form
+   * could not tell that apart from a real success, saw res.ok, and fired a
+   * client conversion with transaction_id undefined. So a submission the
+   * server threw away still booked a conversion, and nothing on the server
+   * side existed for Ads to dedupe it against.
+   *
+   * It is also the honest rule in general: this fire exists to add enhanced
+   * data to a conversion the server already recorded, and without the id it
+   * is not that, it is a second unattributable one. If a password manager
+   * ever fills the hidden field, the customer loses the lead and the account
+   * gains a phantom.
+   */
+  if (!conversionId) {
+    console.warn("[gtag] no conversion id from the server, client fire skipped");
+    return;
+  }
   if (typeof window === "undefined") return;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const gtag = (window as any).gtag;

@@ -42,6 +42,7 @@ import {
 } from "lucide-react";
 import { getProductByHandle, ShopifyProduct } from "@/lib/shopify";
 import AddToCartButton from "@/components/AddToCartButton";
+import CallbackForm from "@/components/CallbackForm";
 import BookingCalendar from "@/components/BookingCalendar";
 import FeaturedProducts from "@/components/FeaturedProducts";
 
@@ -247,6 +248,24 @@ export default function RingInstallationPage() {
               <CheckCircle2 className="w-4 h-4" />
             </a>
           </div>
+
+          {/*
+            The third path, and the one that was missing entirely.
+            
+            Above this line the page offers a phone number and a card
+            payment. Over thirty days that produced five calls and one
+            payment from 143 clicks, because somebody who searched "ring
+            doorbell installation", read the page and is interested but is
+            not paying €139 to €479 this minute had nothing left to do.
+            
+            It sits here rather than lower down for the same reason the two
+            buttons above do: the page's own comment says scrolling to the
+            configure section is real friction on mobile, and that applies
+            twice over to the lowest-commitment action on the page. The free
+            consultation was already linked from below the FAQ and converted
+            nobody there.
+          */}
+          <CallbackForm />
         </div>
       </section>
 

@@ -66,7 +66,31 @@ export default function PhoneClickTracker() {
       // if the page is unloading (`tel:` link follow does count as an
       // unload on iOS). If sendBeacon isn't available (e.g. very old
       // browsers), fall back to fetch with keepalive, same guarantee.
-      const body = JSON.stringify({ phone: PHONE, page, attribution });
+      /*
+       * One id for both fires, minted here.
+       *
+       * The server generated its own UUID and the client fire carried none,
+       * so Google Ads saw two conversions on the same action and could only
+       * fall back to cookie dedupe, which does not work for a visitor who
+       * blocks cookies or taps from a fresh session. The route's own comment
+       * says so: "The client-side PhoneClickTracker.tsx does NOT currently
+       * pass a transaction_id, TODO add one if we see double-counting in
+       * Ads." Five of the last seven recorded conversions were phone calls,
+       * so this is the number most likely to have been distorted.
+       *
+       * Minted on the client rather than returned by the server, because a
+       * tel: tap unloads the page on iOS and the client fire cannot wait for
+       * a response that may never arrive.
+       *
+       * crypto.randomUUID is available in every browser that supports
+       * sendBeacon; the fallback keeps a tap from being lost on an old one,
+       * where the previous no-id behaviour is what happens anyway.
+       */
+      const conversionId =
+        typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+          ? crypto.randomUUID()
+          : `pc-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      const body = JSON.stringify({ phone: PHONE, page, attribution, conversionId });
       try {
         if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
           // sendBeacon uses Content-Type: text/plain by default. Our API
@@ -118,6 +142,7 @@ export default function PhoneClickTracker() {
           send_to: `${GADS_ACCOUNT}/${GADS_CALL_LABEL}`,
           value: 30,
           currency: "EUR",
+          transaction_id: conversionId,
           transport_type: "beacon",
           event_callback: () => console.log("[gtag] phone-call conversion ack"),
         });
@@ -128,6 +153,7 @@ export default function PhoneClickTracker() {
       w.gtag("event", "generate_lead", {
         currency: "EUR",
         value: 30,
+        transaction_id: conversionId,
         lead_source: "phone_click",
         phone_number: PHONE,
         transport_type: "beacon",

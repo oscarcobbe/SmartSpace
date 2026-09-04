@@ -68,6 +68,8 @@ interface PhoneClickBody {
   phone?: string;
   page?: string;
   attribution?: AttributionRecord;
+  /** Minted by the client so both fires of one tap share it. */
+  conversionId?: string;
 }
 
 export async function POST(request: Request) {
@@ -94,11 +96,21 @@ export async function POST(request: Request) {
     .replace(/^AW-\d+\//, "")
     .replace(/\s+/g, "");
 
-  // Stable transaction ID, Google Ads + GA4 dedupe by this, so even if
-  // client-side gtag AND this server fire both arrive, only one conversion
-  // counts. The client-side PhoneClickTracker.tsx does NOT currently pass
-  // a transaction_id, TODO add one if we see double-counting in Ads.
-  const conversionId = randomUUID();
+  /*
+   * The client's id where it sent one, ours only as a fallback.
+   *
+   * This used to mint its own unconditionally while the client fire carried
+   * none, so the same phone tap arrived at Google Ads as two conversions with
+   * nothing tying them together. PhoneClickTracker now mints the id before it
+   * fires and sends it here, so both halves agree.
+   *
+   * Validated rather than trusted: this endpoint takes an unauthenticated
+   * body, and an id is interpolated into an outbound conversion payload.
+   * Anything that is not a plain token of a sane length is discarded and
+   * replaced, which costs one tap its dedupe and cannot do worse.
+   */
+  const claimed = typeof body.conversionId === "string" ? body.conversionId : "";
+  const conversionId = /^[A-Za-z0-9-]{8,64}$/.test(claimed) ? claimed : randomUUID();
 
   // Fire both server-side channels (GA4 MP + Google Ads pixel). Best-effort,
   // 4s ceiling enforced inside fireServerConversion. Never throws.

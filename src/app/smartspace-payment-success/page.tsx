@@ -23,7 +23,7 @@ const FREE_CONSULTATION_VALUE = 50;
 
 type VerifyState =
   | { status: "loading" }
-  | { status: "free"; email?: string; phone?: string }
+  | { status: "free"; email?: string; phone?: string; conversionId?: string }
   | { status: "paid"; amount: number; currency: string; sessionId: string; email?: string; phone?: string }
   | { status: "invalid" };
 
@@ -46,12 +46,18 @@ function PaymentSuccessContent() {
     if (isFree) {
       let email: string | undefined;
       let phone: string | undefined;
+      let conversionId: string | undefined;
       try {
         const raw = sessionStorage.getItem("ss_pending_identity");
         if (raw) {
-          const parsed = JSON.parse(raw) as { email?: string; phone?: string };
+          const parsed = JSON.parse(raw) as {
+            email?: string;
+            phone?: string;
+            conversionId?: string;
+          };
           email = parsed.email;
           phone = parsed.phone;
+          conversionId = parsed.conversionId;
           // Single-use, clear immediately so a refresh doesn't re-fire
           // the conversion against an old identity.
           sessionStorage.removeItem("ss_pending_identity");
@@ -59,7 +65,7 @@ function PaymentSuccessContent() {
       } catch {
         /* corrupt storage, fire without enhanced data */
       }
-      setState({ status: "free", email, phone });
+      setState({ status: "free", email, phone, conversionId });
       return;
     }
     if (!sessionId) {
@@ -93,15 +99,43 @@ function PaymentSuccessContent() {
     const w = window as unknown as { gtag?: (...args: unknown[]) => void };
     if (typeof w.gtag !== "function") return;
 
+    /*
+     * email_address, not email.
+     *
+     * Google's user_data schema has no `email` key, so it was ignored and
+     * every enhanced-conversion match on this page ran on the phone number
+     * alone. The money path and the free-consultation path both used it, so
+     * both were matching at roughly half strength for as long as this has
+     * been live.
+     *
+     * This is the exact mistake the header of lib/lead-conversion.ts was
+     * written to stop, and it was already wrong here when that was written.
+     */
     const userData = (email?: string, phone?: string) => {
       const data: Record<string, string> = {};
-      if (email) data.email = email;
+      if (email) data.email_address = email;
       if (phone) data.phone_number = phone;
       return data;
     };
 
     if (state.status === "free") {
       fired.current = true;
+      /*
+       * No id, no fire.
+       *
+       * The server already fired this conversion and is the reliable half:
+       * it cannot be blocked by an ad blocker or lost to a closed tab. The
+       * client fire exists only to add enhanced-conversion data, and it is
+       * useful only when it carries the same transaction_id so Ads can treat
+       * the two as one.
+       *
+       * Without this guard, /smartspace-payment-success?free=true fired a
+       * fresh unidentified EUR 50 conversion on every visit. The page trusts
+       * the query string, the identity is single-use and cleared on read, so
+       * a refresh, a back button, or anybody pasting the URL booked another
+       * conversion against an account that had taken one booking.
+       */
+      if (!state.conversionId) return;
       const ud = userData(state.email, state.phone);
       if (Object.keys(ud).length) w.gtag("set", "user_data", ud);
       // Google Ads conversion
@@ -109,6 +143,7 @@ function PaymentSuccessContent() {
         send_to: GADS_FREE_CONSULTATION_TAG,
         value: FREE_CONSULTATION_VALUE,
         currency: "EUR",
+        transaction_id: state.conversionId,
         transport_type: "beacon",
         event_callback: () => console.log("[gtag] AW free-consult ack"),
       });
@@ -117,6 +152,8 @@ function PaymentSuccessContent() {
         currency: "EUR",
         value: FREE_CONSULTATION_VALUE,
         lead_source: "free_consultation",
+        // Same id as the Ads fire and the server fire, so GA4 counts one lead.
+        transaction_id: state.conversionId,
         transport_type: "beacon",
       });
       console.log("[gtag] free consultation conversion + lead fired", { sendTo: GADS_FREE_CONSULTATION_TAG });

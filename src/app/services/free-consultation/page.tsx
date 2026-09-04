@@ -109,9 +109,25 @@ export default function FreeConsultationPage() {
         // the success page. sessionStorage is per-tab and cleared on
         // close. The success page reads it once and clears it.
         try {
+          /*
+           * The conversion id is carried across too, and that is the fix
+           * rather than an extra.
+           *
+           * The route has always returned it and this stashed only the email
+           * and phone, so the success page fired the same Google Ads label as
+           * the server with no transaction_id on it. Two fires of one
+           * conversion action, one identified and one not, which Ads cannot
+           * dedupe: every free consultation was counted twice. The server
+           * comment says "shared conversionId acts as transaction_id so
+           * Google Ads dedupes", and the sharing was never built.
+           */
           sessionStorage.setItem(
             "ss_pending_identity",
-            JSON.stringify({ email: email.trim(), phone: phone.trim() })
+            JSON.stringify({
+              email: email.trim(),
+              phone: phone.trim(),
+              conversionId: data.conversionId,
+            })
           );
         } catch {
           /* private mode / blocked storage, non-fatal */
