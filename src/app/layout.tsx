@@ -7,6 +7,7 @@ import CartDrawer from "@/components/CartDrawer";
 import { CartProvider } from "@/context/CartContext";
 import GclidCapture from "@/components/GclidCapture";
 import CookieBanner from "@/components/CookieBanner";
+import VisitBeacon from "@/components/VisitBeacon";
 import PhoneClickTracker from "@/components/PhoneClickTracker";
 import { AGGREGATE_RATING, AGGREGATE_REVIEW_COUNT } from "@/lib/business-constants";
 
@@ -310,6 +311,7 @@ export default function RootLayout({
           <CartDrawer />
           <Footer />
           <CookieBanner />
+          <VisitBeacon />
         </CartProvider>
       </body>
     </html>
