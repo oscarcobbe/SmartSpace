@@ -97,6 +97,19 @@ function Beacon() {
   const lastSent = useRef<string | null>(null);
 
   useEffect(() => {
+    /*
+     * OFF until the privacy notice describes it. A legal flag, not a feature
+     * flag, and it stays false until the disclosure is live.
+     *
+     * This site's /privacy does not mention it. It has in fact never fired --
+     * CookieBanner stores JSON and this compared the raw string, and the CSP
+     * omits the portal from connect-src -- so no data has been transferred.
+     * That is luck rather than design, and fixing those two bugs without the
+     * disclosure would start an undisclosed transfer rather than resume one.
+     */
+    const DISCLOSED_IN_THE_PRIVACY_NOTICE = false;
+    if (!DISCLOSED_IN_THE_PRIVACY_NOTICE) return;
+
     if (consent !== "granted") return;
     if (!pathname || lastSent.current === pathname) return;
 
