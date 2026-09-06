@@ -234,7 +234,7 @@ export async function POST(request: Request) {
         `  Phone: 01 513 0424`,
         `  Email: info@smart-space.ie`,
         "",
-        "We're Dublin's #1 Ring installer, transparent pricing quoted up front, no contracts, brand-agnostic across Ring, Eufy, Nest, Tapo, and Aosu.",
+        "We're Ring installation specialists, transparent pricing quoted up front, no contracts, brand-agnostic across Ring, Eufy, Nest, Tapo, and Aosu.",
         "",
         "Talk soon,",
         "Nigel and the Smart Space team",
@@ -279,7 +279,7 @@ export async function POST(request: Request) {
         </table>
       </td></tr>
       <tr><td style="padding:24px 32px 8px;font-family:'Plus Jakarta Sans','Inter',Helvetica,Arial,sans-serif;">
-        <p style="margin:0;font-size:15px;line-height:1.6;color:#3f3d3a;">We're Dublin's #1 Ring installer. Transparent pricing quoted up front, no contracts, brand-agnostic across Ring, Eufy, Nest, Tapo, and Aosu.</p>
+        <p style="margin:0;font-size:15px;line-height:1.6;color:#3f3d3a;">We're Ring installation specialists. Transparent pricing quoted up front, no contracts, brand-agnostic across Ring, Eufy, Nest, Tapo, and Aosu.</p>
       </td></tr>
       <tr><td style="padding:24px 32px 32px;font-family:'Plus Jakarta Sans','Inter',Helvetica,Arial,sans-serif;">
         <p style="margin:0;font-size:15px;line-height:1.6;color:#3f3d3a;">Talk soon,<br><strong style="color:#1C1A18;">Nigel and the Smart Space team</strong><br><a href="https://smart-space.ie" style="color:#f48222;font-weight:700;text-decoration:underline;">smart-space.ie</a></p>
@@ -289,7 +289,7 @@ export async function POST(request: Request) {
           <tr>
             <td valign="top" style="padding-right:16px;">
               <div style="font-weight:800;color:#ffffff;font-size:14px;letter-spacing:0.4px;margin-bottom:8px;">Smart Space</div>
-              <div>Dublin's #1 Ring installer.</div>
+              <div>Ring installation specialists.</div>
               <div>Brand-agnostic. No contract.</div>
             </td>
             <td valign="top" style="padding-left:16px;text-align:right;">

@@ -8,7 +8,7 @@ const SITE = "https://smart-space.ie";
 export const metadata: Metadata = {
   title: "Guides | Ring Installation & Home Security in Ireland | Smart Space",
   description:
-    "Practical guides on Ring doorbell installation, home security cameras, and smart home setup for Irish homes, written by Dublin's #1 Ring installer.",
+    "Practical guides on Ring doorbell installation, home security cameras, and smart home setup for Irish homes, written by Ring installation specialists.",
   alternates: { canonical: "/blog" },
   robots: { index: true, follow: true },
   openGraph: {
@@ -150,7 +150,7 @@ export default function BlogIndexPage() {
             Ready to book your install?
           </h2>
           <p className="text-gray-500 mb-6 max-w-lg mx-auto">
-            Book a complimentary consultation with Dublin&apos;s #1 Ring installer.
+            Book a complimentary consultation with Ring installation specialists.
             Serving all of Leinster.
           </p>
           <Link

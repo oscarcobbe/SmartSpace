@@ -331,7 +331,7 @@ export default function ProductHero({ product, shortDescription, accent = "orang
         {/* Trust Strip */}
         <div className="grid grid-cols-2 gap-3 p-4 bg-gray-50 rounded-2xl">
           {[
-            { icon: Shield, text: isBlue ? "Dublin's Trusted Installer" : "Dublin's #1 Ring Installer" },
+            { icon: Shield, text: isBlue ? "Dublin's Trusted Installer" : "Ring Installation Specialists" },
             { icon: Star, text: "5-Star Google Rating" },
             { icon: Wrench, text: "5,000+ Installations" },
             { icon: Award, text: "SME Winner 2025" },

@@ -231,7 +231,7 @@ export default function Post() {
           in your home, or whether a like-for-like intercom repair is the right call.
         </p>
         <p>
-          Smart Space is Dublin&apos;s #1 Ring installer and covers all of Leinster.{" "}
+          Smart Space is Ring installation specialists and covers all of Leinster.{" "}
           <Link href="/services/free-consultation">Book a free consultation</Link> or{" "}
           <Link href="/contact">get in touch</Link>.
         </p>

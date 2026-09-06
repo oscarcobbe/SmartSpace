@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Star, ArrowRight } from "lucide-react";
 
+import { AGGREGATE_RATING, AGGREGATE_REVIEW_COUNT } from "@/lib/business-constants";
+
 export default function ReviewsSurfacing() {
   return (
     <section className="py-3 sm:py-10 bg-white border-t border-b border-gray-100">
@@ -20,8 +22,20 @@ export default function ReviewsSurfacing() {
           <div className="h-4 sm:h-8 w-px bg-gray-200" />
           <div>
             <div className="text-xs sm:text-sm font-bold text-[#1a1a1a]">
-              <span className="sm:hidden">100+ Google reviews</span>
-              <span className="hidden sm:inline">Rated 5 on Google by 100+ customers</span>
+              {/*
+                Read from the same constant the JSON-LD uses.
+
+                business-constants.ts records that the count was corrected to
+                46 on 2026-05-20 because 100 "materially overstated reality and
+                risked a Google rich-snippet manual penalty". That correction
+                reached the schema and never reached this line, so Google was
+                told 46 and the visitor on the homepage was told 100+. Reading
+                the constant is what stops the two drifting apart again.
+              */}
+              <span className="sm:hidden">{AGGREGATE_REVIEW_COUNT} Google reviews</span>
+              <span className="hidden sm:inline">
+                Rated {AGGREGATE_RATING} on Google by {AGGREGATE_REVIEW_COUNT} customers
+              </span>
             </div>
             <div className="hidden sm:block text-xs text-gray-500">
               5,000+ Ring installations across Dublin &amp; Leinster

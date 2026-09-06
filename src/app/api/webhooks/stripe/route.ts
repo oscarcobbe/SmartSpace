@@ -169,7 +169,7 @@ async function sendOrderNotification(params: {
     const isEufyOrder = /eufy/i.test(params.productName || "");
     const brandTagline = isEufyOrder
       ? "Dublin's trusted smart security installer."
-      : "Dublin's #1 Ring installer.";
+      : "Ring installation specialists.";
     // Trim product name for subject line so it stays under common
     // inbox preview widths (~60 chars after the "Order confirmed..."
     // prefix consumes ~30).

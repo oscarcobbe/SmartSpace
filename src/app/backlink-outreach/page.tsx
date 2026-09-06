@@ -43,7 +43,7 @@ export default function BacklinkOutreachPage() {
 
         <h3>Tier 3, Irish media &amp; property publications</h3>
         <ul>
-          <li><strong>Dublin Live (Reach plc)</strong>, pitch local-interest angle: &quot;Dublin&apos;s only 5-star Ring installer&quot;.</li>
+          <li><strong>Dublin Live (Reach plc)</strong>, pitch local-interest angle: &quot;a 5-star rated Ring installer&quot;.</li>
           <li><strong>Irish Examiner home &amp; property section</strong>, pitch expert commentary on home security trends.</li>
           <li><strong>Irish Times property section</strong>, seasonal pitch (&quot;Best home security upgrades for autumn&quot;).</li>
           <li><strong>RTÉ Home of the Year</strong>, supplier credit if one of our installs is featured.</li>
@@ -98,7 +98,7 @@ export default function BacklinkOutreachPage() {
           Hi [editor name],
           <br /><br />
           I enjoyed your recent piece on [specific article title]. I&apos;m Nigel, owner of
-          Smart Space, Dublin&apos;s #1 Ring installer, and I thought your readers might
+          Smart Space, Ring installation specialists, and I thought your readers might
           enjoy a practical piece on home security in Ireland.
           <br /><br />
           Three angles I could write about:
@@ -134,7 +134,7 @@ export default function BacklinkOutreachPage() {
           Following your coverage of [topic], I wanted to offer myself as a commentary
           source for future pieces on home security in Ireland.
           <br /><br />
-          I&apos;m Nigel, owner of Smart Space, Dublin&apos;s only 5-star Ring installer,
+          I&apos;m Nigel, owner of Smart Space, a 5-star rated Ring installer,
           with 5,000+ installations across Leinster. I can speak to:
           <br /><br />
         , Trends in Irish home security (what&apos;s being installed in 2026)

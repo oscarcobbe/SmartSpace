@@ -38,7 +38,7 @@ export default function Footer() {
               />
             </Link>
             <p className="text-sm leading-relaxed mb-4 max-w-sm lg:max-w-none">
-              Dublin&apos;s #1 Ring installer. Professional Ring doorbell and
+              Ring installation specialists. Professional Ring doorbell and
               security camera installation across Dublin and all of Leinster.
             </p>
             <p className="text-sm leading-relaxed font-bold text-brand-500 max-w-sm lg:max-w-none">
@@ -113,7 +113,7 @@ export default function Footer() {
             <Link href="/terms" className="hover:text-white transition-colors">
               Terms
             </Link>
-            <span className="hidden sm:inline">Dublin&apos;s #1 Ring Installer, Serving All of Leinster</span>
+            <span className="hidden sm:inline">Ring Installation Specialists, Serving All of Leinster</span>
           </div>
         </div>
       </div>

@@ -5,21 +5,21 @@ import ContactForm from "@/components/ContactForm";
 const SITE = "https://smart-space.ie";
 
 export const metadata: Metadata = {
-  title: "Contact Us | Smart Space, Dublin's #1 Ring Installer",
+  title: "Contact Us | Smart Space, Ring Installation Dublin",
   description:
     "Contact Smart Space for Ring installation in Dublin and Leinster. Call 01 513 0424 or email info@smart-space.ie.",
   alternates: { canonical: "/contact" },
   openGraph: {
-    title: "Contact Smart Space | Dublin's #1 Ring Installer",
+    title: "Contact Smart Space | Ring Installation, Dublin and Leinster",
     description:
       "Call 01 513 0424 or email info@smart-space.ie. Serving Dublin and all of Leinster.",
     url: `${SITE}/contact`,
     type: "website",
-    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Contact Smart Space, Dublin's #1 Ring Installer" }],
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Contact Smart Space, Ring Installation Dublin" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Contact Smart Space | Dublin's #1 Ring Installer",
+    title: "Contact Smart Space | Ring Installation, Dublin and Leinster",
     description:
       "Call 01 513 0424 or email info@smart-space.ie. Serving Dublin and all of Leinster.",
     images: ["/og-default.png"],

@@ -70,7 +70,7 @@ const ITEM_LIST_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "ItemList",
   name: "Smart Space Ring Installation Services",
-  description: "Service offerings from Smart Space, Dublin's #1 Ring installer.",
+  description: "Service offerings from Smart Space, Ring installation specialists.",
   itemListElement: SERVICE_INDEX.map((s, i) => ({
     "@type": "ListItem",
     position: i + 1,

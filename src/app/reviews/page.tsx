@@ -6,12 +6,12 @@ import { AGGREGATE_RATING, AGGREGATE_REVIEW_COUNT } from "@/lib/business-constan
 const SITE = "https://smart-space.ie";
 
 export const metadata: Metadata = {
-  title: "Reviews | Smart Space, Dublin's #1 Ring Installer",
+  title: "Reviews | Smart Space, Ring Installation Dublin",
   description:
     "See customer reviews for Smart Space. Rated 5 on Google. 5,000+ Ring installations across Dublin and Leinster.",
   alternates: { canonical: "/reviews" },
   openGraph: {
-    title: "Reviews | Smart Space, Dublin's #1 Ring Installer",
+    title: "Reviews | Smart Space, Ring Installation Dublin",
     description:
       "5 on Google · 5,000+ installations across Dublin and Leinster.",
     url: `${SITE}/reviews`,
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Reviews | Smart Space, Dublin's #1 Ring Installer",
+    title: "Reviews | Smart Space, Ring Installation Dublin",
     description:
       "5 on Google · 5,000+ installations across Dublin and Leinster.",
     images: ["/og-default.png"],
@@ -138,7 +138,10 @@ export default function ReviewsPage() {
             <div className="h-10 w-px bg-gray-200" />
             <div className="text-left">
               <div className="text-sm font-bold text-gray-900">Google Reviews</div>
-              <div className="text-xs text-gray-500">Based on 100+ reviews</div>
+              {/* The same constant the schema uses. See ReviewsSurfacing. */}
+              <div className="text-xs text-gray-500">
+                Based on {AGGREGATE_REVIEW_COUNT} reviews
+              </div>
             </div>
           </div>
         </div>
@@ -168,7 +171,7 @@ export default function ReviewsPage() {
             Join 5,000+ happy customers
           </h2>
           <p className="text-gray-500 mb-6 max-w-lg mx-auto">
-            See why we&apos;re Dublin&apos;s #1 Ring installer. Browse our services and book your installation today.
+            See why we&apos;re Ring installation specialists. Browse our services and book your installation today.
           </p>
           <Link
             href="/services"

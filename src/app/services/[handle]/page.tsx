@@ -284,7 +284,7 @@ export default async function ServiceDetailPage({ params }: { params: { handle: 
                   <p className="text-white/70 mb-6">
                     {isEufy
                       ? "Let Dublin's trusted smart security installer handle everything, we serve all of Leinster and set up your new device for optimal performance."
-                      : "Let Dublin's #1 Ring installer handle everything, we serve all of Leinster and set up your new device for optimal performance."}
+                      : "Let Ring installation specialists handle everything, we serve all of Leinster and set up your new device for optimal performance."}
                   </p>
                   <div className="grid sm:grid-cols-2 gap-3 max-w-xl mx-auto">
                     {[

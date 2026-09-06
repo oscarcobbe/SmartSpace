@@ -305,7 +305,7 @@ function buildEmailHtml(opts: {
           <tr>
             <td valign="top" class="stack-col" style="padding-right:16px;">
               <div style="font-weight:800;color:#ffffff;font-size:14px;letter-spacing:0.4px;margin-bottom:8px;">Smart Space</div>
-              <div>Dublin's #1 Ring installer.</div>
+              <div>Ring installation specialists.</div>
               <div>Brand-agnostic. No contract.</div>
             </td>
             <td valign="top" class="stack-col footer-right" style="padding-left:16px;text-align:right;">

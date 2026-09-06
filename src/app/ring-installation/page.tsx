@@ -216,7 +216,7 @@ export default function RingInstallationPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 bg-brand-50 text-brand-700 px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-[0.15em] mb-5">
             <span className="w-1.5 h-1.5 rounded-full bg-brand-500" />
-            Dublin&apos;s #1 Ring Installer
+            Ring Installation Specialists
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4 leading-[1.08] tracking-tight">
             Ring Doorbell Installation in Ireland,{" "}
@@ -568,7 +568,7 @@ export default function RingInstallationPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: Shield, text: "Dublin's #1 Ring Installer" },
+              { icon: Shield, text: "Ring Installation Specialists" },
               { icon: Star, text: "5 Star Google Rating" },
               { icon: Wrench, text: "5,000+ Installations" },
               { icon: Award, text: "SME Winner 2025" },

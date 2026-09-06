@@ -223,7 +223,7 @@ export default async function DrivewayBundlePage() {
             <div className="max-w-3xl mx-auto">
               <h2 className="text-2xl sm:text-3xl font-extrabold mb-2">Supplied &amp; Fitted by Smart Space</h2>
               <p className="text-white/70 mb-6">
-                Let Dublin&apos;s #1 Ring installer handle everything, we serve all of Leinster and set up your new system for optimal performance.
+                Let Ring installation specialists handle everything, we serve all of Leinster and set up your new system for optimal performance.
               </p>
               <div className="grid sm:grid-cols-2 gap-3 max-w-xl mx-auto">
                 {[
@@ -245,7 +245,7 @@ export default async function DrivewayBundlePage() {
         {/* Trust Strip */}
         <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-gray-50 rounded-2xl">
           {[
-            { icon: Shield, text: "Dublin's #1 Ring Installer" },
+            { icon: Shield, text: "Ring Installation Specialists" },
             { icon: Star, text: "5-Star Google Rating" },
             { icon: Wrench, text: "5,000+ Installations" },
             { icon: Award, text: "SME Winner 2025" },

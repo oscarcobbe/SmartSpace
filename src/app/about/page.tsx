@@ -5,23 +5,23 @@ import { ShieldCheck, Award, Users, MapPin, ArrowRight } from "lucide-react";
 const SITE = "https://smart-space.ie";
 
 export const metadata: Metadata = {
-  title: "About Smart Space | Dublin's #1 Ring Installer",
+  title: "About Smart Space | Ring Installation, Dublin and Leinster",
   description:
-    "Smart Space is Dublin's only 5-star Ring installer, serving all of Leinster. SME Business Winner 2025 with 5,000+ installations.",
+    "Smart Space is a 5-star rated Ring installer, serving all of Leinster. SME Business Winner 2025 with 5,000+ installations.",
   alternates: { canonical: "/about" },
   openGraph: {
-    title: "About Smart Space | Dublin's #1 Ring Installer",
+    title: "About Smart Space | Ring Installation, Dublin and Leinster",
     description:
-      "Dublin's only 5-star Ring installer. 5,000+ installations across Dublin and Leinster.",
+      "a 5-star rated Ring installer. 5,000+ installations across Dublin and Leinster.",
     url: `${SITE}/about`,
     type: "website",
-    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "About Smart Space, Dublin's #1 Ring Installer" }],
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "About Smart Space, Ring Installation Dublin" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "About Smart Space | Dublin's #1 Ring Installer",
+    title: "About Smart Space | Ring Installation, Dublin and Leinster",
     description:
-      "Dublin's only 5-star Ring installer. 5,000+ installations across Dublin and Leinster.",
+      "a 5-star rated Ring installer. 5,000+ installations across Dublin and Leinster.",
     images: ["/og-default.png"],
   },
 };
@@ -32,7 +32,7 @@ const aboutSchema = {
   url: `${SITE}/about`,
   name: "About Smart Space",
   description:
-    "Smart Space is Dublin's only 5-star Ring installer, serving all of Leinster with 5,000+ professional installations.",
+    "Smart Space is a 5-star rated Ring installer, serving all of Leinster with 5,000+ professional installations.",
   mainEntity: { "@id": `${SITE}/#localbusiness` },
   publisher: { "@id": `${SITE}/#organization` },
 };
@@ -55,7 +55,7 @@ export default function AboutPage() {
             We&apos;re Smart Space
           </h1>
           <p className="text-xl text-white/80 max-w-2xl mx-auto leading-relaxed">
-            Dublin&apos;s #1 Ring installer, bringing professional smart home
+            Ring installation specialists, bringing professional smart home
             security to homes across Dublin and all of Leinster.
           </p>
         </div>
@@ -76,7 +76,7 @@ export default function AboutPage() {
                   professional-grade security that&apos;s easy to use and beautifully designed.
                 </p>
                 <p>
-                  As Dublin&apos;s #1 Ring installer, now serving all of Leinster, we don&apos;t just
+                  As Ring installation specialists, now serving all of Leinster, we don&apos;t just
                   sell products. We deliver a complete service: helping you choose the right
                   setup for your home, professional installation, and ongoing support.
                 </p>
