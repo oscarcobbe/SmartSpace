@@ -77,11 +77,57 @@ export function captureAttribution(): void {
     expiresAt: now + TTL_MS,
   };
 
+  /*
+   * Written only once consent is in, not on page load.
+   *
+   * This wrote gclid, landing page, referrer and all five UTM values to
+   * localStorage from GclitCapture, which the root layout mounts above
+   * <CookieBanner />. So the identifiers were stored before the banner had
+   * been answered, and /privacy said the opposite in terms: "by default we
+   * collect no personal advertising or analytics data until you accept
+   * cookies". The notice was right about the intention and wrong about the
+   * code.
+   *
+   * Deferring outright would lose it: the gclid is in the URL of the landing
+   * page and is gone by the time somebody answers two pages later. So the
+   * record is held in memory for this page view and written when consent
+   * arrives. Refuse, or ignore the banner, and nothing is stored.
+   */
+  writeWhenConsented(record);
+}
+
+/** True if the visitor has already accepted, by the banner's own key. */
+function consentGranted(): boolean {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
+    return localStorage.getItem("ss_consent") === "granted";
   } catch {
-    // ignore, not critical
+    return false;
   }
+}
+
+/**
+ * Holds one attribution record until consent, then writes it.
+ *
+ * The queue is on window so CookieBanner can drain it without importing this
+ * module, which would pull attribution capture into the banner's bundle.
+ */
+function writeWhenConsented(record: Attribution): void {
+  const write = () => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
+    } catch {
+      // ignore, not critical
+    }
+  };
+
+  if (consentGranted()) {
+    write();
+    return;
+  }
+
+  const w = window as unknown as { __ssOnConsent?: (() => void)[] };
+  w.__ssOnConsent = w.__ssOnConsent ?? [];
+  w.__ssOnConsent.push(write);
 }
 
 /** Retrieve the stored attribution record, or null if missing/expired. */

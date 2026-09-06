@@ -107,6 +107,18 @@ export default function PrivacyPage() {
                 <strong>Resend</strong> (transactional email), your email address and any message you sent us. Stored
                 in the EU.
               </li>
+              {/*
+                Twilio was missing from this list while receiving more than
+                most of the names on it. The Stripe webhook composes an SMS
+                carrying the customer's name, phone and installation address
+                and posts it to api.twilio.com, so a processor holding a home
+                address was undisclosed. SmartCare's notice lists Twilio; this
+                one had drifted.
+              */}
+              <li>
+                <strong>Twilio</strong> (SMS alerts to our installation team), your name, phone number and
+                installation address, sent when an order is placed. Stored in the US under SCCs.
+              </li>
               <li>
                 <strong>Google</strong> (Analytics 4 and Ads), anonymised behavioural data plus, when you consent,
                 hashed email and phone for advertising attribution. Stored in the EU and US under SCCs.

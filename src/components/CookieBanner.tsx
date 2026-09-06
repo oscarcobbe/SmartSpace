@@ -48,6 +48,22 @@ function fireConsentUpdate(decision: Decision) {
   const w = window as unknown as { gtag?: (...args: unknown[]) => void };
   if (typeof w.gtag !== "function") return;
   if (decision === "granted") {
+    /*
+     * Flush anything attribution.ts has been holding in memory. It captures
+     * on page load but no longer writes until this point, so the gclid that
+     * arrived in the landing URL survives a visitor who accepts two pages
+     * later, and is never stored for one who does not.
+     */
+    try {
+      const queued = (window as unknown as { __ssOnConsent?: (() => void)[] }).__ssOnConsent;
+      if (Array.isArray(queued)) {
+        queued.forEach((fn) => {
+          try { fn(); } catch { /* one bad writer must not stop the rest */ }
+        });
+        queued.length = 0;
+      }
+    } catch { /* nothing queued */ }
+
     w.gtag("consent", "update", {
       ad_storage: "granted",
       ad_user_data: "granted",
