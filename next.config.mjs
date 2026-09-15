@@ -89,6 +89,33 @@ const nextConfig = {
       { source: "/pages/contact-us", destination: "/contact", permanent: true },
       { source: "/pages/your-5-star-rated-all-things-ring-installer", destination: "/reviews", permanent: true },
 
+      // ────────────────────────────────────────────────────────────
+      // Added 14 September 2026. Found by testing every final URL in
+      // the Google Ads account rather than by reading the config.
+      //
+      // Google generates sitelinks automatically by crawling the site,
+      // and it is still holding three Shopify-era URLs. They cannot be
+      // edited in Ads (CANNOT_MODIFY_AUTOMATICALLY_CREATED_ASSET), so
+      // the only place to fix them is here.
+      //
+      // Two of the three were already disapproved for
+      // DESTINATION_NOT_WORKING, which at least means they stopped
+      // serving. The third, "Contact Us", was APPROVED and live on
+      // Installer April 2026, sending paid clicks to a 404. Approval
+      // status said healthy while the destination was broken.
+      //
+      // /pages/contact-us already redirected. /pages/get-in-touch did
+      // not: the same page under a second Shopify slug, missed because
+      // whoever added the first had no reason to look for a second.
+      //
+      // These are one-to-one to genuinely equivalent pages, which is
+      // what the note below says Google handles normally. They are not
+      // the many-to-one wildcards removed on 25 May.
+      // ────────────────────────────────────────────────────────────
+      { source: "/pages/get-in-touch", destination: "/contact", permanent: true },
+      { source: "/collections/ring-security-cams-installed", destination: "/services/camera", permanent: true },
+      { source: "/collections/ring-video-doorbells-installed", destination: "/services/doorbell", permanent: true },
+
       // Legacy Shopify /products/* → topically-matching service pages.
       // These previously went to "/" — same reason as the /pages/*
       // overrides above.
