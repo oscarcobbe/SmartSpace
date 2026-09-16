@@ -35,7 +35,7 @@ export function PanelSkeleton({ title, rows = 3 }: { title: string; rows?: numbe
 /** What is booked in, and what is overdue. */
 export async function NeedsYou({ site }: { site: Site }) {
   const [feed, overdue] = await Promise.all([
-    fetchLeads(),
+    fetchLeads(site),
     crmConfigured()
       ? crm<{ id: string; what: string; due_on: string | null }[]>(
           `crm_tasks?site=eq.${site}&done_at=is.null&due_on=lt.${new Date().toISOString().slice(0, 10)}&select=id,what,due_on&order=due_on.asc&limit=5`,
@@ -98,8 +98,8 @@ export async function NeedsYou({ site }: { site: Site }) {
 }
 
 /** The last few things that came in, whatever they were. */
-export async function LatestIn() {
-  const feed = await fetchLeads();
+export async function LatestIn({ site }: { site: Site }) {
+  const feed = await fetchLeads(site);
   if (!feed.ok) {
     return (
       <Panel title="Latest in">

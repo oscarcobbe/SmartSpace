@@ -46,7 +46,7 @@ export default function CrmHome({ searchParams }: { searchParams: { error?: stri
             <NeedsYou site={session.site} />
           </Suspense>
           <Suspense fallback={<PanelSkeleton title="Latest in" rows={4} />}>
-            <LatestIn />
+            <LatestIn site={session.site} />
           </Suspense>
           <Suspense fallback={<PanelSkeleton title="Money" rows={2} />}>
             <MoneyThisMonth />

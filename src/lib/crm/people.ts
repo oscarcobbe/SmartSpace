@@ -83,7 +83,7 @@ export async function listPeople(site: Site): Promise<PeopleResult> {
   const problems: string[] = [];
 
   const [feedResult, dbResult] = await Promise.all([
-    fetchLeads().catch((e) => ({ ok: false as const, reason: String(e) })),
+    fetchLeads(site).catch((e) => ({ ok: false as const, reason: String(e) })),
     listContacts(site).catch(() => null),
   ]);
 

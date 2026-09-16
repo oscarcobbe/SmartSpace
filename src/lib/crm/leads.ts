@@ -12,6 +12,8 @@
  * the whole reason this is a server component and not a fetch from the page.
  */
 
+import { THIS_SITE, type Site } from "./db";
+
 export interface QA {
   question: string;
   answer: string;
@@ -52,7 +54,23 @@ export type LeadsResult =
   | { ok: true; data: LeadsPayload }
   | { ok: false; reason: string };
 
-export async function fetchLeads(): Promise<LeadsResult> {
+/**
+ * The two businesses keep their orders in different places, and every page
+ * above this asks the same question, so the choice is made once here.
+ *
+ * Smart Space has /api/admin/leads, which reconciles Stripe, Calendly and a
+ * sheet. SmartCare Living has a Google Sheet its own site writes to and reads
+ * back through api/dashboard-data. Neither page nor component needs to know.
+ */
+export async function fetchLeads(site: Site = THIS_SITE): Promise<LeadsResult> {
+  if (site === "smartcareliving") {
+    const { fetchSclLeads } = await import("./leads-scl");
+    return fetchSclLeads();
+  }
+  return fetchSmartSpaceLeads();
+}
+
+async function fetchSmartSpaceLeads(): Promise<LeadsResult> {
   const key = process.env.ADMIN_KEY?.trim();
   if (!key) return { ok: false, reason: "ADMIN_KEY is not set on this deployment." };
 

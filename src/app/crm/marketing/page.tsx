@@ -3,6 +3,7 @@ import { fetchAds, adsSplit } from "@/lib/crm/google-ads";
 import { money, moneyExact } from "@/lib/crm/leads";
 import { STATUS_PILL } from "@/lib/crm/labels";
 import { PageHeader, Panel, Stat, StatRow, Note, Pill } from "../ui";
+import ExportButton from "../export-button";
 import { BarChart, Legend } from "../chart";
 import type { AdsData } from "@/lib/crm/google-ads";
 
@@ -129,7 +130,19 @@ export default async function MarketingPage() {
           </p>
         </Panel>
 
-        <Panel title="By campaign">
+        <Panel
+          title="By campaign"
+          aside={
+            <ExportButton
+              filename="marketing-by-campaign"
+              headers={["Campaign", "Status", "Spend", "Clicks", "Impressions", "Enquiries", "Cost each", "Work won"]}
+              rows={own.campaigns.map((c) => [
+                c.name, c.status, c.cost.toFixed(2), c.clicks, c.impressions,
+                c.conversions.toFixed(0), c.conversions ? (c.cost / c.conversions).toFixed(2) : "", c.value.toFixed(2),
+              ])}
+            />
+          }
+        >
           <CampaignTable campaigns={own.campaigns} />
         </Panel>
 

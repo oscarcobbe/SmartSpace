@@ -6,8 +6,8 @@ import OrdersTable from "./table";
 export const dynamic = "force-dynamic";
 
 export default async function OrdersPage() {
-  requireSession();
-  const result = await fetchLeads();
+  const { site } = requireSession();
+  const result = await fetchLeads(site);
 
   if (!result.ok) {
     return (
@@ -24,6 +24,14 @@ export default async function OrdersPage() {
   const upcoming = leads.filter((l) => l.upcoming).length;
   const enquiries = leads.filter((l) => l.type === "Contact Enquiry").length;
   const consults = leads.filter((l) => l.type === "Consultation").length;
+  const scl = site === "smartcareliving";
+  const urgent = leads.filter((l) => l.status === "Urgent").length;
+  /* Seven days back, counted off the same "DD/MM/YYYY, HH:MM" the rows carry. */
+  const weekAgo = Date.now() - 7 * 86_400_000;
+  const recent = leads.filter((l) => {
+    const m = /^(\d{2})\/(\d{2})\/(\d{4})/.exec(l.date);
+    return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) >= weekAgo : false;
+  }).length;
 
   const stamp = new Date(generated).toLocaleString("en-IE", {
     timeZone: "Europe/Dublin",
@@ -33,17 +41,36 @@ export default async function OrdersPage() {
   return (
     <>
       <PageHeader
-        title="Orders"
-        sub="Paid orders from Stripe, bookings from Calendly and enquiries from the contact form, in one list."
+        title={scl ? "Enquiries" : "Orders"}
+        sub={
+          scl
+            ? "Every quiz, contact form and callback request from the site, newest first."
+            : "Paid orders from Stripe, bookings from Calendly and enquiries from the contact form, in one list."
+        }
         aside={<span className="text-xs text-slate-500">Read at {stamp}</span>}
       />
 
+      {/* SmartCare Living sells a subscription that lives in Stripe, not a job
+          that is paid for on the way in, so its sheet has no paid orders and a
+          "Revenue: €0" tile would be a wrong answer rather than an empty one. */}
       <StatRow>
-        <Stat label="Paid orders" value={String(paid.length)} />
-        <Stat label="Revenue" value={money(revenue)} note="Sum of paid orders in this list" />
-        <Stat label="Upcoming" value={String(upcoming)} note="Installs and calls still ahead" tone={upcoming ? "good" : "plain"} />
-        <Stat label="Consultations" value={String(consults)} />
-        <Stat label="Enquiries" value={String(enquiries)} />
+        {scl ? (
+          <>
+            <Stat label="Enquiries" value={String(leads.length)} />
+            <Stat label="Urgent" value={String(urgent)} note="Asked for a callback" tone={urgent ? "warn" : "plain"} />
+            <Stat label="Consultations" value={String(consults)} />
+            <Stat label="Upcoming" value={String(upcoming)} note="Calls still ahead" tone={upcoming ? "good" : "plain"} />
+            <Stat label="Last seven days" value={String(recent)} />
+          </>
+        ) : (
+          <>
+            <Stat label="Paid orders" value={String(paid.length)} />
+            <Stat label="Revenue" value={money(revenue)} note="Sum of paid orders in this list" />
+            <Stat label="Upcoming" value={String(upcoming)} note="Installs and calls still ahead" tone={upcoming ? "good" : "plain"} />
+            <Stat label="Consultations" value={String(consults)} />
+            <Stat label="Enquiries" value={String(enquiries)} />
+          </>
+        )}
       </StatRow>
 
       {stripeUpcomingPayout && (

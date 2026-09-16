@@ -5,6 +5,8 @@ import { listPeople, type Person } from "@/lib/crm/people";
 import { STATUS_PILL, STATUS_LABEL } from "@/lib/crm/labels";
 import { money } from "@/lib/crm/leads";
 import { PageHeader, Panel, Note, Empty, Stat, StatRow, Pill } from "../ui";
+import ExportButton from "../export-button";
+import { fullAddress } from "@/lib/crm/people";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +27,11 @@ export default async function ContactsPage({ searchParams }: { searchParams: { q
   const customers = people.filter((p) => p.paid > 0);
   const paid = customers.reduce((s, p) => s + p.paid, 0);
   const open = people.filter((p) => p.status && !["won", "lost", "spam"].includes(p.status)).length;
+
+  const exportRows = rows.map((p) => [
+    p.name, p.email, p.phone, fullAddress(p), p.status ?? (p.orders ? "customer" : "enquiry"),
+    p.orders, p.paid ? p.paid.toFixed(2) : "", p.lastActivity ? p.lastActivity.slice(0, 10) : "", p.notes ?? "",
+  ]);
 
   const search = (
     <form method="get" className="flex items-center gap-2">
@@ -70,7 +77,19 @@ export default async function ContactsPage({ searchParams }: { searchParams: { q
         </div>
       )}
 
-      <Panel title="Customers" aside={search}>
+      <Panel
+        title="Customers"
+        aside={
+          <div className="flex items-center gap-2">
+            {search}
+            <ExportButton
+              filename="customers"
+              headers={["Name", "Email", "Phone", "Address", "Status", "Orders", "Spent", "Last seen", "Notes"]}
+              rows={exportRows}
+            />
+          </div>
+        }
+      >
         {rows.length === 0 ? (
           <Empty
             title={q ? "Nobody matches that" : "No customers yet"}

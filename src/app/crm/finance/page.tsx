@@ -1,14 +1,18 @@
+import Link from "next/link";
+import { Upload } from "lucide-react";
 import { requireSession } from "@/lib/crm/session";
+import { fetchBank } from "@/lib/crm/bank";
 import { fetchFinance } from "@/lib/crm/stripe-finance";
 import { moneyExact, money } from "@/lib/crm/leads";
 import { PageHeader, Panel, Stat, StatRow, Note } from "../ui";
+import ExportButton from "../export-button";
 import { BarChart, Legend } from "../chart";
 
 export const dynamic = "force-dynamic";
 
 export default async function FinancePage() {
-  requireSession();
-  const result = await fetchFinance(12);
+  const { site } = requireSession();
+  const [result, bank] = await Promise.all([fetchFinance(12), fetchBank(site, 12)]);
 
   if (!result.ok) {
     return (
@@ -39,6 +43,15 @@ export default async function FinancePage() {
       <PageHeader
         title="Finance"
         sub="Everything that has moved through Stripe in the last twelve months, after card fees and refunds."
+        aside={
+          <Link
+            href="/crm/finance/import"
+            className="flex min-h-[38px] items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            <Upload className="h-4 w-4 text-slate-400" aria-hidden="true" />
+            Import a statement
+          </Link>
+        }
       />
 
       <StatRow>
@@ -68,7 +81,7 @@ export default async function FinancePage() {
           </p>
         </Panel>
 
-        <Panel title="In the bank">
+        <Panel title="At Stripe">
           <div className="grid grid-cols-1 divide-slate-200 sm:grid-cols-3 sm:divide-x">
             {/* A negative balance is normal after a refund clears before the
                 next payment lands, and "ready to pay out" was the wrong
@@ -88,7 +101,53 @@ export default async function FinancePage() {
           </div>
         </Panel>
 
-        <Panel title="Month by month">
+        {/* Kept apart from the Stripe figures on purpose. A card payment appears
+            in both, once when it is taken and again when it settles into the
+            bank, so adding the two together would count every sale twice. */}
+        {bank ? (
+          <Panel
+            title="The bank account"
+            aside={<span className="text-xs text-slate-500">{bank.count} imported lines since {bank.latestOn?.slice(0, 7)}</span>}
+          >
+            <div className="grid grid-cols-2 divide-x divide-y divide-slate-200 sm:grid-cols-4 sm:divide-y-0">
+              <Stat label="In" value={money(bank.inCents / 100)} tone="good" />
+              <Stat label="Out" value={money(bank.outCents / 100)} />
+              <Stat label="Difference" value={money(bank.netCents / 100)} tone={bank.netCents >= 0 ? "good" : "bad"} />
+              <Stat
+                label="Balance"
+                value={bank.latestBalanceCents == null ? "Not given" : moneyExact(bank.latestBalanceCents / 100)}
+                note={bank.latestOn ? `As at ${bank.latestOn}` : undefined}
+              />
+            </div>
+          </Panel>
+        ) : (
+          <Panel title="The bank account">
+            <div className="px-4 py-5">
+              <p className="mb-3 text-sm text-slate-600">
+                Nothing imported yet. Stripe only knows about card payments, so transfers, standing
+                orders and bank fees are missing from everything above.
+              </p>
+              <Link
+                href="/crm/finance/import"
+                className="inline-flex min-h-[38px] items-center gap-2 rounded-lg bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-800"
+              >
+                <Upload className="h-4 w-4" aria-hidden="true" />
+                Import a statement
+              </Link>
+            </div>
+          </Panel>
+        )}
+
+        <Panel
+          title="Month by month"
+          aside={
+            <ExportButton
+              filename="finance-by-month"
+              headers={["Month", "Payments", "Money in", "Card fees", "Refunds", "Kept"]}
+              rows={f.months.map((m) => [m.label, m.payments, m.gross.toFixed(2), m.fees.toFixed(2), m.refunds.toFixed(2), m.net.toFixed(2)])}
+            />
+          }
+        >
           <div className="overflow-x-auto">
             <table className="w-full min-w-[34rem] text-sm">
               <thead>

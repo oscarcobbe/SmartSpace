@@ -4,6 +4,7 @@ import { Fragment, useMemo, useState } from "react";
 import { ChevronDown, Download, Search } from "lucide-react";
 import type { Lead } from "@/lib/crm/leads";
 import { telHref } from "@/lib/crm/labels";
+import { toCsv, downloadCsv } from "@/lib/crm/csv";
 import { Empty, Pill, PILL_KIND } from "../ui";
 
 const TABS = ["All", "Paid Order", "Upcoming", "Installation", "Consultation", "Contact Enquiry"] as const;
@@ -35,14 +36,10 @@ const dash = (v: string | undefined) => (!v || v === "-" ? "" : v);
 const dayOnly = (v: string) => dash(v).split(",")[0] ?? "";
 
 function csv(rows: Lead[]): string {
-  const head = ["Date", "Type", "Name", "Email", "Phone", "Address", "Product", "Amount", "Booking", "Slot", "Status", "Order ID"];
-  const cell = (v: string) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-  const lines = rows.map((l) =>
-    [l.date, l.type, l.name, l.email, l.phone, l.address, l.product, l.amount, l.bookingDate, l.bookingSlot, l.status, l.orderId]
-      .map((v) => cell(dash(v)))
-      .join(","),
+  return toCsv(
+    ["Date", "Type", "Name", "Email", "Phone", "Address", "Product", "Amount", "Booking", "Slot", "Status", "Order ID"],
+    rows.map((l) => [l.date, l.type, l.name, l.email, l.phone, l.address, l.product, l.amount, l.bookingDate, l.bookingSlot, l.status, l.orderId]),
   );
-  return [head.join(","), ...lines].join("\n");
 }
 
 export default function OrdersTable({ leads }: { leads: Lead[] }) {
@@ -72,13 +69,7 @@ export default function OrdersTable({ leads }: { leads: Lead[] }) {
   }, [leads, tab, q]);
 
   function download() {
-    const blob = new Blob([csv(rows)], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `orders-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadCsv(`orders-${new Date().toISOString().slice(0, 10)}.csv`, csv(rows));
   }
 
   const idOf = (l: Lead, i: number) => `${l.orderId || l.email || l.phone || "row"}-${i}`;
@@ -123,7 +114,11 @@ export default function OrdersTable({ leads }: { leads: Lead[] }) {
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
       <div className="flex flex-col gap-3 border-b border-slate-200 px-3 py-3 lg:flex-row lg:items-center">
         <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-0.5">
-          {TABS.map((t) => (
+          {/* A filter that can only ever return nothing is not a filter. Smart
+              Space has paid orders and installs; SmartCare Living's sheet has
+              neither, and showing "Paid 0" there invites the question of where
+              the money went. */}
+          {TABS.filter((t) => t === "All" || (counts[t] ?? 0) > 0).map((t) => (
             <button
               key={t}
               type="button"

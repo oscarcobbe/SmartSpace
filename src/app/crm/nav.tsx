@@ -15,6 +15,12 @@ import type { Site } from "@/lib/crm/db";
  * so putting the tab on both sites would invite it to be used where it should
  * not be.
  */
+/* SmartCare Living takes enquiries, not orders: nothing is paid for on the way
+   in, so "Orders" was the wrong word for the section on that site. */
+const LABEL_BY_SITE: Record<string, Partial<Record<Site, string>>> = {
+  "/crm/orders": { smartcareliving: "Enquiries" },
+};
+
 const GROUPS: { heading: string; items: { href: string; label: string; icon: typeof Users; sites?: Site[] }[] }[] = [
   {
     heading: "Today",
@@ -53,7 +59,9 @@ export default function CrmNav({ site, horizontal = false }: { site: Site; horiz
 
   const visible = GROUPS.map((g) => ({
     ...g,
-    items: g.items.filter((i) => !i.sites || i.sites.includes(site)),
+    items: g.items
+      .filter((i) => !i.sites || i.sites.includes(site))
+      .map((i) => ({ ...i, label: LABEL_BY_SITE[i.href]?.[site] ?? i.label })),
   }));
 
   if (horizontal) {
