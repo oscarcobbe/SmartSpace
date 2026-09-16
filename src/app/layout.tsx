@@ -9,6 +9,7 @@ import GclidCapture from "@/components/GclidCapture";
 import CookieBanner from "@/components/CookieBanner";
 import VisitBeacon from "@/components/VisitBeacon";
 import PhoneClickTracker from "@/components/PhoneClickTracker";
+import EngagementTracker from "@/components/EngagementTracker";
 import { AGGREGATE_RATING, AGGREGATE_REVIEW_COUNT } from "@/lib/business-constants";
 
 // next/font self-hosts the font, eliminates the render-blocking
@@ -306,6 +307,7 @@ export default function RootLayout({
         <CartProvider>
           <GclidCapture />
           <PhoneClickTracker />
+          <EngagementTracker />
           <Navbar />
           <main id="main-content" className="min-h-screen">{children}</main>
           <CartDrawer />
