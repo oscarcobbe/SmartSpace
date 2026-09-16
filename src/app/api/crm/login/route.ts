@@ -45,6 +45,33 @@ export async function POST(request: Request) {
     const origin = new URL(request.url).origin;
     const link = `${origin}/api/crm/session?token=${encodeURIComponent(token)}`;
 
+    /*
+     * A local run must not send real email.
+     *
+     * This repository's .env.local carries Smart Space's production Resend
+     * credentials, because the live site's receipts run on them. So a
+     * developer opening the CRM on localhost and typing an address into the
+     * sign-in box sent that person a genuine "Your sign-in link" email from
+     * the client's own account. It happened twice in one sitting, to Nigel,
+     * during a demo, and the link in it pointed at localhost so it was
+     * useless as well as unexpected.
+     *
+     * Outside production the link is printed to the server log instead, which
+     * is also how you sign in locally. CRM_ALLOW_REAL_EMAIL=true is the
+     * deliberate override for anyone who genuinely needs to test delivery.
+     */
+    const localRun =
+      process.env.NODE_ENV !== "production" && process.env.CRM_ALLOW_REAL_EMAIL !== "true";
+    if (localRun) {
+      console.log(`\n[crm/login] local run, no email sent. Sign-in link for ${address}:\n${link}\n`);
+      /* Handed back to the page as well as logged. Printing it only to the
+         server log meant whoever was sitting in front of the browser had no
+         way to get in without somebody reading the terminal for them. Never
+         reaches a real deployment: localRun is false whenever NODE_ENV is
+         production. */
+      return NextResponse.json({ ...same, devLink: link });
+    }
+
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) throw new Error("RESEND_API_KEY is not set");
     await new Resend(apiKey).emails.send({

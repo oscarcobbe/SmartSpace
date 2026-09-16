@@ -33,6 +33,8 @@ const SOURCES = [
   ["quiz", "Eufy doorbell"],
 ];
 
+const sessions = new Map();
+
 const day = (n) => new Date(Date.now() - n * 86400000).toISOString();
 const uuidOf = (i) => `00000000-0000-4000-8000-${String(i + 1).padStart(12, "0")}`;
 
@@ -126,7 +128,16 @@ const json = (res, body, code = 200) => {
   res.end(JSON.stringify(body));
 };
 
-createServer((req, res) => {
+const server = createServer((req, res) => {
+  /* The body has to be buffered before any route can look at it. The first
+     version of this handler answered synchronously, which was fine while every
+     stubbed route ignored the body and broke the moment one did not. */
+  let body = "";
+  req.on("data", (c) => (body += c));
+  req.on("end", () => handle(req, res, body));
+});
+
+function handle(req, res, body) {
   const url = req.url ?? "";
 
   if (url.startsWith("/api/admin/leads")) return json(res, adminLeads);
@@ -160,7 +171,26 @@ createServer((req, res) => {
     return json(res, tasks);
   }
   if (url.startsWith("/rest/v1/crm_users")) return json(res, [{ sites: ["smart-space", "smartcareliving"] }]);
-  if (url.startsWith("/rest/v1/crm_sessions")) return json(res, [], req.method === "GET" ? 200 : 201);
+
+  /* Sign-in link tokens, held in memory so the printed link actually redeems.
+     Returning an empty array here meant every local link came back "expired",
+     which looked like a bug in the auth code rather than in the stub. */
+  if (url.startsWith("/rest/v1/crm_sessions")) {
+    if (req.method === "POST") {
+      const row = body ? JSON.parse(body) : null;
+      if (row) sessions.set(row.token_hash, row);
+      return json(res, [row], 201);
+    }
+    const m = /token_hash=eq\.([0-9a-f]+)/.exec(url);
+    if (req.method === "GET") return json(res, m && sessions.has(m[1]) ? [sessions.get(m[1])] : []);
+    if (req.method === "PATCH") {
+      if (m && sessions.has(m[1])) Object.assign(sessions.get(m[1]), JSON.parse(body || "{}"));
+      return json(res, null, 204);
+    }
+    return json(res, [], 200);
+  }
 
   json(res, { error: "no stub for " + url }, 404);
-}).listen(3999, () => console.log("design stub on 3999"));
+}
+
+server.listen(3999, () => console.log("design stub on 3999"));

@@ -22,7 +22,7 @@
  *   a tampered cookie fails before any query runs.
  */
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "crypto";
-import { crm, type Site } from "./db";
+import { crm, THIS_SITE, type Site } from "./db";
 
 const SESSION_DAYS = 30;
 const LINK_MINUTES = 15;
@@ -36,12 +36,55 @@ const secret = () => {
 
 const sha256 = (v: string) => createHash("sha256").update(v).digest("hex");
 
-/** Is this address allowed in at all, and to which sites. */
+/**
+ * Which company domain gets into which CRM.
+ *
+ * Anyone with a mailbox on the business's own domain can sign in, so a new
+ * person in the office does not have to wait for somebody to add them to a
+ * table. The mailbox is the credential: a link is emailed to it and only
+ * whoever can open that mailbox can use the link.
+ *
+ * Set CRM_EMAIL_DOMAINS to override, comma separated. Deliberately does not
+ * include fourwindsdigital.com: this is Nigel's customer data, and our access
+ * is a named row in crm_users rather than a standing right for a whole domain.
+ */
+const DOMAIN_SITES: Record<string, Site> = {
+  "smart-space.ie": "smart-space",
+  "smartcareliving.ie": "smartcareliving",
+};
+
+function sitesForDomain(address: string): Site[] | null {
+  const domain = address.split("@")[1];
+  if (!domain) return null;
+
+  const override = process.env.CRM_EMAIL_DOMAINS?.trim();
+  if (override) {
+    const allowed = override.split(",").map((d) => d.trim().toLowerCase()).filter(Boolean);
+    return allowed.includes(domain) ? [THIS_SITE] : null;
+  }
+
+  const site = DOMAIN_SITES[domain];
+  /* Only ever this deployment's own site. An address on the other business's
+     domain is not a way into this one, whatever the table says. */
+  return site && site === THIS_SITE ? [site] : null;
+}
+
+/**
+ * Is this address allowed in at all, and to which sites.
+ *
+ * A named row wins, because it can grant access to both businesses and can be
+ * removed to revoke somebody. The domain rule is the fallback.
+ */
 export async function allowedSites(email: string): Promise<Site[] | null> {
+  const address = email.trim().toLowerCase();
+
   const rows = await crm<{ sites: Site[] }[]>(
-    `crm_users?email=eq.${encodeURIComponent(email.trim().toLowerCase())}&select=sites&limit=1`,
+    `crm_users?email=eq.${encodeURIComponent(address)}&select=sites&limit=1`,
   );
-  return rows?.[0]?.sites ?? null;
+  const named = rows?.[0]?.sites;
+  if (named?.length) return named;
+
+  return sitesForDomain(address);
 }
 
 export async function mintLinkToken(email: string, site: Site, ip: string): Promise<string> {
