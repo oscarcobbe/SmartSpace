@@ -5,7 +5,25 @@ import { NextResponse } from "next/server";
  * permissive for now (allows Google Ads, gtag, Calendly, Stripe, Shopify,
  * Resend/Gmail domains used by third-party scripts/fonts).
  */
-export function middleware() {
+export function middleware(request: Request) {
+  /*
+   * The CRM does not exist on a deployment that has no database.
+   *
+   * The page itself called notFound(), which rendered the right page and
+   * answered 200, because a streaming response has already committed its
+   * status by the time the component runs. A public URL that says "Page not
+   * found" over a 200 is the shape this repository keeps finding: a crawl, an
+   * uptime check or a probe reads it as a working page.
+   *
+   * Middleware runs before any of that, so the 404 here is a real one. Setting
+   * SMARTCRM_URL and SMARTCRM_SERVICE_KEY brings the CRM into being.
+   */
+  const path = new URL(request.url).pathname;
+  const isCrm = path === "/crm" || path.startsWith("/crm/") || path.startsWith("/api/crm/");
+  if (isCrm && !(process.env.SMARTCRM_URL?.trim() && process.env.SMARTCRM_SERVICE_KEY?.trim())) {
+    return new NextResponse("Not found", { status: 404, headers: { "Content-Type": "text/plain" } });
+  }
+
   const res = NextResponse.next();
   const h = res.headers;
 

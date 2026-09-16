@@ -1,6 +1,7 @@
 import { Suspense } from "react";
+import { notFound } from "next/navigation";
 import { currentSession, SITE_LABEL } from "@/lib/crm/session";
-import { THIS_SITE } from "@/lib/crm/db";
+import { THIS_SITE, crmConfigured } from "@/lib/crm/db";
 import LoginForm from "./login-form";
 import { PageHeader } from "./ui";
 import { NeedsYou, LatestIn, MoneyThisMonth, AdsThisMonth, RecentActivity, PanelSkeleton } from "./overview-panels";
@@ -25,6 +26,12 @@ function greeting(): string {
 
 export default function CrmHome({ searchParams }: { searchParams: { error?: string } }) {
   const session = currentSession();
+
+  /* Until the database is wired up there is no CRM, so it does not exist.
+     A sign-in form on a public domain that cannot possibly sign anybody in is
+     an invitation to probe it and a thing a customer might find and ask about.
+     Setting SMARTCRM_URL and SMARTCRM_SERVICE_KEY brings it into being. */
+  if (!session && !crmConfigured()) notFound();
 
   if (session) {
     const today = new Intl.DateTimeFormat("en-IE", {
