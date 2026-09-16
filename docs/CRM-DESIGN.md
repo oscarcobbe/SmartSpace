@@ -83,6 +83,44 @@ checked:
   is caught rather than quietly counted. Its spend is shown in its own panel
   rather than dropped.
 
+## Signing in
+
+Anyone with a mailbox on the business's own domain can sign in. The mailbox is
+the credential: the link goes to it and only whoever can open it can use it. A
+named row in `crm_users` still wins, because it can grant both businesses and
+can be removed to revoke somebody.
+
+Deliberately not `fourwindsdigital.com`. This is the client's customer data and
+our access is a named row, not a standing right for a whole domain. A
+deployment only ever admits its own site's domain, so an address at the other
+business is not a way into this one.
+
+**A local run never sends real email.** This repository's `.env.local` carries
+Smart Space's production Resend credentials, so typing an address into the
+sign-in box on localhost once sent that person a real sign-in link from the
+client's own account. Outside production the link is printed to the server log
+and shown on the page as an "Open the CRM" button.
+`CRM_ALLOW_REAL_EMAIL=true` is the deliberate override.
+
+## Two businesses, one build
+
+`CRM_SITE` decides which business a deployment is. Everything downstream follows
+from it: which orders feed is read, what the second nav item is called, which
+Google Ads account is queried, which stats make sense, and whether Outreach
+exists at all.
+
+- **Orders.** Smart Space has `/api/admin/leads`, which reconciles Stripe,
+  Calendly and a sheet. SmartCare Living has a Google Sheet its own site writes
+  to, read back through `api/dashboard-data.js`. `lib/crm/leads-scl.ts` maps
+  those rows onto the same shape, so no page knows which site it is showing.
+- **Words.** SmartCare Living takes enquiries, not orders. Nothing is paid for
+  on the way in, so a "Revenue: €0" tile would be a wrong answer rather than an
+  empty one, and filters that can only return nothing are hidden.
+- **Outreach** appears for SmartCare Living only, and sends nothing. A prospect
+  can only be written to once a person has read it and written down why we may.
+  `crm_outreach_blocks` is never deleted from: an opt-out a later import can
+  undo is not an opt-out.
+
 ## Guards
 
 `npm run build` runs `scripts/check-crm-dates.mjs`, which fails if any date
