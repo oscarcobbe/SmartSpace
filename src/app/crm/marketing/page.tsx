@@ -1,13 +1,58 @@
-import { requireSession } from "@/lib/crm/session";
-import { fetchAds } from "@/lib/crm/google-ads";
+import { requireSession, SITE_LABEL } from "@/lib/crm/session";
+import { fetchAds, adsSplit } from "@/lib/crm/google-ads";
 import { money, moneyExact } from "@/lib/crm/leads";
-import { PageHeader, Panel, Stat, StatRow, Note, Pill } from "../ui";
 import { STATUS_PILL } from "@/lib/crm/labels";
+import { PageHeader, Panel, Stat, StatRow, Note, Pill } from "../ui";
 import { BarChart, Legend } from "../chart";
+import type { AdsData } from "@/lib/crm/google-ads";
 
 export const dynamic = "force-dynamic";
 
 const int = (n: number) => new Intl.NumberFormat("en-IE", { maximumFractionDigits: 0 }).format(n);
+
+function CampaignTable({ campaigns }: { campaigns: AdsData["campaigns"] }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[42rem] text-sm">
+        <thead>
+          <tr className="border-b border-slate-200 text-left text-[11px] uppercase tracking-wider text-slate-500">
+            <th scope="col" className="px-4 py-2 font-semibold">Campaign</th>
+            <th scope="col" className="px-4 py-2 font-semibold">Status</th>
+            <th scope="col" className="px-4 py-2 text-right font-semibold">Spend</th>
+            <th scope="col" className="px-4 py-2 text-right font-semibold">Clicks</th>
+            <th scope="col" className="px-4 py-2 text-right font-semibold">Enquiries</th>
+            <th scope="col" className="px-4 py-2 text-right font-semibold">Cost each</th>
+            <th scope="col" className="px-4 py-2 text-right font-semibold">Work won</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-100">
+          {campaigns.map((c) => (
+            <tr key={c.id} className={c.status === "ENABLED" ? undefined : "text-slate-500"}>
+              {/* Campaign names are internal and long, "RETIRED - do not
+                  enable - ..." among them. Truncated with the full name on
+                  hover, so one of them cannot push the numbers off the table. */}
+              <td className="max-w-[18rem] px-4 py-2">
+                <span className="block truncate text-slate-900" title={c.name}>{c.name}</span>
+              </td>
+              <td className="px-4 py-2">
+                <Pill className={c.status === "ENABLED" ? STATUS_PILL.won : STATUS_PILL.contacted}>
+                  {c.status === "ENABLED" ? "Running" : c.status === "PAUSED" ? "Paused" : c.status}
+                </Pill>
+              </td>
+              <td className="px-4 py-2 text-right tabular-nums text-slate-700">{moneyExact(c.cost)}</td>
+              <td className="px-4 py-2 text-right tabular-nums text-slate-700">{int(c.clicks)}</td>
+              <td className="px-4 py-2 text-right tabular-nums text-slate-700">{c.conversions.toFixed(0)}</td>
+              <td className="px-4 py-2 text-right tabular-nums text-slate-700">
+                {c.conversions ? moneyExact(c.cost / c.conversions) : "–"}
+              </td>
+              <td className="px-4 py-2 text-right tabular-nums text-slate-900">{c.value ? moneyExact(c.value) : "–"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 export default async function MarketingPage() {
   const session = requireSession();
@@ -22,42 +67,49 @@ export default async function MarketingPage() {
     );
   }
 
-  const a = result.data;
-  const roas = a.cost ? a.value / a.cost : 0;
-  const cpc = a.clicks ? a.cost / a.clicks : 0;
-  const cpa = a.conversions ? a.cost / a.conversions : 0;
-  const ctr = a.impressions ? (a.clicks / a.impressions) * 100 : 0;
+  /* The headline figures are this business's campaigns, not the account's.
+     SmartCare Living ran from the Smart Space account before it had its own,
+     and counting its €926 as Smart Space spend pushed Smart Space's return on
+     spend down by about a fifth for work it never won. The other business's
+     spend is still shown, below, rather than quietly dropped. */
+  const { own, other } = adsSplit(result.data);
+  const otherLabel = session.site === "smart-space" ? SITE_LABEL.smartcareliving : SITE_LABEL["smart-space"];
 
-  const thisMonth = a.months[a.months.length - 1];
+  const roas = own.cost ? own.value / own.cost : 0;
+  const cpc = own.clicks ? own.cost / own.clicks : 0;
+  const cpa = own.conversions ? own.cost / own.conversions : 0;
+  const ctr = own.impressions ? (own.clicks / own.impressions) * 100 : 0;
+
+  const thisMonth = own.months[own.months.length - 1];
   const dayOfMonth = new Date().getDate();
 
-  const bars = a.months.map((m) => ({
+  const bars = own.months.map((m) => ({
     label: m.label,
     value: m.cost,
-    title: `${m.label}: ${moneyExact(m.cost)} spent, ${m.conversions.toFixed(1)} conversions, ${moneyExact(m.value)} of work won`,
+    title: `${m.label}: ${moneyExact(m.cost)} spent, ${m.conversions.toFixed(1)} enquiries, ${moneyExact(m.value)} of work won`,
   }));
 
   return (
     <>
       <PageHeader
         title="Marketing"
-        sub={`Google Ads, ${a.window.from} to ${a.window.to}.`}
+        sub={`Google Ads for ${SITE_LABEL[session.site]}, ${own.window.from} to ${own.window.to}.`}
       />
 
       <StatRow>
-        <Stat label="Spend" value={money(a.cost)} note="Last twelve months" />
-        <Stat label="Work won" value={money(a.value)} note="Value recorded against ads" tone={a.value > 0 ? "good" : "plain"} />
+        <Stat label="Spend" value={money(own.cost)} note="Last twelve months" />
+        <Stat label="Work won" value={money(own.value)} note="Value recorded against ads" tone={own.value > 0 ? "good" : "plain"} />
         <Stat
           label="Return on spend"
-          value={a.cost ? `${roas.toFixed(1)}x` : "–"}
-          note={a.cost ? `${money(a.value)} back on ${money(a.cost)}` : undefined}
+          value={own.cost ? `${roas.toFixed(1)}x` : "–"}
+          note={own.cost ? `${money(own.value)} back on ${money(own.cost)}` : undefined}
           tone={roas >= 3 ? "good" : roas >= 1 ? "warn" : "bad"}
         />
-        <Stat label="Enquiries" value={a.conversions.toFixed(0)} note={a.conversions ? `${moneyExact(cpa)} each` : undefined} />
-        <Stat label="Clicks" value={int(a.clicks)} note={`${moneyExact(cpc)} each, ${ctr.toFixed(1)}% of views`} />
+        <Stat label="Enquiries" value={own.conversions.toFixed(0)} note={own.conversions ? `${moneyExact(cpa)} each` : undefined} />
+        <Stat label="Clicks" value={int(own.clicks)} note={`${moneyExact(cpc)} each, ${ctr.toFixed(1)}% of views`} />
       </StatRow>
 
-      {a.value === 0 && a.cost > 0 && (
+      {own.value === 0 && own.cost > 0 && (
         <div className="mb-6">
           <Note tone="warn">
             No revenue is recorded against these ads yet, so return on spend cannot be worked out. That figure
@@ -72,53 +124,27 @@ export default async function MarketingPage() {
             <BarChart bars={bars} ariaLabel="Google Ads spend by month over the last twelve months" />
           </div>
           <Legend items={[{ color: "#f48222", label: "Spend" }]} />
-          <p className="px-4 pb-4 -mt-2 text-xs text-slate-500">
+          <p className="-mt-2 px-4 pb-4 text-xs text-slate-500">
             {thisMonth.label} is {dayOfMonth} {dayOfMonth === 1 ? "day" : "days"} in, so its bar is a part month.
           </p>
         </Panel>
 
         <Panel title="By campaign">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[42rem] text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
-                  <th scope="col" className="px-4 py-2 font-medium">Campaign</th>
-                  <th scope="col" className="px-4 py-2 font-medium">Status</th>
-                  <th scope="col" className="px-4 py-2 text-right font-medium">Spend</th>
-                  <th scope="col" className="px-4 py-2 text-right font-medium">Clicks</th>
-                  <th scope="col" className="px-4 py-2 text-right font-medium">Enquiries</th>
-                  <th scope="col" className="px-4 py-2 text-right font-medium">Cost each</th>
-                  <th scope="col" className="px-4 py-2 text-right font-medium">Work won</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {a.campaigns.map((c) => (
-                  <tr key={c.name} className={c.status === "ENABLED" ? undefined : "text-slate-500"}>
-                    {/* Campaign names are internal and long, "RETIRED - do not
-                        enable - ..." among them. Truncated with the full name
-                        on hover, so one of them cannot push the numbers off
-                        the right of the table. */}
-                    <td className="max-w-[18rem] px-4 py-2">
-                      <span className="block truncate text-slate-900" title={c.name}>{c.name}</span>
-                    </td>
-                    <td className="px-4 py-2">
-                      <Pill className={c.status === "ENABLED" ? STATUS_PILL.won : STATUS_PILL.contacted}>
-                        {c.status === "ENABLED" ? "Running" : c.status === "PAUSED" ? "Paused" : c.status}
-                      </Pill>
-                    </td>
-                    <td className="px-4 py-2 text-right tabular-nums text-slate-700">{moneyExact(c.cost)}</td>
-                    <td className="px-4 py-2 text-right tabular-nums text-slate-700">{int(c.clicks)}</td>
-                    <td className="px-4 py-2 text-right tabular-nums text-slate-700">{c.conversions.toFixed(0)}</td>
-                    <td className="px-4 py-2 text-right tabular-nums text-slate-700">
-                      {c.conversions ? moneyExact(c.cost / c.conversions) : "–"}
-                    </td>
-                    <td className="px-4 py-2 text-right tabular-nums text-slate-900">{c.value ? moneyExact(c.value) : "–"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <CampaignTable campaigns={own.campaigns} />
         </Panel>
+
+        {other && (
+          <Panel title={`${otherLabel} on this account`}>
+            <div className="border-b border-slate-200 px-4 py-3">
+              <Note>
+                {otherLabel} ran from this Google account before it had one of its own. The {money(other.cost)} below is
+                real spend on this account and it is kept out of the figures above, because it is not {SITE_LABEL[session.site]}
+                {" "}performance.
+              </Note>
+            </div>
+            <CampaignTable campaigns={other.campaigns} />
+          </Panel>
+        )}
       </div>
     </>
   );

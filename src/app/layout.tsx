@@ -255,6 +255,25 @@ export default function RootLayout({
               // upper end of what Google documents and still imperceptible.
               "  wait_for_update: 2000",
               "});",
+              // ── The CRM is not the website ──
+              // /crm is a private admin application on the same domain. Every
+              // config call below sends a hit, so without this guard Nigel
+              // reading his own order list filed a page_view against the GA4
+              // property the ads are judged by, and put paths like
+              // /crm/contacts/<id> into Google's reports.
+              //
+              // Only the config calls are guarded. gtag('js'), the consent
+              // defaults and url_passthrough all stay, because they send
+              // nothing on their own and because the consent default must run
+              // before any config on every page without exception. gtag.js
+              // still loads on /crm and, with no config call, sends no hit.
+              //
+              // Checked at load time rather than on navigation: the CRM is
+              // linked from nowhere on the site, so it is always a fresh
+              // document, and a config call only sends its page_view once per
+              // document anyway.
+              "var ssIsCrm = location.pathname === '/crm' || location.pathname.indexOf('/crm/') === 0;",
+              "if (!ssIsCrm) {",
               // Google Ads
               "gtag('config', " + JSON.stringify(GTAG_ID) + ", { allow_enhanced_conversions: true });",
               // GA4 (only configured when the measurement ID env var is set)
@@ -273,6 +292,7 @@ export default function RootLayout({
               "  gtag('config', " + JSON.stringify(GTAG_ID) + " + '/' + callLabel, {",
               "    phone_conversion_number: " + JSON.stringify(BUSINESS_PHONE_CALL_TRACKING),
               "  });",
+              "}",
               "}",
             ].join("\n"),
           }}

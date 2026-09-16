@@ -14,9 +14,33 @@
 
 const VERSION = "v25";
 
-export const ADS_ACCOUNT: Record<"smart-space" | "smartcareliving", string> = {
+export type AdSite = "smart-space" | "smartcareliving";
+
+export const ADS_ACCOUNT: Record<AdSite, string> = {
   "smart-space": "9994041488",
   smartcareliving: "9060218843",
+};
+
+/**
+ * Campaigns that sit on one business's account but spent the other business's
+ * money. There is one: SmartCare Living was first run from the Smart Space
+ * account in March before it got its own, and its €926 is still on that
+ * account's history. Reported as Smart Space, it pushed Smart Space's return on
+ * spend down by about a fifth for work it never won.
+ *
+ * Verified against the API on 16 September 2026 rather than guessed. The id is
+ * what identifies it, because a campaign can be renamed; the name pattern is a
+ * second net so a new cross-business campaign is caught rather than quietly
+ * counted, and it only ever has to be right about the word.
+ */
+const FOREIGN_CAMPAIGN_IDS: Record<AdSite, string[]> = {
+  "smart-space": ["23688259814"],
+  smartcareliving: [],
+};
+
+const FOREIGN_NAME: Record<AdSite, RegExp> = {
+  "smart-space": /smart\s*care\s*living/i,
+  smartcareliving: /smart\s*space/i,
 };
 
 export interface MonthSpend {
@@ -30,8 +54,21 @@ export interface MonthSpend {
 }
 
 export interface CampaignRow {
+  id: string;
   name: string;
   status: string;
+  cost: number;
+  clicks: number;
+  impressions: number;
+  conversions: number;
+  value: number;
+  /** True when this campaign belongs to the other business. */
+  foreign: boolean;
+}
+
+interface Cell {
+  month: string;
+  campaignId: string;
   cost: number;
   clicks: number;
   impressions: number;
@@ -42,6 +79,9 @@ export interface CampaignRow {
 export interface AdsData {
   months: MonthSpend[];
   campaigns: CampaignRow[];
+  /** Kept so a split can rebuild the months for either side. */
+  cells: Cell[];
+  monthKeys: string[];
   window: { from: string; to: string };
   cost: number;
   clicks: number;
@@ -79,7 +119,7 @@ async function accessToken(): Promise<string> {
 /** Only the fields these queries ask for. Google returns camelCase over REST. */
 interface AdsRow {
   segments?: { month?: string };
-  campaign?: { name?: string; status?: string };
+  campaign?: { id?: string | number; name?: string; status?: string };
   metrics?: {
     costMicros?: string | number;
     clicks?: string | number;
@@ -118,77 +158,146 @@ const monthLabel = (key: string) => {
 
 const num = (v: unknown) => (typeof v === "number" ? v : parseFloat(String(v ?? 0)) || 0);
 
-export async function fetchAds(site: "smart-space" | "smartcareliving", monthsBack = 12): Promise<AdsResult> {
+const isForeign = (site: AdSite, id: string, name: string) =>
+  FOREIGN_CAMPAIGN_IDS[site].includes(id) || FOREIGN_NAME[site].test(name);
+
+function buildMonths(cells: Cell[], monthKeys: string[], keep: (campaignId: string) => boolean): MonthSpend[] {
+  const buckets = new Map<string, MonthSpend>(
+    monthKeys.map((key) => [key, { key, label: monthLabel(key), cost: 0, conversions: 0, value: 0, clicks: 0, impressions: 0 }]),
+  );
+  for (const c of cells) {
+    if (!keep(c.campaignId)) continue;
+    const b = buckets.get(c.month);
+    if (!b) continue;
+    b.cost += c.cost;
+    b.clicks += c.clicks;
+    b.impressions += c.impressions;
+    b.conversions += c.conversions;
+    b.value += c.value;
+  }
+  return Array.from(buckets.values());
+}
+
+function totals(months: MonthSpend[]) {
+  const sum = (f: (m: MonthSpend) => number) => months.reduce((s, m) => s + f(m), 0);
+  return {
+    cost: sum((m) => m.cost),
+    clicks: sum((m) => m.clicks),
+    impressions: sum((m) => m.impressions),
+    conversions: sum((m) => m.conversions),
+    value: sum((m) => m.value),
+  };
+}
+
+export async function fetchAds(site: AdSite, monthsBack = 12): Promise<AdsResult> {
   const customerId = ADS_ACCOUNT[site];
   try {
     const now = new Date();
     const from = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (monthsBack - 1), 1));
-    const range = `segments.date BETWEEN '${iso(from)}' AND '${iso(now)}'`;
 
-    const [byMonth, byCampaign] = await Promise.all([
-      search(
-        customerId,
-        `SELECT segments.month, metrics.cost_micros, metrics.clicks, metrics.impressions,
-                metrics.conversions, metrics.conversions_value
-         FROM campaign WHERE ${range}`,
-      ),
-      search(
-        customerId,
-        `SELECT campaign.name, campaign.status, metrics.cost_micros, metrics.clicks,
-                metrics.impressions, metrics.conversions, metrics.conversions_value
-         FROM campaign WHERE ${range}`,
-      ),
-    ]);
+    /* One query, segmented by month and by campaign, because the page needs
+       both roll-ups and the split between the two businesses needs the cells. */
+    const rows = await search(
+      customerId,
+      `SELECT segments.month, campaign.id, campaign.name, campaign.status,
+              metrics.cost_micros, metrics.clicks, metrics.impressions,
+              metrics.conversions, metrics.conversions_value
+       FROM campaign
+       WHERE segments.date BETWEEN '${iso(from)}' AND '${iso(now)}'`,
+    );
 
-    const buckets = new Map<string, MonthSpend>();
+    const monthKeys: string[] = [];
     for (let i = 0; i < monthsBack; i++) {
       const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (monthsBack - 1 - i), 1));
-      const key = iso(d).slice(0, 7);
-      buckets.set(key, { key, label: monthLabel(key), cost: 0, conversions: 0, value: 0, clicks: 0, impressions: 0 });
-    }
-    for (const r of byMonth) {
-      /* segments.month comes back as a full date on the first of the month. */
-      const key = String(r.segments?.month ?? "").slice(0, 7);
-      const b = buckets.get(key);
-      if (!b) continue;
-      b.cost += num(r.metrics?.costMicros) / 1e6;
-      b.clicks += num(r.metrics?.clicks);
-      b.impressions += num(r.metrics?.impressions);
-      b.conversions += num(r.metrics?.conversions);
-      b.value += num(r.metrics?.conversionsValue);
+      monthKeys.push(iso(d).slice(0, 7));
     }
 
-    const rolled = new Map<string, CampaignRow>();
-    for (const r of byCampaign) {
+    const cells: Cell[] = [];
+    const campaigns = new Map<string, CampaignRow>();
+
+    for (const r of rows) {
+      const id = String(r.campaign?.id ?? "");
       const name = String(r.campaign?.name ?? "Unnamed");
-      const row = rolled.get(name) ?? {
-        name, status: String(r.campaign?.status ?? ""), cost: 0, clicks: 0, impressions: 0, conversions: 0, value: 0,
+      /* segments.month comes back as a full date on the first of the month. */
+      const month = String(r.segments?.month ?? "").slice(0, 7);
+      const cell: Cell = {
+        month, campaignId: id,
+        cost: num(r.metrics?.costMicros) / 1e6,
+        clicks: num(r.metrics?.clicks),
+        impressions: num(r.metrics?.impressions),
+        conversions: num(r.metrics?.conversions),
+        value: num(r.metrics?.conversionsValue),
       };
-      row.cost += num(r.metrics?.costMicros) / 1e6;
-      row.clicks += num(r.metrics?.clicks);
-      row.impressions += num(r.metrics?.impressions);
-      row.conversions += num(r.metrics?.conversions);
-      row.value += num(r.metrics?.conversionsValue);
-      rolled.set(name, row);
+      cells.push(cell);
+
+      const row = campaigns.get(id) ?? {
+        id, name, status: String(r.campaign?.status ?? ""),
+        cost: 0, clicks: 0, impressions: 0, conversions: 0, value: 0,
+        foreign: isForeign(site, id, name),
+      };
+      row.cost += cell.cost;
+      row.clicks += cell.clicks;
+      row.impressions += cell.impressions;
+      row.conversions += cell.conversions;
+      row.value += cell.value;
+      campaigns.set(id, row);
     }
 
-    const months = Array.from(buckets.values());
-    const sum = (f: (m: MonthSpend) => number) => months.reduce((s, m) => s + f(m), 0);
+    const months = buildMonths(cells, monthKeys, () => true);
 
     return {
       ok: true,
       data: {
         months,
-        campaigns: Array.from(rolled.values()).sort((a, b) => b.cost - a.cost),
+        campaigns: Array.from(campaigns.values()).sort((a, b) => b.cost - a.cost),
+        cells,
+        monthKeys,
         window: { from: iso(from), to: iso(now) },
-        cost: sum((m) => m.cost),
-        clicks: sum((m) => m.clicks),
-        impressions: sum((m) => m.impressions),
-        conversions: sum((m) => m.conversions),
-        value: sum((m) => m.value),
+        ...totals(months),
       },
     };
   } catch (err) {
     return { ok: false, reason: err instanceof Error ? err.message : "Google Ads could not be reached." };
   }
+}
+
+export interface AdsSplit {
+  /** This business's own campaigns, which is what the headline figures use. */
+  own: AdsData;
+  /** The other business's campaigns sitting on this account, or null. */
+  other: AdsData | null;
+}
+
+/**
+ * Separate the business from the account.
+ *
+ * Takes no site argument: which campaigns are foreign was decided in fetchAds,
+ * where the account being queried is known, and re-deciding it here would be a
+ * second rule to keep in step with the first.
+ *
+ * The totals on the account are real spend and are still available, but they
+ * are not this business's performance, and a page that leads with them answers
+ * a question nobody asked.
+ */
+export function adsSplit(data: AdsData): AdsSplit {
+  const foreignIds = new Set(data.campaigns.filter((c) => c.foreign).map((c) => c.id));
+
+  const ownMonths = buildMonths(data.cells, data.monthKeys, (id) => !foreignIds.has(id));
+  const own: AdsData = {
+    ...data,
+    months: ownMonths,
+    campaigns: data.campaigns.filter((c) => !c.foreign),
+    ...totals(ownMonths),
+  };
+
+  if (foreignIds.size === 0) return { own, other: null };
+
+  const otherMonths = buildMonths(data.cells, data.monthKeys, (id) => foreignIds.has(id));
+  const other: AdsData = {
+    ...data,
+    months: otherMonths,
+    campaigns: data.campaigns.filter((c) => c.foreign),
+    ...totals(otherMonths),
+  };
+  return { own, other };
 }

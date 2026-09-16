@@ -23,7 +23,7 @@ export async function GET(request: Request) {
   if (!claim) return NextResponse.redirect(`${origin}/crm?error=expired`);
 
   const { value, maxAge } = makeSessionCookie(claim.email, claim.site);
-  const res = NextResponse.redirect(`${origin}/crm/orders`);
+  const res = NextResponse.redirect(`${origin}/crm`);
   res.cookies.set(COOKIE, value, {
     httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge,
   });

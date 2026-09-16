@@ -60,8 +60,38 @@ with digits in a column carries `tabular-nums`.
 
 ## Still open
 
-- The base gtag page view still fires on `/crm`, so CRM paths reach GA4. The
-  trackers no longer do. Fixing it means editing the inline consent and config
-  script in the root layout, which has broken conversion measurement twice
-  before, so it is a separate change with its own verification.
-- No overview page. Signing in lands on Orders.
+Nothing from the first pass. The three that were open have been closed and
+checked:
+
+- The base gtag page view no longer fires on `/crm`. Only the `config` calls
+  are guarded; `gtag('js')` and the consent default still run on every page
+  without exception, because the consent default must. `gtag.js` still loads on
+  `/crm` and, with nothing configured, sends no hit. Verified twice: the
+  shipped inline script was run per path in a VM and its `dataLayer` counted
+  (`/ring-installation` configures Ads, GA4 and the call label, `/crm/...`
+  configures nothing, `/crmsomething` is treated as the website), and then in
+  the browser, where the marketing page fires `g/collect` and `ccm/collect` and
+  `/crm/orders` fires neither.
+- There is an overview at `/crm`, and signing in lands there. Four panels, each
+  behind its own Suspense boundary, because they read three different services
+  and the slowest should not decide when the first one appears.
+- Marketing reports the business, not the account. SmartCare Living ran from
+  the Smart Space account before it had its own, and its €926 was being counted
+  as Smart Space spend, which read as 1.2x return where the truth is 1.5x. The
+  foreign campaign is identified by id, verified against the API rather than
+  guessed, with a name pattern as a second net so a new cross-business campaign
+  is caught rather than quietly counted. Its spend is shown in its own panel
+  rather than dropped.
+
+## Guards
+
+`npm run build` runs `scripts/check-crm-dates.mjs`, which fails if any date
+formatter under `src/app/crm` or `src/lib/crm` omits `timeZone:
+"Europe/Dublin"`. This machine is set to America/Denver and Vercel functions
+run in UTC; a date-only column parses as UTC midnight, so without the timezone
+every next step on the overview rendered a day early. Removing the timezone
+from one call turns the guard red, which has been run rather than assumed.
+
+`npm run check:crm-inbound` exercises the lead intake against a stubbed
+PostgREST. `scripts/crm-design-stub.mjs` serves invented customers so every
+screen can be looked at with content on it.

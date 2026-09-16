@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { BarChart3, CheckSquare, Euro, Receipt, Send, Users } from "lucide-react";
+import { BarChart3, CheckSquare, Euro, Home, Receipt, Send, Users } from "lucide-react";
 import type { Site } from "@/lib/crm/db";
 
 /**
@@ -19,6 +19,7 @@ const GROUPS: { heading: string; items: { href: string; label: string; icon: typ
   {
     heading: "Today",
     items: [
+      { href: "/crm", label: "Overview", icon: Home },
       { href: "/crm/orders", label: "Orders", icon: Receipt },
       { href: "/crm/contacts", label: "Customers", icon: Users },
       { href: "/crm/tasks", label: "Next steps", icon: CheckSquare },
@@ -35,7 +36,9 @@ const GROUPS: { heading: string; items: { href: string; label: string; icon: typ
 ];
 
 const isActive = (path: string | null, href: string) =>
-  path === href || Boolean(path?.startsWith(`${href}/`));
+  /* "/crm" is a real page now, not a prefix, so the exact test has to come
+     first or Overview would light up on every section beneath it. */
+  href === "/crm" ? path === "/crm" : path === href || Boolean(path?.startsWith(`${href}/`));
 
 export default function CrmNav({ site, horizontal = false }: { site: Site; horizontal?: boolean }) {
   const path = usePathname();

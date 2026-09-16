@@ -56,7 +56,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur lg:hidden">
             <header className="flex h-14 items-center justify-between gap-4 px-4">
-              <Link href="/crm/orders" className="flex items-center gap-2 text-sm font-semibold tracking-tight">
+              <Link href="/crm" className="flex items-center gap-2 text-sm font-semibold tracking-tight">
                 <span className="h-2.5 w-2.5 rounded-full bg-brand-500" aria-hidden="true" />
                 {SITE_LABEL[session.site]}
               </Link>

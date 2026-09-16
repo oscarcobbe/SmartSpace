@@ -1,8 +1,9 @@
-import { redirect } from "next/navigation";
-import { currentSession } from "@/lib/crm/session";
+import { Suspense } from "react";
+import { currentSession, SITE_LABEL } from "@/lib/crm/session";
 import { THIS_SITE } from "@/lib/crm/db";
-import { SITE_LABEL } from "@/lib/crm/session";
 import LoginForm from "./login-form";
+import { PageHeader } from "./ui";
+import { NeedsYou, LatestIn, MoneyThisMonth, AdsThisMonth, RecentActivity, PanelSkeleton } from "./overview-panels";
 
 export const dynamic = "force-dynamic";
 
@@ -11,8 +12,58 @@ const MESSAGES: Record<string, string> = {
   expired: "That link has already been used or has run out. Ask for a new one below.",
 };
 
-export default function CrmLogin({ searchParams }: { searchParams: { error?: string } }) {
-  if (currentSession()) redirect("/crm/orders");
+/** "Good morning" at nine, not at nine at night. Dublin, because the machine
+ *  this renders on is not in Ireland and has said so before. */
+function greeting(): string {
+  const hour = Number(
+    new Intl.DateTimeFormat("en-IE", { timeZone: "Europe/Dublin", hour: "2-digit", hour12: false }).format(new Date()),
+  );
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+}
+
+export default function CrmHome({ searchParams }: { searchParams: { error?: string } }) {
+  const session = currentSession();
+
+  if (session) {
+    const today = new Intl.DateTimeFormat("en-IE", {
+      timeZone: "Europe/Dublin", weekday: "long", day: "numeric", month: "long",
+    }).format(new Date());
+
+    return (
+      <>
+        <PageHeader
+          title={greeting()}
+          sub={`${SITE_LABEL[session.site]}, ${today}.`}
+        />
+
+        {/* Four reads of three different services. Each panel streams in on its
+            own, so the fastest is on screen while Google Ads is still
+            answering, instead of the page waiting for the slowest. */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Suspense fallback={<PanelSkeleton title="Needs you" rows={4} />}>
+            <NeedsYou site={session.site} />
+          </Suspense>
+          <Suspense fallback={<PanelSkeleton title="Latest in" rows={4} />}>
+            <LatestIn />
+          </Suspense>
+          <Suspense fallback={<PanelSkeleton title="Money" rows={2} />}>
+            <MoneyThisMonth />
+          </Suspense>
+          <Suspense fallback={<PanelSkeleton title="Advertising" rows={2} />}>
+            <AdsThisMonth site={session.site} />
+          </Suspense>
+          <div className="lg:col-span-2">
+            <Suspense fallback={null}>
+              <RecentActivity site={session.site} />
+            </Suspense>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   const message = searchParams.error ? MESSAGES[searchParams.error] ?? MESSAGES.expired : null;
 
   return (
