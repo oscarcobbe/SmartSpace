@@ -18,6 +18,7 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 import { crm, upsertContact, logActivity, crmConfigured, type Site } from "@/lib/crm/db";
+import { sourceLabel } from "@/lib/crm/labels";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -104,7 +105,10 @@ export async function POST(request: Request) {
     await logActivity(site, {
       lead_id: leadId, contact_id: contactId,
       kind: "lead_created",
-      summary: `${str("source") ?? "Enquiry"}${str("source_detail") ? ` (${str("source_detail")})` : ""}`,
+      /* Written in words, because this string is what Nigel reads in the
+         history column. It used to be the raw key, so the trail said
+         "contact_form (Camera and doorbell, semi-detached)". */
+      summary: `${sourceLabel(str("source"))}${str("source_detail") ? `: ${str("source_detail")}` : ""}`,
       detail: { gclid: str("gclid"), utm_campaign: str("utm_campaign") },
       actor: "website",
     });

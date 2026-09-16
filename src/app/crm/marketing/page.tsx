@@ -1,7 +1,8 @@
 import { requireSession } from "@/lib/crm/session";
 import { fetchAds } from "@/lib/crm/google-ads";
 import { money, moneyExact } from "@/lib/crm/leads";
-import { PageHeader, Panel, Stat, StatRow, Note } from "../ui";
+import { PageHeader, Panel, Stat, StatRow, Note, Pill } from "../ui";
+import { STATUS_PILL } from "@/lib/crm/labels";
 import { BarChart, Legend } from "../chart";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +27,9 @@ export default async function MarketingPage() {
   const cpc = a.clicks ? a.cost / a.clicks : 0;
   const cpa = a.conversions ? a.cost / a.conversions : 0;
   const ctr = a.impressions ? (a.clicks / a.impressions) * 100 : 0;
+
+  const thisMonth = a.months[a.months.length - 1];
+  const dayOfMonth = new Date().getDate();
 
   const bars = a.months.map((m) => ({
     label: m.label,
@@ -68,6 +72,9 @@ export default async function MarketingPage() {
             <BarChart bars={bars} ariaLabel="Google Ads spend by month over the last twelve months" />
           </div>
           <Legend items={[{ color: "#f48222", label: "Spend" }]} />
+          <p className="px-4 pb-4 -mt-2 text-xs text-slate-500">
+            {thisMonth.label} is {dayOfMonth} {dayOfMonth === 1 ? "day" : "days"} in, so its bar is a part month.
+          </p>
         </Panel>
 
         <Panel title="By campaign">
@@ -86,9 +93,19 @@ export default async function MarketingPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {a.campaigns.map((c) => (
-                  <tr key={c.name}>
-                    <td className="px-4 py-2 text-slate-900">{c.name}</td>
-                    <td className="px-4 py-2 text-slate-600">{c.status === "ENABLED" ? "Running" : c.status === "PAUSED" ? "Paused" : c.status}</td>
+                  <tr key={c.name} className={c.status === "ENABLED" ? undefined : "text-slate-500"}>
+                    {/* Campaign names are internal and long, "RETIRED - do not
+                        enable - ..." among them. Truncated with the full name
+                        on hover, so one of them cannot push the numbers off
+                        the right of the table. */}
+                    <td className="max-w-[18rem] px-4 py-2">
+                      <span className="block truncate text-slate-900" title={c.name}>{c.name}</span>
+                    </td>
+                    <td className="px-4 py-2">
+                      <Pill className={c.status === "ENABLED" ? STATUS_PILL.won : STATUS_PILL.contacted}>
+                        {c.status === "ENABLED" ? "Running" : c.status === "PAUSED" ? "Paused" : c.status}
+                      </Pill>
+                    </td>
                     <td className="px-4 py-2 text-right tabular-nums text-slate-700">{moneyExact(c.cost)}</td>
                     <td className="px-4 py-2 text-right tabular-nums text-slate-700">{int(c.clicks)}</td>
                     <td className="px-4 py-2 text-right tabular-nums text-slate-700">{c.conversions.toFixed(0)}</td>

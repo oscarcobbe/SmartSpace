@@ -1,0 +1,67 @@
+# CRM design notes
+
+The CRM at `/crm` is an application, not a page on the website. These are the
+decisions behind how it looks, written down so the next change to it does not
+have to re-derive them.
+
+## Colour
+
+| Token | Value | Used for |
+|---|---|---|
+| Ground | `slate-50` | the page behind everything |
+| Surface | `white` | panels, the rail, the table |
+| Hairline | `slate-200` | every border and divider |
+| Ink | `slate-900` | headings, figures, the primary button |
+| Muted | `slate-500` | labels, timestamps, secondary text |
+| Brand | `brand-500` `#f48222` | the site dot and chart bars, nothing else |
+
+Semantic colour is separate from the accent and means one thing each: emerald
+for money and won, amber for needs attention, rose for overdue and lost, sky
+for new. Statuses were six hues, which put "quoted" at the same visual weight
+as "won" and made teal and green indistinguishable at pill size. They are now
+four.
+
+The brand orange appears only on marks that represent money. An accent spent on
+chrome stops being able to point at anything.
+
+## Type
+
+Plus Jakarta Sans, already self-hosted by the site. Scale: 11 uppercase label,
+12 meta, 14 body and table, 16 panel title, 20 page title, 26 figure. Anything
+with digits in a column carries `tabular-nums`.
+
+## Layout
+
+- 240px rail on `lg` and up, sticky, grouped into Today and Performance because
+  the two halves of the job are different jobs.
+- Under `lg`, a sticky top bar and a horizontally scrolling strip of sections
+  that scrolls the current one into view, since Marketing sat off the right edge
+  with nothing to say it was there.
+- Content is capped at 1400px.
+- Under `sm`, tables become cards. A seven column table at 375px is a sideways
+  scroll nobody reads, and the thing being looked for is a person, not a cell.
+
+## Rules that came from something going wrong
+
+- **The CRM does not inherit the marketing site.** It used to. The fixed navbar
+  sat over the rail, the footer bracketed a customer database, and every
+  tracker mounted, so scrolling through orders filed `scroll_depth` and
+  `rage_click` into the GA4 property the ads are judged by. `SiteChrome` draws
+  the furniture for every route except `/crm`.
+- **Tap targets are at least 40px.** The done checkbox was an 18px square.
+- **Every wait has a skeleton.** Finance waits on Stripe and Marketing on
+  Google, several seconds each, and the page was blank for all of it.
+- **A part month says so.** The current month's bar is always shorter and
+  always read as a collapse.
+- **Nothing shows a raw key.** `contact_form`, `lead_created` and `stripe` are
+  column names. `src/lib/crm/labels.ts` is the only place they become words.
+- **A failed source is named, not hidden.** A page that drops Calendly and still
+  prints a confident total is the failure this repository keeps having.
+
+## Still open
+
+- The base gtag page view still fires on `/crm`, so CRM paths reach GA4. The
+  trackers no longer do. Fixing it means editing the inline consent and config
+  script in the root layout, which has broken conversion measurement twice
+  before, so it is a separate change with its own verification.
+- No overview page. Signing in lands on Orders.

@@ -1,22 +1,38 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
+import { ChevronDown, Download, Search } from "lucide-react";
 import type { Lead } from "@/lib/crm/leads";
-import { Empty, Pill } from "../ui";
+import { telHref } from "@/lib/crm/labels";
+import { Empty, Pill, PILL_KIND } from "../ui";
 
 const TABS = ["All", "Paid Order", "Upcoming", "Installation", "Consultation", "Contact Enquiry"] as const;
 type Tab = (typeof TABS)[number];
 
-const KIND: Record<string, "paid" | "upcoming" | "enquiry" | "consult" | "install"> = {
-  "Paid Order": "paid",
-  Upcoming: "upcoming",
-  Installation: "install",
-  Consultation: "consult",
-  "Contact Enquiry": "enquiry",
+/** Short on the row, full in the filter. A pill that wraps to two lines makes
+ *  the whole table row taller than the rows around it. */
+const SHORT: Record<string, string> = {
+  "Paid Order": "Paid",
+  Upcoming: "Upcoming",
+  Installation: "Install",
+  Consultation: "Consultation",
+  "Contact Enquiry": "Enquiry",
+};
+
+const KIND: Record<string, string> = {
+  "Paid Order": PILL_KIND.paid,
+  Upcoming: PILL_KIND.upcoming,
+  Installation: PILL_KIND.install,
+  Consultation: PILL_KIND.consult,
+  "Contact Enquiry": PILL_KIND.enquiry,
 };
 
 /** The feed writes "-" for an absent value, which should render as nothing. */
 const dash = (v: string | undefined) => (!v || v === "-" ? "" : v);
+
+/** Stripe rows arrive as "18/07/2026, 21:20". The time is noise in a list of
+ *  ninety of them; it is kept and shown in the expanded detail instead. */
+const dayOnly = (v: string) => dash(v).split(",")[0] ?? "";
 
 function csv(rows: Lead[]): string {
   const head = ["Date", "Type", "Name", "Email", "Phone", "Address", "Product", "Amount", "Booking", "Slot", "Status", "Order ID"];
@@ -33,6 +49,12 @@ export default function OrdersTable({ leads }: { leads: Lead[] }) {
   const [tab, setTab] = useState<Tab>("All");
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<string | null>(null);
+
+  const counts = useMemo(() => {
+    const c: Record<string, number> = { All: leads.length, Upcoming: leads.filter((l) => l.upcoming).length };
+    for (const l of leads) c[l.type] = (c[l.type] ?? 0) + 1;
+    return c;
+  }, [leads]);
 
   const rows = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -59,10 +81,48 @@ export default function OrdersTable({ leads }: { leads: Lead[] }) {
     URL.revokeObjectURL(url);
   }
 
+  const idOf = (l: Lead, i: number) => `${l.orderId || l.email || l.phone || "row"}-${i}`;
+
+  const Detail = ({ l }: { l: Lead }) => {
+    const tel = telHref(l.phone);
+    const facts: [string, ReactNodeish][] = [
+      ["Phone", tel ? <a key="p" href={tel} className="text-slate-900 underline underline-offset-2">{dash(l.phone)}</a> : dash(l.phone)],
+      ["Email", dash(l.email) ? <a key="e" href={`mailto:${l.email}`} className="break-all text-slate-900 underline underline-offset-2">{l.email}</a> : ""],
+      ["Address", dash(l.address)],
+      ["Received", dash(l.date)],
+      ["Status", dash(l.status)],
+      ["Order ID", dash(l.orderId)],
+    ];
+    return (
+      <div className="grid gap-5 sm:grid-cols-2">
+        <dl className="space-y-2 text-sm">
+          {facts.filter(([, v]) => v).map(([k, v]) => (
+            <div key={k} className="grid grid-cols-[5.5rem_1fr] gap-2">
+              <dt className="text-slate-500">{k}</dt>
+              <dd className="break-words text-slate-900">{v}</dd>
+            </div>
+          ))}
+        </dl>
+        {l.details?.length ? (
+          <dl className="space-y-3 text-sm">
+            {l.details.map((d, j) => (
+              <div key={j}>
+                <dt className="text-slate-500">{d.question}</dt>
+                <dd className="whitespace-pre-wrap break-words text-slate-900">{d.answer}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : (
+          <p className="text-sm text-slate-500">Nothing else was captured with this one.</p>
+        )}
+      </div>
+    );
+  };
+
   return (
-    <div className="rounded-lg border border-slate-200 bg-white">
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 px-3 py-3">
-        <div className="flex flex-wrap gap-1">
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <div className="flex flex-col gap-3 border-b border-slate-200 px-3 py-3 lg:flex-row lg:items-center">
+        <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-0.5">
           {TABS.map((t) => (
             <button
               key={t}
@@ -70,30 +130,35 @@ export default function OrdersTable({ leads }: { leads: Lead[] }) {
               onClick={() => setTab(t)}
               aria-pressed={tab === t}
               className={[
-                "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                "flex min-h-[36px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-sm font-medium transition-colors",
                 tab === t ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100",
               ].join(" ")}
             >
-              {t === "Contact Enquiry" ? "Enquiries" : t === "Paid Order" ? "Paid" : t}
+              {SHORT[t] ?? t}
+              <span className={tab === t ? "text-white/60" : "text-slate-400"}>{counts[t] ?? 0}</span>
             </button>
           ))}
         </div>
-        <div className="ml-auto flex items-center gap-2">
-          <label htmlFor="orders-search" className="sr-only">Search orders</label>
-          <input
-            id="orders-search"
-            type="search"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Name, email, phone, Eircode"
-            className="w-56 rounded-md border border-slate-300 px-3 py-1.5 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
-          />
+        <div className="flex items-center gap-2 lg:ml-auto">
+          <div className="relative flex-1 lg:flex-none">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+            <label htmlFor="orders-search" className="sr-only">Search orders</label>
+            <input
+              id="orders-search"
+              type="search"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Name, email, phone, Eircode"
+              className="min-h-[36px] w-full rounded-lg border border-slate-300 pl-8 pr-3 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 lg:w-64"
+            />
+          </div>
           <button
             type="button"
             onClick={download}
-            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="flex min-h-[36px] shrink-0 items-center gap-1.5 rounded-lg border border-slate-300 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
           >
-            Export CSV
+            <Download className="h-4 w-4" aria-hidden="true" />
+            <span className="hidden sm:inline">Export</span>
           </button>
         </div>
       </div>
@@ -101,96 +166,106 @@ export default function OrdersTable({ leads }: { leads: Lead[] }) {
       {rows.length === 0 ? (
         <Empty title="Nothing here" detail={q ? "No row matches that search." : "No rows of this kind yet."} />
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[48rem] text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
-                <th scope="col" className="px-4 py-2 font-medium">Date</th>
-                <th scope="col" className="px-4 py-2 font-medium">Customer</th>
-                <th scope="col" className="px-4 py-2 font-medium">Type</th>
-                <th scope="col" className="px-4 py-2 font-medium">Product</th>
-                <th scope="col" className="px-4 py-2 text-right font-medium">Amount</th>
-                <th scope="col" className="px-4 py-2 font-medium">Booking</th>
-                <th scope="col" className="px-4 py-2"><span className="sr-only">Detail</span></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {rows.map((l, i) => {
-                const id = `${l.orderId || l.email || l.phone || "row"}-${i}`;
-                const expanded = open === id;
-                return (
-                  <Fragment key={id}>
-                    <tr className={expanded ? "bg-slate-50" : undefined}>
-                      <td className="whitespace-nowrap px-4 py-3 tabular-nums text-slate-600">{dash(l.date) || "–"}</td>
-                      <td className="px-4 py-3">
-                        <span className="block font-medium text-slate-900">{dash(l.name) || "Unnamed"}</span>
-                        <span className="block text-xs text-slate-500">{dash(l.email) || dash(l.phone)}</span>
-                      </td>
-                      <td className="px-4 py-3"><Pill kind={KIND[l.type]}>{l.type}</Pill></td>
-                      <td className="px-4 py-3 text-slate-700">{dash(l.product) || "–"}</td>
-                      <td className="px-4 py-3 text-right tabular-nums text-slate-900">{dash(l.amount) || "–"}</td>
-                      <td className="px-4 py-3 text-slate-700">
-                        {dash(l.bookingDate) || "–"}
-                        {dash(l.bookingSlot) && <span className="block text-xs text-slate-500">{l.bookingSlot}</span>}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <button
-                          type="button"
-                          onClick={() => setOpen(expanded ? null : id)}
-                          aria-expanded={expanded}
-                          className="rounded-md px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100"
-                        >
-                          {expanded ? "Close" : "Detail"}
-                        </button>
-                      </td>
-                    </tr>
-                    {expanded && (
-                      <tr className="bg-slate-50">
-                        <td colSpan={7} className="px-4 pb-5 pt-1">
-                          <div className="grid gap-5 sm:grid-cols-2">
-                            <dl className="space-y-2 text-sm">
-                              {([
-                                ["Phone", dash(l.phone)],
-                                ["Email", dash(l.email)],
-                                ["Address", dash(l.address)],
-                                ["Status", dash(l.status)],
-                                ["Order ID", dash(l.orderId)],
-                              ] as [string, string][])
-                                .filter(([, v]) => v)
-                                .map(([k, v]) => (
-                                  <div key={k} className="grid grid-cols-[6rem_1fr] gap-2">
-                                    <dt className="text-slate-500">{k}</dt>
-                                    <dd className="break-words text-slate-900">{v}</dd>
-                                  </div>
-                                ))}
-                            </dl>
-                            {l.details?.length ? (
-                              <dl className="space-y-3 text-sm">
-                                {l.details.map((d, j) => (
-                                  <div key={j}>
-                                    <dt className="text-slate-500">{d.question}</dt>
-                                    <dd className="whitespace-pre-wrap break-words text-slate-900">{d.answer}</dd>
-                                  </div>
-                                ))}
-                              </dl>
-                            ) : (
-                              <p className="text-sm text-slate-500">Nothing else was captured with this one.</p>
-                            )}
-                          </div>
+        <>
+          {/* Under sm a seven column table is a horizontal scroll nobody makes
+              sense of on a phone, so the same rows become cards. */}
+          <ul className="divide-y divide-slate-100 sm:hidden">
+            {rows.map((l, i) => {
+              const id = idOf(l, i);
+              const expanded = open === id;
+              return (
+                <li key={id}>
+                  <button
+                    type="button"
+                    onClick={() => setOpen(expanded ? null : id)}
+                    aria-expanded={expanded}
+                    className="flex w-full items-start gap-3 px-4 py-3.5 text-left"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-slate-900">{dash(l.name) || "Unnamed"}</p>
+                      <p className="mt-0.5 truncate text-xs text-slate-500">{dash(l.product) || dash(l.email) || dash(l.phone)}</p>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                        <Pill className={KIND[l.type]}>{SHORT[l.type] ?? l.type}</Pill>
+                        <span className="text-xs tabular-nums text-slate-500">{dayOnly(l.date)}</span>
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      {dash(l.amount) && <span className="text-sm font-medium tabular-nums text-slate-900">{l.amount}</span>}
+                      <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${expanded ? "rotate-180" : ""}`} aria-hidden="true" />
+                    </div>
+                  </button>
+                  {expanded && <div className="bg-slate-50 px-4 pb-5 pt-1"><Detail l={l} /></div>}
+                </li>
+              );
+            })}
+          </ul>
+
+          <div className="hidden overflow-x-auto sm:block">
+            <table className="w-full min-w-[46rem] text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 text-left text-[11px] uppercase tracking-wider text-slate-500">
+                  <th scope="col" className="px-4 py-2 font-semibold">Date</th>
+                  <th scope="col" className="px-4 py-2 font-semibold">Customer</th>
+                  <th scope="col" className="px-4 py-2 font-semibold">Type</th>
+                  <th scope="col" className="px-4 py-2 font-semibold">Product</th>
+                  <th scope="col" className="px-4 py-2 text-right font-semibold">Amount</th>
+                  <th scope="col" className="px-4 py-2 font-semibold">Booking</th>
+                  <th scope="col" className="w-10 px-2 py-2"><span className="sr-only">Detail</span></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {rows.map((l, i) => {
+                  const id = idOf(l, i);
+                  const expanded = open === id;
+                  return (
+                    <Fragment key={id}>
+                      <tr
+                        onClick={() => setOpen(expanded ? null : id)}
+                        className={`cursor-pointer ${expanded ? "bg-slate-50" : "hover:bg-slate-50"}`}
+                      >
+                        <td className="whitespace-nowrap px-4 py-3 tabular-nums text-slate-600">{dayOnly(l.date) || "–"}</td>
+                        <td className="px-4 py-3">
+                          <span className="block font-medium text-slate-900">{dash(l.name) || "Unnamed"}</span>
+                          <span className="block text-xs text-slate-500">{dash(l.email) || dash(l.phone)}</span>
+                        </td>
+                        <td className="px-4 py-3"><Pill className={KIND[l.type]}>{SHORT[l.type] ?? l.type}</Pill></td>
+                        <td className="px-4 py-3 text-slate-700">{dash(l.product) || "–"}</td>
+                        <td className="px-4 py-3 text-right font-medium tabular-nums text-slate-900">{dash(l.amount) || "–"}</td>
+                        <td className="px-4 py-3 text-slate-700">
+                          {dash(l.bookingDate) || "–"}
+                          {dash(l.bookingSlot) && <span className="block text-xs text-slate-500">{l.bookingSlot}</span>}
+                        </td>
+                        <td className="px-2 py-3 text-right">
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setOpen(expanded ? null : id); }}
+                            aria-expanded={expanded}
+                            aria-label={expanded ? `Hide detail for ${dash(l.name) || "this row"}` : `Show detail for ${dash(l.name) || "this row"}`}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-200/60"
+                          >
+                            <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`} aria-hidden="true" />
+                          </button>
                         </td>
                       </tr>
-                    )}
-                  </Fragment>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                      {expanded && (
+                        <tr className="bg-slate-50">
+                          <td colSpan={7} className="px-4 pb-5 pt-1"><Detail l={l} /></td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       <p className="border-t border-slate-200 px-4 py-2 text-xs text-slate-500">
-        {rows.length} of {leads.length} shown
+        Showing {rows.length} of {leads.length}
       </p>
     </div>
   );
 }
+
+type ReactNodeish = string | JSX.Element;

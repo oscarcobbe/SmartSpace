@@ -1,15 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import CartDrawer from "@/components/CartDrawer";
-import { CartProvider } from "@/context/CartContext";
-import GclidCapture from "@/components/GclidCapture";
-import CookieBanner from "@/components/CookieBanner";
-import VisitBeacon from "@/components/VisitBeacon";
-import PhoneClickTracker from "@/components/PhoneClickTracker";
-import EngagementTracker from "@/components/EngagementTracker";
+import SiteChrome from "@/components/SiteChrome";
 import { AGGREGATE_RATING, AGGREGATE_REVIEW_COUNT } from "@/lib/business-constants";
 
 // next/font self-hosts the font, eliminates the render-blocking
@@ -292,29 +284,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${jakarta.className} antialiased bg-white text-gray-900`}>
-        {/*
-          Skip-to-content link. Must be the FIRST focusable element in the
-          DOM. Invisible until focused (keyboard Tab on desktop, screen-
-          reader swipe on mobile via VoiceOver/TalkBack). When activated
-          it jumps focus past the sticky review strip + Navbar + cart icon
-          to the page content, saves ~15-20 Tab presses on every page
-          load for keyboard and assistive-tech users. The styling is in
-          globals.css under `.skip-link` and `.skip-link:focus`.
-        */}
-        <a href="#main-content" className="skip-link">
-          Skip to content
-        </a>
-        <CartProvider>
-          <GclidCapture />
-          <PhoneClickTracker />
-          <EngagementTracker />
-          <Navbar />
-          <main id="main-content" className="min-h-screen">{children}</main>
-          <CartDrawer />
-          <Footer />
-          <CookieBanner />
-          <VisitBeacon />
-        </CartProvider>
+        <SiteChrome>{children}</SiteChrome>
       </body>
     </html>
   );
