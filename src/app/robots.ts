@@ -10,6 +10,11 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
         disallow: [
           "/admin/",
+          // The CRM holds customer names, addresses and what they paid. It is
+          // linked from nowhere, and this is the second lock: a crawler that
+          // finds the login page must not put it in results.
+          "/crm",
+          "/crm/",
           "/api/",
           "/smartspace-payment-success",
           "/smartcareliving-payment-success",
