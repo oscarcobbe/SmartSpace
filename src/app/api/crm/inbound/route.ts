@@ -47,7 +47,16 @@ export async function POST(request: Request) {
   try { payload = JSON.parse(raw); }
   catch { return NextResponse.json({ error: "Unparseable" }, { status: 400 }); }
 
-  const site: Site = payload.brand === "smartcareliving" ? "smartcareliving" : "smart-space";
+  /* The two senders spell the brand differently: this site sends "smart-space"
+     and SmartCare Living's api/_lib/crm.js sends "smartcare-living", which is
+     not the enum value. Matching on the exact string filed every SmartCare
+     Living lead under Smart Space and nothing would ever have complained, so
+     the comparison drops everything that is not a letter first. */
+  const brand = String(payload.brand ?? "").toLowerCase().replace(/[^a-z]/g, "");
+  if (brand && brand !== "smartspace" && brand !== "smartcareliving") {
+    return NextResponse.json({ error: "Unknown brand" }, { status: 400 });
+  }
+  const site: Site = brand === "smartcareliving" ? "smartcareliving" : "smart-space";
   const str = (k: string) => (typeof payload[k] === "string" ? (payload[k] as string) : null);
 
   try {
