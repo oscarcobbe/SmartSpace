@@ -177,7 +177,7 @@ export default function BundlesPage() {
           </h2>
           <p className="text-gray-500 mb-6 max-w-lg mx-auto">
             If you need something different, get in touch and we&apos;ll put
-            together a package tailored to your home.
+            together a package built around your home.
           </p>
           <Link href="/contact" className="inline-flex items-center justify-center bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm px-8 py-3.5 rounded-full transition-colors">
             Have a Question?

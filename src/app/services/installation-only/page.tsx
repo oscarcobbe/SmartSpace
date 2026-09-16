@@ -45,7 +45,7 @@ const services = [
   },
   {
     icon: Shield,
-    title: "Tailored Configuration",
+    title: "Set Up For Your Home",
     description: "We set up the app on your phone, configure motion zones, alerts, linked devices, and shared users.",
   },
   {

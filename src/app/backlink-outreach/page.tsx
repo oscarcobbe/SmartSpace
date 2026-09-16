@@ -1,3 +1,5 @@
+import { notFound } from "next/navigation";
+
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -7,6 +9,15 @@ export const metadata: Metadata = {
 };
 
 export default function BacklinkOutreachPage() {
+  /*
+   * 404 in production. This page answered 200 on smart-space.ie to anybody who
+   * guessed the path, and robots.txt both failed to stop that and published
+   * the path in a file anyone can read. It is a working page in development,
+   * which is the only place it has a reader.
+   */
+  if (process.env.NODE_ENV === "production") notFound();
+
+
   return (
     <div className="pt-32 lg:pt-36 pb-16 lg:pb-24 bg-white">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 prose-ss">

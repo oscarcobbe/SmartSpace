@@ -1,10 +1,22 @@
 "use client";
 
+import { notFound } from "next/navigation";
+
+
 import { useState } from "react";
 import AddToCartButton from "@/components/AddToCartButton";
 import BookingCalendar from "@/components/BookingCalendar";
 
 export default function TestCheckoutPage() {
+  /*
+   * 404 in production. This page answered 200 on smart-space.ie to anybody who
+   * guessed the path, and robots.txt both failed to stop that and published
+   * the path in a file anyone can read. It is a working page in development,
+   * which is the only place it has a reader.
+   */
+  if (process.env.NODE_ENV === "production") notFound();
+
+
   const [bookingSelection, setBookingSelection] = useState<{
     date: string;
     timeSlot: string;

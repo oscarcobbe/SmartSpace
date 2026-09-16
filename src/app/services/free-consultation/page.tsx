@@ -43,7 +43,7 @@ const benefits = [
   {
     icon: ClipboardCheck,
     title: "Personalised Quote",
-    description: "Receive a detailed, written quote tailored to your home, covering exactly what you need and nothing you don't.",
+    description: "Receive a detailed, written quote for your home, covering exactly what you need and nothing you don't.",
   },
   {
     icon: Lightbulb,

@@ -185,7 +185,7 @@ export default async function WholeHomeBundlePage() {
             <p className="text-sm text-gray-500">
               Related: <Link href="/services/bundles/driveway" className="text-brand-700 underline hover:text-brand-800">Driveway Bundle</Link>{" "}for front-only coverage,{" "}
               <Link href="/services/installation-only" className="text-brand-700 underline hover:text-brand-800">Installation Only</Link>{" "}if you already own the gear, or{" "}
-              <Link href="/services/free-consultation" className="text-brand-700 underline hover:text-brand-800">Book a free home survey</Link>{" "}for a tailored quote.
+              <Link href="/services/free-consultation" className="text-brand-700 underline hover:text-brand-800">Book a free home survey</Link>{" "}and we will quote for your home.
             </p>
           </div>
         </section>
