@@ -24,20 +24,38 @@ import { usePathname } from "next/navigation";
 type Params = Record<string, string | number | boolean>;
 
 declare global {
-  interface Window { gtag?: (...args: unknown[]) => void }
+  interface Window {
+    gtag?: (...args: unknown[]) => void;
+    dataLayer?: Record<string, unknown>[];
+  }
 }
 
 export default function EngagementTracker() {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (typeof window === "undefined" || typeof window.gtag !== "function") return;
+    if (typeof window === "undefined") return;
+
+    /*
+     * gtag is NOT required at mount, and the first version of this was wrong
+     * about that. gtag arrives on an async script tag, this effect runs as
+     * soon as the component mounts, and on a fast connection the effect wins
+     * the race: the check returned, no listener was ever registered, and the
+     * whole component did nothing on a page that scrolled to 95%. Verified in
+     * a browser, which is the only place that race exists.
+     *
+     * dataLayer is created synchronously by the gtag snippet in the document
+     * head, so pushing there reaches Google whether or not the library itself
+     * has finished loading, and gtag reads the same queue.
+     */
 
     const origin = window.location.hostname.replace(/^www\./, "");
     const fired: Record<string, true> = {};
     const once = (k: string) => (fired[k] ? false : ((fired[k] = true), true));
     const send = (name: string, params: Params = {}) => {
-      window.gtag?.("event", name, { page_clean: pathname, ...params });
+      const payload = { page_clean: pathname, ...params };
+      if (typeof window.gtag === "function") window.gtag("event", name, payload);
+      else (window.dataLayer ||= []).push({ event: name, ...payload });
     };
 
     /* Scroll depth. Next.js keeps the document between routes, so the marks
