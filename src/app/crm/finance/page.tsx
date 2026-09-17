@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Upload } from "lucide-react";
 import { requireSession } from "@/lib/crm/session";
 import { fetchBank } from "@/lib/crm/bank";
+import { bankBreakdown, monthName } from "@/lib/crm/bank-insight";
+import Findings from "../findings-panel";
 import { fetchFinance } from "@/lib/crm/stripe-finance";
 import { moneyExact, money } from "@/lib/crm/leads";
 import { PageHeader, Panel, Stat, StatRow, Note } from "../ui";
@@ -13,6 +15,9 @@ export const dynamic = "force-dynamic";
 export default async function FinancePage() {
   const { site } = requireSession();
   const [result, bank] = await Promise.all([fetchFinance(12), fetchBank(site, 12)]);
+  /* Cheap, pure, and derived from rows already fetched, so it costs nothing
+     beyond the statement that is already on the page. */
+  const cut = bankBreakdown(bank?.rows ?? []);
 
   if (!result.ok) {
     return (
@@ -101,6 +106,58 @@ export default async function FinancePage() {
           </div>
         </Panel>
 
+        {bank && <Findings findings={cut.findings} title="What the bank account says" />}
+
+        {bank && cut.categories.length > 0 && (
+          <Panel title="Where the money went">
+            <ul className="divide-y divide-slate-100">
+              {cut.categories.map((c) => (
+                <li key={c.label} className="flex items-center gap-3 px-4 py-2.5">
+                  <span className="w-44 flex-none text-sm text-slate-700">{c.label}</span>
+                  <span className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+                    <span className="block h-full rounded-full bg-brand-500" style={{ width: `${Math.max(2, c.share * 100)}%` }} />
+                  </span>
+                  <span className="w-28 flex-none text-right text-sm font-semibold tabular-nums text-slate-900">
+                    {money(c.cents / 100)}
+                  </span>
+                  <span className="w-12 flex-none text-right text-xs tabular-nums text-slate-500">
+                    {(c.share * 100).toFixed(0)}%
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Panel>
+        )}
+
+        {bank && cut.months.length > 1 && (
+          <Panel title="Month by month">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[30rem] text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 text-left text-[11px] uppercase tracking-wider text-slate-500">
+                    <th scope="col" className="px-4 py-2 font-semibold">Month</th>
+                    <th scope="col" className="px-4 py-2 text-right font-semibold">Customers paid</th>
+                    <th scope="col" className="px-4 py-2 text-right font-semibold">Out</th>
+                    <th scope="col" className="px-4 py-2 text-right font-semibold">Difference</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {cut.months.map((m) => (
+                    <tr key={m.key}>
+                      <td className="px-4 py-2 text-slate-700">{monthName(m.key)}</td>
+                      <td className="px-4 py-2 text-right tabular-nums text-slate-700">{money(m.earnedCents / 100)}</td>
+                      <td className="px-4 py-2 text-right tabular-nums text-slate-700">{money(m.outCents / 100)}</td>
+                      <td className={`px-4 py-2 text-right font-semibold tabular-nums ${m.netCents >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+                        {money(m.netCents / 100)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Panel>
+        )}
+
         {/* Kept apart from the Stripe figures on purpose. A card payment appears
             in both, once when it is taken and again when it settles into the
             bank, so adding the two together would count every sale twice. */}
@@ -109,16 +166,26 @@ export default async function FinancePage() {
             title="The bank account"
             aside={<span className="text-xs text-slate-500">{bank.count} imported lines since {bank.latestOn?.slice(0, 7)}</span>}
           >
+            {/* Earned is kept apart from moved on purpose. Money transferred
+                in from another account is money in, and counting it beside
+                customer takings is how an account that is losing money on its
+                trading shows a healthy difference. */}
             <div className="grid grid-cols-2 divide-x divide-y divide-slate-200 sm:grid-cols-4 sm:divide-y-0">
-              <Stat label="In" value={money(bank.inCents / 100)} tone="good" />
+              <Stat label="Customers paid in" value={money(cut.earnedCents / 100)} tone="good" note="card payments" />
+              <Stat label="Moved in" value={money(cut.movedInCents / 100)} note="from our own accounts" />
               <Stat label="Out" value={money(bank.outCents / 100)} />
-              <Stat label="Difference" value={money(bank.netCents / 100)} tone={bank.netCents >= 0 ? "good" : "bad"} />
               <Stat
-                label="Balance"
-                value={bank.latestBalanceCents == null ? "Not given" : moneyExact(bank.latestBalanceCents / 100)}
-                note={bank.latestOn ? `As at ${bank.latestOn}` : undefined}
+                label="Trading"
+                value={money(cut.tradingCents / 100)}
+                note="customers in, less everything out"
+                tone={cut.tradingCents >= 0 ? "good" : "bad"}
               />
             </div>
+            <p className="border-t border-slate-100 px-4 py-2 text-xs text-slate-500">
+              Balance {bank.latestBalanceCents == null ? "not given" : moneyExact(bank.latestBalanceCents / 100)}
+              {bank.latestOn ? ` as at ${bank.latestOn}` : ""}. The difference between money in and money out is{" "}
+              {money(bank.netCents / 100)}, which includes money moved between our own accounts.
+            </p>
           </Panel>
         ) : (
           <Panel title="The bank account">
