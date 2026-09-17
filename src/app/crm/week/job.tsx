@@ -32,10 +32,30 @@ export default function Job({ lead, dateLabel }: { lead: Lead; dateLabel?: strin
   const [open, setOpen] = useState(false);
   const tel = telHref(lead.phone);
   const address = dash(lead.address);
-  const details = lead.details ?? [];
+  /*
+   * The same question can arrive from both joined rows, so it is shown once.
+   * Keyed on the question and the answer together, because "Address" appearing
+   * twice with two different answers is worth seeing and twice with the same
+   * answer is noise.
+   */
+  const details = (lead.details ?? []).filter(
+    (d, i, all) => all.findIndex((o) => o.question === d.question && o.answer === d.answer) === i,
+  );
+
+  /*
+   * orderId is not always an id. On a paid order it arrives as the whole
+   * booking written out: "Product: ... | Order: cs_live_... | Address: ... |
+   * Phone: ...". Rendered raw it wrapped over five lines and repeated every
+   * field already shown above it. The real reference is pulled out where there
+   * is one, and the rest is dropped rather than printed at somebody.
+   */
+  const rawOrder = dash(lead.orderId);
+  const reference = rawOrder.includes("|")
+    ? (rawOrder.match(/Order:\s*([^|]+)/i)?.[1] ?? "").trim()
+    : rawOrder;
   /* A job with nothing beyond the row has nothing to open, and a control that
      reveals an empty box is worse than no control. */
-  const hasMore = details.length > 0 || dash(lead.email) || dash(lead.orderId) || address;
+  const hasMore = details.length > 0 || dash(lead.email) || address;
 
   return (
     <li className="px-4 py-3.5">
@@ -111,10 +131,10 @@ export default function Job({ lead, dateLabel }: { lead: Lead; dateLabel?: strin
                 <a href={`mailto:${lead.email}`} className="underline-offset-2 hover:underline">{lead.email}</a>
               </span>
             )}
-            {dash(lead.orderId) && (
+            {reference && (
               <span className="inline-flex items-center gap-1.5">
                 <Hash className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
-                <span className="break-all">{lead.orderId}</span>
+                <span className="break-all font-mono text-[11px]">{reference.slice(0, 28)}{reference.length > 28 ? "…" : ""}</span>
               </span>
             )}
           </div>

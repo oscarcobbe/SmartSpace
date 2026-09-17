@@ -41,6 +41,57 @@ export interface Week {
    looked calm because the rows were gone, not because the diary was empty. */
 const toIso = (raw: string | undefined) => bookingIso(raw);
 
+const emailKey = (v: string | undefined) => {
+  const t = String(v ?? "").trim().toLowerCase();
+  return t && t !== "-" ? t : null;
+};
+const phoneKey = (v: string | undefined) => {
+  const d = String(v ?? "").replace(/[^\d]/g, "");
+  return d.length >= 9 ? d.slice(-9) : null;
+};
+/** "12:30 – 14:30" and "12:30-14:30" are the same slot. */
+const slotKey = (v: string | undefined) => String(v ?? "").replace(/[^\d]/g, "");
+
+/**
+ * One job per job.
+ *
+ * A booked installation arrives twice, because upstream they are two different
+ * things: Calendly holds the appointment and Stripe holds the payment. The
+ * Orders table already joins them. The diary did not, so every job was listed
+ * once as an Installation and again as a Paid Order, at the same time, at the
+ * same address, and the count at the top of the page was roughly double the
+ * work. Somebody reading it on a Monday would plan the wrong week.
+ *
+ * Same person, same day, same slot is the same job. The paid row wins, because
+ * it carries the amount and the product the customer actually chose, and any
+ * detail only the appointment row has is carried across rather than dropped.
+ */
+function collapse(jobs: Lead[]): Lead[] {
+  const out: Lead[] = [];
+  const seen = new Map<string, number>();
+  for (const l of jobs) {
+    const who = emailKey(l.email) ?? phoneKey(l.phone);
+    const key = who ? `${who}|${slotKey(l.bookingSlot)}` : null;
+    const at = key ? seen.get(key) : undefined;
+    if (key == null || at === undefined) {
+      if (key) seen.set(key, out.length);
+      out.push(l);
+      continue;
+    }
+    const kept = out[at];
+    const paid = (x: Lead) => String(x.amount ?? "").replace(/[^\d.]/g, "") !== "";
+    const winner = paid(l) && !paid(kept) ? l : kept;
+    const other = winner === kept ? l : kept;
+    out[at] = {
+      ...winner,
+      /* Whichever row is kept, take anything the other one alone knew. */
+      address: String(winner.address ?? "").trim() && winner.address !== "-" ? winner.address : other.address,
+      details: [...(winner.details ?? []), ...(other.details ?? [])],
+    };
+  }
+  return out;
+}
+
 /** Today in Dublin, not in whatever timezone the server happens to run in. */
 function todayDublin(): string {
   return new Intl.DateTimeFormat("en-CA", {
@@ -85,13 +136,13 @@ export async function fetchWeek(site: Site, daysAhead = 14): Promise<Week> {
         timeZone: "Europe/Dublin", weekday: "long", day: "numeric", month: "long",
       }).format(d),
       isToday: i === 0,
-      jobs: (byDay.get(date) ?? []).sort((a, b) => (a.bookingSlot || "").localeCompare(b.bookingSlot || "")),
+      jobs: collapse(byDay.get(date) ?? []).sort((a, b) => (a.bookingSlot || "").localeCompare(b.bookingSlot || "")),
     });
   }
 
   const lastDay = days[days.length - 1]?.date ?? today;
-  const later = ahead
-    .filter((x) => x.on > lastDay)
+  const later = collapse(ahead.filter((x) => x.on > lastDay).map((x) => x.job))
+    .map((job) => ({ job, on: ahead.find((a) => a.job === job)?.on ?? lastDay }))
     .sort((a, b) => a.on.localeCompare(b.on) || (a.job.bookingSlot || "").localeCompare(b.job.bookingSlot || ""))
     .map((x) => ({
       ...x,
