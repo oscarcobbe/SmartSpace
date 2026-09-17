@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { Activity, BarChart3, CheckSquare, Euro, Home, Receipt, Send, Users } from "lucide-react";
+import { Activity, BarChart3, CalendarDays, CheckSquare, Euro, Home, Receipt, Send, Users } from "lucide-react";
 import type { Site } from "@/lib/crm/db";
 
 /**
@@ -26,6 +26,7 @@ const GROUPS: { heading: string; items: { href: string; label: string; icon: typ
     heading: "Today",
     items: [
       { href: "/crm", label: "Overview", icon: Home },
+      { href: "/crm/week", label: "This week", icon: CalendarDays },
       { href: "/crm/orders", label: "Orders", icon: Receipt },
       { href: "/crm/contacts", label: "Customers", icon: Users },
       { href: "/crm/tasks", label: "Next steps", icon: CheckSquare },

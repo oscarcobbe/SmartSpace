@@ -38,6 +38,16 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
             <span className="h-2.5 w-2.5 rounded-full bg-brand-500" aria-hidden="true" />
             <span className="truncate text-sm font-semibold tracking-tight">{SITE_LABEL[session.site]}</span>
           </div>
+          <form action="/crm/search" method="get" className="px-3 pt-3">
+            <label htmlFor="rail-search" className="sr-only">Search everything</label>
+            <input
+              id="rail-search"
+              name="q"
+              type="search"
+              placeholder="Search everything"
+              className="min-h-[36px] w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
+            />
+          </form>
           <CrmNav site={session.site} />
           <div className="mt-auto border-t border-slate-200 p-3">
             <p className="truncate px-3 pb-1 text-xs text-slate-500" title={session.email}>{session.email}</p>
