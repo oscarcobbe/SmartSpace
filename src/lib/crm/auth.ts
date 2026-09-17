@@ -21,7 +21,7 @@
  * Lax, signed with CRM_SESSION_SECRET, and checked before any query runs.
  */
 import { createHmac, timingSafeEqual } from "crypto";
-import { THIS_SITE, type Site } from "./db";
+import type { Site } from "./db";
 
 const SESSION_DAYS = 30;
 export const COOKIE = "crm_session";
