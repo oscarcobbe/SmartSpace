@@ -35,10 +35,19 @@ const KEY = process.env.SMARTCRM_KEY?.trim();
 export type Site = "smart-space" | "smartcareliving";
 
 /**
- * Which of the two businesses this deployment is. The CRM is built into each
- * site separately rather than hosted centrally, so a deployment only ever
- * shows its own data and a misconfigured value can only ever under-show, not
- * leak the other business's rows into this one.
+ * Which business a fresh sign in starts on.
+ *
+ * This used to be the whole answer: the CRM was to be deployed once per site,
+ * and the argument for it was that a deployment could only ever under-show
+ * rather than leak. Sound, and it left SmartCare Living with no CRM at all,
+ * because smartcareliving.ie is static HTML with a few functions and there is
+ * nowhere on it to put a Next.js app. Its leads reader, its ads account and
+ * its GA4 property all existed and were reachable from nothing.
+ *
+ * So one deployment now serves both and the session carries which, changed
+ * through /api/crm/site. This value is only the starting point. The safety
+ * argument survives in a different form: both businesses are the same person's,
+ * there is one password, and the switch needs a valid session already.
  */
 export const THIS_SITE: Site =
   process.env.CRM_SITE === "smartcareliving" ? "smartcareliving" : "smart-space";
