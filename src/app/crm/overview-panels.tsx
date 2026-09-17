@@ -203,7 +203,26 @@ export async function AdsThisMonth({ site }: { site: Site }) {
   const a = result.data;
   const { own } = adsSplit(a);
   const now = own.months[own.months.length - 1];
-  const roas = now.cost ? now.value / now.cost : 0;
+
+  /*
+   * This used to divide Google's attributed value by the spend and print the
+   * result as a return, in red. On the account it was written against that
+   * read "0.1x" off 32 euro against 379, and the client quite reasonably asked
+   * why the Marketing page said something completely different.
+   *
+   * Both were describing real numbers and neither was describing a return. The
+   * 32 euro is not sales: it is the sum of the fixed placeholder values sitting
+   * on the lead actions, a euro for a call and ten for a form, set when the
+   * actions were created. Dividing invented numbers by real spend produces an
+   * invented ratio, and putting it in red asserts a failure that has not been
+   * measured.
+   *
+   * So the panel now shows what is actually counted: what was spent, how many
+   * enquiries came, and what each cost. The return question lives on Marketing,
+   * where the basis is named and switchable, and this says so rather than
+   * answering it differently.
+   */
+  const perEnquiry = now.conversions ? now.cost / now.conversions : null;
 
   return (
     <Panel
@@ -214,15 +233,20 @@ export async function AdsThisMonth({ site }: { site: Site }) {
         <Stat
           label={`Spent in ${now.label}`}
           value={money(now.cost)}
-          note={now.conversions ? `${now.conversions.toFixed(0)} enquiries, ${moneyExact(now.cost / now.conversions)} each` : "No enquiries yet"}
+          note={`${now.clicks} clicks so far this month`}
         />
         <Stat
-          label="Back on that"
-          value={now.cost ? `${roas.toFixed(1)}x` : "–"}
-          note={now.value ? money(now.value) + " of work won" : "Nothing recorded yet"}
-          tone={roas >= 3 ? "good" : roas >= 1 ? "warn" : now.cost ? "bad" : "plain"}
+          label="Cost per enquiry"
+          value={perEnquiry === null ? "–" : moneyExact(perEnquiry)}
+          note={now.conversions ? `${now.conversions.toFixed(0)} enquiries in ${now.label}` : "No enquiries yet this month"}
+          tone={perEnquiry === null ? "plain" : perEnquiry <= 60 ? "good" : perEnquiry <= 100 ? "warn" : "bad"}
         />
       </div>
+      <p className="border-t border-slate-100 px-4 py-2 text-xs text-slate-500">
+        What came back for this is on{" "}
+        <Link href="/crm/marketing" className="font-medium text-slate-700 underline-offset-2 hover:underline">Marketing</Link>,
+        where you can choose whether to count every euro Stripe took or only what Google could tie to a click.
+      </p>
     </Panel>
   );
 }

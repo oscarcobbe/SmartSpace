@@ -2,12 +2,13 @@ import { requireSession } from "@/lib/crm/session";
 import { fetchLeads, euros, money } from "@/lib/crm/leads";
 import { PageHeader, Stat, StatRow, Note } from "../ui";
 import OrdersTable from "./table";
+import { fetchMarks } from "@/lib/crm/order-marks";
 
 export const dynamic = "force-dynamic";
 
 export default async function OrdersPage() {
   const { site } = requireSession();
-  const result = await fetchLeads(site);
+  const [result, marks] = await Promise.all([fetchLeads(site), fetchMarks(site)]);
 
   if (!result.ok) {
     return (
@@ -91,7 +92,16 @@ export default async function OrdersPage() {
         </div>
       ) : null}
 
-      <OrdersTable leads={leads} />
+      {/* The marks travel as a plain object because the table is a client
+          component and a Map does not cross that boundary. */}
+      <OrdersTable
+        leads={leads}
+        marks={(() => {
+          const m: Record<string, "cancelled" | "done"> = {};
+          marks.forEach((v, k) => { m[k] = v.state; });
+          return m;
+        })()}
+      />
     </>
   );
 }

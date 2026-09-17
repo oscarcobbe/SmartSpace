@@ -1,6 +1,8 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
+import { orderKey } from "@/lib/crm/order-marks";
+import { setOrderMark } from "./actions";
 import { joinBookings } from "@/lib/crm/order-bookings";
 import { ChevronDown, Download, MapPin, Search } from "lucide-react";
 import type { Lead } from "@/lib/crm/leads";
@@ -43,7 +45,16 @@ function csv(rows: Lead[]): string {
   );
 }
 
-export default function OrdersTable({ leads }: { leads: Lead[] }) {
+export default function OrdersTable({
+  leads,
+  marks = {},
+}: {
+  leads: Lead[];
+  marks?: Record<string, "cancelled" | "done">;
+  /* Accepted and ignored: the page passes it, and dropping it there would be a
+     second edit for no behaviour. */
+  keyOf?: unknown;
+}) {
   /* Stripe orders and Calendly appointments arrive as separate rows, so a
      customer who paid first and booked afterwards left the paid order reading
      "-". Their appointment is on another row in this same list; this carries
@@ -83,6 +94,8 @@ export default function OrdersTable({ leads }: { leads: Lead[] }) {
   const Detail = ({ l }: { l: Lead }) => {
     const tel = telHref(l.phone);
     const address = dash(l.address);
+    const ref = orderKey(l);
+    const mark = marks[ref];
     const facts: [string, ReactNodeish][] = [
       ["Phone", tel ? <a key="p" href={tel} className="text-slate-900 underline underline-offset-2">{dash(l.phone)}</a> : dash(l.phone)],
       ["Email", dash(l.email) ? <a key="e" href={`mailto:${l.email}`} className="break-all text-slate-900 underline underline-offset-2">{l.email}</a> : ""],
@@ -113,6 +126,36 @@ export default function OrdersTable({ leads }: { leads: Lead[] }) {
         ) : (
           <p className="text-sm text-slate-500">Nothing else was captured with this one.</p>
         )}
+
+        {/*
+          Marking a job cancelled.
+          Stripe and Calendly cannot be told a job was called off on the phone,
+          so this is the only place the CRM can learn it. It writes a note of
+          its own and never touches the payment: the money stays exactly where
+          it is and a refund, if there is one, is a separate decision.
+        */}
+        <div className="sm:col-span-2">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Is this still happening?</p>
+          <form action={setOrderMark} className="flex flex-wrap items-center gap-2">
+            <input type="hidden" name="ref" value={ref} />
+            <input type="hidden" name="state" value={mark === "cancelled" ? "" : "cancelled"} />
+            <button
+              type="submit"
+              className={`min-h-[40px] rounded-lg border px-3 text-sm font-medium ${
+                mark === "cancelled"
+                  ? "border-slate-300 text-slate-700 hover:bg-white"
+                  : "border-rose-300 text-rose-700 hover:bg-rose-50"
+              }`}
+            >
+              {mark === "cancelled" ? "Put it back, it is happening" : "Mark cancelled"}
+            </button>
+            <span className="text-xs text-slate-500">
+              {mark === "cancelled"
+                ? "Hidden from the diary. The payment in Stripe is untouched."
+                : "Takes it out of the diary. Does not refund anything."}
+            </span>
+          </form>
+        </div>
 
         {/* The map matters more than it looks on an installer's job: half the
             question about a booking is where it is and how far. Google's embed
@@ -267,7 +310,13 @@ export default function OrdersTable({ leads }: { leads: Lead[] }) {
                           </button>
                           <span className="block text-xs text-slate-500">{dash(l.email) || dash(l.phone)}</span>
                         </td>
-                        <td className="px-4 py-3"><Pill className={KIND[l.type]}>{SHORT[l.type] ?? l.type}</Pill></td>
+                        <td className="px-4 py-3">
+                          {marks[orderKey(l)] === "cancelled" ? (
+                            <Pill className="bg-rose-50 text-rose-700 ring-rose-600/20">Cancelled</Pill>
+                          ) : (
+                            <Pill className={KIND[l.type]}>{SHORT[l.type] ?? l.type}</Pill>
+                          )}
+                        </td>
                         <td className="px-4 py-3 text-slate-700">{dash(l.product) || "–"}</td>
                         <td className="px-4 py-3 text-right font-medium tabular-nums text-slate-900">{dash(l.amount) || "–"}</td>
                         <td className="px-4 py-3 text-slate-700">

@@ -8,6 +8,7 @@
  */
 import { fetchLeads, type Lead } from "./leads";
 import { bookingIso } from "./booking-date";
+import { fetchMarks, orderKey } from "./order-marks";
 import type { Site } from "./db";
 
 export interface Day {
@@ -100,13 +101,17 @@ function todayDublin(): string {
 }
 
 export async function fetchWeek(site: Site, daysAhead = 14): Promise<Week> {
-  const feed = await fetchLeads(site);
+  const [feed, marks] = await Promise.all([fetchLeads(site), fetchMarks(site)]);
   if (!feed.ok) {
     return { days: [], later: [], overdue: [], booked: 0, problem: feed.reason };
   }
 
   const today = todayDublin();
   const withDate = feed.data.leads
+    /* A job cancelled on the phone is still paid in Stripe and still has its
+       Calendly slot, so nothing upstream drops it. The diary is the one place
+       it must not appear: it is a van going somewhere nobody is expecting it. */
+    .filter((l) => marks.get(orderKey(l))?.state !== "cancelled")
     .map((l) => ({ l, on: toIso(l.bookingDate) }))
     .filter((x): x is { l: Lead; on: string } => x.on !== null);
 
