@@ -54,9 +54,40 @@ export default function EngagementTracker() {
     const once = (k: string) => (fired[k] ? false : ((fired[k] = true), true));
     const send = (name: string, params: Params = {}) => {
       const payload = { page_clean: pathname, ...params };
-      if (typeof window.gtag === "function") window.gtag("event", name, payload);
-      else (window.dataLayer ||= []).push({ event: name, ...payload });
+      if (typeof window.gtag === "function") {
+        window.gtag("event", name, payload);
+        return;
+      }
+      /*
+       * The fallback used to push { event: name, ...payload }. That is GTM's
+       * queue format, and this site does not run GTM: it runs gtag.js, whose
+       * queue is the arguments object that `function gtag(){dataLayer.push(
+       * arguments)}` pushes. gtag.js ignores a plain object with an `event`
+       * key, so every event taking this path was dropped in silence.
+       *
+       * Pushing an array in gtag's own shape is what the snippet itself does,
+       * so the library picks it up when it finishes loading.
+       */
+      (window.dataLayer ||= []).push(["event", name, payload] as unknown as Record<string, unknown>);
     };
+
+    /*
+     * One event that depends on nothing: not a scroll, not a click, not the
+     * tab being in front. It fires once per page as soon as this effect runs.
+     *
+     * It exists because none of the fourteen events below has appeared in GA4
+     * in twenty eight days across five hundred visits on two sites, and every
+     * attempt to reproduce that in a browser has been defeated by the test rig
+     * rather than by the code: the automated pane will not scroll the window
+     * and reports the tab as hidden, so the scroll and timer paths cannot be
+     * exercised there at all.
+     *
+     * If this appears in GA4 and the others do not, the component runs and the
+     * triggers are wrong. If this does not appear either, the component never
+     * runs on a real visitor's browser. Either answer arrives within hours and
+     * neither needs a person watching a listener fire.
+     */
+    send("fw_tracker_alive", { tracker_version: "2026-09-17" });
 
     /* Scroll depth. Next.js keeps the document between routes, so the marks
        reset per pathname through the effect's dependency rather than staying
