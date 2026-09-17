@@ -83,6 +83,22 @@ checked:
   is caught rather than quietly counted. Its spend is shown in its own panel
   rather than dropped.
 
+## Reaching the database
+
+Two credentials, and both are needed. The publishable key identifies the
+project and opens nothing on its own; every policy on every CRM table also
+requires a shared secret sent as `X-CRM-Key`. PostgREST publishes request
+headers to SQL, so the policy reads the header and compares it inside a
+`SECURITY DEFINER` function against a row in a schema PostgREST does not serve.
+Nothing that can reach the API can read the secret back out.
+
+This replaced Supabase's service role key, which is only obtainable by hand
+from the dashboard. It is also stricter: the service key bypasses RLS on every
+table in the database including any added later, where this grants exactly the
+ten CRM tables and is revoked with one `UPDATE` to `private.crm_auth`.
+
+Env: `SMARTCRM_URL`, `SMARTCRM_ANON_KEY`, `SMARTCRM_KEY`.
+
 ## Signing in
 
 Anyone with a mailbox on the business's own domain can sign in. The mailbox is
