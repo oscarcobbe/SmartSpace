@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Mail, Phone } from "lucide-react";
+import { ArrowLeft, Mail, MapPin, Phone } from "lucide-react";
 import { requireSession } from "@/lib/crm/session";
 import { getPerson, fullAddress, distinctLeads } from "@/lib/crm/people";
 import { getContact, STATUSES, type ActivityRow, type TaskRow } from "@/lib/crm/contacts";
@@ -232,6 +232,30 @@ export default async function ContactPage({ params }: { params: { id: string } }
                 <dd className="text-slate-900">{day(person.lastActivity)}</dd>
               </div>
             </dl>
+
+            {/* Same reason as on Orders: half the question about a customer is
+                where they are. No API key needed and maps.google.com is already
+                in the site's frame-src. */}
+            {address && (
+              <div className="border-t border-slate-200 p-3">
+                <iframe
+                  title={`Map of ${address}`}
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(address)}&z=14&output=embed`}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  className="h-44 w-full rounded-lg border border-slate-200"
+                />
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-900"
+                >
+                  <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+                  Directions
+                </a>
+              </div>
+            )}
           </Panel>
 
           <Panel title="Next steps">

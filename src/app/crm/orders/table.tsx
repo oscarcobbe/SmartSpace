@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
-import { ChevronDown, Download, Search } from "lucide-react";
+import { ChevronDown, Download, MapPin, Search } from "lucide-react";
 import type { Lead } from "@/lib/crm/leads";
 import { telHref } from "@/lib/crm/labels";
 import { toCsv, downloadCsv } from "@/lib/crm/csv";
@@ -76,6 +76,7 @@ export default function OrdersTable({ leads }: { leads: Lead[] }) {
 
   const Detail = ({ l }: { l: Lead }) => {
     const tel = telHref(l.phone);
+    const address = dash(l.address);
     const facts: [string, ReactNodeish][] = [
       ["Phone", tel ? <a key="p" href={tel} className="text-slate-900 underline underline-offset-2">{dash(l.phone)}</a> : dash(l.phone)],
       ["Email", dash(l.email) ? <a key="e" href={`mailto:${l.email}`} className="break-all text-slate-900 underline underline-offset-2">{l.email}</a> : ""],
@@ -105,6 +106,36 @@ export default function OrdersTable({ leads }: { leads: Lead[] }) {
           </dl>
         ) : (
           <p className="text-sm text-slate-500">Nothing else was captured with this one.</p>
+        )}
+
+        {/* The map matters more than it looks on an installer's job: half the
+            question about a booking is where it is and how far. Google's embed
+            endpoint needs no API key, and maps.google.com is already in the
+            site's frame-src, so this works without touching the CSP.
+            loading="lazy" because a list with eight rows open would otherwise
+            fetch eight maps nobody has scrolled to. */}
+        {address && (
+          <div className="sm:col-span-2">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Where it is</p>
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-900"
+              >
+                <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+                Directions
+              </a>
+            </div>
+            <iframe
+              title={`Map of ${address}`}
+              src={`https://maps.google.com/maps?q=${encodeURIComponent(address)}&z=14&output=embed`}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              className="h-56 w-full rounded-lg border border-slate-200"
+            />
+          </div>
         )}
       </div>
     );
@@ -220,7 +251,14 @@ export default function OrdersTable({ leads }: { leads: Lead[] }) {
                       >
                         <td className="whitespace-nowrap px-4 py-3 tabular-nums text-slate-600">{dayOnly(l.date) || "–"}</td>
                         <td className="px-4 py-3">
-                          <span className="block font-medium text-slate-900">{dash(l.name) || "Unnamed"}</span>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setOpen(expanded ? null : id); }}
+                            aria-expanded={expanded}
+                            className="block text-left font-medium text-slate-900 underline-offset-2 hover:underline"
+                          >
+                            {dash(l.name) || "Unnamed"}
+                          </button>
                           <span className="block text-xs text-slate-500">{dash(l.email) || dash(l.phone)}</span>
                         </td>
                         <td className="px-4 py-3"><Pill className={KIND[l.type]}>{SHORT[l.type] ?? l.type}</Pill></td>

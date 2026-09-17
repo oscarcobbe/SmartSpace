@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { BarChart3, CheckSquare, Euro, Home, Receipt, Send, Users } from "lucide-react";
+import { Activity, BarChart3, CheckSquare, Euro, Home, Receipt, Send, Users } from "lucide-react";
 import type { Site } from "@/lib/crm/db";
 
 /**
@@ -34,6 +34,7 @@ const GROUPS: { heading: string; items: { href: string; label: string; icon: typ
   {
     heading: "Performance",
     items: [
+      { href: "/crm/insights", label: "Visitors", icon: Activity },
       { href: "/crm/finance", label: "Finance", icon: Euro },
       { href: "/crm/marketing", label: "Marketing", icon: BarChart3 },
       { href: "/crm/outreach", label: "Outreach", icon: Send, sites: ["smartcareliving"] },
