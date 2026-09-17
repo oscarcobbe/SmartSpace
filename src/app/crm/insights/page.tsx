@@ -1,5 +1,6 @@
 import { requireSession, SITE_LABEL } from "@/lib/crm/session";
 import { fetchInsights, EVENT_LABEL } from "@/lib/crm/ga4";
+import { fetchScans, scanLabel } from "@/lib/crm/scans";
 import { PageHeader, Panel, Stat, StatRow, Note, Empty } from "../ui";
 import { BarChart, Legend } from "../chart";
 
@@ -45,7 +46,7 @@ function Bars({ rows, total }: { rows: { label: string; value: number; note?: st
 export default async function InsightsPage({ searchParams }: { searchParams: { days?: string } }) {
   const { site } = requireSession();
   const days = [7, 28, 90].includes(Number(searchParams.days)) ? Number(searchParams.days) : 28;
-  const result = await fetchInsights(site, days);
+  const [result, scans] = await Promise.all([fetchInsights(site, days), fetchScans(site, 90)]);
 
   if (!result.ok) {
     return (
@@ -132,6 +133,30 @@ export default async function InsightsPage({ searchParams }: { searchParams: { d
             </>
           )}
         </Panel>
+
+        {/* Printed codes, kept out of Orders. A scan is somebody pointing a
+            phone at a van at a traffic light, not an enquiry, and putting the
+            two in one list makes both numbers useless. */}
+        {scans && scans.total > 0 && (
+          <Panel
+            title="Printed codes scanned"
+            aside={<span className="text-xs text-slate-500">last 90 days</span>}
+          >
+            <div className="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200 sm:grid-cols-3">
+              <Stat label="Scans" value={int(scans.total)} />
+              <Stat label="Last seven days" value={int(scans.last7)} tone={scans.last7 ? "good" : "plain"} />
+              <Stat
+                label="Most scanned"
+                value={scans.byCode[0] ? scanLabel(scans.byCode[0].code) : "–"}
+                note={scans.byCode[0] ? `${int(scans.byCode[0].count)} scans` : undefined}
+              />
+            </div>
+            <Bars
+              total={scans.total}
+              rows={scans.byCode.map((c) => ({ label: scanLabel(c.code), value: c.count }))}
+            />
+          </Panel>
+        )}
 
         <div className="grid gap-6 lg:grid-cols-2">
           <Panel title="Where they came from">

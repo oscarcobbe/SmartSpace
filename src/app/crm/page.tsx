@@ -8,11 +8,6 @@ import { NeedsYou, LatestIn, MoneyThisMonth, AdsThisMonth, RecentActivity, Panel
 
 export const dynamic = "force-dynamic";
 
-const MESSAGES: Record<string, string> = {
-  missing: "That link was incomplete. Ask for a new one below.",
-  expired: "That link has already been used or has run out. Ask for a new one below.",
-};
-
 /** "Good morning" at nine, not at nine at night. Dublin, because the machine
  *  this renders on is not in Ireland and has said so before. */
 function greeting(): string {
@@ -24,7 +19,7 @@ function greeting(): string {
   return "Good evening";
 }
 
-export default function CrmHome({ searchParams }: { searchParams: { error?: string } }) {
+export default function CrmHome() {
   const session = currentSession();
 
   /* Until the database is wired up there is no CRM, so it does not exist.
@@ -71,8 +66,6 @@ export default function CrmHome({ searchParams }: { searchParams: { error?: stri
     );
   }
 
-  const message = searchParams.error ? MESSAGES[searchParams.error] ?? MESSAGES.expired : null;
-
   return (
     <div>
       {/* Named, because the first thing a person sees should tell them what
@@ -84,15 +77,8 @@ export default function CrmHome({ searchParams }: { searchParams: { error?: stri
 
       <div className="rounded-xl border border-slate-200 bg-white p-6">
         <h1 className="text-lg font-semibold tracking-tight text-slate-900">Sign in</h1>
-        <p className="mt-1.5 text-sm text-slate-600">
-          Enter your email address and we will send you a link. There is no password to remember.
-        </p>
-        {message && (
-          <p role="status" className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-            {message}
-          </p>
-        )}
-        <LoginForm site={THIS_SITE} />
+        <p className="mt-1.5 text-sm text-slate-600">Enter the password to continue.</p>
+        <LoginForm />
       </div>
 
       <p className="mt-4 text-center text-xs text-slate-500">

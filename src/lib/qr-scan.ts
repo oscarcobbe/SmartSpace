@@ -17,6 +17,7 @@
 import { NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { logLead } from "@/lib/leads";
+import { crm, THIS_SITE } from "@/lib/crm/db";
 
 export interface TrackQrScanOptions {
   /**
@@ -130,6 +131,42 @@ export async function trackQrScan(
     // logLead swallows errors internally, but belt-and-braces: never let
     // a logging failure break the customer's redirect.
     console.error(`[qr-scan ${source}] lead log threw (should not happen):`, err);
+  }
+
+  /*
+   * And into the CRM, in its own table.
+   *
+   * The sheet row above puts a scan in the same list as paid orders and booked
+   * installations, because type="QR Scan" is just another row there. A scan is
+   * not a lead: somebody pointed a phone at a van at a traffic light. Counted
+   * as one it makes the orders list wrong and the scan count invisible.
+   *
+   * Nothing identifying is written: no IP, no user agent, no identifier. The
+   * coarse device class answers the only question worth asking, which is
+   * whether printing more of these is worth it.
+   *
+   * Awaited for the same reason as the sheet write, and its own failure is
+   * swallowed: a customer mid-scan must reach their destination whatever the
+   * database is doing.
+   */
+  try {
+    const [code, ...rest] = source.split(":");
+    await crm("crm_scans", {
+      method: "POST",
+      prefer: "return=minimal",
+      body: JSON.stringify({
+        site: THIS_SITE,
+        code: rest.length ? rest.join(":") : code,
+        placement: store ?? variant ?? null,
+        destination,
+        device: deviceClass,
+        browser,
+        os,
+        referer: referer || null,
+      }),
+    });
+  } catch (err) {
+    console.error(`[qr-scan ${source}] crm write failed:`, err instanceof Error ? err.message : err);
   }
 
   return NextResponse.redirect(destination, {

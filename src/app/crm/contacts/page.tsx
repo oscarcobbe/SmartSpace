@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { requireSession } from "@/lib/crm/session";
 import { listPeople, type Person } from "@/lib/crm/people";
 import { STATUS_PILL, STATUS_LABEL } from "@/lib/crm/labels";
@@ -58,6 +58,15 @@ export default async function ContactsPage({ searchParams }: { searchParams: { q
       <PageHeader
         title="Customers"
         sub="Everyone who has ordered, booked or been in touch, with what they bought and what was said."
+        aside={
+          <Link
+            href="/crm/contacts/new"
+            className="flex min-h-[38px] items-center gap-2 rounded-lg bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-800"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Add a customer
+          </Link>
+        }
       />
 
       <StatRow>

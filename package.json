@@ -13,8 +13,7 @@
     "check:strings": "node scripts/guard-strings.mjs",
     "check:crm-inbound": "node scripts/check-crm-inbound.mjs",
     "check:crm-dates": "node scripts/check-crm-dates.mjs",
-    "check:revolut": "node scripts/check-revolut-parser.mjs",
-    "check:crm-domain": "node scripts/check-crm-domain-login.mjs"
+    "check:revolut": "node scripts/check-revolut-parser.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.577.0",
