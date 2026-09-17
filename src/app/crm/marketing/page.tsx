@@ -1,10 +1,13 @@
 import { requireSession, SITE_LABEL } from "@/lib/crm/session";
 import { fetchAds, adsSplit } from "@/lib/crm/google-ads";
+import { fetchFinance } from "@/lib/crm/stripe-finance";
 import { money, moneyExact } from "@/lib/crm/leads";
 import { STATUS_PILL } from "@/lib/crm/labels";
 import { PageHeader, Panel, Stat, StatRow, Note, Pill } from "../ui";
 import ExportButton from "../export-button";
-import { BarChart, Legend } from "../chart";
+import RoasChart, { type RoasMonth } from "../roas-chart";
+import Findings from "../findings-panel";
+import { marketingFindings } from "@/lib/crm/findings";
 import type { AdsData } from "@/lib/crm/google-ads";
 
 export const dynamic = "force-dynamic";
@@ -57,7 +60,12 @@ function CampaignTable({ campaigns }: { campaigns: AdsData["campaigns"] }) {
 
 export default async function MarketingPage() {
   const session = requireSession();
-  const result = await fetchAds(session.site, 12);
+  /* Both feeds at once: the chart sets one against the other, and fetching
+     them in series would add a second of latency for nothing. */
+  const [result, finance] = await Promise.all([
+    fetchAds(session.site, 12),
+    fetchFinance(12),
+  ]);
 
   if (!result.ok) {
     return (
@@ -84,11 +92,34 @@ export default async function MarketingPage() {
   const thisMonth = own.months[own.months.length - 1];
   const dayOfMonth = new Date().getDate();
 
-  const bars = own.months.map((m) => ({
+  /* Ad spend and money taken, on the same months. Stripe is joined by the
+     month key rather than by position, because the two feeds do not always
+     start at the same month and lining them up by index would silently set
+     one month's spend against another's takings. */
+  const keptByMonth = new Map<string, number>();
+  if (finance.ok) for (const m of finance.data.months) keptByMonth.set(m.key, m.net);
+
+  const roasMonths: RoasMonth[] = own.months.map((m) => ({
+    key: m.key,
     label: m.label,
-    value: m.cost,
-    title: `${m.label}: ${moneyExact(m.cost)} spent, ${m.conversions.toFixed(1)} enquiries, ${moneyExact(m.value)} of work won`,
+    spend: m.cost,
+    attributed: m.value,
+    kept: keptByMonth.get(m.key) ?? 0,
+    conversions: m.conversions,
+    clicks: m.clicks,
+    partial: m.key === thisMonth.key,
   }));
+
+  /* How far into this month we are, so a part month is compared against the
+     same fraction of the last one rather than against the whole of it. */
+  const nowD = new Date();
+  const daysInMonth = new Date(nowD.getFullYear(), nowD.getMonth() + 1, 0).getDate();
+  const findings = marketingFindings({
+    months: own.months,
+    campaigns: own.campaigns,
+    keptByMonth,
+    monthElapsed: Math.min(1, nowD.getDate() / daysInMonth),
+  });
 
   return (
     <>
@@ -120,13 +151,13 @@ export default async function MarketingPage() {
       )}
 
       <div className="space-y-6">
-        <Panel title="What was spent, month by month">
-          <div className="px-4 pt-4">
-            <BarChart bars={bars} ariaLabel="Google Ads spend by month over the last twelve months" />
-          </div>
-          <Legend items={[{ color: "#f48222", label: "Spend" }]} />
-          <p className="-mt-2 px-4 pb-4 text-xs text-slate-500">
-            {thisMonth.label} is {dayOfMonth} {dayOfMonth === 1 ? "day" : "days"} in, so its bar is a part month.
+        <Findings findings={findings} title="What this says, and what to do" />
+
+        <Panel title="What the advertising cost, and what came in">
+          <RoasChart months={roasMonths} />
+          <p className="border-t border-slate-100 px-4 py-2 text-xs text-slate-500">
+            {thisMonth.label} is {dayOfMonth} {dayOfMonth === 1 ? "day" : "days"} in, so its bars are a part month and read low.
+            {!finance.ok && " Stripe could not be read, so \u2018all money kept\u2019 is empty on this chart."}
           </p>
         </Panel>
 
