@@ -106,58 +106,6 @@ export default async function FinancePage() {
           </div>
         </Panel>
 
-        {bank && <Findings findings={cut.findings} title="What the bank account says" />}
-
-        {bank && cut.categories.length > 0 && (
-          <Panel title="Where the money went">
-            <ul className="divide-y divide-slate-100">
-              {cut.categories.map((c) => (
-                <li key={c.label} className="flex items-center gap-3 px-4 py-2.5">
-                  <span className="w-44 flex-none text-sm text-slate-700">{c.label}</span>
-                  <span className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
-                    <span className="block h-full rounded-full bg-brand-500" style={{ width: `${Math.max(2, c.share * 100)}%` }} />
-                  </span>
-                  <span className="w-28 flex-none text-right text-sm font-semibold tabular-nums text-slate-900">
-                    {money(c.cents / 100)}
-                  </span>
-                  <span className="w-12 flex-none text-right text-xs tabular-nums text-slate-500">
-                    {(c.share * 100).toFixed(0)}%
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </Panel>
-        )}
-
-        {bank && cut.months.length > 1 && (
-          <Panel title="Month by month">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[30rem] text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200 text-left text-[11px] uppercase tracking-wider text-slate-500">
-                    <th scope="col" className="px-4 py-2 font-semibold">Month</th>
-                    <th scope="col" className="px-4 py-2 text-right font-semibold">Customers paid</th>
-                    <th scope="col" className="px-4 py-2 text-right font-semibold">Out</th>
-                    <th scope="col" className="px-4 py-2 text-right font-semibold">Difference</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {cut.months.map((m) => (
-                    <tr key={m.key}>
-                      <td className="px-4 py-2 text-slate-700">{monthName(m.key)}</td>
-                      <td className="px-4 py-2 text-right tabular-nums text-slate-700">{money(m.earnedCents / 100)}</td>
-                      <td className="px-4 py-2 text-right tabular-nums text-slate-700">{money(m.outCents / 100)}</td>
-                      <td className={`px-4 py-2 text-right font-semibold tabular-nums ${m.netCents >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
-                        {money(m.netCents / 100)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Panel>
-        )}
-
         {/* Kept apart from the Stripe figures on purpose. A card payment appears
             in both, once when it is taken and again when it settles into the
             bank, so adding the two together would count every sale twice. */}
@@ -201,6 +149,58 @@ export default async function FinancePage() {
                 <Upload className="h-4 w-4" aria-hidden="true" />
                 Import a statement
               </Link>
+            </div>
+          </Panel>
+        )}
+
+        {bank && <Findings findings={cut.findings} title="What the bank account says" />}
+
+        {bank && cut.categories.length > 0 && (
+          <Panel title="Where the money went">
+            <ul className="divide-y divide-slate-100">
+              {cut.categories.map((c) => (
+                <li key={c.label} className="flex items-center gap-3 px-4 py-2.5">
+                  <span className="w-44 flex-none text-sm text-slate-700">{c.label}</span>
+                  <span className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+                    <span className="block h-full rounded-full bg-brand-500" style={{ width: `${Math.max(2, c.share * 100)}%` }} />
+                  </span>
+                  <span className="w-28 flex-none text-right text-sm font-semibold tabular-nums text-slate-900">
+                    {money(c.cents / 100)}
+                  </span>
+                  <span className="w-12 flex-none text-right text-xs tabular-nums text-slate-500">
+                    {(c.share * 100).toFixed(0)}%
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Panel>
+        )}
+
+        {bank && cut.months.length > 1 && (
+          <Panel title="The bank account, month by month">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[30rem] text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 text-left text-[11px] uppercase tracking-wider text-slate-500">
+                    <th scope="col" className="px-4 py-2 font-semibold">Month</th>
+                    <th scope="col" className="px-4 py-2 text-right font-semibold">Customers paid</th>
+                    <th scope="col" className="px-4 py-2 text-right font-semibold">Out</th>
+                    <th scope="col" className="px-4 py-2 text-right font-semibold">Difference</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {cut.months.map((m) => (
+                    <tr key={m.key}>
+                      <td className="px-4 py-2 text-slate-700">{monthName(m.key)}</td>
+                      <td className="px-4 py-2 text-right tabular-nums text-slate-700">{money(m.earnedCents / 100)}</td>
+                      <td className="px-4 py-2 text-right tabular-nums text-slate-700">{money(m.outCents / 100)}</td>
+                      <td className={`px-4 py-2 text-right font-semibold tabular-nums ${m.netCents >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+                        {money(m.netCents / 100)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </Panel>
         )}
