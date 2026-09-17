@@ -60,6 +60,10 @@ type Basis = "kept" | "attributed";
 export default function RoasChart({ months, height = 260 }: { months: RoasMonth[]; height?: number }) {
   const [basis, setBasis] = useState<Basis>("kept");
   const [hover, setHover] = useState<number | null>(null);
+  /* Clicking a month pins it, so the figures can be read without holding the
+     pointer still, and so they survive on a touch screen where there is no
+     hover at all. */
+  const [pinned, setPinned] = useState<number | null>(null);
   const uid = useId();
 
   const revenue = (m: RoasMonth) => (basis === "kept" ? m.kept : m.attributed);
@@ -94,7 +98,8 @@ export default function RoasChart({ months, height = 260 }: { months: RoasMonth[
     .filter(Boolean)
     .join(" ");
 
-  const shown = hover !== null ? months[hover] : null;
+  const activeIdx = hover ?? pinned;
+  const shown = activeIdx !== null ? months[activeIdx] : null;
 
   return (
     <div>
@@ -120,6 +125,20 @@ export default function RoasChart({ months, height = 260 }: { months: RoasMonth[
             : "Only what Google could tie back to a click."}
         </p>
       </div>
+
+      <dl className="grid grid-cols-3 gap-px border-y border-slate-200 bg-slate-200">
+        {[
+          { k: "Spent on ads", v: exact(totalSpend), sub: `${months.length} months` },
+          { k: basis === "kept" ? "Money kept" : "Attributed to ads", v: exact(totalRev), sub: basis === "kept" ? "all sources" : "Google's figure" },
+          { k: "Per euro out", v: `${overall.toFixed(2)}×`, sub: overall >= 1 ? "more in than out" : "less in than out" },
+        ].map((c) => (
+          <div key={c.k} className="bg-white px-4 py-2.5">
+            <dt className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">{c.k}</dt>
+            <dd className="mt-0.5 text-lg font-bold tabular-nums text-slate-900">{c.v}</dd>
+            <dd className="text-xs text-slate-500">{c.sub}</dd>
+          </div>
+        ))}
+      </dl>
 
       <svg
         viewBox={`0 0 ${WIDTH} ${height}`}
@@ -154,11 +173,13 @@ export default function RoasChart({ months, height = 260 }: { months: RoasMonth[
                 y={PAD.top}
                 width={slot}
                 height={plotH}
-                fill={hover === i ? "#0f172a" : "transparent"}
-                fillOpacity={hover === i ? 0.04 : 0}
+                fill={activeIdx === i ? "#0f172a" : "transparent"}
+                fillOpacity={activeIdx === i ? 0.05 : 0}
                 onMouseEnter={() => setHover(i)}
                 onFocus={() => setHover(i)}
                 onBlur={() => setHover(null)}
+                onClick={() => setPinned(pinned === i ? null : i)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPinned(pinned === i ? null : i); } }}
                 tabIndex={0}
                 role="button"
                 aria-label={
@@ -172,7 +193,15 @@ export default function RoasChart({ months, height = 260 }: { months: RoasMonth[
               <rect x={cx + 1} y={y(rev)} width={barW} height={Math.max(0, PAD.top + plotH - y(rev))}
                 rx="2" fill="#0d9488" fillOpacity={m.partial ? 0.55 : 1} pointerEvents="none" />
               <text x={cx} y={height - 10} textAnchor="middle" fontSize="11"
-                fill={hover === i ? "#0f172a" : "#64748b"} pointerEvents="none">{m.label}</text>
+                fill={activeIdx === i ? "#0f172a" : "#64748b"} pointerEvents="none">{m.label}</text>
+              {/* The ratio printed over every column, because the whole point
+                  of the chart is the number and making it hover-only hid it. */}
+              {m.spend > 0 && (
+                <text x={cx} y={Math.min(y(m.spend), y(rev)) - 6} textAnchor="middle" fontSize="10.5"
+                  fontWeight="700" fill={rev / m.spend >= 1 ? "#0f766e" : "#b45309"} pointerEvents="none">
+                  {(rev / m.spend).toFixed(1)}×
+                </text>
+              )}
             </g>
           );
         })}
@@ -181,7 +210,7 @@ export default function RoasChart({ months, height = 260 }: { months: RoasMonth[
         {months.map((m, i) => {
           if (m.spend <= 0) return null;
           const cx = PAD.left + slot * i + slot / 2;
-          return <circle key={`${uid}-${m.key}`} cx={cx} cy={ry(revenue(m) / m.spend)} r={hover === i ? 5 : 3}
+          return <circle key={`${uid}-${m.key}`} cx={cx} cy={ry(revenue(m) / m.spend)} r={activeIdx === i ? 5.5 : 3}
             fill="#0d9488" stroke="#fff" strokeWidth="1.5" pointerEvents="none" />;
         })}
       </svg>
@@ -194,21 +223,31 @@ export default function RoasChart({ months, height = 260 }: { months: RoasMonth[
 
       {/* Reads as a caption when nothing is hovered, so the panel is never
           blank and never jumps in height when the pointer moves. */}
-      <div className="min-h-[3.25rem] border-t border-slate-100 px-4 py-2 text-sm">
+      <div className="min-h-[5.5rem] border-t border-slate-100 px-4 py-3 text-sm">
         {shown ? (
-          <p className="text-slate-700">
-            <span className="font-semibold text-slate-900">{shown.label}</span>
-            {shown.partial && <span className="text-slate-500"> (part month)</span>}
-            {" · "}spent <span className="font-medium">{exact(shown.spend)}</span>
-            {" · "}{basis === "kept" ? "kept" : "attributed"} <span className="font-medium">{exact(revenue(shown))}</span>
-            {shown.spend > 0 && <> {" · "}<span className="font-semibold text-teal-700">{(revenue(shown) / shown.spend).toFixed(2)}× </span>in per euro out</>}
-            {shown.conversions > 0 && <> {" · "}{shown.conversions.toFixed(0)} enquiries from {shown.clicks} clicks</>}
-          </p>
+          <div>
+            <p className="font-semibold text-slate-900">
+              {shown.label}
+              {shown.partial && <span className="font-normal text-slate-500"> · part month so far</span>}
+              {pinned !== null && <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-600">pinned, click again to release</span>}
+            </p>
+            <dl className="mt-1.5 grid grid-cols-2 gap-x-6 gap-y-1 sm:grid-cols-4">
+              {[
+                ["Spent", exact(shown.spend)],
+                [basis === "kept" ? "Kept" : "Attributed", exact(revenue(shown))],
+                ["Per euro out", shown.spend > 0 ? `${(revenue(shown) / shown.spend).toFixed(2)}×` : "–"],
+                ["Enquiries", shown.conversions > 0 ? `${shown.conversions.toFixed(0)} from ${shown.clicks} clicks` : `none from ${shown.clicks} clicks`],
+              ].map(([k, v]) => (
+                <div key={k}>
+                  <dt className="text-[11px] uppercase tracking-wider text-slate-500">{k}</dt>
+                  <dd className="font-semibold tabular-nums text-slate-900">{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         ) : (
           <p className="text-slate-600">
-            Over the whole period, <span className="font-medium text-slate-900">{exact(totalSpend)}</span> of advertising sits
-            against <span className="font-medium text-slate-900">{exact(totalRev)}</span>, which is{" "}
-            <span className="font-semibold text-teal-700">{overall.toFixed(2)}×</span> in for every euro out. Hover a month for its own figures.
+            Hover or tap a month for its own figures. The number over each column is what came back for every euro spent that month.
           </p>
         )}
       </div>

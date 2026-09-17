@@ -1,5 +1,5 @@
 import { requireSession, SITE_LABEL } from "@/lib/crm/session";
-import { fetchAds, adsSplit } from "@/lib/crm/google-ads";
+import { fetchAds, adsSplit, fetchChanges, summariseChanges } from "@/lib/crm/google-ads";
 import { fetchFinance } from "@/lib/crm/stripe-finance";
 import { money, moneyExact } from "@/lib/crm/leads";
 import { STATUS_PILL } from "@/lib/crm/labels";
@@ -62,9 +62,10 @@ export default async function MarketingPage() {
   const session = requireSession();
   /* Both feeds at once: the chart sets one against the other, and fetching
      them in series would add a second of latency for nothing. */
-  const [result, finance] = await Promise.all([
+  const [result, finance, changes] = await Promise.all([
     fetchAds(session.site, 12),
     fetchFinance(12),
+    fetchChanges(session.site, 14),
   ]);
 
   if (!result.ok) {
@@ -114,11 +115,13 @@ export default async function MarketingPage() {
      same fraction of the last one rather than against the whole of it. */
   const nowD = new Date();
   const daysInMonth = new Date(nowD.getFullYear(), nowD.getMonth() + 1, 0).getDate();
+  const changeList = changes.ok ? summariseChanges(changes.data) : [];
   const findings = marketingFindings({
     months: own.months,
     campaigns: own.campaigns,
     keptByMonth,
     monthElapsed: Math.min(1, nowD.getDate() / daysInMonth),
+    changes: changeList,
   });
 
   return (
@@ -152,6 +155,27 @@ export default async function MarketingPage() {
 
       <div className="space-y-6">
         <Findings findings={findings} title="What this says, and what to do" />
+
+        <Panel title="What we changed, last fourteen days">
+          {changeList.length === 0 ? (
+            <div className="px-4 py-4">
+              <Note tone="info">
+                {changes.ok
+                  ? "Nothing was edited in the account over the last fourteen days, so any movement in the figures above is the market rather than us."
+                  : `The change history could not be read. ${changes.reason}`}
+              </Note>
+            </div>
+          ) : (
+            <ul className="divide-y divide-slate-100">
+              {changeList.map((c) => (
+                <li key={c} className="px-4 py-2 text-sm text-slate-700">{c}</li>
+              ))}
+            </ul>
+          )}
+          <p className="border-t border-slate-100 px-4 py-2 text-xs text-slate-500">
+            Straight from the account&apos;s own change log. Google keeps thirty days of it.
+          </p>
+        </Panel>
 
         <Panel title="What the advertising cost, and what came in">
           <RoasChart months={roasMonths} />

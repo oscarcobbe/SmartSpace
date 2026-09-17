@@ -162,6 +162,8 @@ export interface MarketingInput {
   keptByMonth: Map<string, number>;
   /** Fraction of this month already elapsed, 0 to 1, for like-for-like. */
   monthElapsed: number;
+  /** What was actually edited in the account lately, commonest first. */
+  changes?: string[];
 }
 
 export function marketingFindings(m: MarketingInput): Finding[] {
@@ -194,9 +196,14 @@ export function marketingFindings(m: MarketingInput): Finding[] {
       out.push({
         kind: pct <= 0 ? "win" : "risk",
         title: `Each enquiry costs ${say(pct)} on ${prev.label}`,
-        detail: `${eur(cpaNow)} each in ${now.label} against ${eur(cpaPrev)} in ${prev.label}. ${
-          pct <= 0 ? "Whatever changed is working." : "Worth finding what changed before the budget follows it."
-        }`,
+        /* This used to end "whatever changed is working", which is a shrug
+           where the answer belongs. The account keeps every edit, so the edits
+           are named and the reader can judge which of them did it. */
+        detail:
+          `${eur(cpaNow)} each in ${now.label} against ${eur(cpaPrev)} in ${prev.label}.` +
+          (m.changes?.length
+            ? ` Changed in that time: ${m.changes.slice(0, 4).join(", ")}.`
+            : " No edits were recorded in the account over that period, so this is the market moving rather than anything we did."),
       });
     }
   }

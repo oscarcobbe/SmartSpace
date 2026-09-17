@@ -301,3 +301,108 @@ export function adsSplit(data: AdsData): AdsSplit {
   };
   return { own, other };
 }
+
+/* ─── What was changed in the account, and when ───────────────── */
+
+export interface AccountChange {
+  /** ISO-ish, as Google returns it. */
+  at: string;
+  resource: string;
+  operation: string;
+  campaign: string | null;
+}
+
+export type ChangesResult = { ok: true; data: AccountChange[] } | { ok: false; reason: string };
+
+/**
+ * The account's own change log.
+ *
+ * ── WHY THIS IS HERE ─────────────────────────────────────────────
+ *
+ * The marketing findings used to say "whatever changed is working" when cost
+ * per enquiry improved. That is a shrug standing in for the answer, and the
+ * answer was available the whole time: Google keeps every edit, who made it
+ * and when. A report that notices an improvement and cannot say what caused it
+ * is not worth reading twice.
+ *
+ * Google only retains thirty days here, and rejects a window wider than that,
+ * so this asks for fourteen: enough to cover the fortnight a change is usually
+ * judged over, and well inside what the API will answer.
+ */
+export async function fetchChanges(site: AdSite, days = 14): Promise<ChangesResult> {
+  const customerId = ADS_ACCOUNT[site];
+  if (!customerId) return { ok: false, reason: "No Google Ads account is mapped to this site." };
+  try {
+    const rows = await search(
+      customerId,
+      `SELECT change_event.change_date_time, change_event.change_resource_type,
+              change_event.resource_change_operation, campaign.name
+         FROM change_event
+        WHERE change_event.change_date_time DURING LAST_${days === 30 ? 30 : 14}_DAYS
+        ORDER BY change_event.change_date_time DESC
+        LIMIT 500`,
+    );
+    return {
+      ok: true,
+      data: rows.map((r) => {
+        const c = (r as Record<string, Record<string, unknown>>).changeEvent ?? {};
+        const camp = (r as Record<string, Record<string, unknown>>).campaign ?? {};
+        return {
+          at: String(c.changeDateTime ?? ""),
+          resource: String(c.changeResourceType ?? ""),
+          operation: String(c.resourceChangeOperation ?? ""),
+          campaign: camp.name ? String(camp.name) : null,
+        };
+      }),
+    };
+  } catch (err) {
+    return { ok: false, reason: err instanceof Error ? err.message : "Change history could not be read." };
+  }
+}
+
+/** Plain English for one kind of edit, singular and plural. */
+const CHANGE_WORD: Record<string, [string, string]> = {
+  "CREATE|CAMPAIGN_CRITERION": ["negative keyword or target added", "negative keywords or targets added"],
+  "REMOVE|CAMPAIGN_CRITERION": ["negative keyword or target removed", "negative keywords or targets removed"],
+  "CREATE|AD_GROUP_CRITERION": ["keyword added", "keywords added"],
+  "REMOVE|AD_GROUP_CRITERION": ["keyword removed", "keywords removed"],
+  "UPDATE|AD_GROUP_CRITERION": ["keyword changed", "keywords changed"],
+  "CREATE|AD_GROUP_AD": ["ad added", "ads added"],
+  "UPDATE|AD": ["ad edited", "ads edited"],
+  "UPDATE|AD_GROUP": ["ad group changed", "ad groups changed"],
+  "CREATE|AD_GROUP": ["ad group added", "ad groups added"],
+  "UPDATE|CAMPAIGN": ["campaign setting changed", "campaign settings changed"],
+  "UPDATE|CAMPAIGN_BUDGET": ["budget changed", "budget changes"],
+  "CREATE|CAMPAIGN_ASSET": ["sitelink or callout added", "sitelinks or callouts added"],
+  "REMOVE|CAMPAIGN_ASSET": ["sitelink or callout removed", "sitelinks or callouts removed"],
+};
+
+/**
+ * The edits, counted and worded, commonest first.
+ *
+ * Counted rather than listed one by one: thirty-nine separate rows saying
+ * "negative keyword added" is a log, and nobody reads a log. "39 negative
+ * keywords added" is the same fact in a form somebody takes in at a glance.
+ */
+export function summariseChanges(changes: AccountChange[]): string[] {
+  const counts = new Map<string, number>();
+  for (const c of changes) {
+    const key = `${c.operation}|${c.resource}`;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  const entries: [string, number][] = [];
+  counts.forEach((n, key) => entries.push([key, n]));
+  return entries
+    .sort((a, b) => b[1] - a[1])
+    .map(([key, n]) => {
+      const words = CHANGE_WORD[key];
+      if (!words) {
+        /* An edit type we have no phrase for is still reported, in Google's
+           own words, rather than dropped. Silence here would understate the
+           work done in exactly the month somebody asks what we did. */
+        const [op, res] = key.split("|");
+        return `${n} ${res.toLowerCase().replace(/_/g, " ")} ${op.toLowerCase()}${n === 1 ? "" : "s"}`;
+      }
+      return `${n} ${n === 1 ? words[0] : words[1]}`;
+    });
+}
