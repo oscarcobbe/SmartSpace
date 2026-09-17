@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
+import { joinBookings } from "@/lib/crm/order-bookings";
 import { ChevronDown, Download, MapPin, Search } from "lucide-react";
 import type { Lead } from "@/lib/crm/leads";
 import { telHref } from "@/lib/crm/labels";
@@ -43,6 +44,11 @@ function csv(rows: Lead[]): string {
 }
 
 export default function OrdersTable({ leads }: { leads: Lead[] }) {
+  /* Stripe orders and Calendly appointments arrive as separate rows, so a
+     customer who paid first and booked afterwards left the paid order reading
+     "-". Their appointment is on another row in this same list; this carries
+     it across so the table can answer when the van is actually due. */
+  const borrowed = useMemo(() => joinBookings(leads), [leads]);
   const [tab, setTab] = useState<Tab>("All");
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<string | null>(null);
@@ -265,8 +271,32 @@ export default function OrdersTable({ leads }: { leads: Lead[] }) {
                         <td className="px-4 py-3 text-slate-700">{dash(l.product) || "–"}</td>
                         <td className="px-4 py-3 text-right font-medium tabular-nums text-slate-900">{dash(l.amount) || "–"}</td>
                         <td className="px-4 py-3 text-slate-700">
-                          {dash(l.bookingDate) || "–"}
-                          {dash(l.bookingSlot) && <span className="block text-xs text-slate-500">{l.bookingSlot}</span>}
+                          {(() => {
+                            const own = dash(l.bookingDate);
+                            if (own) {
+                              return (
+                                <>
+                                  {own}
+                                  {dash(l.bookingSlot) && <span className="block text-xs text-slate-500">{l.bookingSlot}</span>}
+                                </>
+                              );
+                            }
+                            const b = borrowed.get(l);
+                            if (b) {
+                              return (
+                                <>
+                                  {b.label}
+                                  <span className="block text-xs text-slate-500">
+                                    {b.slot ? `${b.slot} · booked separately` : "booked separately"}
+                                  </span>
+                                </>
+                              );
+                            }
+                            /* A dash said both "nobody booked this" and "the
+                               booking is on another row". Only one of those is
+                               something to act on, so it says which. */
+                            return <span className="text-amber-700">Not booked yet</span>;
+                          })()}
                         </td>
                         <td className="px-2 py-3 text-right">
                           <button

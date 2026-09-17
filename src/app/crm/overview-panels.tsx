@@ -148,7 +148,26 @@ export async function MoneyThisMonth() {
   const f = result.data;
   const now = f.months[f.months.length - 1];
   const prev = f.months[f.months.length - 2];
-  const change = prev && prev.net > 0 ? ((now.net - prev.net) / prev.net) * 100 : null;
+
+  /*
+   * Like for like, or not at all.
+   *
+   * This compared the month so far against the WHOLE of last month, so on the
+   * 17th it set seventeen days against thirty-one and read "down 45%". It said
+   * that every month, all month, and only came right on the final day. A
+   * figure that is wrong in a predictable direction is worse than no figure,
+   * because somebody eventually makes a decision on it.
+   *
+   * So the comparison is against the same span of last month, and the note
+   * says which span, because a percentage nobody can see the basis of is the
+   * thing that produced the original bug.
+   */
+  const basis = prev && !prev.completeToDate ? prev.netToDate : prev?.net ?? 0;
+  const change = prev && basis > 0 ? ((now.net - basis) / basis) * 100 : null;
+  const spanDays = new Date().getUTCDate();
+  const against = prev && !prev.completeToDate
+    ? `the first ${spanDays} days of ${prev.label}`
+    : prev?.label ?? "";
 
   return (
     <Panel
@@ -159,7 +178,7 @@ export async function MoneyThisMonth() {
         <Stat
           label={`Kept in ${now.label}`}
           value={money(now.net)}
-          note={change === null ? `${now.payments} payments` : `${change >= 0 ? "up" : "down"} ${Math.abs(change).toFixed(0)}% on ${prev.label}`}
+          note={change === null ? `${now.payments} payments` : `${change >= 0 ? "up" : "down"} ${Math.abs(change).toFixed(0)}% on ${against}`}
           tone={change === null ? "plain" : change >= 0 ? "good" : "warn"}
         />
         <Stat

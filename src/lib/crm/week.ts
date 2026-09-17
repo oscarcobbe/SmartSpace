@@ -7,6 +7,7 @@
  * one is the one asked every morning.
  */
 import { fetchLeads, type Lead } from "./leads";
+import { bookingIso } from "./booking-date";
 import type { Site } from "./db";
 
 export interface Day {
@@ -24,16 +25,11 @@ export interface Week {
   problem: string | null;
 }
 
-/** "21/09/2026" and "2026-09-21" both become 2026-09-21. Anything else, null. */
-function toIso(raw: string | undefined): string | null {
-  const s = (raw ?? "").trim();
-  if (!s || s === "-") return null;
-  let m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
-  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
-  m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(s);
-  if (m) return `${m[3]}-${String(m[2]).padStart(2, "0")}-${String(m[1]).padStart(2, "0")}`;
-  return null;
-}
+/* One parser, shared with the orders join. The local one here handled ISO and
+   dd/mm/yyyy and returned null for Calendly's "Thu, 17 Sep, 15:00", so every
+   Calendly consultation and installation was filtered out of this page: it
+   looked calm because the rows were gone, not because the diary was empty. */
+const toIso = (raw: string | undefined) => bookingIso(raw);
 
 /** Today in Dublin, not in whatever timezone the server happens to run in. */
 function todayDublin(): string {
