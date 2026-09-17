@@ -122,6 +122,16 @@ interface Lead {
   // order whose install date is still ahead. Lets the Upcoming tab include
   // site-booked and emergency paid orders, not only Calendly rows.
   upcoming?: boolean;
+  /**
+   * The Google click id captured when this person first arrived, if there was
+   * one. Kept as the value rather than a yes, because it is the only thing
+   * that can tie a bespoke job paid by link or bank transfer back to the ad
+   * that produced the enquiry: the payment itself carries nothing, and without
+   * this the revenue is unattributable forever.
+   *
+   * Not personal data. It identifies the click, not the person.
+   */
+  gclid?: string;
   orderId: string;
   /**
    * Question/answer pairs the customer provided at conversion time.
@@ -587,6 +597,7 @@ export async function GET(request: Request) {
           if (r.utmSource) contactDetails.push({ question: "Source", answer: String(r.utmSource) });
           if (r.utmCampaign) contactDetails.push({ question: "Campaign", answer: String(r.utmCampaign) });
           if (r.gclid) contactDetails.push({ question: "Google Ads click", answer: "Yes" });
+          const enquiryGclid = r.gclid ? String(r.gclid).trim() : "";
 
           // Show the parsed Topic in the Product column instead of the
           // useless generic "Contact form", Nigel now sees the subject
@@ -626,6 +637,7 @@ export async function GET(request: Request) {
             bookingSlot: "-",
             status: statusLabel,
             orderId: String(r.notes || "-"),
+            ...(enquiryGclid ? { gclid: enquiryGclid } : {}),
             details: contactDetails.length ? contactDetails : undefined,
           });
         }
