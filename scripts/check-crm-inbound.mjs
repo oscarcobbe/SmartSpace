@@ -5,7 +5,7 @@
  * 3999, with SMARTCRM_URL pointed at the stub:
  *
  *   node scripts/crm-postgrest-stub.mjs /tmp/crm-stub-log.json &
- *   SMARTCRM_URL=http://localhost:3999 SMARTCRM_SERVICE_KEY=stub-key \
+ *   SMARTCRM_URL=http://localhost:3999 SMARTCRM_ANON_KEY=stub SMARTCRM_KEY=stub \
  *     CRM_HMAC_SECRET=stub-hmac-secret npm run dev
  *   node scripts/check-crm-inbound.mjs
  *

@@ -30,7 +30,7 @@ export default function CrmHome({ searchParams }: { searchParams: { error?: stri
   /* Until the database is wired up there is no CRM, so it does not exist.
      A sign-in form on a public domain that cannot possibly sign anybody in is
      an invitation to probe it and a thing a customer might find and ask about.
-     Setting SMARTCRM_URL and SMARTCRM_SERVICE_KEY brings it into being. */
+     Setting SMARTCRM_URL, SMARTCRM_ANON_KEY and SMARTCRM_KEY brings it into being. */
   if (!session && !crmConfigured()) notFound();
 
   if (session) {

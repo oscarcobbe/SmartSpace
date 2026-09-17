@@ -7,13 +7,30 @@
  * contracts and email log. It is also Nigel's data: if it ever moves, it moves
  * as one project rather than as an extraction.
  *
- * Every table has RLS on and no policies at all, so the anon key reads nothing
- * and this key is the only way in. Verified rather than assumed: crm_users
- * holds two rows and the anon key returns an empty array for it.
+ * Two credentials, and both are needed. The publishable key identifies the
+ * project and opens nothing by itself; every policy on every CRM table also
+ * requires the shared secret, sent as X-CRM-Key and compared inside the
+ * database against a row in a schema PostgREST does not serve.
+ *
+ * This replaced the service role key, which is only obtainable by hand from the
+ * Supabase dashboard. It is also stricter: the service key bypasses RLS on
+ * every table in the database including any added later, where this grants
+ * exactly the ten CRM tables and is revoked with one UPDATE.
+ *
+ * Verified rather than assumed, against the live project: the publishable key
+ * alone returns [] for crm_users while the database holds two rows, a wrong
+ * secret returns [], a write without the header is refused with 401, and both
+ * work with the secret present.
  */
 
 const URL_ = process.env.SMARTCRM_URL?.trim();
-const KEY = process.env.SMARTCRM_SERVICE_KEY?.trim();
+/* The publishable key, which opens nothing on its own: every policy on every
+   CRM table requires the shared secret below as well. */
+const ANON = process.env.SMARTCRM_ANON_KEY?.trim();
+/* The shared secret, sent as X-CRM-Key. PostgREST publishes request headers to
+   SQL, so the policies read it and compare it against a row in a schema
+   PostgREST does not serve. */
+const KEY = process.env.SMARTCRM_KEY?.trim();
 
 export type Site = "smart-space" | "smartcareliving";
 
@@ -26,7 +43,7 @@ export type Site = "smart-space" | "smartcareliving";
 export const THIS_SITE: Site =
   process.env.CRM_SITE === "smartcareliving" ? "smartcareliving" : "smart-space";
 
-export const crmConfigured = () => Boolean(URL_ && KEY);
+export const crmConfigured = () => Boolean(URL_ && ANON && KEY);
 
 /**
  * Returns null rather than throwing when the CRM is not configured, so a lead
@@ -37,10 +54,11 @@ export async function crm<T = unknown>(
   path: string,
   init: RequestInit & { prefer?: string } = {},
 ): Promise<T | null> {
-  if (!URL_ || !KEY) return null;
+  if (!URL_ || !ANON || !KEY) return null;
   const headers: Record<string, string> = {
-    apikey: KEY,
-    Authorization: `Bearer ${KEY}`,
+    apikey: ANON,
+    Authorization: `Bearer ${ANON}`,
+    "X-CRM-Key": KEY,
     "Content-Type": "application/json",
     ...(init.prefer ? { Prefer: init.prefer } : {}),
     ...((init.headers as Record<string, string>) ?? {}),

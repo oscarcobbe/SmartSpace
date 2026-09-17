@@ -16,11 +16,11 @@ export function middleware(request: Request) {
    * uptime check or a probe reads it as a working page.
    *
    * Middleware runs before any of that, so the 404 here is a real one. Setting
-   * SMARTCRM_URL and SMARTCRM_SERVICE_KEY brings the CRM into being.
+   * SMARTCRM_URL, SMARTCRM_ANON_KEY and SMARTCRM_KEY brings the CRM into being.
    */
   const path = new URL(request.url).pathname;
   const isCrm = path === "/crm" || path.startsWith("/crm/") || path.startsWith("/api/crm/");
-  if (isCrm && !(process.env.SMARTCRM_URL?.trim() && process.env.SMARTCRM_SERVICE_KEY?.trim())) {
+  if (isCrm && !(process.env.SMARTCRM_URL?.trim() && process.env.SMARTCRM_ANON_KEY?.trim() && process.env.SMARTCRM_KEY?.trim())) {
     return new NextResponse("Not found", { status: 404, headers: { "Content-Type": "text/plain" } });
   }
 
