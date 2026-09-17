@@ -1,8 +1,8 @@
-import { AlertCircle, CalendarClock, MapPin, Phone } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import Job from "./job";
 import { requireSession } from "@/lib/crm/session";
 import { fetchWeek } from "@/lib/crm/week";
-import { telHref } from "@/lib/crm/labels";
-import { PageHeader, Panel, Note, Empty, Pill, PILL_KIND } from "../ui";
+import { PageHeader, Panel, Note, Empty } from "../ui";
 
 export const dynamic = "force-dynamic";
 
@@ -67,55 +67,26 @@ export default async function WeekPage() {
               aside={<span className="text-xs text-slate-500">{day.jobs.length} {day.jobs.length === 1 ? "job" : "jobs"}</span>}
             >
               <ul className="divide-y divide-slate-100">
-                {day.jobs.map((l, i) => {
-                  const tel = telHref(l.phone);
-                  const address = dash(l.address);
-                  return (
-                    <li key={`${l.orderId}-${i}`} className="px-4 py-3.5">
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="flex items-center gap-2 text-sm font-medium text-slate-900">
-                            <CalendarClock className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                            {dash(l.bookingSlot) || "Time not set"}
-                            <span className="text-slate-400">·</span>
-                            {dash(l.name) || "Unnamed"}
-                          </p>
-                          {dash(l.product) && <p className="mt-0.5 pl-6 text-sm text-slate-600">{l.product}</p>}
-                          {address && (
-                            <p className="mt-0.5 flex items-start gap-1.5 pl-6 text-sm text-slate-600">
-                              <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
-                              <a
-                                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`}
-                                target="_blank" rel="noopener noreferrer"
-                                className="underline-offset-2 hover:underline"
-                              >
-                                {address}
-                              </a>
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex shrink-0 items-center gap-2">
-                          {dash(l.amount) && (
-                            <span className="text-sm font-semibold tabular-nums text-slate-900">{l.amount}</span>
-                          )}
-                          <Pill className={l.type === "Paid Order" ? PILL_KIND.paid : PILL_KIND.consult}>{l.type}</Pill>
-                          {tel && (
-                            <a
-                              href={tel}
-                              aria-label={`Ring ${dash(l.name) || "this customer"}`}
-                              className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50"
-                            >
-                              <Phone className="h-4 w-4" aria-hidden="true" />
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </li>
-                  );
-                })}
+                {day.jobs.map((l, i) => <Job key={`${l.orderId}-${i}`} lead={l} />)}
               </ul>
             </Panel>
           ))}
+        </div>
+      )}
+
+      {week.later.length > 0 && (
+        <div className="mt-4">
+          <Panel
+            title="Booked further ahead"
+            aside={<span className="text-xs text-slate-500">{week.later.length} {week.later.length === 1 ? "job" : "jobs"} past the fortnight</span>}
+          >
+            {/* Everything beyond the day panels, in the order it happens. A job
+                booked three weeks out used to appear on nothing until it drifted
+                inside the window, which is late to find out where you are going. */}
+            <ul className="divide-y divide-slate-100">
+              {week.later.map((x, i) => <Job key={`${x.job.orderId}-${i}`} lead={x.job} dateLabel={x.label} />)}
+            </ul>
+          </Panel>
         </div>
       )}
     </>
