@@ -12,7 +12,7 @@ import { fetchPeriods, dailyReport } from "@/lib/crm/ads-periods";
 import { Periods } from "../periods";
 import { DailyReport } from "../daily-report";
 import { Sparkline } from "../sparkline";
-import { TrendChart, type TrendWeek } from "../trend-chart";
+import { TrendChart, type TrendPoint } from "../trend-chart";
 import type { AdsData } from "@/lib/crm/google-ads";
 
 export const dynamic = "force-dynamic";
@@ -128,7 +128,9 @@ export default async function MarketingPage() {
   /* Weeks for the trend, with our own account changes counted against the week
      they happened in. Google retains change history for fourteen days, so
      markers only ever land on recent weeks and the note below says so. */
+  const changesByDay = new Map<string, number>();
   const changesByWeek = new Map<string, number>();
+  const changesByMonth = new Map<string, number>();
   if (changes.ok) {
     for (const c of changes.data) {
       const d = new Date(c.at);
@@ -138,16 +140,27 @@ export default async function MarketingPage() {
       const utc = Date.UTC(yy!, mm! - 1, dd!);
       const dow = new Date(utc).getUTCDay();
       const monday = new Date(utc - (dow === 0 ? 6 : dow - 1) * 86_400_000).toISOString().slice(0, 10);
+      changesByDay.set(iso, (changesByDay.get(iso) ?? 0) + 1);
       changesByWeek.set(monday, (changesByWeek.get(monday) ?? 0) + 1);
+      changesByMonth.set(iso.slice(0, 7), (changesByMonth.get(iso.slice(0, 7)) ?? 0) + 1);
     }
   }
 
-  const trendWeeks: TrendWeek[] = periods.ok
-    ? periods.data.week.slice(-16).map((w) => ({
-        key: w.key, label: w.label, cost: w.cost, conversions: w.conversions,
-        cpa: w.cpa, changes: changesByWeek.get(w.key) ?? 0,
-      }))
-    : [];
+  /* One shape for all three grains, so the chart can switch between them
+     without the page refetching anything. Changes are counted against the
+     bucket they happened in, at whichever grain is being viewed. */
+  const toPoints = (rows: { key: string; label: string; cost: number; clicks: number; impressions: number;
+                            conversions: number; value: number; cpa: number | null; roas: number | null }[],
+                    counts: Map<string, number>): TrendPoint[] =>
+    rows.map((r) => ({ ...r, changes: counts.get(r.key) ?? 0 }));
+
+  const trend = periods.ok
+    ? {
+        day: toPoints(periods.data.day.slice(-90), changesByDay),
+        week: toPoints(periods.data.week, changesByWeek),
+        month: toPoints(periods.data.month, changesByMonth),
+      }
+    : { day: [], week: [], month: [] };
 
   /* Sparkline series, from the same daily rows. Last eight weeks so the shape
      is readable rather than a year of noise squeezed into 104 pixels. */
@@ -210,16 +223,18 @@ export default async function MarketingPage() {
 
       {report && <DailyReport report={report} />}
 
-      {trendWeeks.length > 0 && (
+      {trend.week.length > 0 && (
         <div className="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 px-4 py-3">
-            <h2 className="text-sm font-semibold text-slate-900">Is each enquiry getting cheaper?</h2>
+            <h2 className="text-sm font-semibold text-slate-900">How it is moving</h2>
             <p className="mt-0.5 text-xs text-slate-500">
-              Cost per enquiry by week, with the weeks we changed something marked.
+              Pick a number and a window. Each point is marked where we changed something in the account.
             </p>
           </div>
           <TrendChart
-            weeks={trendWeeks}
+            day={trend.day}
+            week={trend.week}
+            month={trend.month}
             changeNote={changes.ok
               ? "Google keeps change history for fourteen days, so only recent weeks can be marked."
               : null}
