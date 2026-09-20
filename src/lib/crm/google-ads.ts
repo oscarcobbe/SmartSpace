@@ -129,7 +129,7 @@ interface AdsRow {
   };
 }
 
-async function search(customerId: string, gaql: string): Promise<AdsRow[]> {
+export async function search(customerId: string, gaql: string): Promise<AdsRow[]> {
   const dev = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
   if (!dev) throw new Error("GOOGLE_ADS_DEVELOPER_TOKEN is not set on this deployment.");
   const res = await fetch(`https://googleads.googleapis.com/${VERSION}/customers/${customerId}/googleAds:search`, {
@@ -149,16 +149,16 @@ async function search(customerId: string, gaql: string): Promise<AdsRow[]> {
   return JSON.parse(text).results ?? [];
 }
 
-const iso = (d: Date) => d.toISOString().slice(0, 10);
+export const iso = (d: Date) => d.toISOString().slice(0, 10);
 
 const monthLabel = (key: string) => {
   const [y, m] = key.split("-").map(Number);
   return `${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m - 1]} ${String(y).slice(2)}`;
 };
 
-const num = (v: unknown) => (typeof v === "number" ? v : parseFloat(String(v ?? 0)) || 0);
+export const num = (v: unknown) => (typeof v === "number" ? v : parseFloat(String(v ?? 0)) || 0);
 
-const isForeign = (site: AdSite, id: string, name: string) =>
+export const isForeign = (site: AdSite, id: string, name: string) =>
   FOREIGN_CAMPAIGN_IDS[site].includes(id) || FOREIGN_NAME[site].test(name);
 
 function buildMonths(cells: Cell[], monthKeys: string[], keep: (campaignId: string) => boolean): MonthSpend[] {

@@ -8,6 +8,9 @@ import ExportButton from "../export-button";
 import RoasChart, { type RoasMonth } from "../roas-chart";
 import Findings from "../findings-panel";
 import { marketingFindings } from "@/lib/crm/findings";
+import { fetchPeriods, dailyReport } from "@/lib/crm/ads-periods";
+import { Periods } from "../periods";
+import { DailyReport } from "../daily-report";
 import type { AdsData } from "@/lib/crm/google-ads";
 
 export const dynamic = "force-dynamic";
@@ -115,6 +118,11 @@ export default async function MarketingPage() {
      same fraction of the last one rather than against the whole of it. */
   const nowD = new Date();
   const daysInMonth = new Date(nowD.getFullYear(), nowD.getMonth() + 1, 0).getDate();
+  /* Day, week and month come from one query segmented by date, so yesterday
+     and last year arrive in the same round trip. */
+  const periods = await fetchPeriods(session.site);
+  const report = periods.ok ? dailyReport(periods.data.day) : null;
+
   const changeList = changes.ok ? summariseChanges(changes.data) : [];
   const findings = marketingFindings({
     months: own.months,
@@ -143,6 +151,23 @@ export default async function MarketingPage() {
         <Stat label="Enquiries" value={own.conversions.toFixed(0)} note={own.conversions ? `${moneyExact(cpa)} each` : undefined} />
         <Stat label="Clicks" value={int(own.clicks)} note={`${moneyExact(cpc)} each, ${ctr.toFixed(1)}% of views`} />
       </StatRow>
+
+      {report && <DailyReport report={report} />}
+
+      <div className="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 px-4 py-3">
+          <h2 className="text-sm font-semibold text-slate-900">Every period, and how it moved</h2>
+          <p className="mt-0.5 text-xs text-slate-500">
+            Each row is compared with the one before it, so a day is measured against the day before and a month
+            against the month before. Click a row for the clicks behind it.
+          </p>
+        </div>
+        {periods.ok ? (
+          <Periods day={periods.data.day} week={periods.data.week} month={periods.data.month} />
+        ) : (
+          <div className="px-4 py-4"><Note tone="warn">The day by day figures could not be read. {periods.reason}</Note></div>
+        )}
+      </div>
 
       {own.value === 0 && own.cost > 0 && (
         <div className="mb-6">

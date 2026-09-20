@@ -44,7 +44,7 @@ export default function CrmHome() {
             own, so the fastest is on screen while Google Ads is still
             answering, instead of the page waiting for the slowest. */}
         <div className="grid gap-6 lg:grid-cols-2">
-          <Suspense fallback={<PanelSkeleton title="Needs you" rows={4} />}>
+          <Suspense fallback={<PanelSkeleton title="Diary" rows={4} />}>
             <NeedsYou site={session.site} />
           </Suspense>
           <Suspense fallback={<PanelSkeleton title="Latest in" rows={4} />}>
