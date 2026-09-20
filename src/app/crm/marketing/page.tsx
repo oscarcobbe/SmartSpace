@@ -11,6 +11,8 @@ import { marketingFindings } from "@/lib/crm/findings";
 import { fetchPeriods, dailyReport } from "@/lib/crm/ads-periods";
 import { Periods } from "../periods";
 import { DailyReport } from "../daily-report";
+import { Sparkline } from "../sparkline";
+import { TrendChart, type TrendWeek } from "../trend-chart";
 import type { AdsData } from "@/lib/crm/google-ads";
 
 export const dynamic = "force-dynamic";
@@ -123,6 +125,41 @@ export default async function MarketingPage() {
   const periods = await fetchPeriods(session.site);
   const report = periods.ok ? dailyReport(periods.data.day) : null;
 
+  /* Weeks for the trend, with our own account changes counted against the week
+     they happened in. Google retains change history for fourteen days, so
+     markers only ever land on recent weeks and the note below says so. */
+  const changesByWeek = new Map<string, number>();
+  if (changes.ok) {
+    for (const c of changes.data) {
+      const d = new Date(c.at);
+      if (Number.isNaN(d.getTime())) continue;
+      const iso = d.toISOString().slice(0, 10);
+      const [yy, mm, dd] = iso.split("-").map(Number);
+      const utc = Date.UTC(yy!, mm! - 1, dd!);
+      const dow = new Date(utc).getUTCDay();
+      const monday = new Date(utc - (dow === 0 ? 6 : dow - 1) * 86_400_000).toISOString().slice(0, 10);
+      changesByWeek.set(monday, (changesByWeek.get(monday) ?? 0) + 1);
+    }
+  }
+
+  const trendWeeks: TrendWeek[] = periods.ok
+    ? periods.data.week.slice(-16).map((w) => ({
+        key: w.key, label: w.label, cost: w.cost, conversions: w.conversions,
+        cpa: w.cpa, changes: changesByWeek.get(w.key) ?? 0,
+      }))
+    : [];
+
+  /* Sparkline series, from the same daily rows. Last eight weeks so the shape
+     is readable rather than a year of noise squeezed into 104 pixels. */
+  const sparkWeeks = periods.ok ? periods.data.week.slice(-8) : [];
+  const spark = {
+    cost: sparkWeeks.map((w) => w.cost),
+    conversions: sparkWeeks.map((w) => w.conversions),
+    cpa: sparkWeeks.map((w) => w.cpa ?? 0),
+    value: sparkWeeks.map((w) => w.value),
+  };
+  const prior = (xs: number[]) => (xs.length > 1 ? xs[xs.length - 2]! : null);
+
   const changeList = changes.ok ? summariseChanges(changes.data) : [];
   const findings = marketingFindings({
     months: own.months,
@@ -139,6 +176,25 @@ export default async function MarketingPage() {
         sub={`Google Ads for ${SITE_LABEL[session.site]}, ${own.window.from} to ${own.window.to}.`}
       />
 
+      {sparkWeeks.length > 1 && (
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {([
+            ["Spend", spark.cost, "none" as const],
+            ["Enquiries", spark.conversions, "good" as const],
+            ["Cost each", spark.cpa, "bad" as const],
+            ["Work won", spark.value, "good" as const],
+          ]).map(([label, series, tone]) => (
+            <div key={label as string} className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition-shadow duration-200 hover:shadow-md">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">{label as string}</p>
+              <p className="mt-0.5 text-[11px] text-slate-400">Last eight weeks</p>
+              <div className="mt-1.5">
+                <Sparkline series={series as number[]} tone={tone as "good" | "bad" | "none"} baseline={prior(series as number[])} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       <StatRow>
         <Stat label="Spend" value={money(own.cost)} note="Last twelve months" />
         <Stat label="Work won" value={money(own.value)} note="Value recorded against ads" tone={own.value > 0 ? "good" : "plain"} />
@@ -153,6 +209,23 @@ export default async function MarketingPage() {
       </StatRow>
 
       {report && <DailyReport report={report} />}
+
+      {trendWeeks.length > 0 && (
+        <div className="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-200 px-4 py-3">
+            <h2 className="text-sm font-semibold text-slate-900">Is each enquiry getting cheaper?</h2>
+            <p className="mt-0.5 text-xs text-slate-500">
+              Cost per enquiry by week, with the weeks we changed something marked.
+            </p>
+          </div>
+          <TrendChart
+            weeks={trendWeeks}
+            changeNote={changes.ok
+              ? "Google keeps change history for fourteen days, so only recent weeks can be marked."
+              : null}
+          />
+        </div>
+      )}
 
       <div className="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 px-4 py-3">
