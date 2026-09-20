@@ -7,11 +7,13 @@
  * the page sat blank for as long as Google Ads took.
  */
 import Link from "next/link";
-import { AlertCircle, CalendarClock, Inbox } from "lucide-react";
-import { fetchLeads, money, moneyExact, type Lead } from "@/lib/crm/leads";
+import { AlertCircle, Inbox } from "lucide-react";
+import { fetchLeads, money, moneyExact } from "@/lib/crm/leads";
 import { fetchFinance } from "@/lib/crm/stripe-finance";
 import { fetchAds, adsSplit } from "@/lib/crm/google-ads";
 import { crm, crmConfigured, type Site } from "@/lib/crm/db";
+import { fetchDiary } from "@/lib/crm/diary";
+import { DiaryToggle, type Row } from "./diary-toggle";
 import { Panel, Stat, Note, Empty, Skeleton } from "./ui";
 
 const dash = (v: string | undefined) => (!v || v === "-" ? "" : v);
@@ -32,10 +34,19 @@ export function PanelSkeleton({ title, rows = 3 }: { title: string; rows?: numbe
   );
 }
 
-/** What is booked in, and what is overdue. */
+/**
+ * The diary, and anything genuinely overdue.
+ *
+ * This was titled "Needs you" and listed bookings, which are not things that
+ * need you, they are places to be. Worse, it rendered them in feed order, so
+ * 5 October appeared above 23 September and the panel could not be read as a
+ * plan. Overdue tasks are the part that really does need him, so they keep the
+ * red strip at the top; the bookings below are now two orderings behind a
+ * toggle.
+ */
 export async function NeedsYou({ site }: { site: Site }) {
-  const [feed, overdue] = await Promise.all([
-    fetchLeads(site),
+  const [diary, overdue] = await Promise.all([
+    fetchDiary(site),
     crmConfigured()
       ? crm<{ id: string; what: string; due_on: string | null }[]>(
           `crm_tasks?site=eq.${site}&done_at=is.null&due_on=lt.${new Date().toISOString().slice(0, 10)}&select=id,what,due_on&order=due_on.asc&limit=5`,
@@ -43,16 +54,24 @@ export async function NeedsYou({ site }: { site: Site }) {
       : Promise.resolve(null),
   ]);
 
-  const upcoming: Lead[] = feed.ok ? feed.data.leads.filter((l) => l.upcoming).slice(0, 6) : [];
+  const toRow = (r: (typeof diary.upcoming)[number], i: number): Row => ({
+    key: `${r.job.orderId}-${r.on ?? ""}-${i}`,
+    name: r.name,
+    standIn: r.standIn,
+    product: dash(r.job.product) || r.job.type,
+    when: r.label,
+    slot: dash(r.job.bookingSlot),
+    amount: dash(r.job.amount),
+  });
 
   return (
     <Panel
-      title="Needs you"
-      aside={<Link href="/crm/tasks" className="text-xs font-medium text-slate-600 hover:text-slate-900">All next steps</Link>}
+      title="Diary"
+      aside={<Link href="/crm/week" className="text-xs font-medium text-slate-600 hover:text-slate-900">Full week</Link>}
     >
-      {!feed.ok && (
+      {diary.problem && (
         <div className="px-4 pt-4">
-          <Note tone="warn">The orders feed could not be read, so bookings are missing here. {feed.reason}</Note>
+          <Note tone="warn">The orders feed could not be read, so bookings are missing here. {diary.problem}</Note>
         </div>
       )}
 
@@ -74,25 +93,10 @@ export async function NeedsYou({ site }: { site: Site }) {
         </ul>
       )}
 
-      {upcoming.length === 0 && (overdue?.length ?? 0) === 0 ? (
-        <Empty title="Nothing booked and nothing overdue" detail="Upcoming installs and calls appear here." />
-      ) : (
-        <ul className="divide-y divide-slate-100">
-          {upcoming.map((l, i) => (
-            <li key={`${l.orderId}-${i}`} className="flex items-start gap-2.5 px-4 py-2.5 text-sm">
-              <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-              <span className="min-w-0">
-                <span className="block truncate text-slate-900">{dash(l.name) || "Unnamed"}</span>
-                <span className="block truncate text-xs text-slate-500">{dash(l.product) || l.type}</span>
-              </span>
-              <span className="ml-auto shrink-0 text-right">
-                <span className="block text-xs tabular-nums text-slate-700">{dayOnly(l.bookingDate) || dayOnly(l.date)}</span>
-                {dash(l.bookingSlot) && <span className="block text-xs text-slate-500">{l.bookingSlot}</span>}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
+      <DiaryToggle
+        upcoming={diary.upcoming.map(toRow)}
+        justBooked={diary.justBooked.map(toRow)}
+      />
     </Panel>
   );
 }
