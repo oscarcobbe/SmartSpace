@@ -189,9 +189,22 @@ export function flushPendingAttribution(): void {
   try {
     const raw = sessionStorage.getItem(PENDING_KEY);
     if (!raw) return;
-    /* Only if nothing durable is stored yet: capture is first touch, and a
-       parked record must never overwrite one already accepted. */
-    if (!localStorage.getItem(STORAGE_KEY)) localStorage.setItem(STORAGE_KEY, raw);
+
+    /*
+     * First touch holds, except against an ad click, which is the same rule
+     * captureAttribution applies a few lines up: `if (existing &&
+     * !hasAdSignal) return`.
+     *
+     * Getting this wrong is not theoretical. Tested against production on a
+     * browser that already held an organic record from an earlier visit: a
+     * fresh ad click parked correctly, and a version of this function that
+     * refused to overwrite anything would have dropped it on acceptance,
+     * which is the exact visitor the whole fix exists for.
+     */
+    const parked = JSON.parse(raw) as Attribution;
+    const hasAdSignal = Boolean(parked.gclid || parked.utmSource);
+    const existing = localStorage.getItem(STORAGE_KEY);
+    if (!existing || hasAdSignal) localStorage.setItem(STORAGE_KEY, raw);
     sessionStorage.removeItem(PENDING_KEY);
   } catch {
     // ignore, not critical

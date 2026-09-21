@@ -114,7 +114,33 @@ try {
       : fail(`accepted a page later, expected TEST_TWO, stored ${JSON.stringify(got)}`);
   }
 
-  // 3. The gate still has to hold. Refuse, and nothing durable is written.
+  // 3. A returning visitor who already has an organic record, then clicks an
+  //    ad and accepts a page later. First touch holds against another organic
+  //    visit and must not hold against an ad click, which is the rule
+  //    captureAttribution itself applies. Found by testing against production,
+  //    where a browser holding a stale organic record would have thrown the
+  //    new click id away on acceptance.
+  {
+    const { local } = browser();
+    local.setItem("ss_attribution", JSON.stringify({
+      landingPage: "/", capturedAt: Date.now() - 86400000, expiresAt: Date.now() + 86400000,
+    }));
+    window.location.search = "?gclid=TEST_RETURNING";
+    attribution.captureAttribution();          // parks, nothing decided yet
+
+    delete globalThis.window.__ssOnConsent;    // a full page load
+    window.location.search = "";
+    window.location.pathname = "/contact";
+    local.setItem("ss_consent", consentValue("granted"));
+    attribution.captureAttribution();
+
+    const got = JSON.parse(local.getItem("ss_attribution") ?? "{}").gclid;
+    got === "TEST_RETURNING"
+      ? pass("a returning visitor's ad click beats the older organic record")
+      : fail(`returning visitor, expected TEST_RETURNING, stored ${JSON.stringify(got)}`);
+  }
+
+  // 4. The gate still has to hold. Refuse, and nothing durable is written.
   {
     const { local } = browser();
     local.setItem("ss_consent", consentValue("denied"));
@@ -125,7 +151,7 @@ try {
       : fail("consent refused and the click id was stored anyway");
   }
 
-  // 4. An undecided visitor is not treated as consent.
+  // 5. An undecided visitor is not treated as consent.
   {
     const { local } = browser();
     window.location.search = "?gclid=TEST_FOUR";
@@ -135,7 +161,7 @@ try {
       : fail("no decision yet and the click id was stored anyway");
   }
 
-  // 5. An expired decision is not consent.
+  // 6. An expired decision is not consent.
   {
     const { local } = browser();
     local.setItem("ss_consent", JSON.stringify({
@@ -155,5 +181,5 @@ try {
 if (process.exitCode) {
   console.error("\nThe consent gate and attribution capture disagree.");
 } else {
-  console.log("\nConsent and attribution capture agree on all five cases.");
+  console.log("\nConsent and attribution capture agree on all six cases.");
 }
