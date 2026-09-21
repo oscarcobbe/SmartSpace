@@ -184,11 +184,16 @@ export async function MoneyThisMonth() {
           value={money(now.net)}
           note={change === null ? `${now.payments} payments` : `${change >= 0 ? "up" : "down"} ${Math.abs(change).toFixed(0)}% on ${against}`}
           tone={change === null ? "plain" : change >= 0 ? "good" : "warn"}
+          /* Straight to the month's own rows rather than to Finance, which
+             would only ask him to find the month again when he is already
+             looking at it. */
+          source={now.payments > 0 ? { href: `/crm/orders?month=${now.key}`, label: "See the payments" } : undefined}
         />
         <Stat
           label="Next payout"
           value={moneyExact(f.available + f.pending)}
           note="Available and pending at Stripe" explain="nextPayout"
+          source={{ href: "/crm/finance", label: "See the money" }}
         />
       </div>
     </Panel>
@@ -238,12 +243,14 @@ export async function AdsThisMonth({ site }: { site: Site }) {
           label={`Spent in ${now.label}`}
           value={money(now.cost)}
           note={`${now.clicks} clicks so far this month`}
+          source={{ href: "/crm/marketing", label: "See what came back" }}
         />
         <Stat
           label="Cost per enquiry"
           value={perEnquiry === null ? "–" : moneyExact(perEnquiry)}
           note={now.conversions ? `${now.conversions.toFixed(0)} enquiries in ${now.label}` : "No enquiries yet this month"}
           tone={perEnquiry === null ? "plain" : perEnquiry <= 60 ? "good" : perEnquiry <= 100 ? "warn" : "bad"}
+          source={{ href: "/crm/marketing", label: "See what came back" }}
         />
       </div>
       <p className="border-t border-slate-100 px-4 py-2 text-xs text-slate-500">

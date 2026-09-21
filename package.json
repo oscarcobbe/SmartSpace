@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/guard-strings.mjs && node scripts/check-crm-dates.mjs && node scripts/check-booking-dates.mjs && node scripts/check-crm-language.mjs && node scripts/check-consent-attribution.mjs && node scripts/check-payment-link-ref.mjs && next build",
+    "build": "node scripts/guard-strings.mjs && node scripts/check-crm-dates.mjs && node scripts/check-booking-dates.mjs && node scripts/check-crm-language.mjs && node scripts/check-consent-attribution.mjs && node scripts/check-payment-link-ref.mjs && node scripts/check-month-filter.mjs && next build",
     "start": "next start",
     "lint": "next lint",
     "check:strings": "node scripts/guard-strings.mjs",
@@ -16,7 +16,8 @@
     "check:revolut": "node scripts/check-revolut-parser.mjs",
     "check:crm-language": "node scripts/check-crm-language.mjs",
     "check:consent": "node scripts/check-consent-attribution.mjs",
-    "check:payment-link": "node scripts/check-payment-link-ref.mjs"
+    "check:payment-link": "node scripts/check-payment-link-ref.mjs",
+    "check:month": "node scripts/check-month-filter.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.577.0",

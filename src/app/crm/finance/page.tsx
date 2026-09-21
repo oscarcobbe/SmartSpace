@@ -43,6 +43,12 @@ export default async function FinancePage() {
       { label: "Kept", value: moneyExact(m.net) },
       { label: "Payments", value: String(m.payments) },
     ],
+    /* The bar is a door to the rows it is made of. A month with nothing in it
+       has nothing to open, so it stays a plain bar. */
+    href: m.payments > 0 ? `/crm/orders?month=${m.key}` : undefined,
+    hrefLabel: m.payments > 0
+      ? `See the ${m.payments} payment${m.payments === 1 ? "" : "s"}`
+      : undefined,
   }));
 
   const feeRate = f.gross ? (f.fees / f.gross) * 100 : 0;

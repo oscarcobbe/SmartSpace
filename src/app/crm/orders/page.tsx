@@ -3,10 +3,19 @@ import { fetchLeads, euros, money } from "@/lib/crm/leads";
 import { PageHeader, Stat, StatRow, Note } from "../ui";
 import OrdersTable from "./table";
 import { fetchMarks } from "@/lib/crm/order-marks";
+import { isMonthKey } from "@/lib/crm/month";
 
 export const dynamic = "force-dynamic";
 
-export default async function OrdersPage() {
+export default async function OrdersPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ month?: string }>;
+}) {
+  const sp = (await searchParams) ?? {};
+  /* Validated rather than trusted: it reaches a filter, and "2026-09" is the
+     only shape that means anything to one. */
+  const month = isMonthKey(sp.month) ? sp.month : undefined;
   const { site } = requireSession();
   const [result, marks] = await Promise.all([fetchLeads(site), fetchMarks(site)]);
 
@@ -94,7 +103,7 @@ export default async function OrdersPage() {
 
       {/* The marks travel as a plain object because the table is a client
           component and a Map does not cross that boundary. */}
-      <OrdersTable
+      <OrdersTable month={month}
         leads={leads}
         marks={(() => {
           const m: Record<string, "cancelled" | "done"> = {};

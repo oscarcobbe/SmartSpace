@@ -257,6 +257,21 @@ export default function RoasChart({
             <rect width="7" height="7" fill="#f8fafc" />
             <line x1="0" y1="0" x2="0" y2="7" stroke="#cbd5e1" strokeWidth="2" />
           </pattern>
+          {/* Spend and return keep the hues they already had. The ramp is what
+              separates the pair of columns in a bucket from the flat blocks
+              they were, without adding a third colour to a chart that is
+              already carrying two scales. */}
+          <linearGradient id={`${uid}-spend`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#f0a32a" />
+            <stop offset="100%" stopColor="#c2670a" />
+          </linearGradient>
+          <linearGradient id={`${uid}-rev`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#19a99b" />
+            <stop offset="100%" stopColor="#0b7168" />
+          </linearGradient>
+          <filter id={`${uid}-lift`} x="-60%" y="-60%" width="220%" height="220%">
+            <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#0f172a" floodOpacity="0.28" />
+          </filter>
         </defs>
 
         {/* The run where the click id was not recorded, shaded rather than
@@ -313,7 +328,8 @@ export default function RoasChart({
               />
               <rect className="roas-bar" x={centre - barW - 1} y={y(b.spend)} width={barW}
                 height={Math.max(0, PAD.top + plotH - y(b.spend))} rx="2"
-                fill="#d97706" fillOpacity={b.partial ? 0.5 : 0.92} pointerEvents="none" />
+                fill={`url(#${uid}-spend)`} fillOpacity={b.partial ? 0.5 : 1} pointerEvents="none"
+                filter={activeIdx === i ? `url(#${uid}-lift)` : undefined} />
               {/* The top slice of the spend bar is money spent after the click
                   id stopped being written, drawn paler so it is visible that
                   it was really spent and still left out of the return. */}
@@ -325,7 +341,8 @@ export default function RoasChart({
               {!blind && (
                 <rect className="roas-bar" x={centre + 1} y={y(rev)} width={barW}
                   height={Math.max(0, PAD.top + plotH - y(rev))} rx="2"
-                  fill="#0d9488" fillOpacity={b.partial ? 0.5 : 0.92} pointerEvents="none" />
+                  fill={`url(#${uid}-rev)`} fillOpacity={b.partial ? 0.5 : 1} pointerEvents="none"
+                  filter={activeIdx === i ? `url(#${uid}-lift)` : undefined} />
               )}
               {/* Where Google's figure sits against the real one, drawn on the
                   same bar so the disagreement is visible without a second
@@ -355,7 +372,7 @@ export default function RoasChart({
           );
         })}
 
-        {line && <polyline className="roas-line" points={line} fill="none" stroke="#0d9488"
+        {line && <polyline className="roas-line" pathLength={1} points={line} fill="none" stroke="#0d9488"
           strokeWidth="2" strokeDasharray="4 3" pointerEvents="none" />}
         {buckets.map((b, i) =>
           (basis === "ad" ? b.spend - b.spendBlind : b.spend) > 0 && blindness(b) !== "all" ? (

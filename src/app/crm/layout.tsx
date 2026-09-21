@@ -4,6 +4,7 @@ import Link from "next/link";
 import { LogOut } from "lucide-react";
 import { currentSession, SITE_LABEL } from "@/lib/crm/session";
 import CrmNav from "./nav";
+import Refresh from "./refresh";
 
 export const metadata: Metadata = {
   title: "CRM",
@@ -72,6 +73,8 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
                 <span className="h-2.5 w-2.5 rounded-full bg-brand-500" aria-hidden="true" />
                 {SITE_LABEL[session.site]}
               </Link>
+              <div className="flex items-center gap-2">
+              <Refresh />
               <form action="/api/crm/logout" method="post">
                 <button
                   type="submit"
@@ -81,10 +84,14 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
                   <LogOut className="h-4 w-4" aria-hidden="true" />
                 </button>
               </form>
+              </div>
             </header>
             <div className="px-3">
               <CrmNav site={session.site} horizontal />
             </div>
+          </div>
+          <div className="sticky top-0 z-20 hidden h-14 shrink-0 items-center justify-end border-b border-slate-200 bg-white/85 px-8 backdrop-blur lg:flex">
+            <Refresh />
           </div>
           <main id="crm-main" className="mx-auto w-full min-w-0 max-w-[1400px] flex-1 px-4 py-6 sm:px-5 lg:px-8 lg:py-8">
             {children}

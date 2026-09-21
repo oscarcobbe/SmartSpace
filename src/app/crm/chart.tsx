@@ -12,7 +12,8 @@
  * bars actually reach, so the picture and the numbers cannot disagree.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import Link from "next/link";
 
 const PAD = { top: 22, right: 8, bottom: 28, left: 46 };
 
@@ -43,6 +44,16 @@ export interface Bar {
    * cannot be reached with a keyboard and it holds one line of unstyled text.
    */
   detail?: { label: string; value: string }[];
+  /**
+   * The rows this bar is made of.
+   *
+   * A figure nobody can get behind is a figure nobody checks, and a chart is
+   * the place the question gets asked. Given one, the bucket becomes a link to
+   * its own rows and the readout offers the same door in words.
+   */
+  href?: string;
+  /** What that link says, e.g. "See the 14 orders". */
+  hrefLabel?: string;
 }
 
 export function BarChart({ bars: given, height = 220, ariaLabel }: { bars: Bar[]; height?: number; ariaLabel: string }) {
@@ -105,10 +116,38 @@ export function BarChart({ bars: given, height = 220, ariaLabel }: { bars: Bar[]
   const active = hover ?? pinned;
   const shown = active !== null ? bars[active] : null;
 
+  /* From useId, never from the data. Two charts on one page with ids built
+     from their series resolve url(#id) to whichever was painted first. */
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
+  const fill = `bar${uid}`;
+  const fillOn = `barOn${uid}`;
+  const fillSec = `barSec${uid}`;
+  const glow = `glow${uid}`;
+
   return (
     <div ref={wrap}>
       <svg viewBox={`0 0 ${width} ${h}`} role="img" aria-label={ariaLabel} width="100%" height={h}
         onMouseLeave={() => setHover(null)}>
+        <defs>
+          {/* Flat orange rectangles read as a spreadsheet drawn sideways. A
+              vertical ramp gives a column a lit top and a base it stands on,
+              which is what makes it an object rather than a fill. */}
+          <linearGradient id={fill} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#f69743" />
+            <stop offset="100%" stopColor="#d96d15" />
+          </linearGradient>
+          <linearGradient id={fillOn} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#f8b172" />
+            <stop offset="100%" stopColor="#e8760f" />
+          </linearGradient>
+          <linearGradient id={fillSec} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#fde5d0" />
+            <stop offset="100%" stopColor="#facba1" />
+          </linearGradient>
+          <filter id={glow} x="-60%" y="-60%" width="220%" height="220%">
+            <feDropShadow dx="0" dy="2" stdDeviation="5" floodColor="#d96d15" floodOpacity="0.45" />
+          </filter>
+        </defs>
         {ticks.map((t) => (
           <g key={t}>
             <line x1={PAD.left} x2={width - PAD.right} y1={y(t)} y2={y(t)} stroke="#eef2f7" strokeWidth="1" />
@@ -124,19 +163,37 @@ export function BarChart({ bars: given, height = 220, ariaLabel }: { bars: Bar[]
           return (
             <g key={b.label}>
               {/* One hit area per bucket, so the pointer never has to find the
-                  bar and a keyboard can tab through the same targets. */}
-              <rect x={PAD.left + slot * i} y={PAD.top} width={slot} height={plotH}
-                fill={on ? "#0f172a" : "transparent"} fillOpacity={on ? 0.05 : 0}
-                onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} onBlur={() => setHover(null)}
-                onClick={() => setPinned(pinned === i ? null : i)}
-                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPinned(pinned === i ? null : i); } }}
-                tabIndex={0} role="button" aria-label={b.title ?? `${b.label}: ${short(b.value)}`} />
-              {hSec > 0 && (
-                <rect x={x} y={y(b.value + b.secondary!)} width={barW} height={hSec} fill="#fcd9b6" rx="2"
-                  pointerEvents="none" />
+                  bar and a keyboard can tab through the same targets. Where the
+                  bucket has rows behind it the target is a real link, which
+                  middle-clicks, opens in a tab and shows its destination in the
+                  status bar the way every other link on the page does. */}
+              {b.href ? (
+                <Link href={b.href} aria-label={b.hrefLabel ?? b.title ?? `${b.label}: ${short(b.value)}`}>
+                  <rect x={PAD.left + slot * i} y={PAD.top} width={slot} height={plotH}
+                    className="cursor-pointer"
+                    fill={on ? "#0f172a" : "transparent"} fillOpacity={on ? 0.05 : 0}
+                    onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} onBlur={() => setHover(null)} />
+                </Link>
+              ) : (
+                <rect x={PAD.left + slot * i} y={PAD.top} width={slot} height={plotH}
+                  fill={on ? "#0f172a" : "transparent"} fillOpacity={on ? 0.05 : 0}
+                  onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} onBlur={() => setHover(null)}
+                  onClick={() => setPinned(pinned === i ? null : i)}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPinned(pinned === i ? null : i); } }}
+                  tabIndex={0} role="button" aria-label={b.title ?? `${b.label}: ${short(b.value)}`} />
               )}
-              <rect x={x} y={y(b.value)} width={barW} height={hMain} rx="2" pointerEvents="none"
-                fill={on ? "#d96d0c" : "#f48222"} />
+              {/* Both parts of a stacked bar grow together, so the column rises
+                  as one object and the cap is never left floating mid-air. */}
+              <g className="crm-rise" style={{ animationDelay: `${Math.min(i, 11) * 45}ms` }}>
+                {hSec > 0 && (
+                  <rect x={x} y={y(b.value + b.secondary!)} width={barW} height={hSec} fill={`url(#${fillSec})`} rx="2"
+                    pointerEvents="none" />
+                )}
+                <rect x={x} y={y(b.value)} width={barW} height={hMain} rx="2" pointerEvents="none"
+                  className="transition-[filter] duration-200"
+                  filter={on ? `url(#${glow})` : undefined}
+                  fill={`url(#${on ? fillOn : fill})`} />
+              </g>
               {on && (
                 <text x={cx} y={y(b.value + (b.secondary ?? 0)) - 7} textAnchor="middle" fontSize="11"
                   fontWeight="700" fill="#0f172a" pointerEvents="none"
@@ -163,13 +220,19 @@ export function BarChart({ bars: given, height = 220, ariaLabel }: { bars: Bar[]
               {shown.label}
               {pinned !== null && <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-600">pinned</span>}
             </p>
-            <dl className="mt-0.5 flex flex-wrap gap-x-6 gap-y-0.5">
+            <dl className="mt-0.5 flex flex-wrap items-baseline gap-x-6 gap-y-0.5">
               {(shown.detail ?? [{ label: "Value", value: short(shown.value) }]).map((d) => (
                 <div key={d.label} className="flex items-baseline gap-1.5">
                   <dt className="text-[11px] uppercase tracking-wider text-slate-500">{d.label}</dt>
                   <dd className="text-xs font-semibold tabular-nums text-slate-900">{d.value}</dd>
                 </div>
               ))}
+              {shown.href && (
+                <Link href={shown.href}
+                  className="text-xs font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 transition-colors hover:text-slate-900 hover:decoration-slate-600">
+                  {shown.hrefLabel ?? "See the rows"} <span aria-hidden="true">&rarr;</span>
+                </Link>
+              )}
             </dl>
           </div>
         ) : (

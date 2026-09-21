@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
+import { monthOf, monthLabel } from "@/lib/crm/month";
 import { orderKey } from "@/lib/crm/order-marks";
 import { setOrderMark } from "./actions";
 import { joinBookings } from "@/lib/crm/order-bookings";
@@ -48,9 +49,19 @@ function csv(rows: Lead[]): string {
 export default function OrdersTable({
   leads,
   marks = {},
+  month,
 }: {
   leads: Lead[];
   marks?: Record<string, "cancelled" | "done">;
+  /**
+   * One month, as 2026-09, arrived at by clicking that bar on Finance.
+   *
+   * The chart could say a month earned six thousand euro and the only way to
+   * see which orders that was, was to read the whole list and do the dates in
+   * your head. It is state in the URL rather than in the component so the view
+   * survives a refresh and can be sent to somebody.
+   */
+  month?: string;
   /* Accepted and ignored: the page passes it, and dropping it there would be a
      second edit for no behaviour. */
   keyOf?: unknown;
@@ -62,17 +73,26 @@ export default function OrdersTable({
   const borrowed = useMemo(() => joinBookings(leads), [leads]);
   const [tab, setTab] = useState<Tab>("All");
   const [q, setQ] = useState("");
+  /* Cleared in place rather than by navigating, so dropping the month does not
+     cost a round trip or lose the tab and search already set. */
+  const [monthOn, setMonthOn] = useState(true);
+  const activeMonth = monthOn ? month : undefined;
   const [open, setOpen] = useState<string | null>(null);
 
+  const inMonth = useMemo(
+    () => (activeMonth ? leads.filter((l) => monthOf(l.date) === activeMonth) : leads),
+    [leads, activeMonth],
+  );
+
   const counts = useMemo(() => {
-    const c: Record<string, number> = { All: leads.length, Upcoming: leads.filter((l) => l.upcoming).length };
-    for (const l of leads) c[l.type] = (c[l.type] ?? 0) + 1;
+    const c: Record<string, number> = { All: inMonth.length, Upcoming: inMonth.filter((l) => l.upcoming).length };
+    for (const l of inMonth) c[l.type] = (c[l.type] ?? 0) + 1;
     return c;
-  }, [leads]);
+  }, [inMonth]);
 
   const rows = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    return leads.filter((l) => {
+    return inMonth.filter((l) => {
       /* "Upcoming" is a view, not a type: a paid order whose install date is
          still ahead belongs in it as much as a Calendly booking does, which is
          why the feed carries that flag separately from the type. */
@@ -83,7 +103,7 @@ export default function OrdersTable({
         String(v ?? "").toLowerCase().includes(needle),
       );
     });
-  }, [leads, tab, q]);
+  }, [inMonth, tab, q]);
 
   function download() {
     downloadCsv(`orders-${new Date().toISOString().slice(0, 10)}.csv`, csv(rows));
@@ -192,6 +212,23 @@ export default function OrdersTable({
 
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+      {/* Arriving filtered without being told is how a reader concludes the
+          rest of the orders are missing. Say which month, and how to leave. */}
+      {activeMonth && (
+        <div className="flex flex-wrap items-center gap-2 border-b border-brand-200 bg-brand-50 px-3 py-2 text-sm text-brand-900">
+          <span>
+            Showing <strong className="font-semibold">{monthLabel(activeMonth)}</strong> only,
+            {" "}{inMonth.length} row{inMonth.length === 1 ? "" : "s"}.
+          </span>
+          <button
+            type="button"
+            onClick={() => setMonthOn(false)}
+            className="ml-auto inline-flex min-h-[28px] items-center gap-1 rounded-md border border-brand-300 bg-white px-2 text-xs font-medium text-brand-800 transition-colors hover:border-brand-500 hover:bg-brand-100"
+          >
+            Show every month
+          </button>
+        </div>
+      )}
       <div className="flex flex-col gap-3 border-b border-slate-200 px-3 py-3 lg:flex-row lg:items-center">
         <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-0.5">
           {/* A filter that can only ever return nothing is not a filter. Smart

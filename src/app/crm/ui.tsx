@@ -128,8 +128,16 @@ export function Stat({ label, value, note, tone = "plain", explain, source, tren
     bad: "text-rose-700",
     cost: "text-amber-700",
   }[tone];
+  /*
+   * A tile with rows behind it is the whole target, not just the small link
+   * under it. The underlined words stay: they say where the click goes, which
+   * a whole-card hover state cannot.
+   */
+  const interactive = source
+    ? "group relative cursor-pointer transition-colors hover:bg-slate-50 focus-within:bg-slate-50"
+    : "";
   return (
-    <div className="flex flex-col px-4 py-3.5">
+    <div className={`flex flex-col px-4 py-3.5 ${interactive}`}>
       {/* A div, not a p. Explain renders a details with a div inside it, and
           neither is legal inside a paragraph: the browser closed the p early
           and React failed to hydrate the whole page. */}
@@ -144,9 +152,9 @@ export function Stat({ label, value, note, tone = "plain", explain, source, tren
       {trend && <div className="mt-1.5">{trend}</div>}
       {source && (
         <a href={source.href}
-           className="-mt-0.5 inline-flex w-fit items-center gap-1 text-xs font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 transition-colors hover:text-slate-900 hover:decoration-slate-600">
+           className="-mt-0.5 inline-flex w-fit items-center gap-1 text-xs font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 transition-colors before:absolute before:inset-0 before:content-[''] group-hover:text-slate-900 group-hover:decoration-slate-600">
           {source.label}
-          <span aria-hidden="true">&rarr;</span>
+          <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">&rarr;</span>
         </a>
       )}
     </div>

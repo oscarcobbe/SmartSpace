@@ -279,3 +279,40 @@ p {
 
 /* Used by the marketing daily report and the period drill-down. */
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* CRM charts.
+   Bars rise from the baseline once, on first paint, so the shape of a year is
+   read as it is drawn rather than arriving already flat on the page. The
+   origin has to be set in fill-box units: an SVG rect's default transform
+   origin is the viewport's corner, so scaleY there slides the bar instead of
+   growing it. */
+@keyframes crmRise { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+.crm-rise {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: crmRise 0.55s cubic-bezier(0.22, 0.8, 0.26, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .crm-rise { animation: none; }
+}
+
+/* The return chart. .roas-bar and .roas-line were already on these elements
+   and styled nothing; they are the hooks the markup was expecting. */
+.roas-bar {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: crmRise 0.5s cubic-bezier(0.22, 0.8, 0.26, 1) both;
+}
+/* pathLength="1" is set on the polyline, so one unit is the whole line however
+   many buckets it crosses. Guessing a length in user units draws the line
+   short on a long series and leaves dashes on a short one. */
+@keyframes crmDraw { to { stroke-dashoffset: 0; } }
+.roas-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: crmDraw 1s ease-out 0.2s forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .roas-bar { animation: none; }
+  .roas-line { animation: none; stroke-dashoffset: 0; }
+}
