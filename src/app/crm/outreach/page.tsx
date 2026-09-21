@@ -2,6 +2,7 @@ import { ShieldCheck } from "lucide-react";
 import { requireSession, SITE_LABEL } from "@/lib/crm/session";
 import { fetchOutreach, OUTREACH_PILL, OUTREACH_LABEL } from "@/lib/crm/outreach";
 import { PageHeader, Panel, Note, Empty, Stat, StatRow, Pill } from "../ui";
+import { LinkedInSection, PartnersSection } from "./sections";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +60,14 @@ export default async function OutreachPage() {
             </span>
           </span>
         </Note>
+      </div>
+
+      {/* What we are saying in public and what we are offering partners, above
+          the list, because the list is the mechanics and these two are the
+          work. */}
+      <div className="mb-6 space-y-6">
+        <PartnersSection />
+        <LinkedInSection />
       </div>
 
       <StatRow>
