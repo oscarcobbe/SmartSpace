@@ -318,7 +318,53 @@ export async function GET(request: Request) {
       }
       const calData = await calRes.json();
 
-      for (const event of calData.collection || []) {
+      /*
+       * Every invitee at once, not one after another.
+       *
+       * This used to sit inside the loop below: one fetch per Calendly event,
+       * awaited in turn, each with an eight second ceiling. The comment on it
+       * acknowledged that "a single hung call could otherwise serialise into a
+       * 90s admin-page render", and that is what happened. The CRM Overview
+       * showed "The orders feed could not be read... the operation was aborted
+       * due to timeout" with no bookings at all, because the page's own thirty
+       * second budget ran out before this loop finished.
+       *
+       * Six at a time rather than all of them, because Calendly rate limits
+       * and a burst that comes back 429 is slower than a queue that does not.
+       */
+      const calEvents = calData.collection || [];
+      /* Only the fields read below. Typed rather than left as any, so a
+         Calendly change that removes one of them is a compile error here
+         instead of a dash on somebody's booking. */
+      interface CalendlyInvitee {
+        name?: string;
+        email?: string;
+        text_reminder_number?: string;
+        questions_and_answers?: { question: string; answer: string }[];
+      }
+      const invitees = new Map<string, { collection?: CalendlyInvitee[] }>();
+      const LANES = 6;
+      await Promise.all(
+        Array.from({ length: Math.min(LANES, calEvents.length) }, async (_, lane) => {
+          for (let i = lane; i < calEvents.length; i += LANES) {
+            const ev = calEvents[i];
+            try {
+              const r = await fetch(`${ev.uri}/invitees`, {
+                headers: { Authorization: `Bearer ${calendlyToken}` },
+                cache: "no-store",
+                signal: AbortSignal.timeout(8000),
+              });
+              invitees.set(ev.uri, await r.json());
+            } catch {
+              /* One booking without its invitee details is a row with a dash
+                 in it. The whole feed failing is an empty page. */
+              invitees.set(ev.uri, { collection: [] });
+            }
+          }
+        }),
+      );
+
+      for (const event of calEvents) {
         // Get invitee details
         let inviteeName = "-";
         let inviteeEmail = "-";
@@ -328,15 +374,7 @@ export async function GET(request: Request) {
         const calendlyDetails: QA[] = [];
 
         try {
-          const invRes = await fetch(`${event.uri}/invitees`, {
-            headers: { Authorization: `Bearer ${calendlyToken}` },
-            cache: "no-store",
-            // 8s per-invitee ceiling, the outer loop fans out one of
-            // these per Calendly event so a single hung call could
-            // otherwise serialise into a 90s admin-page render.
-            signal: AbortSignal.timeout(8000),
-          });
-          const invData = await invRes.json();
+          const invData = invitees.get(event.uri) ?? { collection: [] };
           const inv = (invData.collection || [])[0];
           if (inv) {
             inviteeName = inv.name || "-";
