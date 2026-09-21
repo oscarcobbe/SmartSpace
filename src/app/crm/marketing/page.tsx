@@ -160,6 +160,8 @@ async function LiveSections({ site }: { site: Site }) {
     conversions: sparkWeeks.map((w) => w.conversions),
     cpa: sparkWeeks.map((w) => w.cpa ?? 0),
     value: sparkWeeks.map((w) => w.value),
+    clicks: sparkWeeks.map((w) => w.clicks),
+    roas: sparkWeeks.map((w) => w.roas ?? 0),
   };
   /* So a point on a sparkline can say which week it is, not just its height. */
   const sparkLabels = sparkWeeks.map((w) => w.label);
@@ -182,11 +184,20 @@ async function LiveSections({ site }: { site: Site }) {
 
       {/* One row, not two. The four sparkline cards that used to sit here
           repeated the four figures below them, which is the clutter D2 is
-          about: the same question asked twice in a row. */}
+          about: the same question asked twice in a row.
+
+          Every tile in this row carries the same furniture: a figure, a
+          sparkline, and the link through to the day by day table. It used to
+          be three of five with a sparkline and two of five with the link,
+          which reads as tiles that were never finished rather than as tiles
+          that had nothing to show. Every one of these five has eight weeks of
+          history behind it and the same table underneath it, so there was
+          never a reason for the difference. */}
       <StatRow>
         <Stat label="Spend" value={money(own.cost)} note="Last twelve months" explain="spend" source={{ href: "#every-period", label: "See it day by day" }}
           trend={sparkWeeks.length > 1 ? <Sparkline series={spark.cost} tone="none" baseline={prior(spark.cost)} labels={sparkLabels} format="money" /> : undefined} />
         <Stat label="Work won" value={money(own.value)} note="Value recorded against ads" tone={own.value > 0 ? "good" : "plain"} explain="workWon"
+          source={{ href: "#every-period", label: "See it day by day" }}
           trend={sparkWeeks.length > 1 ? <Sparkline series={spark.value} tone="good" baseline={prior(spark.value)} labels={sparkLabels} format="money" /> : undefined} />
         <Stat
           label="Return on spend"
@@ -194,10 +205,13 @@ async function LiveSections({ site }: { site: Site }) {
           value={own.cost ? `${roas.toFixed(1)}x` : "–"}
           note={own.cost ? `${money(own.value)} back on ${money(own.cost)}` : undefined}
           tone={roas >= 3 ? "good" : roas >= 1 ? "warn" : "bad"}
-        />
+          source={{ href: "#every-period", label: "See it day by day" }}
+          trend={sparkWeeks.length > 1 ? <Sparkline series={spark.roas} tone={roas >= 1 ? "good" : "bad"} baseline={prior(spark.roas)} labels={sparkLabels} format="ratio" /> : undefined} />
         <Stat label="Enquiries" value={own.conversions.toFixed(0)} note={own.conversions ? `${moneyExact(cpa)} each` : undefined} explain="enquiries" source={{ href: "#every-period", label: "See it day by day" }}
           trend={sparkWeeks.length > 1 ? <Sparkline series={spark.conversions} tone="good" baseline={prior(spark.conversions)} labels={sparkLabels} format="count" /> : undefined} />
-        <Stat label="Clicks" value={int(own.clicks)} note={`${moneyExact(cpc)} each, ${ctr.toFixed(1)}% of views`} explain="clicks" />
+        <Stat label="Clicks" value={int(own.clicks)} note={`${moneyExact(cpc)} each, ${ctr.toFixed(1)}% of views`} explain="clicks"
+          source={{ href: "#every-period", label: "See it day by day" }}
+          trend={sparkWeeks.length > 1 ? <Sparkline series={spark.clicks} tone="none" baseline={prior(spark.clicks)} labels={sparkLabels} format="count" /> : undefined} />
       </StatRow>
 
       {report && <DailyReport report={report} />}

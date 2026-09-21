@@ -54,7 +54,17 @@ export function Sparkline({
   const min = Math.min(...series);
   const max = Math.max(...series);
   const span = max - min || 1; // a flat line sits in the middle rather than dividing by zero
-  const pad = 2;
+  /*
+   * Room for the marker, not just for the line.
+   *
+   * This was two pixels, which is less than the hovered point's own radius,
+   * so the highest and lowest weeks had their dots sliced off by the edge of
+   * the box and the line itself ran into the border. The padding has to clear
+   * the largest thing drawn at a data point, which is the hover marker: three
+   * pixels of radius plus half of its 1.6 stroke.
+   */
+  const MARKER = 3 + 1.6 / 2;
+  const pad = Math.ceil(MARKER);
 
   const x = (i: number) => (i / (series.length - 1)) * (width - pad * 2) + pad;
   const y = (v: number) => height - pad - ((v - min) / span) * (height - pad * 2);
