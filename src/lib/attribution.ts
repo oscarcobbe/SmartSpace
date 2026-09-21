@@ -192,18 +192,36 @@ function writeWhenConsented(record: Attribution): void {
      * banner on the page they land on.
      */
     const parked = sessionStorage.getItem(PENDING_KEY);
-    if (parked && !cameFromAnAd(record)) {
-      const prior = JSON.parse(parked) as Attribution;
-      if (cameFromAnAd(prior)) return;
-    }
-    sessionStorage.setItem(PENDING_KEY, JSON.stringify(record));
+    /* Skip only the park write, never the queue registration below. Returning
+       out of the whole function here meant the page the banner was actually
+       answered on registered nothing, so accepting wrote nothing at all until
+       the next page load. */
+    const keepParked =
+      parked !== null && !cameFromAnAd(record) && cameFromAnAd(JSON.parse(parked) as Attribution);
+    if (!keepParked) sessionStorage.setItem(PENDING_KEY, JSON.stringify(record));
   } catch {
     // ignore, the window queue below still covers a same-page acceptance
   }
 
   const w = window as unknown as { __ssOnConsent?: (() => void)[] };
   w.__ssOnConsent = w.__ssOnConsent ?? [];
-  w.__ssOnConsent.push(write);
+  /*
+   * On acceptance, promote what was parked before writing this page's record.
+   *
+   * Without this the durable record only appeared on the next page load, so
+   * somebody who accepted the banner and submitted the form without
+   * navigating again had no attribution at that moment, which is the one
+   * moment it is read. And the queued write is for the page the banner was
+   * answered on, which is usually not the page the ad landed on, so it has to
+   * give way to the parked record rather than replace it.
+   */
+  w.__ssOnConsent.push(() => {
+    flushPendingAttribution();
+    let existing: string | null = null;
+    try { existing = localStorage.getItem(STORAGE_KEY); } catch { /* blocked */ }
+    if (existing && !cameFromAnAd(record)) return;
+    write();
+  });
 }
 
 /**

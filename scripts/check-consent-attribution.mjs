@@ -75,6 +75,14 @@ function bannerWrites() {
   return (decision) => JSON.stringify({ decision, decidedAt: Date.now() });
 }
 
+/* Exactly what CookieBanner.tsx does on Accept: run the queued writers and
+   empty the queue. Without this the test was asserting against a stub that
+   only checks the stored consent shape, and reported a gap that was its own. */
+function drainConsentQueue() {
+  const q = globalThis.window.__ssOnConsent;
+  if (Array.isArray(q)) { q.forEach((fn) => { try { fn(); } catch { /* ignore */ } }); q.length = 0; }
+}
+
 const fail = (m) => { console.error(`FAIL  ${m}`); process.exitCode = 1; };
 const pass = (m) => console.log(`ok    ${m}`);
 
@@ -165,6 +173,27 @@ try {
       : fail(`campaign-only visit, expected autumn_falls, stored ${JSON.stringify(got)}`);
   }
 
+  // 2d. Accepts on page two and converts there without navigating again. The
+  //     durable record has to exist at that moment, because that is when the
+  //     form reads it. It used to appear only on the next page load.
+  {
+    const { local } = browser();
+    window.location.search = "?gclid=TEST_SAME_TICK";
+    attribution.captureAttribution();          // landing page, undecided
+
+    delete globalThis.window.__ssOnConsent;
+    window.location.search = "";
+    window.location.pathname = "/contact";
+    attribution.captureAttribution();          // page two, still undecided
+    local.setItem("ss_consent", consentValue("granted"));
+    drainConsentQueue();                       // what CookieBanner does, no reload
+
+    const got = JSON.parse(local.getItem("ss_attribution") ?? "{}").gclid;
+    got === "TEST_SAME_TICK"
+      ? pass("accepted and converted on the same page, the click id is there already")
+      : fail(`accepted without reloading, expected TEST_SAME_TICK, stored ${JSON.stringify(got)}`);
+  }
+
   // 3. A returning visitor who already has an organic record, then clicks an
   //    ad and accepts a page later. First touch holds against another organic
   //    visit and must not hold against an ad click, which is the rule
@@ -232,5 +261,5 @@ try {
 if (process.exitCode) {
   console.error("\nThe consent gate and attribution capture disagree.");
 } else {
-  console.log("\nConsent and attribution capture agree on all eight cases.");
+  console.log("\nConsent and attribution capture agree on all nine cases.");
 }
