@@ -45,7 +45,31 @@ function loadStored(): StoredConsent | null {
 }
 
 function fireConsentUpdate(decision: Decision) {
-  const w = window as unknown as { gtag?: (...args: unknown[]) => void };
+  const w = window as unknown as {
+    gtag?: (...args: unknown[]) => void;
+    dataLayer?: unknown[];
+  };
+
+  /*
+   * Record the answer itself, before anything else and whichever way it goes.
+   *
+   * Google Ads only ever sees visitors who press Accept. An unanswered banner
+   * produces no conversion ping at all, while GA4 keeps counting the same
+   * events through a cookieless one, which is why the two systems have
+   * disagreed for months and why a real sale can be invisible in the ad
+   * account.
+   *
+   * Nobody knows what share of visitors answer, so nobody can say how much of
+   * that gap is the banner. This makes the rate a number rather than an
+   * argument. It carries no identifier and fires under either outcome, so it
+   * needs no consent of its own, and it is pushed before the gtag guard below
+   * because a page where gtag never loaded is exactly the case worth seeing.
+   */
+  try {
+    w.dataLayer = w.dataLayer || [];
+    w.dataLayer.push({ event: "consent_decision", consent_decision: decision, consent_prompt: "banner" });
+  } catch { /* a blocked dataLayer is not worth failing the banner over */ }
+
   if (typeof w.gtag !== "function") return;
   if (decision === "granted") {
     /*
