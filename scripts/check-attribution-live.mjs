@@ -104,5 +104,38 @@ for (const site of SITES) {
   } finally { b.close(); }
 }
 
+/*
+ * --alert emails on failure, because this runs unattended and a red line in a
+ * log nobody opens is the same as no check at all. That is precisely how
+ * August ran broken for weeks.
+ */
+if (bad && process.argv.includes("--alert")) {
+  const key = process.env.RESEND_API_KEY?.trim();
+  const from = process.env.RESEND_FROM?.trim() || "Smart Space <bookings@bookings.smart-space.ie>";
+  const to = process.env.ATTRIBUTION_ALERT_TO?.trim() || "oscar@fourwindsdigital.com";
+  if (!key) console.error("(--alert given but RESEND_API_KEY is not set, so no email was sent)");
+  else {
+    const body = [
+      `${bad} site(s) are losing the Google click id on the way to the cookie banner.`,
+      "",
+      "A visitor clicks an ad, reads a second page, accepts cookies there, and the",
+      "click id is gone. Google will not record a conversion it cannot match to a",
+      "click, so sales from advertising stop appearing in the ad account while the",
+      "sites carry on looking completely normal.",
+      "",
+      "Reproduce:  npm run check:attribution-live",
+      "Checked at: " + new Date().toISOString(),
+    ].join("\n");
+    try {
+      const r = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: "Bearer " + key, "Content-Type": "application/json" },
+        body: JSON.stringify({ from, to, subject: `Attribution broken on ${bad} site(s)`, text: body }),
+      });
+      console.error(r.ok ? "(alert emailed)" : `(alert email failed: ${r.status})`);
+    } catch (e) { console.error("(alert email failed: " + e.message + ")"); }
+  }
+}
+
 if (bad) { console.error(`\n${bad} site(s) are losing the click id.`); process.exit(1); }
 console.log("\nBoth sites carry the click id through to consent.");
