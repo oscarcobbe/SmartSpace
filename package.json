@@ -17,7 +17,9 @@
     "check:crm-language": "node scripts/check-crm-language.mjs",
     "check:consent": "node scripts/check-consent-attribution.mjs",
     "check:payment-link": "node scripts/check-payment-link-ref.mjs",
-    "check:month": "node scripts/check-month-filter.mjs"
+    "check:month": "node scripts/check-month-filter.mjs",
+    "check:money-split": "node scripts/check-money-split.mjs",
+    "check:attribution-live": "node scripts/check-attribution-live.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.577.0",

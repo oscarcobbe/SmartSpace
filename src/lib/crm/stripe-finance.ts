@@ -56,6 +56,13 @@ export type FinanceResult = { ok: true; data: FinanceData } | { ok: false; reaso
 
 import { THIS_SITE, type Site } from "./db";
 
+interface CheckoutSession {
+  id: string;
+  payment_status: string;
+  payment_intent?: string | null;
+  line_items?: { data: { description?: string | null }[] };
+}
+
 interface BalanceTransaction {
   id: string;
   created: number;
@@ -64,7 +71,7 @@ interface BalanceTransaction {
   fee?: number;
   type: string;
   /** Expanded with expand[]=data.source, so the charge can be told apart. */
-  source?: { description?: string | null } | string | null;
+  source?: { description?: string | null; payment_intent?: string | null } | string | null;
 }
 
 interface StripeList<T> {
@@ -98,40 +105,58 @@ const monthLabel = (key: string) => {
 };
 
 /**
- * Which business a payment belongs to.
+ * Which business a payment belongs to, read from what was actually sold.
  *
  * One Stripe account, "SmartSpace Technologies", carries both. Smart Space
- * sells installations one at a time through checkout and, for a bigger custom
- * quote, a payment link made by hand. SmartCare Living sells the SmartGuardian
- * monthly subscription through Stripe billing. Every renewal therefore landed
- * in this account and was counted as Smart Space income, because this file had
- * no idea there were two businesses in it: Finance showed one combined total
- * whichever business was selected, and Marketing's "all money taken" basis
- * measured Smart Space's advertising against it.
+ * sells Ring and Eufy installations through checkout and takes bigger custom
+ * quotes on payment links made by hand. SmartCare Living sells SmartGuardian:
+ * mostly the monthly subscription through Stripe billing, but whole systems
+ * through checkout too.
  *
- * Measured 21 Sep 2026 over 91 succeeded charges since 1 April:
- *   SmartCare Living  28 charges, EUR 4,140   subscriptions and their invoices
- *   Smart Space       63 charges, EUR 25,218  checkouts and one payment link
+ * So the payment mechanism does not decide it. Checked over 91 charges since
+ * 1 April, splitting on mechanism alone put four SmartGuardian sales worth
+ * EUR 2,865 into Smart Space, including a EUR 1,947 seven zone system, because
+ * they were taken through checkout like an installation. The product name is
+ * the only thing that actually says whose sale it is.
  *
- * Stripe does not expose the invoice link on these charges, so the tell is the
- * description it writes itself: billing sets one, checkout leaves it null. The
- * rule was checked against every charge in that window and agreed on 90 of 91.
- * The single exception is the one that proves it: a EUR 758 "Bundle" on 7 May,
- * taken on a payment link so it has no checkout session, which the rule
- * correctly keeps with Smart Space because it is a custom quote and not a
- * subscription.
+ * Read in this order:
+ *   the checkout line items, when the payment came through checkout
+ *   otherwise the description Stripe writes for billing, since every invoice
+ *   in the account is a SmartGuardian or trial subscription
  *
- * "Payment for Invoice" is read as SmartCare Living because invoicing here is
- * the subscription's own mechanism. If Smart Space ever invoices a quote
- * directly, this is the line to revisit.
+ * A charge that is neither, such as the EUR 758 "Bundle" on 7 May taken on a
+ * payment link, stays with Smart Space, which is what a custom quote is.
  */
+const SCL_PRODUCT = /smartguardian/i;
 const BILLED_NOT_SOLD = /^(subscription|payment for invoice)/i;
 
-function belongsTo(t: BalanceTransaction): Site {
-  const src = t.source;
-  const description =
-    typeof src === "object" && src !== null ? String((src as { description?: string | null }).description ?? "") : "";
-  return BILLED_NOT_SOLD.test(description) ? "smartcareliving" : "smart-space";
+function belongsTo(t: BalanceTransaction, soldByCheckout: Map<string, string>): Site {
+  const src = typeof t.source === "object" && t.source !== null ? t.source : null;
+  const pi = src?.payment_intent ?? null;
+
+  const bought = pi ? soldByCheckout.get(pi) : undefined;
+  if (bought !== undefined) return SCL_PRODUCT.test(bought) ? "smartcareliving" : "smart-space";
+
+  return BILLED_NOT_SOLD.test(String(src?.description ?? "")) ? "smartcareliving" : "smart-space";
+}
+
+/** payment_intent to the line items it bought, for the window being read. */
+async function checkoutProducts(fromUnix: number): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  let after: string | null = null;
+  let guard = 0;
+  do {
+    const qs: string =
+      `checkout/sessions?limit=100&expand[]=data.line_items&created[gte]=${Math.floor(fromUnix)}` +
+      (after ? `&starting_after=${after}` : "");
+    const page: StripeList<CheckoutSession> = await stripe(qs);
+    for (const sess of page.data) {
+      if (sess.payment_status !== "paid" || !sess.payment_intent) continue;
+      map.set(sess.payment_intent, (sess.line_items?.data ?? []).map((l) => l.description ?? "").join(" | "));
+    }
+    after = page.has_more && page.data.length ? page.data[page.data.length - 1].id : null;
+  } while (after && ++guard < 20);
+  return map;
 }
 
 export async function fetchFinance(monthsBack = 12, site: Site = THIS_SITE): Promise<FinanceResult> {
@@ -159,6 +184,10 @@ export async function fetchFinance(monthsBack = 12, site: Site = THIS_SITE): Pro
     const toDate = new Map<string, { gross: number; fees: number; refunds: number; payments: number }>();
     buckets.forEach((_, key) => toDate.set(key, { gross: 0, fees: 0, refunds: 0, payments: 0 }));
 
+    /* One extra pass over checkout, so each payment can be traced to the
+       thing it bought rather than to the mechanism that took the money. */
+    const soldByCheckout = await checkoutProducts(from);
+
     let after: string | null = null;
     let guard = 0;
     do {
@@ -169,7 +198,7 @@ export async function fetchFinance(monthsBack = 12, site: Site = THIS_SITE): Pro
         const b = buckets.get(monthKey(at));
         if (!b) continue;
         if (t.currency !== "eur") continue;
-        if (belongsTo(t) !== site) continue;
+        if (belongsTo(t, soldByCheckout) !== site) continue;
         const amount = t.amount / 100;
         const fee = (t.fee ?? 0) / 100;
         const monthStart = Date.UTC(at.getUTCFullYear(), at.getUTCMonth(), 1);
