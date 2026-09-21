@@ -396,10 +396,6 @@ export default function RoasChart({
           const rev = revenue(b);
           const blind = blindness(b) === "all";
           const centre = cx(i);
-          /* Worked out on the spend that could be attributed at all, so the
-             month attribution broke in is not charged for days it had no way
-             of being credited for. */
-          const spendCounted = basis !== "all" ? b.spend - b.spendBlind : b.spend;
           const ratio = ratioOf(b);
           return (
             <g key={b.key}>
