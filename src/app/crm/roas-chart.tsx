@@ -25,7 +25,7 @@
  * the daily store, so the history stops changing shape between two loads.
  */
 
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import type { RoasBucket, RoasTotals, Grain } from "@/lib/crm/roas";
 
 export type { RoasBucket };
@@ -124,8 +124,8 @@ export default function RoasChart({
     const step = niceStep(peak);
     const top = Math.ceil(peak / step) * step;
     const ratios = buckets
-      .filter((b) => blindness(b) !== "all" && (basis === "ad" ? b.spend - b.spendBlind : b.spend) > 0)
-      .map((b) => revenue(b) / (basis === "ad" ? b.spend - b.spendBlind : b.spend));
+      .filter((b) => blindness(b) !== "all" && (basis !== "all" ? b.spend - b.spendBlind : b.spend) > 0)
+      .map((b) => revenue(b) / (basis !== "all" ? b.spend - b.spendBlind : b.spend));
     const rTop = Math.max(2, Math.ceil(Math.max(0, ...ratios)));
     return {
       top, rTop,
@@ -149,7 +149,22 @@ export default function RoasChart({
      left out entirely: adding a period whose money cannot be tied to an ad to
      a total labelled "from an ad" is the same lie in one number that the old
      chart told in a shape. */
-  const attributing = revenueKnown && basis === "ad" && Boolean(lastAttributed);
+  /*
+   * Google's own figure goes blind with the rest of it.
+   *
+   * This used to treat the blind run as a problem only for "money from an
+   * ad", on the reasoning that Google's number is Google's business. It is
+   * not: Google records a sale when our tag fires carrying a click id, so when
+   * the click id stopped on 12 August, Google's figure stopped with it. Drawn
+   * without the shading it reads as a business falling off a cliff, and it was
+   * read that way. What actually happened is that August was the best month of
+   * the year, sixteen sales and EUR 6,167 through Stripe, while Google
+   * recorded EUR 492 of it and September EUR 33 of EUR 4,386.
+   *
+   * "All money taken" is the one basis that survives, because Stripe knows
+   * what it took whether or not anything was ever tied to an ad.
+   */
+  const attributing = revenueKnown && basis !== "all" && Boolean(lastAttributed);
   const pick = (t: typeof counted) =>
     basis === "ad" ? t.adRevenue : basis === "all" ? t.allRevenue : t.googleValue;
   const totalSpend = attributing ? counted.spend : counted.spend + excluded.spend;
@@ -162,7 +177,7 @@ export default function RoasChart({
 
   const line = buckets
     .map((b, i) => {
-      const d = basis === "ad" ? b.spend - b.spendBlind : b.spend;
+      const d = basis !== "all" ? b.spend - b.spendBlind : b.spend;
       return d > 0 && blindness(b) !== "all" ? `${cx(i)},${ry(revenue(b) / d)}` : null;
     })
     .filter(Boolean)
@@ -177,10 +192,25 @@ export default function RoasChart({
   const tillSaid = counted.adRevenue;
   const gap = tillSaid - googleSaid;
 
+  /*
+   * Until React has hydrated, these buttons are painted and dead.
+   *
+   * Marketing takes a couple of seconds to become interactive, and the server
+   * render puts a full set of toggles on screen the whole time. Anybody who
+   * clicks in that window gets nothing at all and concludes the chart is
+   * broken, which is exactly what happened: "the Google's own figure buttons
+   * don't work, they just get stuck".
+   *
+   * They work. They were not listening yet. Saying so is one line and a
+   * cursor, and is the difference between "slow" and "broken".
+   */
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
+
   const toggle = (on: boolean) =>
     `min-h-[34px] rounded-md px-3 text-xs font-semibold transition-colors duration-150 ${
       on ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:bg-white hover:text-slate-900"
-    }`;
+    } ${ready ? "" : "cursor-wait opacity-50"}`;
 
   return (
     <div>
@@ -194,7 +224,7 @@ export default function RoasChart({
       <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 px-4 py-3">
         <div className="inline-flex rounded-lg bg-slate-100 p-0.5" role="group" aria-label="Time period">
           {(["day", "week", "month"] as Grain[]).map((g) => (
-            <button key={g} type="button" onClick={() => { setGrain(g); setPinned(null); setHover(null); }}
+            <button key={g} type="button" disabled={!ready} onClick={() => { setGrain(g); setPinned(null); setHover(null); }}
               aria-pressed={grain === g} className={toggle(grain === g)}>
               {g === "day" ? "Daily" : g === "week" ? "Weekly" : "Monthly"}
             </button>
@@ -204,7 +234,7 @@ export default function RoasChart({
           {(Object.keys(BASIS) as Basis[])
             .filter((b) => revenueKnown || b === "google")
             .map((b) => (
-              <button key={b} type="button" onClick={() => setBasis(b)} aria-pressed={basis === b}
+              <button key={b} type="button" disabled={!ready} onClick={() => setBasis(b)} aria-pressed={basis === b}
                 className={toggle(basis === b)}>
                 {BASIS[b].label}
               </button>
@@ -308,7 +338,7 @@ export default function RoasChart({
           /* Worked out on the spend that could be attributed at all, so the
              month attribution broke in is not charged for days it had no way
              of being credited for. */
-          const spendCounted = basis === "ad" ? b.spend - b.spendBlind : b.spend;
+          const spendCounted = basis !== "all" ? b.spend - b.spendBlind : b.spend;
           const ratio = spendCounted > 0 ? rev / spendCounted : 0;
           return (
             <g key={b.key}>
@@ -333,7 +363,7 @@ export default function RoasChart({
               {/* The top slice of the spend bar is money spent after the click
                   id stopped being written, drawn paler so it is visible that
                   it was really spent and still left out of the return. */}
-              {basis === "ad" && b.spendBlind > 0 && b.spendBlind < b.spend && (
+              {basis !== "all" && b.spendBlind > 0 && b.spendBlind < b.spend && (
                 <rect className="roas-bar" x={centre - barW - 1} y={y(b.spend)} width={barW}
                   height={Math.max(0, y(b.spend - b.spendBlind) - y(b.spend))} rx="2"
                   fill="#fde68a" stroke="#d97706" strokeWidth="1" pointerEvents="none" />
@@ -375,7 +405,7 @@ export default function RoasChart({
         {line && <polyline className="roas-line" pathLength={1} points={line} fill="none" stroke="#0d9488"
           strokeWidth="2" strokeDasharray="4 3" pointerEvents="none" />}
         {buckets.map((b, i) =>
-          (basis === "ad" ? b.spend - b.spendBlind : b.spend) > 0 && blindness(b) !== "all" ? (
+          (basis !== "all" ? b.spend - b.spendBlind : b.spend) > 0 && blindness(b) !== "all" ? (
             <circle key={`p-${b.key}`} cx={cx(i)}
               cy={ry(revenue(b) / (basis === "ad" ? b.spend - b.spendBlind : b.spend))} r={activeIdx === i ? 5.5 : 3}
               fill="#0d9488" stroke="#fff" strokeWidth="1.5" pointerEvents="none" />
