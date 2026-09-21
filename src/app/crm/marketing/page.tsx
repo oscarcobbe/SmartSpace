@@ -78,7 +78,7 @@ async function LiveSections({ site }: { site: Site }) {
      for nothing. */
   const [result, finance, changes] = await Promise.all([
     fetchAds(site, 12),
-    fetchFinance(12),
+    fetchFinance(12, site),
     fetchChanges(site, 14),
   ]);
 

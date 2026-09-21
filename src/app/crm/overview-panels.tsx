@@ -140,8 +140,8 @@ export async function LatestIn({ site }: { site: Site }) {
   );
 }
 
-export async function MoneyThisMonth() {
-  const result = await fetchFinance(2);
+export async function MoneyThisMonth({ site }: { site: Site }) {
+  const result = await fetchFinance(2, site);
   if (!result.ok) {
     return (
       <Panel title="Money">

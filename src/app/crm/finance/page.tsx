@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 
 export default async function FinancePage() {
   const { site } = requireSession();
-  const [result, bank] = await Promise.all([fetchFinance(12), fetchBank(site, 12)]);
+  const [result, bank] = await Promise.all([fetchFinance(12, site), fetchBank(site, 12)]);
   /* Cheap, pure, and derived from rows already fetched, so it costs nothing
      beyond the statement that is already on the page. */
   const cut = bankBreakdown(bank?.rows ?? []);

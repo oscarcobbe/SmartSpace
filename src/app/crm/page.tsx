@@ -51,7 +51,7 @@ export default function CrmHome() {
             <LatestIn site={session.site} />
           </Suspense>
           <Suspense fallback={<PanelSkeleton title="Money" rows={2} />}>
-            <MoneyThisMonth />
+            <MoneyThisMonth site={session.site} />
           </Suspense>
           <Suspense fallback={<PanelSkeleton title="Advertising" rows={2} />}>
             <AdsThisMonth site={session.site} />

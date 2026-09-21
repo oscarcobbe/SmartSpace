@@ -54,6 +54,8 @@ export interface FinanceData {
 
 export type FinanceResult = { ok: true; data: FinanceData } | { ok: false; reason: string };
 
+import { THIS_SITE, type Site } from "./db";
+
 interface BalanceTransaction {
   id: string;
   created: number;
@@ -61,6 +63,8 @@ interface BalanceTransaction {
   amount: number;
   fee?: number;
   type: string;
+  /** Expanded with expand[]=data.source, so the charge can be told apart. */
+  source?: { description?: string | null } | string | null;
 }
 
 interface StripeList<T> {
@@ -93,7 +97,44 @@ const monthLabel = (key: string) => {
   return `${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m - 1]} ${String(y).slice(2)}`;
 };
 
-export async function fetchFinance(monthsBack = 12): Promise<FinanceResult> {
+/**
+ * Which business a payment belongs to.
+ *
+ * One Stripe account, "SmartSpace Technologies", carries both. Smart Space
+ * sells installations one at a time through checkout and, for a bigger custom
+ * quote, a payment link made by hand. SmartCare Living sells the SmartGuardian
+ * monthly subscription through Stripe billing. Every renewal therefore landed
+ * in this account and was counted as Smart Space income, because this file had
+ * no idea there were two businesses in it: Finance showed one combined total
+ * whichever business was selected, and Marketing's "all money taken" basis
+ * measured Smart Space's advertising against it.
+ *
+ * Measured 21 Sep 2026 over 91 succeeded charges since 1 April:
+ *   SmartCare Living  28 charges, EUR 4,140   subscriptions and their invoices
+ *   Smart Space       63 charges, EUR 25,218  checkouts and one payment link
+ *
+ * Stripe does not expose the invoice link on these charges, so the tell is the
+ * description it writes itself: billing sets one, checkout leaves it null. The
+ * rule was checked against every charge in that window and agreed on 90 of 91.
+ * The single exception is the one that proves it: a EUR 758 "Bundle" on 7 May,
+ * taken on a payment link so it has no checkout session, which the rule
+ * correctly keeps with Smart Space because it is a custom quote and not a
+ * subscription.
+ *
+ * "Payment for Invoice" is read as SmartCare Living because invoicing here is
+ * the subscription's own mechanism. If Smart Space ever invoices a quote
+ * directly, this is the line to revisit.
+ */
+const BILLED_NOT_SOLD = /^(subscription|payment for invoice)/i;
+
+function belongsTo(t: BalanceTransaction): Site {
+  const src = t.source;
+  const description =
+    typeof src === "object" && src !== null ? String((src as { description?: string | null }).description ?? "") : "";
+  return BILLED_NOT_SOLD.test(description) ? "smartcareliving" : "smart-space";
+}
+
+export async function fetchFinance(monthsBack = 12, site: Site = THIS_SITE): Promise<FinanceResult> {
   try {
     /* Start of the month monthsBack-1 ago, so the earliest bucket is a whole
        month and the chart does not open on a stub that reads as a collapse. */
@@ -121,13 +162,14 @@ export async function fetchFinance(monthsBack = 12): Promise<FinanceResult> {
     let after: string | null = null;
     let guard = 0;
     do {
-      const qs = `balance_transactions?limit=100&created[gte]=${Math.floor(from)}${after ? `&starting_after=${after}` : ""}`;
+      const qs = `balance_transactions?limit=100&expand[]=data.source&created[gte]=${Math.floor(from)}${after ? `&starting_after=${after}` : ""}`;
       const page: StripeList<BalanceTransaction> = await stripe(qs);
       for (const t of page.data) {
         const at = new Date(t.created * 1000);
         const b = buckets.get(monthKey(at));
         if (!b) continue;
         if (t.currency !== "eur") continue;
+        if (belongsTo(t) !== site) continue;
         const amount = t.amount / 100;
         const fee = (t.fee ?? 0) / 100;
         const monthStart = Date.UTC(at.getUTCFullYear(), at.getUTCMonth(), 1);
