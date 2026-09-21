@@ -105,6 +105,34 @@ export interface Insights {
 const dateKey = (raw: string) =>
   `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`;
 
+/**
+ * Fold the landing pages that are the same page.
+ *
+ * GA4 reports the homepage under more than one key: "/" and an empty string,
+ * and sometimes a trailing slash on a path that also appears without one. The
+ * page then labelled "/" and "" both as "Homepage" at render time, after they
+ * had already been counted separately, so the list showed Homepage twice, once
+ * with 127 visits at 76 per cent engaged and once with 23 at nought. Two rows
+ * with the same name and different numbers reads as the screen not knowing
+ * what it is counting, which is the right conclusion to draw from it.
+ *
+ * Normalising has to happen before the totals are taken, not when they are
+ * printed, which is why this is here and not in the page.
+ */
+export function mergeLanding(rows: { key: string[]; values: number[] }[]) {
+  const by = new Map<string, { path: string; sessions: number; engaged: number }>();
+  for (const r of rows) {
+    const raw = r.key[0] ?? "";
+    /* Drop the query string, drop a trailing slash, and treat empty as root. */
+    const path = (raw.replace(/\?.*$/, "").replace(/\/+$/, "") || "/");
+    const cur = by.get(path) ?? { path, sessions: 0, engaged: 0 };
+    cur.sessions += r.values[0] ?? 0;
+    cur.engaged += r.values[1] ?? 0;
+    by.set(path, cur);
+  }
+  return Array.from(by.values()).sort((a, b) => b.sessions - a.sessions);
+}
+
 export async function fetchInsights(site: Site, days = 28): Promise<Ga4Result<Insights>> {
   const property = GA4_PROPERTY[site];
   const range = [{ startDate: `${days}daysAgo`, endDate: "today" }];
@@ -175,7 +203,7 @@ export async function fetchInsights(site: Site, days = 28): Promise<Ga4Result<In
         sources: sources.map((r) => ({
           label: r.key[0] || "Unknown", users: r.values[0], sessions: r.values[1], engaged: r.values[2],
         })),
-        landing: landing.map((r) => ({ path: r.key[0] || "/", sessions: r.values[0], engaged: r.values[1] })),
+        landing: mergeLanding(landing),
         events: events.map((r) => ({ name: r.key[0], count: r.values[0] })),
         devices: devices.map((r) => ({ label: r.key[0] || "Unknown", sessions: r.values[0], engaged: r.values[1] })),
         counties: counties.map((r) => ({ label: r.key[0] || "Unknown", sessions: r.values[0] })),
