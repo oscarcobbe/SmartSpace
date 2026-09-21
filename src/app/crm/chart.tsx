@@ -12,7 +12,7 @@
  * bars actually reach, so the picture and the numbers cannot disagree.
  */
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const PAD = { top: 22, right: 8, bottom: 28, left: 46 };
 
@@ -45,31 +45,73 @@ export interface Bar {
   detail?: { label: string; value: string }[];
 }
 
-export function BarChart({ bars, height = 220, ariaLabel }: { bars: Bar[]; height?: number; ariaLabel: string }) {
+export function BarChart({ bars: given, height = 220, ariaLabel }: { bars: Bar[]; height?: number; ariaLabel: string }) {
   const [hover, setHover] = useState<number | null>(null);
   const [pinned, setPinned] = useState<number | null>(null);
-  const width = 720;
+
+  /*
+   * Buckets before the first one with anything in them are not drawn.
+   *
+   * Finance asks Stripe for twelve months and Stripe has only traded for six,
+   * so half the plot was empty floor and the five real bars were squeezed into
+   * the right-hand half, where the shape of the year cannot be read. Drawing
+   * them also makes a claim that is not true: an empty bar says the month
+   * happened and earned nothing, when the truth is there was no account yet.
+   *
+   * Said out loud underneath rather than silently dropped, because a chart
+   * that quietly changes its own range is how a reader gets misled.
+   */
+  const firstReal = given.findIndex((b) => b.value + (b.secondary ?? 0) > 0);
+  const trimmable = firstReal >= 2 && given.length - firstReal >= 3;
+  const bars = trimmable ? given.slice(firstReal) : given;
+  const dropped = trimmable ? given.slice(0, firstReal) : [];
+
+  /*
+   * The drawing is measured, not fixed.
+   *
+   * A 720-unit viewBox stretched to fill its container means every length in
+   * here is a ratio, not a size: the same eleven-point axis label came out at
+   * about five pixels on a phone and fifteen on a wide monitor. Measuring the
+   * container and drawing one unit per pixel makes the numbers in this file
+   * mean what they say, on every screen.
+   */
+  const wrap = useRef<HTMLDivElement>(null);
+  const [measured, setMeasured] = useState(720);
+  useEffect(() => {
+    const el = wrap.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(([e]) => setMeasured(Math.max(280, Math.round(e.contentRect.width))));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const width = measured;
+  /* A phone is a third of the width, so the same height leaves a strip too
+     flat to compare bars in. Give the narrow case its height back. */
+  const h = width < 520
+    ? Math.max(height, 200)
+    : Math.max(height, Math.min(300, Math.round(width * 0.26)));
   const plotW = width - PAD.left - PAD.right;
-  const plotH = height - PAD.top - PAD.bottom;
+  const plotH = h - PAD.top - PAD.bottom;
   const peak = Math.max(1, ...bars.map((b) => b.value + (b.secondary ?? 0)));
   const step = niceStep(peak);
   const top = Math.ceil(peak / step) * step;
   const ticks = Array.from({ length: Math.round(top / step) + 1 }, (_, i) => i * step);
 
   const slot = plotW / Math.max(1, bars.length);
-  const barW = Math.min(46, slot * 0.62);
+  const barW = Math.min(72, slot * 0.62);
+  const labelEvery = Math.max(1, Math.ceil(42 / Math.max(1, slot)));
   const y = (v: number) => PAD.top + plotH - (v / top) * plotH;
 
   const active = hover ?? pinned;
   const shown = active !== null ? bars[active] : null;
 
   return (
-    <div>
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={ariaLabel} className="h-auto w-full"
+    <div ref={wrap}>
+      <svg viewBox={`0 0 ${width} ${h}`} role="img" aria-label={ariaLabel} width="100%" height={h}
         onMouseLeave={() => setHover(null)}>
         {ticks.map((t) => (
           <g key={t}>
-            <line x1={PAD.left} x2={width - PAD.right} y1={y(t)} y2={y(t)} stroke="#e2e8f0" strokeWidth="1" />
+            <line x1={PAD.left} x2={width - PAD.right} y1={y(t)} y2={y(t)} stroke="#eef2f7" strokeWidth="1" />
             <text x={PAD.left - 8} y={y(t) + 4} textAnchor="end" fontSize="11" fill="#64748b">{short(t)}</text>
           </g>
         ))}
@@ -102,12 +144,14 @@ export function BarChart({ bars, height = 220, ariaLabel }: { bars: Bar[]; heigh
                   {short(b.value)}
                 </text>
               )}
-              <text x={cx} y={height - 9} textAnchor="middle" fontSize="11"
-                fill={on ? "#0f172a" : "#64748b"} pointerEvents="none">{b.label}</text>
+              {(i % labelEvery === 0 || i === bars.length - 1 || on) && (
+                <text x={cx} y={h - 9} textAnchor="middle" fontSize="11"
+                  fill={on ? "#0f172a" : "#64748b"} pointerEvents="none">{b.label}</text>
+              )}
             </g>
           );
         })}
-        <line x1={PAD.left} x2={width - PAD.right} y1={y(0)} y2={y(0)} stroke="#cbd5e1" strokeWidth="1" />
+        <line x1={PAD.left} x2={width - PAD.right} y1={y(0)} y2={y(0)} stroke="#94a3b8" strokeWidth="1" />
       </svg>
 
       {/* Reserved height rather than conditional, so the panel never jumps as
@@ -129,7 +173,14 @@ export function BarChart({ bars, height = 220, ariaLabel }: { bars: Bar[]; heigh
             </dl>
           </div>
         ) : (
-          <p className="text-xs text-slate-500">Hover or tap a bar for the figures behind it.</p>
+          <p className="text-xs text-slate-500">
+            Hover or tap a bar for the figures behind it.
+            {dropped.length > 0 && (
+              <span className="text-slate-400">
+                {" "}Nothing recorded {dropped[0].label} to {dropped[dropped.length - 1].label}, so those are not drawn.
+              </span>
+            )}
+          </p>
         )}
       </div>
     </div>

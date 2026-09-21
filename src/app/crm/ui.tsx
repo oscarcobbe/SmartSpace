@@ -26,12 +26,26 @@ export function PageHeader({ title, sub, aside }: { title: string; sub?: string;
   );
 }
 
-export function Panel({ title, children, aside }: { title?: string; children: ReactNode; aside?: ReactNode }) {
+/**
+ * Two weights of panel, because a page of one weight has no hierarchy left.
+ *
+ * Finance drew its chart, its Stripe balances and its bank-import prompt in
+ * three identical white cards with the same border and the same radius, so
+ * nothing on the page said which of them was the point of it. "card" is the
+ * thing the page is about; "quiet" is the supporting note that sits under it.
+ */
+export function Panel({ title, children, aside, tone = "card" }: {
+  title?: string; children: ReactNode; aside?: ReactNode; tone?: "card" | "quiet";
+}) {
+  const shell = tone === "quiet"
+    ? "border-slate-200/80 bg-slate-50"
+    : "border-slate-200 bg-white";
+  const rule = tone === "quiet" ? "border-slate-200/80" : "border-slate-200";
   return (
-    <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <section className={`overflow-hidden rounded-xl border ${shell}`}>
       {(title || aside) && (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
-          {title && <h2 className="text-sm font-semibold text-slate-900">{title}</h2>}
+        <div className={`flex flex-wrap items-center justify-between gap-3 border-b ${rule} px-4 py-3`}>
+          {title && <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-slate-900">{title}</h2>}
           {aside}
         </div>
       )}
@@ -80,7 +94,7 @@ export function Explain({ term, label }: { term: GlossaryKey; label?: string }) 
 }
 
 export function Stat({ label, value, note, tone = "plain", explain, source, trend }: {
-  label: string; value: string; note?: string; tone?: "plain" | "good" | "warn" | "bad";
+  label: string; value: string; note?: string; tone?: "plain" | "good" | "warn" | "bad" | "cost";
   explain?: GlossaryKey;
   /**
    * Where the rows behind this figure live. Nigel's rule: no number that
@@ -97,17 +111,25 @@ export function Stat({ label, value, note, tone = "plain", explain, source, tren
    */
   trend?: ReactNode;
 }) {
+  /*
+   * Colour by what the figure means, not by how it felt when it was written.
+   * Finance had card fees in black and refunds in orange, which are the same
+   * kind of number, and the reader has to learn the exception.
+   *
+   *   money in  → slate, the default, because most figures are neutral
+   *   kept      → emerald, the one number that is genuinely good news
+   *   cost      → amber, anything that leaves
+   *   bad       → rose, reserved for something actually wrong
+   */
   const toneClass = {
     plain: "text-slate-900",
     good: "text-emerald-700",
     warn: "text-amber-700",
     bad: "text-rose-700",
+    cost: "text-amber-700",
   }[tone];
   return (
-    /* Five tiles into two columns leaves the fifth alone with an empty cell
-       beside it, and into three columns leaves two in a row of three. Letting
-       the last one span the gap fills both, and at five across it is a no-op. */
-    <div className="flex flex-col px-4 py-3.5 last:col-span-2 lg:last:col-span-1">
+    <div className="flex flex-col px-4 py-3.5">
       {/* A div, not a p. Explain renders a details with a div inside it, and
           neither is legal inside a paragraph: the browser closed the p early
           and React failed to hydrate the whole page. */}
@@ -115,7 +137,7 @@ export function Stat({ label, value, note, tone = "plain", explain, source, tren
         {label}
         {explain && <Explain term={explain} label={label} />}
       </div>
-      <p className={`mt-1 text-[26px] font-semibold leading-none tabular-nums ${toneClass}`}>{value}</p>
+      <p className={`mt-1.5 text-[27px] font-semibold leading-none tracking-[-0.02em] tabular-nums ${toneClass}`}>{value}</p>
       {/* Reserved height rather than conditional, so tiles with a note and
           tiles without still sit on the same baseline in the same row. */}
       <p className="mt-1.5 min-h-[2rem] text-xs leading-4 text-slate-500">{note ?? ""}</p>
@@ -133,7 +155,12 @@ export function Stat({ label, value, note, tone = "plain", explain, source, tren
 
 export function StatRow({ children }: { children: ReactNode }) {
   return (
-    <div className="mb-6 grid grid-cols-2 divide-x divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white sm:grid-cols-3 sm:divide-y-0 lg:grid-cols-5">
+    /* Five tiles into two columns leaves the fifth alone with an empty cell
+       beside it, and into three columns leaves two in a row of three. Letting
+       the last one span the gap fills both, and at five across it is a no-op.
+       It lives here rather than on Stat because it is a fact about this row of
+       five, and on Stat it also fired inside every other grid a figure sits in. */
+    <div className="mb-6 grid grid-cols-2 divide-x divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white sm:grid-cols-3 sm:divide-y-0 lg:grid-cols-5 [&>*:last-child]:col-span-2 lg:[&>*:last-child]:col-span-1">
       {children}
     </div>
   );

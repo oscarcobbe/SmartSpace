@@ -84,7 +84,12 @@ export default function CrmNav({ site, horizontal = false }: { site: Site; horiz
 
   if (horizontal) {
     return (
-      <nav aria-label="CRM sections" className="-mx-1 flex gap-1 overflow-x-auto px-1 py-2">
+      /* Scrolling into view shows the strip moves, but only once, and only if
+         the active section happens to be off-screen. Fading both edges says
+         there is more in either direction at every moment, including the one
+         where a reader lands on Finance and cannot see that Overview exists. */
+      <nav aria-label="CRM sections"
+        className="-mx-1 flex gap-1 overflow-x-auto px-1 py-2 [scrollbar-width:none] [mask-image:linear-gradient(to_right,transparent,#000_20px,#000_calc(100%-20px),transparent)] [&::-webkit-scrollbar]:hidden">
         {visible.flatMap((g) => g.items).map((item) => {
           const active = isActive(path, item.href);
           return (

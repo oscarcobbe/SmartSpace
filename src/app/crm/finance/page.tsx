@@ -71,8 +71,8 @@ export default async function FinancePage() {
       <StatRow>
         <Stat label="Money in" value={money(f.gross)} note="Before fees" explain="moneyIn" source={{ href: "/crm/orders", label: "See the payments" }} />
         <Stat label="Kept" value={money(f.net)} note="After fees and refunds" tone="good" explain="kept" source={{ href: "/crm/orders", label: "See the payments" }} />
-        <Stat label="Card fees" value={money(f.fees)} note={`${feeRate.toFixed(1)}% of money in`} />
-        <Stat label="Refunded" value={money(f.refunds)} tone={f.refunds > 0 ? "warn" : "plain"} />
+        <Stat label="Card fees" tone="cost" value={money(f.fees)} note={`${feeRate.toFixed(1)}% of money in`} />
+        <Stat label="Refunded" value={money(f.refunds)} tone={f.refunds > 0 ? "cost" : "plain"} />
         <Stat label="Average order" value={money(f.averageOrder)} note={`${f.payments} payments`} explain="averageOrder" source={{ href: "/crm/orders", label: "See the orders" }} />
       </StatRow>
 
@@ -95,7 +95,7 @@ export default async function FinancePage() {
           </p>
         </Panel>
 
-        <Panel title="At Stripe">
+        <Panel tone="quiet" title="At Stripe">
           <div className="grid grid-cols-1 divide-slate-200 sm:grid-cols-3 sm:divide-x">
             {/* A negative balance is normal after a refund clears before the
                 next payment lands, and "ready to pay out" was the wrong
@@ -120,6 +120,7 @@ export default async function FinancePage() {
             bank, so adding the two together would count every sale twice. */}
         {bank ? (
           <Panel
+            tone="quiet"
             title="The bank account"
             aside={<span className="text-xs text-slate-500">{bank.count} imported lines since {bank.latestOn?.slice(0, 7)}</span>}
           >
@@ -145,7 +146,7 @@ export default async function FinancePage() {
             </p>
           </Panel>
         ) : (
-          <Panel title="The bank account">
+          <Panel tone="quiet" title="The bank account">
             <div className="px-4 py-5">
               <p className="mb-3 text-sm text-slate-600">
                 Nothing imported yet. Stripe only knows about card payments, so transfers, standing
