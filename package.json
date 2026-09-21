@@ -25,6 +25,7 @@
     "check:accounts": "node scripts/check-conversion-accounts.mjs",
     "check:payment-links": "node scripts/check-payment-links-redirect.mjs",
     "check:landing": "node scripts/check-landing-merge.mjs",
+    "check:company": "node scripts/check-company-details.mjs",
     "check:partner-price": "node scripts/check-partner-price.mjs",
     "check:money-split": "node scripts/check-money-split.mjs",
     "check:attribution-live": "node scripts/check-attribution-live.mjs"
