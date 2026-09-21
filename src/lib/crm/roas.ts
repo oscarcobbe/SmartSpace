@@ -46,8 +46,18 @@ export interface RoasBucket {
   /** Every euro Stripe took in the period. */
   allRevenue: number;
   orders: number;
-  /** True while the bucket is still running, so its bars read low. */
+  /**
+   * The period is not wholly inside the window: it is either still running, or
+   * the window began part way through it.
+   *
+   * Both ends matter and only one used to be marked. The window starts on a
+   * date, not on the first of a month, so the earliest bucket is usually a
+   * fortnight of April drawn beside five whole months, and a ratio taken over
+   * it is not comparable to the ones beside it.
+   */
   partial: boolean;
+  /** Days of data actually in this bucket, which is what decides the above. */
+  days: number;
   /** First and last day with data in this bucket, for marking the blind run. */
   start: string;
   end: string;
@@ -155,10 +165,11 @@ function roll(cells: DayCell[], keyOf: (d: string) => string, labelOf: (k: strin
     if (!b) {
       b = { key, label: labelOf(key), spend: 0, clicks: 0, impressions: 0, conversions: 0,
             googleValue: 0, adRevenue: 0, allRevenue: 0, orders: 0, partial: key === openKey,
-            start: c.date, end: c.date, spendBlind: 0 };
+            start: c.date, end: c.date, spendBlind: 0, days: 0 };
       by.set(key, b);
     }
     if (lastAttributed && c.date > lastAttributed) b.spendBlind += c.spend;
+    b.days += 1;
     if (c.date < b.start) b.start = c.date;
     if (c.date > b.end) b.end = c.date;
     b.spend += c.spend; b.clicks += c.clicks; b.impressions += c.impressions;
@@ -167,7 +178,19 @@ function roll(cells: DayCell[], keyOf: (d: string) => string, labelOf: (k: strin
   }
   /* Array.from rather than a spread: spreading a Map iterator needs
      downlevelIteration, which this tsconfig does not set. */
-  return Array.from(by.values()).sort((a, b) => a.key.localeCompare(b.key));
+  const out = Array.from(by.values()).sort((a, b) => a.key.localeCompare(b.key));
+
+  /* A bucket holding fewer days than its period is partial, whichever end it
+     is at. Counting the days is grain-agnostic: a month knows how long it is,
+     a week is seven, a day is one. */
+  for (const b of out) {
+    const start = new Date(`${b.start}T12:00:00Z`);
+    const span = b.key.length === 7
+      ? new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 0)).getUTCDate()
+      : b.key.length === 10 ? 1 : 7;
+    if (b.days < span) b.partial = true;
+  }
+  return out;
 }
 
 export async function fetchRoas(site: Site, days = 400): Promise<RoasResult> {

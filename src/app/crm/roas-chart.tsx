@@ -213,6 +213,12 @@ export default function RoasChart({
        through the till and none of it from an ad is a real nought and is
        drawn as one. */
     if (b.allRevenue <= 0 && b.orders <= 0) return null;
+    /* Nor on a part period. The window starts on a date rather than the first
+       of a month, so the earliest bucket is a fortnight of April sitting
+       beside five whole months, and its ratio is not the same measurement.
+       Drawn anyway it put an amber 0.0x at the left edge with the line diving
+       into the floor beneath it, which is the first thing anybody saw. */
+    if (b.partial) return null;
     return revenue(b) / spend;
   };
 
@@ -401,7 +407,8 @@ export default function RoasChart({
             <g key={b.key}>
               <rect className="roas-hit" x={PAD.left + slot * i} y={PAD.top} width={slot}
                 height={stripTop + STRIP - PAD.top}
-                fill={activeIdx === i ? "#0f172a" : "transparent"} fillOpacity={activeIdx === i ? 0.05 : 0}
+                fill="transparent"
+                stroke={activeIdx === i ? "#0f172a" : "transparent"} strokeWidth="1" strokeDasharray="3 3"
                 onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} onBlur={() => setHover(null)}
                 onClick={() => setPinned(pinned === i ? null : i)}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPinned(pinned === i ? null : i); } }}
@@ -437,7 +444,10 @@ export default function RoasChart({
               {/* Where Google's figure sits against the real one, drawn on the
                   same bar so the disagreement is visible without a second
                   chart. */}
-              {!blind && basis !== "google" && b.googleValue > 0 && (
+              {/* Only where there is a bar to mark. Drawn against a
+                  zero-height bar it was a dash floating in clear space, which
+                  reads as debris rather than as a comparison. */}
+              {!blind && basis !== "google" && b.googleValue > 0 && rev > 0 && (
                 <line x1={centre + 1} x2={centre + 1 + barW} y1={y(b.googleValue)} y2={y(b.googleValue)}
                   stroke="#1e293b" strokeWidth="2" strokeDasharray="3 2" pointerEvents="none" />
               )}
@@ -536,6 +546,8 @@ export default function RoasChart({
           <p className="text-slate-600">
             {siteLabel}. Hover or tap any column for its own figures. The number above each pair is what came back
             for every euro spent in that period.
+            {buckets.some((b) => b.partial) &&
+              " A period the window only partly covers is drawn paler and carries no figure, because a fortnight cannot be set against a whole month."}
             {attributing && excluded.days > 0 && ` The shaded run at the end is left out of the totals above: ${exact(excludedSpend)} was spent there and nothing can be attributed to it.`}
           </p>
         )}

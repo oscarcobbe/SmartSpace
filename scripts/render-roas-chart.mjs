@@ -41,12 +41,12 @@ const { default: RoasChart } = await import(pathToFileURL(chart).href);
 /* Shaped like the real months: small spend, lumpy revenue, the click id
    stopping part way through the last month but one. */
 const months = [
-  { key: "2026-04", label: "Apr 2026", start: "2026-04-01", end: "2026-04-30", spend: 180, spendBlind: 0, adRevenue: 0,    allRevenue: 0,    googleValue: 0,   conversions: 0, orders: 0 },
-  { key: "2026-05", label: "May 2026", start: "2026-05-01", end: "2026-05-31", spend: 451, spendBlind: 0, adRevenue: 2404, allRevenue: 3100, googleValue: 1055, conversions: 9, orders: 7 },
-  { key: "2026-06", label: "Jun 2026", start: "2026-06-01", end: "2026-06-30", spend: 551, spendBlind: 0, adRevenue: 1791, allRevenue: 2600, googleValue: 1444, conversions: 8, orders: 6 },
-  { key: "2026-07", label: "Jul 2026", start: "2026-07-01", end: "2026-07-31", spend: 608, spendBlind: 0, adRevenue: 1143, allRevenue: 4200, googleValue: 1186, conversions: 7, orders: 5 },
-  { key: "2026-08", label: "Aug 2026", start: "2026-08-01", end: "2026-08-31", spend: 608, spendBlind: 260, adRevenue: 1218, allRevenue: 6167, googleValue: 492, conversions: 6, orders: 16 },
-  { key: "2026-09", label: "Sept 2026", start: "2026-09-01", end: "2026-09-30", spend: 438, spendBlind: 438, adRevenue: 0, allRevenue: 4386, googleValue: 33, conversions: 2, orders: 11, partial: true },
+  { key: "2026-04", label: "Apr 2026", start: "2026-04-13", end: "2026-04-30", days: 18, partial: true, spend: 180, spendBlind: 0, adRevenue: 0, allRevenue: 900, googleValue: 120, conversions: 1, orders: 2 },
+  { days: 31, key: "2026-05", label: "May 2026", start: "2026-05-01", end: "2026-05-31", spend: 451, spendBlind: 0, adRevenue: 2404, allRevenue: 3100, googleValue: 1055, conversions: 9, orders: 7 },
+  { days: 30, key: "2026-06", label: "Jun 2026", start: "2026-06-01", end: "2026-06-30", spend: 551, spendBlind: 0, adRevenue: 1791, allRevenue: 2600, googleValue: 1444, conversions: 8, orders: 6 },
+  { days: 31, key: "2026-07", label: "Jul 2026", start: "2026-07-01", end: "2026-07-31", spend: 608, spendBlind: 0, adRevenue: 1143, allRevenue: 4200, googleValue: 1186, conversions: 7, orders: 5 },
+  { days: 31, key: "2026-08", label: "Aug 2026", start: "2026-08-01", end: "2026-08-31", spend: 608, spendBlind: 260, adRevenue: 1218, allRevenue: 6167, googleValue: 492, conversions: 6, orders: 16 },
+  { days: 22, key: "2026-09", label: "Sept 2026", start: "2026-09-01", end: "2026-09-30", spend: 438, spendBlind: 438, adRevenue: 0, allRevenue: 4386, googleValue: 33, conversions: 2, orders: 11, partial: true },
 ];
 const totals = (xs) => xs.reduce((a, b) => ({
   spend: a.spend + b.spend, adRevenue: a.adRevenue + b.adRevenue,
