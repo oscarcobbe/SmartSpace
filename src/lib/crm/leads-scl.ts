@@ -15,32 +15,48 @@ import type { Lead, LeadsPayload, LeadsResult, QA } from "./leads";
 
 /** The columns the Apps Script writes. Anything absent is simply absent. */
 interface SheetRow {
-  Timestamp?: string;
-  Source?: string;
-  Name?: string;
-  Phone?: string;
-  Email?: string;
-  Eircode?: string;
-  Urgent?: string;
-  Status?: string;
-  Message?: string;
-  Notes?: string;
-  "Risk Label"?: string;
-  "Booking Date"?: string;
-  "Booking Time"?: string;
-  BookingDate?: string;
-  BookingTime?: string;
-  Gclid?: string;
-  [key: string]: string | undefined;
+  Timestamp?: unknown;
+  Source?: unknown;
+  Name?: unknown;
+  Phone?: unknown;
+  Email?: unknown;
+  Eircode?: unknown;
+  Urgent?: unknown;
+  Status?: unknown;
+  Message?: unknown;
+  Notes?: unknown;
+  "Risk Label"?: unknown;
+  "Booking Date"?: unknown;
+  "Booking Time"?: unknown;
+  BookingDate?: unknown;
+  BookingTime?: unknown;
+  Gclid?: unknown;
+  /* unknown, not string. These values come off somebody else's endpoint and
+     one of them was a number, which is how three pages died on .trim(). The
+     compiler now insists every read goes through clean(). */
+  [key: string]: unknown;
 }
 
-const clean = (v: string | undefined) => {
-  const s = (v ?? "").trim();
+/*
+ * Everything through here is JSON off somebody else's endpoint, so the type
+ * above it is a claim rather than a guarantee.
+ *
+ * It said `string | undefined` and got a number, and "(e ?? \"\").trim is not
+ * a function" took out The diary, Orders and Customers on the SmartCare Living
+ * side of the CRM. Three pages, dead, for as long as whatever field it was has
+ * been coming back unquoted.
+ *
+ * String() rather than a type guard because there is nothing useful to do with
+ * a number here except read it: an amount, an id or a phone number typed
+ * without its leading zero are all worth showing.
+ */
+const clean = (v: unknown) => {
+  const s = String(v ?? "").trim();
   return s && s !== "-" ? s : "";
 };
 
 /** "18/07/2026, 21:20" in Dublin, matching what the Smart Space feed produces. */
-function stamp(value: string | undefined): string {
+function stamp(value: unknown): string {
   const s = clean(value);
   if (!s) return "-";
   const t = Date.parse(s);
@@ -52,7 +68,7 @@ function stamp(value: string | undefined): string {
   });
 }
 
-function dayOnly(value: string | undefined): string {
+function dayOnly(value: unknown): string {
   const s = clean(value);
   if (!s) return "-";
   const t = Date.parse(s);
@@ -61,7 +77,7 @@ function dayOnly(value: string | undefined): string {
 }
 
 /** Whether a booking is still ahead. Dates that will not parse are not future. */
-function isAhead(value: string | undefined): boolean {
+function isAhead(value: unknown): boolean {
   const t = Date.parse(clean(value));
   return Number.isFinite(t) && t > Date.now();
 }
