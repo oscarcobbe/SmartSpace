@@ -104,7 +104,7 @@ export default async function InsightsPage({ searchParams }: { searchParams: { d
       />
 
       <StatRow>
-        <Stat label="People" value={int(users)} note={`${int(sessions)} visits`} />
+        <Stat label="People" value={int(users)} note={`${int(sessions)} visits`} explain="people" />
         <Stat label="Pages read" value={int(views)} note={sessions ? `${(views / sessions).toFixed(1)} a visit` : undefined} />
         <Stat
           label="Stayed to read"
@@ -143,7 +143,7 @@ export default async function InsightsPage({ searchParams }: { searchParams: { d
             aside={<span className="text-xs text-slate-500">last 90 days</span>}
           >
             <div className="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200 sm:grid-cols-3">
-              <Stat label="Scans" value={int(scans.total)} />
+              <Stat label="Scans" value={int(scans.total)} explain="scans" />
               <Stat label="Last seven days" value={int(scans.last7)} tone={scans.last7 ? "good" : "plain"} />
               <Stat
                 label="Most scanned"

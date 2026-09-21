@@ -188,7 +188,7 @@ export async function MoneyThisMonth() {
         <Stat
           label="Next payout"
           value={moneyExact(f.available + f.pending)}
-          note="Available and pending at Stripe"
+          note="Available and pending at Stripe" explain="nextPayout"
         />
       </div>
     </Panel>

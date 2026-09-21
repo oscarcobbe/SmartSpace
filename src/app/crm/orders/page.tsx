@@ -59,16 +59,16 @@ export default async function OrdersPage() {
           <>
             <Stat label="Enquiries" value={String(leads.length)} />
             <Stat label="Urgent" value={String(urgent)} note="Asked for a callback" tone={urgent ? "warn" : "plain"} />
-            <Stat label="Consultations" value={String(consults)} />
+            <Stat label="Consultations" value={String(consults)} explain="consultations" />
             <Stat label="Upcoming" value={String(upcoming)} note="Calls still ahead" tone={upcoming ? "good" : "plain"} />
             <Stat label="Last seven days" value={String(recent)} />
           </>
         ) : (
           <>
-            <Stat label="Paid orders" value={String(paid.length)} />
+            <Stat label="Paid orders" value={String(paid.length)} explain="paidOrders" />
             <Stat label="Revenue" value={money(revenue)} note="Sum of paid orders in this list" />
             <Stat label="Upcoming" value={String(upcoming)} note="Installs and calls still ahead" tone={upcoming ? "good" : "plain"} />
-            <Stat label="Consultations" value={String(consults)} />
+            <Stat label="Consultations" value={String(consults)} explain="consultations" />
             <Stat label="Enquiries" value={String(enquiries)} />
           </>
         )}

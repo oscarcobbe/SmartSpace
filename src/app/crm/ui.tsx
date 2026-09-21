@@ -12,6 +12,7 @@
  * being able to point at anything.
  */
 import type { ReactNode } from "react";
+import { GLOSSARY, type GlossaryKey } from "@/lib/crm/glossary";
 
 export function PageHeader({ title, sub, aside }: { title: string; sub?: string; aside?: ReactNode }) {
   return (
@@ -44,8 +45,43 @@ export function Panel({ title, children, aside }: { title?: string; children: Re
  * and an outline around each one produced a grid of equally important boxes
  * with no hierarchy left to spend.
  */
-export function Stat({ label, value, note, tone = "plain" }: {
+/**
+ * What a figure means, one click away from the figure itself.
+ *
+ * A details element rather than a hover tooltip: it works with a keyboard and
+ * on a phone without any script, and the text is in the page for a screen
+ * reader whether it is open or not. The panel is positioned over its
+ * neighbours rather than pushing them, so opening one does not shuffle the row.
+ */
+export function Explain({ term, label }: { term: GlossaryKey; label?: string }) {
+  const d = GLOSSARY[term];
+  if (!d) return null;
+  return (
+    <details className="relative inline-block align-middle">
+      <summary
+        className="ml-1 inline-flex h-4 w-4 cursor-pointer list-none items-center justify-center rounded-full border border-slate-300 text-[10px] font-bold leading-none text-slate-500 transition-colors hover:border-slate-500 hover:text-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slate-900 [&::-webkit-details-marker]:hidden"
+        aria-label={label ? `What ${label} means` : "What this figure means"}
+      >
+        ?
+      </summary>
+      <div className="absolute left-0 top-6 z-20 w-64 rounded-lg border border-slate-200 bg-white p-3 text-left shadow-lg">
+        <p className="text-xs font-normal normal-case tracking-normal text-slate-700">{d.plain}</p>
+        <p className="mt-1.5 text-[11px] font-normal normal-case tracking-normal text-slate-500">
+          <span className="font-semibold text-slate-600">Made of: </span>{d.madeOf}
+        </p>
+        {d.caution && (
+          <p className="mt-1.5 rounded border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-normal normal-case tracking-normal text-amber-900">
+            {d.caution}
+          </p>
+        )}
+      </div>
+    </details>
+  );
+}
+
+export function Stat({ label, value, note, tone = "plain", explain }: {
   label: string; value: string; note?: string; tone?: "plain" | "good" | "warn" | "bad";
+  explain?: GlossaryKey;
 }) {
   const toneClass = {
     plain: "text-slate-900",
@@ -58,7 +94,13 @@ export function Stat({ label, value, note, tone = "plain" }: {
        beside it, and into three columns leaves two in a row of three. Letting
        the last one span the gap fills both, and at five across it is a no-op. */
     <div className="flex flex-col px-4 py-3.5 last:col-span-2 lg:last:col-span-1">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">{label}</p>
+      {/* A div, not a p. Explain renders a details with a div inside it, and
+          neither is legal inside a paragraph: the browser closed the p early
+          and React failed to hydrate the whole page. */}
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+        {label}
+        {explain && <Explain term={explain} label={label} />}
+      </div>
       <p className={`mt-1 text-[26px] font-semibold leading-none tabular-nums ${toneClass}`}>{value}</p>
       {/* Reserved height rather than conditional, so tiles with a note and
           tiles without still sit on the same baseline in the same row. */}

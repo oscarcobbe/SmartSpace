@@ -60,11 +60,11 @@ export default async function FinancePage() {
       />
 
       <StatRow>
-        <Stat label="Money in" value={money(f.gross)} note="Before fees" />
-        <Stat label="Kept" value={money(f.net)} note="After fees and refunds" tone="good" />
+        <Stat label="Money in" value={money(f.gross)} note="Before fees" explain="moneyIn" />
+        <Stat label="Kept" value={money(f.net)} note="After fees and refunds" tone="good" explain="kept" />
         <Stat label="Card fees" value={money(f.fees)} note={`${feeRate.toFixed(1)}% of money in`} />
         <Stat label="Refunded" value={money(f.refunds)} tone={f.refunds > 0 ? "warn" : "plain"} />
-        <Stat label="Average order" value={money(f.averageOrder)} note={`${f.payments} payments`} />
+        <Stat label="Average order" value={money(f.averageOrder)} note={`${f.payments} payments`} explain="averageOrder" />
       </StatRow>
 
       <div className="space-y-6">

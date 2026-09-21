@@ -198,16 +198,17 @@ async function LiveSections({ site }: { site: Site }) {
       )}
 
       <StatRow>
-        <Stat label="Spend" value={money(own.cost)} note="Last twelve months" />
-        <Stat label="Work won" value={money(own.value)} note="Value recorded against ads" tone={own.value > 0 ? "good" : "plain"} />
+        <Stat label="Spend" value={money(own.cost)} note="Last twelve months" explain="spend" />
+        <Stat label="Work won" value={money(own.value)} note="Value recorded against ads" tone={own.value > 0 ? "good" : "plain"} explain="workWon" />
         <Stat
           label="Return on spend"
+          explain="returnOnSpend"
           value={own.cost ? `${roas.toFixed(1)}x` : "–"}
           note={own.cost ? `${money(own.value)} back on ${money(own.cost)}` : undefined}
           tone={roas >= 3 ? "good" : roas >= 1 ? "warn" : "bad"}
         />
-        <Stat label="Enquiries" value={own.conversions.toFixed(0)} note={own.conversions ? `${moneyExact(cpa)} each` : undefined} />
-        <Stat label="Clicks" value={int(own.clicks)} note={`${moneyExact(cpc)} each, ${ctr.toFixed(1)}% of views`} />
+        <Stat label="Enquiries" value={own.conversions.toFixed(0)} note={own.conversions ? `${moneyExact(cpa)} each` : undefined} explain="enquiries" />
+        <Stat label="Clicks" value={int(own.clicks)} note={`${moneyExact(cpc)} each, ${ctr.toFixed(1)}% of views`} explain="clicks" />
       </StatRow>
 
       {report && <DailyReport report={report} />}

@@ -70,13 +70,13 @@ export default async function ContactsPage({ searchParams }: { searchParams: { q
       />
 
       <StatRow>
-        <Stat label="People" value={String(people.length)} />
+        <Stat label="People" value={String(people.length)} explain="people" />
         <Stat label="Paying customers" value={String(customers.length)} tone="good" />
         <Stat label="Spent with you" value={money(paid)} />
         <Stat label="Open" value={String(open)} note="Not yet won or lost" tone={open ? "warn" : "plain"} />
         <Stat
           label="Average order"
-          value={customers.length ? money(paid / customers.length) : "–"}
+          value={customers.length ? money(paid / customers.length) : "–"} explain="averageOrder"
         />
       </StatRow>
 
