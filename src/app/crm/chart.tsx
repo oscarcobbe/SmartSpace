@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Charts drawn as plain SVG, with no charting library.
  *
@@ -10,7 +12,9 @@
  * bars actually reach, so the picture and the numbers cannot disagree.
  */
 
-const PAD = { top: 12, right: 8, bottom: 28, left: 46 };
+import { useState } from "react";
+
+const PAD = { top: 22, right: 8, bottom: 28, left: 46 };
 
 /** A tick step that lands on a round number: 1, 2, 2.5 or 5 times a power of ten. */
 function niceStep(max: number, targetTicks = 4): number {
@@ -32,9 +36,18 @@ export interface Bar {
   /** Drawn faint, stacked on top of value. Use for the part that is not kept. */
   secondary?: number;
   title?: string;
+  /**
+   * What the bar is made of, shown under the chart while it is hovered.
+   * Nigel's test for a chart is whether it can answer "what is this number",
+   * and a native SVG title tooltip cannot: it takes a second to appear, it
+   * cannot be reached with a keyboard and it holds one line of unstyled text.
+   */
+  detail?: { label: string; value: string }[];
 }
 
 export function BarChart({ bars, height = 220, ariaLabel }: { bars: Bar[]; height?: number; ariaLabel: string }) {
+  const [hover, setHover] = useState<number | null>(null);
+  const [pinned, setPinned] = useState<number | null>(null);
   const width = 720;
   const plotW = width - PAD.left - PAD.right;
   const plotH = height - PAD.top - PAD.bottom;
@@ -47,33 +60,79 @@ export function BarChart({ bars, height = 220, ariaLabel }: { bars: Bar[]; heigh
   const barW = Math.min(46, slot * 0.62);
   const y = (v: number) => PAD.top + plotH - (v / top) * plotH;
 
+  const active = hover ?? pinned;
+  const shown = active !== null ? bars[active] : null;
+
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={ariaLabel} className="h-auto w-full">
-      {ticks.map((t) => (
-        <g key={t}>
-          <line x1={PAD.left} x2={width - PAD.right} y1={y(t)} y2={y(t)} stroke="#e2e8f0" strokeWidth="1" />
-          <text x={PAD.left - 8} y={y(t) + 4} textAnchor="end" fontSize="11" fill="#64748b">{short(t)}</text>
-        </g>
-      ))}
-      {bars.map((b, i) => {
-        const cx = PAD.left + slot * i + slot / 2;
-        const x = cx - barW / 2;
-        const hMain = Math.max(0, plotH - (y(b.value) - PAD.top));
-        const hSec = b.secondary ? ((b.secondary / top) * plotH) : 0;
-        return (
-          <g key={b.label}>
-            {hSec > 0 && (
-              <rect x={x} y={y(b.value + b.secondary!)} width={barW} height={hSec} fill="#fcd9b6" rx="2" />
-            )}
-            <rect x={x} y={y(b.value)} width={barW} height={hMain} fill="#f48222" rx="2">
-              <title>{b.title ?? `${b.label}: ${short(b.value)}`}</title>
-            </rect>
-            <text x={cx} y={height - 9} textAnchor="middle" fontSize="11" fill="#64748b">{b.label}</text>
+    <div>
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={ariaLabel} className="h-auto w-full"
+        onMouseLeave={() => setHover(null)}>
+        {ticks.map((t) => (
+          <g key={t}>
+            <line x1={PAD.left} x2={width - PAD.right} y1={y(t)} y2={y(t)} stroke="#e2e8f0" strokeWidth="1" />
+            <text x={PAD.left - 8} y={y(t) + 4} textAnchor="end" fontSize="11" fill="#64748b">{short(t)}</text>
           </g>
-        );
-      })}
-      <line x1={PAD.left} x2={width - PAD.right} y1={y(0)} y2={y(0)} stroke="#cbd5e1" strokeWidth="1" />
-    </svg>
+        ))}
+        {bars.map((b, i) => {
+          const cx = PAD.left + slot * i + slot / 2;
+          const x = cx - barW / 2;
+          const hMain = Math.max(0, plotH - (y(b.value) - PAD.top));
+          const hSec = b.secondary ? (b.secondary / top) * plotH : 0;
+          const on = active === i;
+          return (
+            <g key={b.label}>
+              {/* One hit area per bucket, so the pointer never has to find the
+                  bar and a keyboard can tab through the same targets. */}
+              <rect x={PAD.left + slot * i} y={PAD.top} width={slot} height={plotH}
+                fill={on ? "#0f172a" : "transparent"} fillOpacity={on ? 0.05 : 0}
+                onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} onBlur={() => setHover(null)}
+                onClick={() => setPinned(pinned === i ? null : i)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPinned(pinned === i ? null : i); } }}
+                tabIndex={0} role="button" aria-label={b.title ?? `${b.label}: ${short(b.value)}`} />
+              {hSec > 0 && (
+                <rect x={x} y={y(b.value + b.secondary!)} width={barW} height={hSec} fill="#fcd9b6" rx="2"
+                  pointerEvents="none" />
+              )}
+              <rect x={x} y={y(b.value)} width={barW} height={hMain} rx="2" pointerEvents="none"
+                fill={on ? "#d96d0c" : "#f48222"} />
+              {on && (
+                <text x={cx} y={y(b.value + (b.secondary ?? 0)) - 7} textAnchor="middle" fontSize="11"
+                  fontWeight="700" fill="#0f172a" pointerEvents="none"
+                  stroke="#fff" strokeWidth="3" paintOrder="stroke">
+                  {short(b.value)}
+                </text>
+              )}
+              <text x={cx} y={height - 9} textAnchor="middle" fontSize="11"
+                fill={on ? "#0f172a" : "#64748b"} pointerEvents="none">{b.label}</text>
+            </g>
+          );
+        })}
+        <line x1={PAD.left} x2={width - PAD.right} y1={y(0)} y2={y(0)} stroke="#cbd5e1" strokeWidth="1" />
+      </svg>
+
+      {/* Reserved height rather than conditional, so the panel never jumps as
+          the pointer moves across the chart. */}
+      <div className="min-h-[3.25rem] border-t border-slate-100 px-4 py-2 text-sm">
+        {shown ? (
+          <div>
+            <p className="text-xs font-semibold text-slate-900">
+              {shown.label}
+              {pinned !== null && <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-600">pinned</span>}
+            </p>
+            <dl className="mt-0.5 flex flex-wrap gap-x-6 gap-y-0.5">
+              {(shown.detail ?? [{ label: "Value", value: short(shown.value) }]).map((d) => (
+                <div key={d.label} className="flex items-baseline gap-1.5">
+                  <dt className="text-[11px] uppercase tracking-wider text-slate-500">{d.label}</dt>
+                  <dd className="text-xs font-semibold tabular-nums text-slate-900">{d.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        ) : (
+          <p className="text-xs text-slate-500">Hover or tap a bar for the figures behind it.</p>
+        )}
+      </div>
+    </div>
   );
 }
 

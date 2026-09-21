@@ -34,6 +34,15 @@ export default async function FinancePage() {
     value: m.net,
     secondary: m.fees + m.refunds,
     title: `${m.label}: ${moneyExact(m.net)} kept from ${moneyExact(m.gross)}, ${m.payments} payment${m.payments === 1 ? "" : "s"}`,
+    /* What the bar is made of, so the chart can answer the question rather
+       than only illustrate the answer. */
+    detail: [
+      { label: "Customers paid", value: moneyExact(m.gross) },
+      { label: "Card fees", value: moneyExact(m.fees) },
+      { label: "Refunded", value: moneyExact(m.refunds) },
+      { label: "Kept", value: moneyExact(m.net) },
+      { label: "Payments", value: String(m.payments) },
+    ],
   }));
 
   const feeRate = f.gross ? (f.fees / f.gross) * 100 : 0;

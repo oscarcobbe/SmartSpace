@@ -73,6 +73,10 @@ export default async function InsightsPage({ searchParams }: { searchParams: { d
     label: new Date(key).toLocaleDateString("en-IE", { timeZone: "Europe/Dublin", day: "2-digit", month: "short" }),
     value,
     title: `Week of ${key}: ${int(value)} visits`,
+    detail: [
+      { label: "Week beginning", value: key },
+      { label: "Visits", value: int(value) },
+    ],
   }));
 
   const named = g.events.filter((e) => EVENT_LABEL[e.name]);
