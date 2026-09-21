@@ -36,6 +36,9 @@ export interface Attribution {
  * attribute, the most recent paid click wins.
  */
 export function captureAttribution(): void {
+  /* Promote anything parked on an earlier page of this visit first, so a
+     visitor who accepted on page two keeps the click id from page one. */
+  flushPendingAttribution();
   if (typeof window === "undefined") return;
 
   const params = new URLSearchParams(window.location.search);
@@ -96,25 +99,63 @@ export function captureAttribution(): void {
   writeWhenConsented(record);
 }
 
-/** True if the visitor has already accepted, by the banner's own key. */
+const CONSENT_KEY = "ss_consent";
+const CONSENT_TTL_MS = 365 * 24 * 60 * 60 * 1000;
+
+/**
+ * True if the visitor has already accepted, read the way the banner writes.
+ *
+ * This compared the raw stored string against "granted". CookieBanner stores
+ * an object, {"decision":"granted","decidedAt":...}, so the comparison was
+ * never true for anybody and consentGranted() returned false for every
+ * visitor including those who had just pressed Accept. Every capture went
+ * into the queue below instead of being written, and the queue lives on
+ * window, so it died on the next full page load: an ad click on
+ * /services?gclid=... followed by a hard navigation lost the click id, and
+ * the record written on the second page had no gclid and an organic landing
+ * page.
+ *
+ * Live since the consent gate went in on 6 September 2026. The last lead of
+ * any kind carrying a click id is 4 September; sixteen since, none with one.
+ *
+ * Reads the same shape and honours the same twelve-month expiry as
+ * CookieBanner's own loadStored, so the two cannot disagree again.
+ */
 function consentGranted(): boolean {
   try {
-    return localStorage.getItem("ss_consent") === "granted";
+    const raw = localStorage.getItem(CONSENT_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw) as { decision?: string; decidedAt?: number };
+    if (parsed?.decision !== "granted") return false;
+    return Date.now() - (parsed.decidedAt ?? 0) <= CONSENT_TTL_MS;
   } catch {
     return false;
   }
 }
 
+/** Where a record waits while the visitor has not yet decided. */
+const PENDING_KEY = "ss_attribution_pending";
+
 /**
  * Holds one attribution record until consent, then writes it.
  *
  * The queue is on window so CookieBanner can drain it without importing this
- * module, which would pull attribution capture into the banner's bundle.
+ * module, which would pull attribution capture into the banner's bundle. That
+ * is fine for a visitor who accepts on the page they landed on and useless
+ * for one who clicks through first, because window does not survive a full
+ * page load and the click id only ever arrives on the landing URL.
+ *
+ * So the record is also parked in sessionStorage, which does survive
+ * navigation within the tab and is discarded when the tab closes. Nothing is
+ * written to the durable store until consent is given, which is the point of
+ * the gate; this only stops the pending record evaporating between the ad
+ * click and the Accept button.
  */
 function writeWhenConsented(record: Attribution): void {
   const write = () => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
+      sessionStorage.removeItem(PENDING_KEY);
     } catch {
       // ignore, not critical
     }
@@ -125,9 +166,36 @@ function writeWhenConsented(record: Attribution): void {
     return;
   }
 
+  try {
+    sessionStorage.setItem(PENDING_KEY, JSON.stringify(record));
+  } catch {
+    // ignore, the window queue below still covers a same-page acceptance
+  }
+
   const w = window as unknown as { __ssOnConsent?: (() => void)[] };
   w.__ssOnConsent = w.__ssOnConsent ?? [];
   w.__ssOnConsent.push(write);
+}
+
+/**
+ * Write anything parked on an earlier page of this visit.
+ *
+ * Called on every capture, so the record from the landing URL is promoted the
+ * moment consent exists, whichever page the visitor happened to accept on.
+ */
+export function flushPendingAttribution(): void {
+  if (typeof window === "undefined") return;
+  if (!consentGranted()) return;
+  try {
+    const raw = sessionStorage.getItem(PENDING_KEY);
+    if (!raw) return;
+    /* Only if nothing durable is stored yet: capture is first touch, and a
+       parked record must never overwrite one already accepted. */
+    if (!localStorage.getItem(STORAGE_KEY)) localStorage.setItem(STORAGE_KEY, raw);
+    sessionStorage.removeItem(PENDING_KEY);
+  } catch {
+    // ignore, not critical
+  }
 }
 
 /** Retrieve the stored attribution record, or null if missing/expired. */

@@ -7,10 +7,17 @@
  *
  * The old version read Google live, drew one revenue series, and buried
  * itself under four other panels. It showed September falling off a cliff.
- * September did not fall off a cliff: the Google click id stopped being
- * written at checkout in August, so every payment since is invisible to
- * attribution whatever caused it. A chart that draws "not known" as zero
- * reports a broken instrument as a business collapse.
+ * September did not fall off a cliff: no payment since 12 August has carried
+ * a Google click id, so nothing in that period can be tied back to an ad
+ * whatever caused it. A chart that draws "not known" as zero reports a blind
+ * instrument as a business collapse.
+ *
+ * Note the wording. An earlier version of this file asserted that the click
+ * id "stopped being written on 12 August", which was a guess dressed as a
+ * finding and was wrong: capture kept working into September, and roughly
+ * half the unattributed money is on payment links made by hand in the Stripe
+ * dashboard, which never carried a click id and never could. 12 August is
+ * the last attributed purchase, not the day anything broke.
  *
  * So: three bases, named plainly, with the gap between them drawn rather
  * than described; the period where nothing can be attributed shaded and
@@ -299,7 +306,7 @@ export default function RoasChart({
                 aria-label={
                   `${b.label}: spent ${exact(b.spend)}. ` +
                   (blind
-                    ? "Nothing can be attributed in this period because the click id was not being recorded."
+                    ? "Nothing here can be tied back to an ad: no payment in this period carried a Google click id."
                     : `${exact(rev)} ${BASIS[basis].short}, ${ratio.toFixed(2)} euro back per euro out.`) +
                   (b.partial ? " A part period so far." : "")
                 }
@@ -364,7 +371,7 @@ export default function RoasChart({
         {blindBuckets.length > 0 && (
           <text x={WIDTH - PAD.right} y={PAD.top - 9} textAnchor="end" fontSize="10.5" fontWeight="700"
             fill="#64748b" pointerEvents="none">
-            click id not recorded
+            no click id on any payment
           </text>
         )}
       </svg>
@@ -390,10 +397,11 @@ export default function RoasChart({
             </p>
             {blindness(shown) === "all" ? (
               <p className="mt-1.5 text-slate-600">
-                {exact(shown.spend)} spent, {int(shown.clicks)} clicks. Nothing can be tied back to an ad here:
-                the Google click id stopped being recorded at checkout on {lastAttributed}, so
-                {shown.allRevenue > 0 ? ` the ${exact(shown.allRevenue)} taken in this period` : " any money taken"} is
-                invisible to attribution whatever caused it. This is a broken gauge, not a bad period.
+                {exact(shown.spend)} spent, {int(shown.clicks)} clicks. Nothing here can be tied back to an ad:
+                no payment since {lastAttributed} has carried a Google click id, so
+                {shown.allRevenue > 0 ? ` the ${exact(shown.allRevenue)} taken in this period` : " any money taken"}
+                {" "}cannot be credited to an ad whatever caused it. This is a blind gauge, not a bad period. Part of
+                it never could be credited: a payment link made by hand in the Stripe dashboard carries no click id.
               </p>
             ) : (
               <dl className="mt-1.5 grid grid-cols-2 gap-x-6 gap-y-1 sm:grid-cols-4">
