@@ -79,18 +79,40 @@ export type LeadsResult =
  */
 export const LEADS_TAG = "crm-leads";
 
+/*
+ * A failure is never cached.
+ *
+ * ── WHAT THIS COST ───────────────────────────────────────────────
+ *
+ * The fetchers return { ok: false, reason } rather than throwing, which is a
+ * perfectly ordinary value, so unstable_cache stored it and served it for the
+ * next sixty seconds. One slow read on a cold function poisoned the whole
+ * minute after it, and the reader got "the orders feed could not be read"
+ * back in about a second: far too fast to be a timeout, which is the tell.
+ *
+ * It also made the thing look unfixed. The orders feed was repaired twice and
+ * the page kept showing the same error, because a single cold failure stuck
+ * around long enough to be the next thing anybody saw.
+ *
+ * So the cache is given something to throw on. Nothing is stored, and the
+ * very next request tries again instead of being told the stale bad news.
+ */
 export async function fetchLeads(site: Site = THIS_SITE): Promise<LeadsResult> {
-  return unstable_cache(
-    async () => {
-      if (site === "smartcareliving") {
-        const { fetchSclLeads } = await import("./leads-scl");
-        return fetchSclLeads();
-      }
-      return fetchSmartSpaceLeads();
-    },
-    ["crm-leads", site],
-    { revalidate: 60, tags: [LEADS_TAG, `${LEADS_TAG}:${site}`] },
-  )();
+  try {
+    return await unstable_cache(
+      async () => {
+        const r = site === "smartcareliving"
+          ? await (await import("./leads-scl")).fetchSclLeads()
+          : await fetchSmartSpaceLeads();
+        if (!r.ok) throw new Error(r.reason);
+        return r;
+      },
+      ["crm-leads", site],
+      { revalidate: 60, tags: [LEADS_TAG, `${LEADS_TAG}:${site}`] },
+    )();
+  } catch (err) {
+    return { ok: false, reason: err instanceof Error ? err.message : "The orders feed could not be read." };
+  }
 }
 
 async function fetchSmartSpaceLeads(): Promise<LeadsResult> {

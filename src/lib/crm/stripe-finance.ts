@@ -192,11 +192,22 @@ async function checkoutProducts(fromUnix: number): Promise<Map<string, string>> 
  * from 1.4 seconds to 5.4. The Refresh button clears this tag too.
  */
 export async function fetchFinance(monthsBack = 12, site: Site = THIS_SITE): Promise<FinanceResult> {
-  return unstable_cache(
-    () => readFinance(monthsBack, site),
-    ["crm-finance", String(monthsBack), site],
-    { revalidate: 60, tags: [FINANCE_TAG, `${FINANCE_TAG}:${site}`] },
-  )();
+  /* Same reasoning as fetchLeads: readFinance signals failure with a value,
+     so the cache would keep it for a minute and serve the bad news back in
+     milliseconds. Throw inside, catch outside, cache nothing. */
+  try {
+    return await unstable_cache(
+      async () => {
+        const r = await readFinance(monthsBack, site);
+        if (!r.ok) throw new Error(r.reason);
+        return r;
+      },
+      ["crm-finance", String(monthsBack), site],
+      { revalidate: 60, tags: [FINANCE_TAG, `${FINANCE_TAG}:${site}`] },
+    )();
+  } catch (err) {
+    return { ok: false, reason: err instanceof Error ? err.message : "Finance could not be read." };
+  }
 }
 
 export const FINANCE_TAG = "crm-finance";
