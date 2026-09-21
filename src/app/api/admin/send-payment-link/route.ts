@@ -27,7 +27,9 @@
 //   TERMS_URL
 
 import { NextResponse } from "next/server";
-import { timingSafeEqual } from "node:crypto";
+import { timingSafeEqual, createHash } from "node:crypto";
+import { crm } from "@/lib/crm/db";
+import { isUsableGclid, mintToken, withReference } from "@/lib/crm/payment-link-ref";
 
 // Payment mode is Smart Space work. Booking mode points at a SmartCare Living
 // consultation, so it must not arrive from a "Smart Space" sender: an
@@ -173,6 +175,55 @@ function money(amount: number, currency: string): string {
   }
 }
 
+/**
+ * Tag a hand-made payment link so the payment can be traced back to the ad.
+ *
+ * ── WHY THIS EXISTS ──────────────────────────────────────────────
+ *
+ * Nigel makes payment links in the Stripe dashboard. Those links carry
+ * nothing about where the customer came from and never could, so roughly 40%
+ * of income has always been invisible to attribution: EUR 3,961 across ten
+ * links since mid-August, and the pattern goes back to May.
+ *
+ * Stripe documents exactly one hook for this. A payment link accepts
+ * ?client_reference_id= on the URL, up to 200 characters of letters, digits,
+ * dashes and underscores, and returns it on the Checkout Session in
+ * checkout.session.completed.
+ *
+ * So: mint an opaque token, remember which click it belongs to, and hang it on
+ * the URL. Opaque rather than the click id itself, because Stripe's own
+ * documentation warns that a link carrying URL parameters travels further than
+ * you intend, and a click id is an identifier worth not scattering.
+ *
+ * Fails soft on purpose. A link that goes out untagged is the status quo; a
+ * link that does not go out at all is a lost sale.
+ */
+async function tagWithAttribution(parsed: URL, gclid: string, email: string): Promise<URL> {
+  /* Stripe silently drops a value it does not like, which would look like
+     the feature working while attributing nothing. See lib/crm/payment-link-ref. */
+  if (!isUsableGclid(gclid)) return parsed;
+  const clean = gclid.trim();
+
+  const token = mintToken();
+  try {
+    await crm("crm_payment_link_refs", {
+      method: "POST",
+      body: JSON.stringify([{
+        token,
+        site: "smart-space",
+        gclid: clean,
+        email_hash: createHash("sha256").update(email.trim().toLowerCase()).digest("hex").slice(0, 32),
+      }]),
+      prefer: "return=minimal",
+    });
+  } catch (err) {
+    console.error("[send-payment-link] could not record attribution:", err);
+    return parsed;
+  }
+
+  return withReference(parsed, token);
+}
+
 export async function POST(request: Request) {
   // ── Auth ──
   const adminKey = process.env.ADMIN_KEY;
@@ -190,7 +241,7 @@ export async function POST(request: Request) {
   }
 
   // ── Parse ──
-  let body: { mode?: string; email?: string; name?: string; paymentUrl?: string };
+  let body: { mode?: string; email?: string; name?: string; paymentUrl?: string; gclid?: string };
   try {
     body = (await request.json()) as typeof body;
   } catch {
@@ -238,8 +289,17 @@ export async function POST(request: Request) {
     );
   }
 
-  const safeUrl = parsed.toString().replace(/&/g, "&amp;");
+  /* Only payment links. A booking link goes to our own site, which captures
+     attribution itself the ordinary way. */
+  const sendUrl = !isBooking && body.gclid
+    ? await tagWithAttribution(parsed, body.gclid, to)
+    : parsed;
+  const attributed = sendUrl.searchParams.has("client_reference_id");
+
+  const safeUrl = sendUrl.toString().replace(/&/g, "&amp;");
   const greeting = name ? `Hi ${escapeHtml(name)},` : "Hello,";
+  /* readCart strips the query and matches on the canonical URL, so the tag
+     does not stop the line items being read back. */
   const cart = isBooking ? null : await readCart(parsed.toString());
 
   // ── Compose ──
@@ -368,6 +428,9 @@ export async function POST(request: Request) {
     console.log(`[send-payment-link] ${body.mode ?? "payment"} sent, id`, data?.id);
     return NextResponse.json({
       ok: true,
+      /* So the dashboard can say plainly whether this one is traceable,
+         rather than the operator having to take it on trust. */
+      attributed,
       to,
       itemised: Boolean(cart),
       id: data?.id ?? null,

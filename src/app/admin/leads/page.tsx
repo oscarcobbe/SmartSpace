@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { formatEuro } from "@/lib/format";
 import { PRODUCT_CATALOGUE } from "@/data/productCatalogue";
 import { RefreshCw, Search, Filter, Calendar, MapPin, Phone, Mail, User, ChevronDown, ChevronUp, ExternalLink, CreditCard, Clock, Package, Route } from "lucide-react";
@@ -40,6 +40,13 @@ interface Lead {
       (Calendly future events, and paid orders whose install date is ahead). */
   upcoming?: boolean;
   orderId: string;
+  /**
+   * The Google click id from this person's first visit, if there was one.
+   * The leads endpoint has always returned it. Declaring it here is what lets
+   * a hand-made Stripe payment link be tied back to the ad that produced the
+   * enquiry, which is otherwise impossible: the link itself carries nothing.
+   */
+  gclid?: string;
   /** Customer's answers to product/booking/contact-form questions. */
   details?: { question: string; answer: string }[];
 }
@@ -94,6 +101,22 @@ export default function AdminLeadsPage() {
   const [spName, setSpName] = useState("");
   const [spEmail, setSpEmail] = useState("");
   const [spUrl, setSpUrl] = useState("");
+
+  /**
+   * The click id belonging to whoever is being sent a payment link.
+   *
+   * Matched against the rows already on screen rather than fetched, so it adds
+   * no latency and cannot fail the send. Most recent enquiry wins: somebody
+   * who came back through a second ad should be credited to the second click.
+   */
+  const spGclid = useMemo(() => {
+    const target = spEmail.trim().toLowerCase();
+    if (!target) return null;
+    const hit = leads
+      .filter((l) => l.email?.trim().toLowerCase() === target && l.gclid)
+      .sort((a, b) => String(b.date).localeCompare(String(a.date)))[0];
+    return hit?.gclid ?? null;
+  }, [spEmail, leads]);
   const [spSending, setSpSending] = useState(false);
   const [spStatus, setSpStatus] = useState<{ ok: boolean; msg: string } | null>(null);
 
@@ -143,14 +166,24 @@ export default function AdminLeadsPage() {
             email: spEmail,
             name: spName,
             paymentUrl: spUrl,
+            /* Matched out of the rows already on screen, so this costs
+               nothing and cannot slow the send down. Most recent first: if
+               somebody enquired twice, the later click is the live one. */
+            gclid: spGclid ?? undefined,
           }),
         });
         const data = (await res.json().catch(() => ({}))) as {
           ok?: boolean;
           error?: string;
+          attributed?: boolean;
         };
         if (res.ok && data.ok) {
-          setSpStatus({ ok: true, msg: `Sent to ${spEmail}.` });
+          setSpStatus({
+            ok: true,
+            msg: data.attributed
+              ? `Sent to ${spEmail}, tagged so the payment traces back to the ad.`
+              : `Sent to ${spEmail}.`,
+          });
           setSpName("");
           setSpEmail("");
           setSpUrl("");
@@ -165,7 +198,10 @@ export default function AdminLeadsPage() {
         setSpSending(false);
       }
     },
-    [key, spEmail, spName, spUrl],
+    /* spGclid belongs here. Without it the callback closes over whatever the
+       click id was when it was last created, so changing the email address
+       and sending would attach the previous customer's click. */
+    [key, spEmail, spName, spUrl, spGclid],
   );
 
   const sendBookingLink = useCallback(
@@ -500,6 +536,16 @@ export default function AdminLeadsPage() {
               Paste the Stripe link , order details and total are read from the link itself
             </span>
           </div>
+          {/* Said out loud before the send, not after. A silent feature that
+              sometimes attaches attribution and sometimes does not is worse
+              than no feature: nobody can tell which sends counted. */}
+          {spEmail.trim() && (
+            <p className={`mb-2 text-xs ${spGclid ? "text-emerald-700" : "text-gray-500"}`}>
+              {spGclid
+                ? "This customer came from a Google ad. The payment will be traced back to it."
+                : "No ad click on record for this address, so this payment will not be traceable to an ad."}
+            </p>
+          )}
           <form onSubmit={sendPaymentLink} className="flex flex-wrap gap-2" autoComplete="off">
             <input
               type="text"

@@ -74,7 +74,29 @@ async function adsByDay(site: AdSite, from: string, to: string): Promise<Map<str
  * the session's metadata at checkout and never reaches the charge. Reading
  * charges is how you conclude no payment ever came from an ad.
  */
-async function revenueByDay(site: AdSite, sinceUnix: number): Promise<Map<string, RevDay>> {
+/**
+ * Tokens we hung on hand-made payment links, and the click each belongs to.
+ *
+ * Read once per run rather than per payment. There are a handful of these a
+ * week and a round trip each would turn a snapshot into a crawl.
+ */
+async function paymentLinkRefs(): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  try {
+    const rows = await crm<{ token: string; gclid: string }[]>(
+      "crm_payment_link_refs?select=token,gclid&limit=5000",
+    );
+    for (const r of rows ?? []) out.set(r.token, r.gclid);
+  } catch (err) {
+    /* Without these the run still records every euro taken; it just cannot
+       credit the payment-link half of it. Losing the whole snapshot over it
+       would be worse. */
+    console.error("[snapshot] could not read payment link refs:", err);
+  }
+  return out;
+}
+
+async function revenueByDay(site: AdSite, sinceUnix: number, refs: Map<string, string>): Promise<Map<string, RevDay>> {
   const key = process.env.STRIPE_SECRET_KEY?.trim();
   /* Only Smart Space sells online. SmartCare Living's ads produce enquiries
      that are invoiced elsewhere, so it has no takings to record and a zero
@@ -93,6 +115,7 @@ async function revenueByDay(site: AdSite, sinceUnix: number): Promise<Map<string
     });
     const body = (await res.json()) as {
       data?: { id: string; created: number; amount_total?: number; payment_status?: string;
+               client_reference_id?: string | null;
                metadata?: Record<string, string> }[];
       has_more?: boolean;
       error?: { message?: string };
@@ -107,8 +130,19 @@ async function revenueByDay(site: AdSite, sinceUnix: number): Promise<Map<string
       const amount = (s.amount_total ?? 0) / 100;
       cur.gross += amount;
       cur.orders += 1;
+      /*
+       * Two ways a payment can be tied to an ad.
+       *
+       * A checkout the website created carries the click id in its metadata.
+       * A payment link Nigel made by hand in Stripe carries nothing at all, so
+       * the dashboard hangs a token on the URL when it emails it and Stripe
+       * gives that token back here as client_reference_id. Before this, the
+       * payment-link half of the income, about 40% of it, could never be
+       * credited to advertising however well the ads were doing.
+       */
       const gclid = s.metadata?.gclid || s.metadata?.gclid_stored || s.metadata?.click_id;
-      if (gclid) cur.attributed += amount;
+      const viaLink = s.client_reference_id ? refs.get(s.client_reference_id) : undefined;
+      if (gclid || viaLink) cur.attributed += amount;
       by.set(date, cur);
     }
     if (!body.has_more || data.length === 0) break;
@@ -129,11 +163,12 @@ export async function runSnapshot(days = 30): Promise<SnapshotSiteResult[]> {
   const now = new Date();
   const from = new Date(now.getTime() - days * 86_400_000);
   const out: SnapshotSiteResult[] = [];
+  const refs = await paymentLinkRefs();
 
   for (const site of SITES) {
     try {
       const ads = await adsByDay(site, iso(from), iso(now));
-      const rev = await revenueByDay(site, Math.floor(from.getTime() / 1000));
+      const rev = await revenueByDay(site, Math.floor(from.getTime() / 1000), refs);
       const capturedAt = new Date().toISOString();
 
       const adRows = Array.from(ads.entries()).map(([on_date, v]) => ({
