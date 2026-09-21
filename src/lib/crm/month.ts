@@ -1,40 +1,44 @@
 /**
- * The month a row belongs to, from the date the feed writes.
+ * The month a row belongs to.
  *
- * Finance charts money by month and Orders lists rows, and the only thing
- * joining them is this conversion. It lives here rather than inside the table
- * because the orders feed cannot be reached from a development machine, so the
- * only way to know the drill-down works is a guard that runs on every build.
+ * Finance charts money by month and Orders lists the rows behind it, and this
+ * is the only thing joining the two.
  *
- * The feed writes Irish order: "DD/MM/YYYY, HH:MM". Read as American it turns
- * every day up to the twelfth into the wrong month and silently drops the
- * rest, which is a filter that looks like it is working.
+ * It does no parsing of its own, on purpose. The orders feed puts three
+ * different date shapes into one field: Stripe writes "18/09/2026, 14:32",
+ * sheet-backed rows carry whatever was stored (ISO, in practice), and Calendly
+ * rows are built with toLocaleString and arrive as "Thu, 17 Sep, 15:00" with
+ * no year at all. booking-date.ts already resolves all three, including the
+ * missing year, and says in its own header that a second parser elsewhere
+ * would eventually disagree with it.
+ *
+ * It was right. The first version of this file read only "dd/mm/yyyy", so
+ * every contact enquiry, consultation and installation fell out of the month
+ * filter while the banner above the table confidently printed a row count. The
+ * page looked correct because the rows had been dropped, not because the month
+ * was quiet, which is the same failure the week view had before booking-date
+ * existed.
  */
+import { bookingIso } from "./booking-date";
 
 /** "2026-09", the key Stripe's month buckets already use. */
 export function isMonthKey(value: unknown): value is string {
   return typeof value === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(value);
 }
 
-/** "DD/MM/YYYY, HH:MM" to "YYYY-MM", or null when there is no usable date. */
-export function monthOf(date: unknown): string | null {
-  if (typeof date !== "string") return null;
-  const m = /^(\d{2})\/(\d{2})\/(\d{4})\b/.exec(date.trim());
-  if (!m) return null;
-  const [, dd, mm, yyyy] = m;
-  const day = Number(dd), mon = Number(mm);
-  if (mon < 1 || mon > 12 || day < 1 || day > 31) return null;
-  return `${yyyy}-${mm}`;
+/** The month a row's date falls in, or null when it carries no date at all. */
+export function monthOf(date: unknown, now: Date = new Date()): string | null {
+  const iso = bookingIso(typeof date === "string" ? date : null, now);
+  return iso ? iso.slice(0, 7) : null;
 }
 
 /** "2026-09" to "September 2026", for saying out loud which month is showing. */
 export function monthLabel(key: string): string {
   if (!isMonthKey(key)) return key;
   const [y, mo] = key.split("-").map(Number);
-  /* Europe/Dublin like every other date in the CRM, which the date guard
-     insists on and is right to. It cannot move this one: Ireland is never
-     behind UTC, so midnight UTC on the first of a month is still that month
-     in Dublin, in summer time and out of it. */
+  /* Europe/Dublin like every other date in the CRM. It cannot move this one:
+     Ireland is never behind UTC, so midday UTC on the first of a month is
+     still that month in Dublin, in summer time and out of it. */
   return new Date(Date.UTC(y, mo - 1, 1, 12)).toLocaleDateString("en-IE", {
     timeZone: "Europe/Dublin", month: "long", year: "numeric",
   });

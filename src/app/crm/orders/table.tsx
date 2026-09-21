@@ -79,9 +79,20 @@ export default function OrdersTable({
   const activeMonth = monthOn ? month : undefined;
   const [open, setOpen] = useState<string | null>(null);
 
+  /* One instant for the whole pass. Calendly rows carry no year, so the month
+     they land in is worked out relative to now; taking a fresh now per row
+     would let two rows in the same render disagree at a year boundary. */
+  const now = useMemo(() => new Date(), []);
   const inMonth = useMemo(
-    () => (activeMonth ? leads.filter((l) => monthOf(l.date) === activeMonth) : leads),
-    [leads, activeMonth],
+    () => (activeMonth ? leads.filter((l) => monthOf(l.date, now) === activeMonth) : leads),
+    [leads, activeMonth, now],
+  );
+  /* Rows carrying no date at all can never be placed in a month. Counted and
+     said out loud, because a filter that quietly omits rows and then prints a
+     confident total is worse than one that shows nothing. */
+  const undated = useMemo(
+    () => (activeMonth ? leads.filter((l) => monthOf(l.date, now) === null).length : 0),
+    [leads, activeMonth, now],
   );
 
   const counts = useMemo(() => {
@@ -219,6 +230,10 @@ export default function OrdersTable({
           <span>
             Showing <strong className="font-semibold">{monthLabel(activeMonth)}</strong> only,
             {" "}{inMonth.length} row{inMonth.length === 1 ? "" : "s"}.
+            {undated > 0 && (
+              <> {undated} row{undated === 1 ? " carries" : "s carry"} no date and{" "}
+                {undated === 1 ? "is" : "are"} in no month.</>
+            )}
           </span>
           <button
             type="button"
