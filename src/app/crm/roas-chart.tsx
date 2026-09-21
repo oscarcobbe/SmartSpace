@@ -27,6 +27,7 @@
 
 import { useEffect, useId, useMemo, useState } from "react";
 import type { RoasBucket, RoasTotals, Grain } from "@/lib/crm/roas";
+import { scaleFor } from "./roas-scale";
 
 export type { RoasBucket };
 
@@ -80,14 +81,6 @@ const int = (n: number) => new Intl.NumberFormat("en-IE", { maximumFractionDigit
 /** Day number for a yyyy-mm-dd, in UTC, so a machine set to Denver cannot shift it. */
 const dayNum = (d: string) => Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)) / 86_400_000;
 
-function niceStep(max: number, targetTicks = 4): number {
-  if (max <= 0) return 1;
-  const raw = max / targetTicks;
-  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
-  const norm = raw / mag;
-  return (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 2.5 ? 2.5 : norm <= 5 ? 5 : 10) * mag;
-}
-
 export default function RoasChart({
   day, week, month, counted, excluded, lastAttributed, revenueKnown, capturedAt, siteLabel,
 }: RoasChartProps) {
@@ -121,16 +114,10 @@ export default function RoasChart({
 
   const view = useMemo(() => {
     const peak = Math.max(1, ...buckets.map((b) => Math.max(b.spend, revenue(b))));
-    const step = niceStep(peak);
-    const top = Math.ceil(peak / step) * step;
     const ratios = buckets
       .filter((b) => blindness(b) !== "all" && (basis !== "all" ? b.spend - b.spendBlind : b.spend) > 0)
       .map((b) => revenue(b) / (basis !== "all" ? b.spend - b.spendBlind : b.spend));
-    const rTop = Math.max(2, Math.ceil(Math.max(0, ...ratios)));
-    return {
-      top, rTop,
-      ticks: Array.from({ length: Math.round(top / step) + 1 }, (_, i) => i * step),
-    };
+    return scaleFor(peak, Math.max(0, ...ratios));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [buckets, basis, lastAttributed, revenueKnown]);
 
@@ -175,13 +162,45 @@ export default function RoasChart({
 
   const cx = (i: number) => PAD.left + slot * i + slot / 2;
 
-  const line = buckets
-    .map((b, i) => {
-      const d = basis !== "all" ? b.spend - b.spendBlind : b.spend;
-      return d > 0 && blindness(b) !== "all" ? `${cx(i)},${ry(revenue(b) / d)}` : null;
-    })
-    .filter(Boolean)
-    .join(" ");
+  /*
+   * One definition of the ratio for the label, the dot and the line.
+   *
+   * There were three. The label divided by spend-less-blind on every basis,
+   * the dot divided by the full spend unless the basis was "ad", and the line
+   * used a third rule again. On Google's basis the dot and its own label
+   * disagreed, which is the fastest way to lose a reader: if the one number
+   * printed on the chart is not where the chart drew it, nothing else on it
+   * is worth reading either.
+   *
+   * Null means there is no ratio to draw, which is not the same as nought.
+   * A period where no payment could be attributed has no ratio; so does one
+   * with no takings recorded at all. Drawing either as 0.0x is the mistake
+   * this whole chart exists to stop, and it was doing it at the left-hand
+   * edge, which is why the line ran into the corner of the plot.
+   */
+  const ratioOf = (b: RoasBucket): number | null => {
+    if (blindness(b) === "all") return null;
+    const spend = basis !== "all" ? b.spend - b.spendBlind : b.spend;
+    if (spend <= 0) return null;
+    /* No takings and no orders is an absence of evidence. A month with money
+       through the till and none of it from an ad is a real nought and is
+       drawn as one. */
+    if (b.allRevenue <= 0 && b.orders <= 0) return null;
+    return revenue(b) / spend;
+  };
+
+  /* Segments, not one polyline. A gap in the middle joined across it, which
+     drew a straight line through a period we are saying nothing about. */
+  const segments: string[] = [];
+  {
+    let run: string[] = [];
+    buckets.forEach((b, i) => {
+      const r = ratioOf(b);
+      if (r === null) { if (run.length > 1) segments.push(run.join(" ")); run = []; return; }
+      run.push(`${cx(i)},${ry(r)}`);
+    });
+    if (run.length > 1) segments.push(run.join(" "));
+  }
 
   const activeIdx = hover ?? pinned;
   const shown = activeIdx !== null ? buckets[activeIdx] : null;
@@ -327,8 +346,10 @@ export default function RoasChart({
             <text x={PAD.left - 8} y={y(t) + 4} textAnchor="end" fontSize="11" fill="#64748b">{eur(t)}</text>
           </g>
         ))}
-        {[0, view.rTop / 2, view.rTop].map((r) => (
-          <text key={r} x={WIDTH - PAD.right + 8} y={ry(r) + 4} fontSize="11" fill="#0d9488">{r.toFixed(1)}×</text>
+        {view.rTicks.map((r) => (
+          <text key={r} x={WIDTH - PAD.right + 8} y={ry(r) + 4} fontSize="11" fill="#0d9488">
+            {r.toFixed(r < 10 ? 1 : 0)}×
+          </text>
         ))}
 
         {buckets.map((b, i) => {
@@ -339,7 +360,7 @@ export default function RoasChart({
              month attribution broke in is not charged for days it had no way
              of being credited for. */
           const spendCounted = basis !== "all" ? b.spend - b.spendBlind : b.spend;
-          const ratio = spendCounted > 0 ? rev / spendCounted : 0;
+          const ratio = ratioOf(b);
           return (
             <g key={b.key}>
               <rect className="roas-hit" x={PAD.left + slot * i} y={PAD.top} width={slot} height={plotH}
@@ -352,7 +373,9 @@ export default function RoasChart({
                   `${b.label}: spent ${exact(b.spend)}. ` +
                   (blind
                     ? "Nothing here can be tied back to an ad: no payment in this period carried a Google click id."
-                    : `${exact(rev)} ${BASIS[basis].short}, ${ratio.toFixed(2)} euro back per euro out.`) +
+                    : ratio === null
+                      ? `${exact(rev)} ${BASIS[basis].short}. Nothing was recorded through the till in this period, so there is no figure for euro back per euro out.`
+                      : `${exact(rev)} ${BASIS[basis].short}, ${ratio.toFixed(2)} euro back per euro out.`) +
                   (b.partial ? " A part period so far." : "")
                 }
               />
@@ -391,7 +414,7 @@ export default function RoasChart({
                   {b.label}
                 </text>
               )}
-              {!blind && spendCounted > 0 && slot > 34 && (
+              {ratio !== null && slot > 34 && (
                 <text x={centre} y={Math.min(y(b.spend), y(rev)) - 7} textAnchor="middle" fontSize="10.5"
                   fontWeight="700" fill={ratio >= 1 ? "#0f766e" : "#b45309"} pointerEvents="none"
                   stroke="#fff" strokeWidth="3" paintOrder="stroke">
@@ -402,15 +425,17 @@ export default function RoasChart({
           );
         })}
 
-        {line && <polyline className="roas-line" pathLength={1} points={line} fill="none" stroke="#0d9488"
-          strokeWidth="2" strokeDasharray="4 3" pointerEvents="none" />}
-        {buckets.map((b, i) =>
-          (basis !== "all" ? b.spend - b.spendBlind : b.spend) > 0 && blindness(b) !== "all" ? (
-            <circle key={`p-${b.key}`} cx={cx(i)}
-              cy={ry(revenue(b) / (basis === "ad" ? b.spend - b.spendBlind : b.spend))} r={activeIdx === i ? 5.5 : 3}
+        {segments.map((pts) => (
+          <polyline key={pts} className="roas-line" pathLength={1} points={pts} fill="none" stroke="#0d9488"
+            strokeWidth="2" strokeDasharray="4 3" pointerEvents="none" />
+        ))}
+        {buckets.map((b, i) => {
+          const r = ratioOf(b);
+          return r === null ? null : (
+            <circle key={`p-${b.key}`} cx={cx(i)} cy={ry(r)} r={activeIdx === i ? 5.5 : 3}
               fill="#0d9488" stroke="#fff" strokeWidth="1.5" pointerEvents="none" />
-          ) : null,
-        )}
+          );
+        })}
 
         {/* Anchored to the right edge of the plot rather than to the start of
             the blind run, which ran the text off the chart whenever the run
