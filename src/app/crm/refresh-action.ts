@@ -11,6 +11,7 @@
 
 import { revalidateTag } from "next/cache";
 import { LEADS_TAG } from "@/lib/crm/leads";
+import { FINANCE_TAG } from "@/lib/crm/stripe-finance";
 import { requireSession } from "@/lib/crm/session";
 
 export async function refreshCrmData(): Promise<void> {
@@ -18,4 +19,5 @@ export async function refreshCrmData(): Promise<void> {
      so it is not something an anonymous request gets to do. */
   requireSession();
   revalidateTag(LEADS_TAG);
+  revalidateTag(FINANCE_TAG);
 }
