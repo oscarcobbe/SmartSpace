@@ -17,6 +17,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { RefreshCw } from "lucide-react";
+import { refreshCrmData } from "./refresh-action";
 
 const STALE_AFTER_MS = 10 * 60 * 1000;
 
@@ -44,7 +45,10 @@ export default function Refresh() {
   }, []);
 
   const refresh = useCallback(() => {
-    start(() => {
+    start(async () => {
+      /* Drop the cached feed first, then redraw. The other order redraws from
+         the cache and reports it as fresh. */
+      try { await refreshCrmData(); } catch { /* still worth redrawing */ }
       router.refresh();
       /* router.refresh resolves when the new tree has been applied, so the
          stamp is set inside the transition rather than optimistically. */

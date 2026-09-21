@@ -12,6 +12,7 @@
  * the whole reason this is a server component and not a fetch from the page.
  */
 
+import { unstable_cache } from "next/cache";
 import { THIS_SITE, type Site } from "./db";
 
 export interface QA {
@@ -62,12 +63,34 @@ export type LeadsResult =
  * sheet. SmartCare Living has a Google Sheet its own site writes to and reads
  * back through api/dashboard-data. Neither page nor component needs to know.
  */
+/**
+ * One minute of cache in front of the orders feed.
+ *
+ * Overview, The diary, Orders and Customers each call this, and every one of
+ * them is force-dynamic, so opening any of them went out to the sheet,
+ * Calendly and Stripe again from scratch. Measured on production: six to eight
+ * seconds a page on Smart Space and fifteen on SmartCare Living, for figures
+ * that change a few times a day. A CRM that slow is one he stops opening.
+ *
+ * Sixty seconds is short enough that nothing on screen is meaningfully stale
+ * and long enough that moving between the four pages is instant. The Refresh
+ * button in the header clears this by tag, so "read it again" still means
+ * now, not up to a minute ago.
+ */
+export const LEADS_TAG = "crm-leads";
+
 export async function fetchLeads(site: Site = THIS_SITE): Promise<LeadsResult> {
-  if (site === "smartcareliving") {
-    const { fetchSclLeads } = await import("./leads-scl");
-    return fetchSclLeads();
-  }
-  return fetchSmartSpaceLeads();
+  return unstable_cache(
+    async () => {
+      if (site === "smartcareliving") {
+        const { fetchSclLeads } = await import("./leads-scl");
+        return fetchSclLeads();
+      }
+      return fetchSmartSpaceLeads();
+    },
+    ["crm-leads", site],
+    { revalidate: 60, tags: [LEADS_TAG, `${LEADS_TAG}:${site}`] },
+  )();
 }
 
 async function fetchSmartSpaceLeads(): Promise<LeadsResult> {
