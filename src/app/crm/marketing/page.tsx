@@ -1,11 +1,13 @@
 import { requireSession, SITE_LABEL } from "@/lib/crm/session";
+import type { Site } from "@/lib/crm/db";
 import { fetchAds, adsSplit, fetchChanges, summariseChanges } from "@/lib/crm/google-ads";
 import { fetchFinance } from "@/lib/crm/stripe-finance";
 import { money, moneyExact } from "@/lib/crm/leads";
 import { STATUS_PILL } from "@/lib/crm/labels";
 import { PageHeader, Panel, Stat, StatRow, Note, Pill } from "../ui";
 import ExportButton from "../export-button";
-import RoasChart, { type RoasMonth } from "../roas-chart";
+import RoasChart from "../roas-chart";
+import { fetchRoas } from "@/lib/crm/roas";
 import Findings from "../findings-panel";
 import { marketingFindings } from "@/lib/crm/findings";
 import { fetchPeriods, dailyReport } from "@/lib/crm/ads-periods";
@@ -63,23 +65,25 @@ function CampaignTable({ campaigns }: { campaigns: AdsData["campaigns"] }) {
   );
 }
 
-export default async function MarketingPage() {
-  const session = requireSession();
-  /* Both feeds at once: the chart sets one against the other, and fetching
-     them in series would add a second of latency for nothing. */
+/**
+ * Everything that needs Google Ads answering right now.
+ *
+ * Split out from the page so a live API failure costs these panels and nothing
+ * else. It used to blank the whole page, headline chart included, which meant
+ * a minute of Google being slow looked identical to a business with no
+ * history, sitting on top of a stored history that was fine.
+ */
+async function LiveSections({ site }: { site: Site }) {
+  /* All three at once: fetching them in series would add a second of latency
+     for nothing. */
   const [result, finance, changes] = await Promise.all([
-    fetchAds(session.site, 12),
+    fetchAds(site, 12),
     fetchFinance(12),
-    fetchChanges(session.site, 14),
+    fetchChanges(site, 14),
   ]);
 
   if (!result.ok) {
-    return (
-      <>
-        <PageHeader title="Marketing" />
-        <Note tone="warn">Google Ads could not be loaded. {result.reason}</Note>
-      </>
-    );
+    return <Note tone="warn">Google Ads could not be read just now, so the panels below the chart are missing. {result.reason}</Note>;
   }
 
   /* The headline figures are this business's campaigns, not the account's.
@@ -88,33 +92,19 @@ export default async function MarketingPage() {
      spend down by about a fifth for work it never won. The other business's
      spend is still shown, below, rather than quietly dropped. */
   const { own, other } = adsSplit(result.data);
-  const otherLabel = session.site === "smart-space" ? SITE_LABEL.smartcareliving : SITE_LABEL["smart-space"];
+  const otherLabel = site === "smart-space" ? SITE_LABEL.smartcareliving : SITE_LABEL["smart-space"];
 
   const roas = own.cost ? own.value / own.cost : 0;
   const cpc = own.clicks ? own.cost / own.clicks : 0;
   const cpa = own.conversions ? own.cost / own.conversions : 0;
   const ctr = own.impressions ? (own.clicks / own.impressions) * 100 : 0;
 
-  const thisMonth = own.months[own.months.length - 1];
-  const dayOfMonth = new Date().getDate();
-
-  /* Ad spend and money taken, on the same months. Stripe is joined by the
-     month key rather than by position, because the two feeds do not always
-     start at the same month and lining them up by index would silently set
-     one month's spend against another's takings. */
+  /* Ad spend and money taken, on the same months, for the findings below.
+     Stripe is joined by the month key rather than by position, because the two
+     feeds do not always start at the same month and lining them up by index
+     would silently set one month's spend against another's takings. */
   const keptByMonth = new Map<string, number>();
   if (finance.ok) for (const m of finance.data.months) keptByMonth.set(m.key, m.net);
-
-  const roasMonths: RoasMonth[] = own.months.map((m) => ({
-    key: m.key,
-    label: m.label,
-    spend: m.cost,
-    attributed: m.value,
-    kept: keptByMonth.get(m.key) ?? 0,
-    conversions: m.conversions,
-    clicks: m.clicks,
-    partial: m.key === thisMonth.key,
-  }));
 
   /* How far into this month we are, so a part month is compared against the
      same fraction of the last one rather than against the whole of it. */
@@ -122,7 +112,7 @@ export default async function MarketingPage() {
   const daysInMonth = new Date(nowD.getFullYear(), nowD.getMonth() + 1, 0).getDate();
   /* Day, week and month come from one query segmented by date, so yesterday
      and last year arrive in the same round trip. */
-  const periods = await fetchPeriods(session.site);
+  const periods = await fetchPeriods(site);
   const report = periods.ok ? dailyReport(periods.data.day) : null;
 
   /* Weeks for the trend, with our own account changes counted against the week
@@ -184,10 +174,9 @@ export default async function MarketingPage() {
 
   return (
     <>
-      <PageHeader
-        title="Marketing"
-        sub={`Google Ads for ${SITE_LABEL[session.site]}, ${own.window.from} to ${own.window.to}.`}
-      />
+      <p className="mb-4 text-xs text-slate-500">
+        Live from Google Ads, {own.window.from} to {own.window.to}.
+      </p>
 
       {sparkWeeks.length > 1 && (
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -290,14 +279,6 @@ export default async function MarketingPage() {
           </p>
         </Panel>
 
-        <Panel title="What the advertising cost, and what came in">
-          <RoasChart months={roasMonths} />
-          <p className="border-t border-slate-100 px-4 py-2 text-xs text-slate-500">
-            {thisMonth.label} is {dayOfMonth} {dayOfMonth === 1 ? "day" : "days"} in, so its bars are a part month and read low.
-            {!finance.ok && " Stripe could not be read, so \u2018all money kept\u2019 is empty on this chart."}
-          </p>
-        </Panel>
-
         <Panel
           title="By campaign"
           aside={
@@ -319,7 +300,7 @@ export default async function MarketingPage() {
             <div className="border-b border-slate-200 px-4 py-3">
               <Note>
                 {otherLabel} ran from this Google account before it had one of its own. The {money(other.cost)} below is
-                real spend on this account and it is kept out of the figures above, because it is not {SITE_LABEL[session.site]}
+                real spend on this account and it is kept out of the figures above, because it is not {SITE_LABEL[site]}
                 {" "}performance.
               </Note>
             </div>
@@ -327,6 +308,57 @@ export default async function MarketingPage() {
           </Panel>
         )}
       </div>
+    </>
+  );
+}
+
+export default async function MarketingPage() {
+  const session = requireSession();
+  /* The headline reads the daily record, which is one short database query and
+     cannot be held up by Google. */
+  const roasStore = await fetchRoas(session.site);
+
+  return (
+    <>
+      <PageHeader
+        title="Marketing"
+        sub={
+          roasStore.ok
+            ? `${SITE_LABEL[session.site]}, ${roasStore.data.from} to ${roasStore.data.to}.`
+            : SITE_LABEL[session.site]
+        }
+      />
+
+      {/* The headline. Nigel's words on the call: this is the chart that
+          decides where the money goes, so nothing sits above it. */}
+      <div className="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 px-4 py-3">
+          <h2 className="text-base font-semibold text-slate-900">What the advertising cost, and what came back</h2>
+          <p className="mt-0.5 text-xs text-slate-500">
+            Read from the daily record rather than live, so the history does not change shape between two loads of
+            this page.
+          </p>
+        </div>
+        {roasStore.ok ? (
+          <RoasChart
+            day={roasStore.data.day}
+            week={roasStore.data.week}
+            month={roasStore.data.month}
+            counted={roasStore.data.counted}
+            excluded={roasStore.data.excluded}
+            lastAttributed={roasStore.data.lastAttributed}
+            revenueKnown={roasStore.data.revenueKnown}
+            capturedAt={roasStore.data.capturedAt}
+            siteLabel={SITE_LABEL[session.site]}
+          />
+        ) : (
+          <div className="px-4 py-4">
+            <Note tone="warn">The daily record could not be read, so this chart is empty. {roasStore.reason}</Note>
+          </div>
+        )}
+      </div>
+
+      <LiveSections site={session.site} />
     </>
   );
 }
