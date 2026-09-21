@@ -23,6 +23,7 @@
     "check:linkedin": "node scripts/build-linkedin-posts.mjs --check",
     "check:links": "node scripts/check-crm-links.mjs",
     "check:accounts": "node scripts/check-conversion-accounts.mjs",
+    "check:payment-links": "node scripts/check-payment-links-redirect.mjs",
     "check:partner-price": "node scripts/check-partner-price.mjs",
     "check:money-split": "node scripts/check-money-split.mjs",
     "check:attribution-live": "node scripts/check-attribution-live.mjs"
