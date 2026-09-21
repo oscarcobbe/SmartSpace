@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { COMPANY } from "@/lib/company";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | Smart Space",
@@ -24,9 +25,11 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-bold text-gray-900 mt-8 mb-3">Who we are</h2>
             <p>
-              Smart Space (&ldquo;we&rdquo;, &ldquo;us&rdquo;) is a Ring camera and video-doorbell installation business
-              operating across Dublin and Leinster, Ireland. We are the data controller for any personal data we
-              collect through smart-space.ie. You can contact us at{" "}
+              Smart Space (&ldquo;we&rdquo;, &ldquo;us&rdquo;) is a trading name of {COMPANY.legalName},
+              a company registered in {COMPANY.country} under number {COMPANY.number}, with its registered
+              office at {COMPANY.registeredOffice} We are a Ring camera and video-doorbell installation
+              business operating across Dublin and Leinster, and {COMPANY.legalName} is the data controller
+              for any personal data collected through smart-space.ie. You can contact us at{" "}
               <a href="mailto:info@smart-space.ie" className="text-brand-500 hover:underline">
                 info@smart-space.ie
               </a>{" "}

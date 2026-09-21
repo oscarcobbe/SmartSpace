@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { COMPANY, companyLine } from "@/lib/company";
 
 const serviceLinks = [
   { href: "/services", label: "All Services" },
@@ -103,9 +104,18 @@ export default function Footer() {
         </div>
       </div>
 
+      {/* The statutory particulars. Section 151 of the Companies Act 2014
+          requires the registered name, number and office on a company's
+          website, and none of the three was anywhere on this site. */}
+      <div className="border-t border-[#333]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 text-[11px] leading-relaxed text-gray-500 text-center">
+          {companyLine()}
+        </div>
+      </div>
+
       <div className="border-t border-[#333]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-center">
-          <p>&copy; {new Date().getFullYear()} Smart Space. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} {COMPANY.tradingAs}. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <Link href="/privacy" className="hover:text-white transition-colors">
               Privacy

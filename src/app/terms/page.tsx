@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { COMPANY } from "@/lib/company";
 
 export const metadata: Metadata = {
   title: "Terms & Conditions | Smart Space",
@@ -24,8 +25,11 @@ export default function TermsPage() {
           <section>
             <p>
               These terms govern any installation, consultation, or product purchase you make from Smart Space
-              (&ldquo;we&rdquo;, &ldquo;us&rdquo;) via smart-space.ie or by phone. By booking an installation, paying
-              for a service, or filling out our contact form, you agree to these terms.
+              (&ldquo;we&rdquo;, &ldquo;us&rdquo;) via smart-space.ie or by phone. Smart Space is a trading name of{" "}
+              {COMPANY.legalName}, a company registered in {COMPANY.country} under number {COMPANY.number},
+              with its registered office at {COMPANY.registeredOffice} Any contract you enter into is with
+              that company. By booking an installation, paying for a service, or filling out our contact form,
+              you agree to these terms.
             </p>
           </section>
 
