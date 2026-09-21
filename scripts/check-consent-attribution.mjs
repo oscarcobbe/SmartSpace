@@ -194,6 +194,25 @@ try {
       : fail(`accepted without reloading, expected TEST_SAME_TICK, stored ${JSON.stringify(got)}`);
   }
 
+  // 2e. Accepts before the script has registered its consent writer, then
+  //     converts on that page with no further navigation. Nothing has drained
+  //     the park, so the read itself has to.
+  {
+    const { local } = browser();
+    window.location.search = "?gclid=TEST_EARLY_ACCEPT";
+    attribution.captureAttribution();          // landing page, parks
+
+    delete globalThis.window.__ssOnConsent;
+    window.location.search = "";
+    window.location.pathname = "/contact";
+    local.setItem("ss_consent", consentValue("granted"));
+    // no captureAttribution here, and no queue to drain: the form reads first
+    const got = attribution.getAttribution();
+    got?.gclid === "TEST_EARLY_ACCEPT"
+      ? pass("accepted before the script was ready, the read still finds the click id")
+      : fail(`read before any drain, expected TEST_EARLY_ACCEPT, got ${JSON.stringify(got?.gclid)}`);
+  }
+
   // 3. A returning visitor who already has an organic record, then clicks an
   //    ad and accepts a page later. First touch holds against another organic
   //    visit and must not hold against an ad click, which is the rule
@@ -261,5 +280,5 @@ try {
 if (process.exitCode) {
   console.error("\nThe consent gate and attribution capture disagree.");
 } else {
-  console.log("\nConsent and attribution capture agree on all nine cases.");
+  console.log("\nConsent and attribution capture agree on all ten cases.");
 }

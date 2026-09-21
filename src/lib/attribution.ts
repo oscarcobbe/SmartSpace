@@ -264,6 +264,17 @@ export function flushPendingAttribution(): void {
 export function getAttribution(): Attribution | null {
   if (typeof window === "undefined") return null;
   try {
+    /*
+     * Last resort: promote the park before reading.
+     *
+     * The park is normally drained when the banner is accepted, or on the
+     * next page load. Neither has happened if a visitor accepts before this
+     * script has finished initialising and then converts on that same page
+     * without navigating again. The record is sitting in sessionStorage the
+     * whole time; this stops the one read that matters missing it.
+     */
+    if (!localStorage.getItem(STORAGE_KEY)) flushPendingAttribution();
+
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Attribution;
