@@ -27,8 +27,26 @@ function niceStep(max: number, targetTicks = 4): number {
   return step * mag;
 }
 
-const short = (n: number) =>
-  Math.abs(n) >= 1000 ? `€${(n / 1000).toFixed(Math.abs(n) >= 10000 ? 0 : 1)}k` : `€${Math.round(n)}`;
+/*
+ * How to write the numbers, named rather than passed as a function.
+ *
+ * This chart put a euro sign on every tick and every bar label, whatever it
+ * was drawing. "Visits, week by week" therefore reported sixty-six visits as
+ * EUR 66, with a euro axis above it, while its own readout underneath said
+ * "VISITS 66". Two contradictory labels on one number is worse than either
+ * being wrong on its own, because it tells the reader the screen does not
+ * know what it is showing.
+ *
+ * Named rather than a function prop because a server component cannot hand a
+ * function to a client one: React refuses it at render time and the page
+ * falls to the error boundary. The same reasoning is on Sparkline.
+ */
+export type Units = "money" | "count";
+
+const short = (n: number, units: Units = "money") =>
+  units === "count"
+    ? (Math.abs(n) >= 10000 ? `${(n / 1000).toFixed(0)}k` : new Intl.NumberFormat("en-IE").format(Math.round(n)))
+    : Math.abs(n) >= 1000 ? `€${(n / 1000).toFixed(Math.abs(n) >= 10000 ? 0 : 1)}k` : `€${Math.round(n)}`;
 
 export interface Bar {
   label: string;
@@ -56,10 +74,12 @@ export interface Bar {
   hrefLabel?: string;
 }
 
-export function BarChart({ bars: given, height = 220, ariaLabel, trimLeadingEmpty = false }: {
+export function BarChart({ bars: given, height = 220, ariaLabel, trimLeadingEmpty = false, units = "money" }: {
   bars: Bar[];
   height?: number;
   ariaLabel: string;
+  /** What the values are. Money by default, because most of these are. */
+  units?: Units;
   /**
    * Drop leading empty buckets. Off by default, and it has to stay off by
    * default: only the caller knows whether an empty bucket means "this period
@@ -166,7 +186,7 @@ export function BarChart({ bars: given, height = 220, ariaLabel, trimLeadingEmpt
         {ticks.map((t) => (
           <g key={t}>
             <line x1={PAD.left} x2={width - PAD.right} y1={y(t)} y2={y(t)} stroke="#eef2f7" strokeWidth="1" />
-            <text x={PAD.left - 8} y={y(t) + 4} textAnchor="end" fontSize="11" fill="#64748b">{short(t)}</text>
+            <text x={PAD.left - 8} y={y(t) + 4} textAnchor="end" fontSize="11" fill="#64748b">{short(t, units)}</text>
           </g>
         ))}
         {bars.map((b, i) => {
@@ -183,7 +203,7 @@ export function BarChart({ bars: given, height = 220, ariaLabel, trimLeadingEmpt
                   middle-clicks, opens in a tab and shows its destination in the
                   status bar the way every other link on the page does. */}
               {b.href ? (
-                <Link href={b.href} aria-label={b.hrefLabel ?? b.title ?? `${b.label}: ${short(b.value)}`}>
+                <Link href={b.href} aria-label={b.hrefLabel ?? b.title ?? `${b.label}: ${short(b.value, units)}`}>
                   <rect x={PAD.left + slot * i} y={PAD.top} width={slot} height={plotH}
                     className="cursor-pointer"
                     fill={on ? "#0f172a" : "transparent"} fillOpacity={on ? 0.05 : 0}
@@ -195,7 +215,7 @@ export function BarChart({ bars: given, height = 220, ariaLabel, trimLeadingEmpt
                   onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} onBlur={() => setHover(null)}
                   onClick={() => setPinned(pinned === i ? null : i)}
                   onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPinned(pinned === i ? null : i); } }}
-                  tabIndex={0} role="button" aria-label={b.title ?? `${b.label}: ${short(b.value)}`} />
+                  tabIndex={0} role="button" aria-label={b.title ?? `${b.label}: ${short(b.value, units)}`} />
               )}
               {/* Both parts of a stacked bar grow together, so the column rises
                   as one object and the cap is never left floating mid-air. */}
@@ -213,7 +233,7 @@ export function BarChart({ bars: given, height = 220, ariaLabel, trimLeadingEmpt
                 <text x={cx} y={y(b.value + (b.secondary ?? 0)) - 7} textAnchor="middle" fontSize="11"
                   fontWeight="700" fill="#0f172a" pointerEvents="none"
                   stroke="#fff" strokeWidth="3" paintOrder="stroke">
-                  {short(b.value)}
+                  {short(b.value, units)}
                 </text>
               )}
               {(i % labelEvery === 0 || i === bars.length - 1 || on) && (
@@ -236,7 +256,7 @@ export function BarChart({ bars: given, height = 220, ariaLabel, trimLeadingEmpt
               {pinned !== null && <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-600">pinned</span>}
             </p>
             <dl className="mt-0.5 flex flex-wrap items-baseline gap-x-6 gap-y-0.5">
-              {(shown.detail ?? [{ label: "Value", value: short(shown.value) }]).map((d) => (
+              {(shown.detail ?? [{ label: "Value", value: short(shown.value, units) }]).map((d) => (
                 <div key={d.label} className="flex items-baseline gap-1.5">
                   <dt className="text-[11px] uppercase tracking-wider text-slate-500">{d.label}</dt>
                   <dd className="text-xs font-semibold tabular-nums text-slate-900">{d.value}</dd>

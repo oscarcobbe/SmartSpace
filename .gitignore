@@ -48,3 +48,4 @@ customer-data/
 ad-assets/
 .claude/worktrees/
 .claude/scheduled_tasks.lock
+.render-*

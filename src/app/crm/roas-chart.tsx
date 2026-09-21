@@ -67,8 +67,31 @@ const BASIS: Record<Basis, { label: string; short: string; blurb: string }> = {
   },
 };
 
-const PAD = { top: 22, right: 46, bottom: 34, left: 56 };
+/*
+ * Two panels, one x axis, and no second y axis over the bars.
+ *
+ * ── WHY IT WAS CHANGED ───────────────────────────────────────────
+ *
+ * Money was drawn on the left scale and euro-back-per-euro on the right, both
+ * inside the same box. Even with the two axes sharing gridlines the line had
+ * nothing to do with the bars underneath it: it sat high across the top while
+ * the columns sat low, crossing them at heights that meant nothing, and it
+ * read exactly as it was described, a floating line that joins up with
+ * nothing.
+ *
+ * That is not a bug in the drawing, it is what a dual axis does. Two
+ * quantities in one box invite a reader to compare heights that are not
+ * comparable. So the bars keep the box and the ratio moves to a strip
+ * underneath, sharing the same columns and the same x positions. Nothing
+ * overlaps, every point still lines up with its month, and the break-even
+ * rule at one times is drawn in the strip, which is the only line on the
+ * chart a reader actually needs to judge a ratio against.
+ */
+const PAD = { top: 22, right: 58, bottom: 30, left: 56 };
 const WIDTH = 760;
+/** The ratio strip under the bars, and the gap that separates them. */
+const STRIP = 74;
+const GUTTER = 16;
 
 const eur = (n: number) =>
   Math.abs(n) >= 1000 ? `€${(n / 1000).toFixed(Math.abs(n) >= 10000 ? 0 : 1)}k` : `€${Math.round(n)}`;
@@ -96,9 +119,11 @@ export default function RoasChart({
   const uid = useId();
 
   const buckets = grain === "day" ? day : grain === "week" ? week : month;
-  const height = 300;
+  const height = 340;
   const plotW = WIDTH - PAD.left - PAD.right;
-  const plotH = height - PAD.top - PAD.bottom;
+  /* The bars own everything above the strip; the strip owns the ratio. */
+  const plotH = height - PAD.top - PAD.bottom - STRIP - GUTTER;
+  const stripTop = PAD.top + plotH + GUTTER;
 
   const revenue = (b: RoasBucket) =>
     basis === "ad" ? b.adRevenue : basis === "all" ? b.allRevenue : b.googleValue;
@@ -122,7 +147,9 @@ export default function RoasChart({
   }, [buckets, basis, lastAttributed, revenueKnown]);
 
   const y = (v: number) => PAD.top + plotH - (v / view.top) * plotH;
-  const ry = (v: number) => PAD.top + plotH - (Math.min(v, view.rTop) / view.rTop) * plotH;
+  /* Inside the strip, on its own floor, so a ratio is never drawn at a height
+     that could be mistaken for an amount of money. */
+  const ry = (v: number) => stripTop + STRIP - (Math.min(v, view.rTop) / view.rTop) * STRIP;
 
   const slot = plotW / Math.max(1, buckets.length);
   /* One label per this many columns. 58px is the widest label these formats
@@ -335,7 +362,7 @@ export default function RoasChart({
           const frac = state === "all" ? 1 : Math.max(0, Math.min(1, after / span));
           return (
             <rect key={`b-${b.key}`} x={PAD.left + slot * (i + 1 - frac)} y={PAD.top}
-              width={slot * frac} height={plotH} fill={`url(#${uid}-blind)`}
+              width={slot * frac} height={stripTop + STRIP - PAD.top} fill={`url(#${uid}-blind)`}
               fillOpacity={state === "all" ? 1 : 0.55} pointerEvents="none" />
           );
         })}
@@ -346,11 +373,24 @@ export default function RoasChart({
             <text x={PAD.left - 8} y={y(t) + 4} textAnchor="end" fontSize="11" fill="#64748b">{eur(t)}</text>
           </g>
         ))}
-        {view.rTicks.map((r) => (
-          <text key={r} x={WIDTH - PAD.right + 8} y={ry(r) + 4} fontSize="11" fill="#0d9488">
-            {r.toFixed(r < 10 ? 1 : 0)}×
-          </text>
-        ))}
+
+        {/* The strip. Its own floor, its own top, and the break-even rule,
+            which is the only height on a ratio chart worth reading against:
+            above it the advertising paid for itself and below it did not. */}
+        <line x1={PAD.left} x2={WIDTH - PAD.right} y1={stripTop + STRIP} y2={stripTop + STRIP}
+          stroke="#cbd5e1" strokeWidth="1" />
+        <text x={PAD.left - 8} y={stripTop + STRIP + 4} textAnchor="end" fontSize="10.5" fill="#94a3b8">0×</text>
+        <text x={PAD.left - 8} y={stripTop + 8} textAnchor="end" fontSize="10.5" fill="#0d9488">
+          {view.rTop.toFixed(view.rTop < 10 ? 1 : 0)}×
+        </text>
+        {view.rTop > 1 && (
+          <g>
+            <line x1={PAD.left} x2={WIDTH - PAD.right} y1={ry(1)} y2={ry(1)}
+              stroke="#94a3b8" strokeWidth="1" strokeDasharray="4 3" />
+            <text x={WIDTH - PAD.right} y={ry(1) - 4} textAnchor="end" fontSize="9.5" fill="#64748b"
+              stroke="#fff" strokeWidth="3" paintOrder="stroke">break even, 1× back</text>
+          </g>
+        )}
 
         {buckets.map((b, i) => {
           const rev = revenue(b);
@@ -363,7 +403,8 @@ export default function RoasChart({
           const ratio = ratioOf(b);
           return (
             <g key={b.key}>
-              <rect className="roas-hit" x={PAD.left + slot * i} y={PAD.top} width={slot} height={plotH}
+              <rect className="roas-hit" x={PAD.left + slot * i} y={PAD.top} width={slot}
+                height={stripTop + STRIP - PAD.top}
                 fill={activeIdx === i ? "#0f172a" : "transparent"} fillOpacity={activeIdx === i ? 0.05 : 0}
                 onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} onBlur={() => setHover(null)}
                 onClick={() => setPinned(pinned === i ? null : i)}
@@ -408,7 +449,7 @@ export default function RoasChart({
                   weekly labels drawn in full overlapped into an unreadable
                   band, which is the first thing anyone notices. */}
               {(i % labelEvery === 0 || activeIdx === i) && (
-                <text x={centre} y={height - 12} textAnchor="middle" fontSize="10.5"
+                <text x={centre} y={height - 8} textAnchor="middle" fontSize="10.5"
                   fill={activeIdx === i ? "#0f172a" : "#64748b"} pointerEvents="none"
                   stroke="#fff" strokeWidth="3" paintOrder="stroke">
                   {b.label}

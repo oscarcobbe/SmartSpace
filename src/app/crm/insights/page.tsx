@@ -131,7 +131,7 @@ export default async function InsightsPage({ searchParams }: { searchParams: { d
           ) : (
             <>
               <div className="px-4 pt-4">
-                <BarChart bars={bars} ariaLabel={`Visits per week over the last ${days} days`} />
+                <BarChart bars={bars} units="count" ariaLabel={`Visits per week over the last ${days} days`} />
               </div>
               <Legend items={[{ color: "#f48222", label: "Visits" }]} />
             </>
