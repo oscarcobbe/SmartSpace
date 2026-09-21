@@ -6,6 +6,7 @@ import { bankBreakdown, monthName } from "@/lib/crm/bank-insight";
 import Findings from "../findings-panel";
 import { fetchFinance } from "@/lib/crm/stripe-finance";
 import { moneyExact, money } from "@/lib/crm/leads";
+import { monthLabel } from "@/lib/crm/month";
 import { PageHeader, Panel, Stat, StatRow, Note } from "../ui";
 import ExportButton from "../export-button";
 import { BarChart, Legend } from "../chart";
@@ -46,9 +47,12 @@ export default async function FinancePage() {
     /* The bar is a door to the rows it is made of. A month with nothing in it
        has nothing to open, so it stays a plain bar. */
     href: m.payments > 0 ? `/crm/orders?month=${m.key}` : undefined,
-    hrefLabel: m.payments > 0
-      ? `See the ${m.payments} payment${m.payments === 1 ? "" : "s"}`
-      : undefined,
+    /* Names the month, not a count. Finance counts what Stripe settled and
+       Orders lists what reached the orders feed, and the two do not agree:
+       a payment taken on a hand-made payment link never creates an orders
+       row. Promising "24 payments" and then showing 18 reads as a broken
+       page, when it is really two honest figures counting different things. */
+    hrefLabel: m.payments > 0 ? `See the orders for ${monthLabel(m.key)}` : undefined,
   }));
 
   const feeRate = f.gross ? (f.fees / f.gross) * 100 : 0;
