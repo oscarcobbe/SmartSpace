@@ -71,12 +71,16 @@ export function Explain({ term, label }: { term: GlossaryKey; label?: string }) 
   const d = GLOSSARY[term];
   if (!d) return null;
   return (
-    /* z-10 is not decoration. A Stat that carries a source link paints a
-       full-tile overlay to make the whole card clickable, and that overlay sat
-       on top of this button: every "?" on Finance, Marketing, Contacts and
-       Overview stopped opening. Anything interactive inside a Stat has to sit
-       above the overlay, which is pinned to z-0. */
-    <details className="relative z-10 inline-block align-middle">
+    /*
+     * Three layers inside a Stat, and they have to stay in this order:
+     *   z-0   the full-tile link overlay, so the whole card is clickable
+     *   z-10  the sparkline, so it still answers the pointer
+     *   z-30  this, so the open panel covers both
+     * Pinning the glossary and the sparkline to the same level left the order
+     * to the DOM, and the sparkline comes later, so its line was drawn through
+     * the sentence explaining the figure.
+     */
+    <details className="relative z-30 inline-block align-middle">
       <summary
         className="ml-1 inline-flex h-4 w-4 cursor-pointer list-none items-center justify-center rounded-full border border-slate-300 text-[10px] font-bold leading-none text-slate-500 transition-colors hover:border-slate-500 hover:text-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slate-900 [&::-webkit-details-marker]:hidden"
         aria-label={label ? `What ${label} means` : "What this figure means"}
@@ -89,7 +93,7 @@ export function Explain({ term, label }: { term: GlossaryKey; label?: string }) 
           <span className="font-semibold text-slate-600">Made of: </span>{d.madeOf}
         </p>
         {d.caution && (
-          <p className="mt-1.5 rounded border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-normal normal-case tracking-normal text-amber-900">
+          <p className="mt-1.5 border-l-2 border-slate-300 pl-2 text-[11px] font-normal normal-case tracking-normal text-slate-600">
             {d.caution}
           </p>
         )}
@@ -177,7 +181,10 @@ export function StatRow({ children }: { children: ReactNode }) {
        the last one span the gap fills both, and at five across it is a no-op.
        It lives here rather than on Stat because it is a fact about this row of
        five, and on Stat it also fired inside every other grid a figure sits in. */
-    <div className="mb-6 grid grid-cols-2 divide-x divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white sm:grid-cols-3 sm:divide-y-0 lg:grid-cols-5 [&>*:last-child]:col-span-2 lg:[&>*:last-child]:col-span-1">
+    /* Deliberately not overflow-hidden. The glossary panel opens below its
+       figure and is taller than the row, so clipping the row cut the
+       explanation off mid-sentence. */
+    <div className="mb-6 grid grid-cols-2 divide-x divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white sm:grid-cols-3 sm:divide-y-0 lg:grid-cols-5 [&>*:last-child]:col-span-2 lg:[&>*:last-child]:col-span-1">
       {children}
     </div>
   );
