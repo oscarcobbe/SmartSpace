@@ -141,7 +141,23 @@ function belongsTo(t: BalanceTransaction, soldByCheckout: Map<string, string>): 
   return BILLED_NOT_SOLD.test(String(src?.description ?? "")) ? "smartcareliving" : "smart-space";
 }
 
-/** payment_intent to the line items it bought, for the window being read. */
+/**
+ * payment_intent to the line items it bought, for the window being read.
+ *
+ * ── WHY THIS MAY COME BACK EMPTY ─────────────────────────────────
+ *
+ * It is an enrichment, not the figures. belongsTo already has an answer for a
+ * payment it cannot find here: it reads the description, which gets the
+ * subscriptions right and only guesses on a custom quote. So a slow or failing
+ * Stripe here should cost a little accuracy in the split, and nothing else.
+ *
+ * It used to cost the whole page. Finance in production showed "could not be
+ * loaded, the operation was aborted due to timeout" and no figures at all,
+ * because this walk sits in front of everything else and one slow call took
+ * the lot down. Measured from here the two walks are about three and a half
+ * seconds each; from a cold function in another region, one expanded page can
+ * be far worse.
+ */
 async function checkoutProducts(fromUnix: number): Promise<Map<string, string>> {
   const map = new Map<string, string>();
   let after: string | null = null;
@@ -150,7 +166,16 @@ async function checkoutProducts(fromUnix: number): Promise<Map<string, string>> 
     const qs: string =
       `checkout/sessions?limit=100&expand[]=data.line_items&created[gte]=${Math.floor(fromUnix)}` +
       (after ? `&starting_after=${after}` : "");
-    const page: StripeList<CheckoutSession> = await stripe(qs);
+    let page: StripeList<CheckoutSession>;
+    try {
+      page = await stripe(qs);
+    } catch (err) {
+      /* Keep whatever was read before it gave up. A partial map is better than
+         none: every payment it did find is classified on what was bought, and
+         the rest fall back to the description. */
+      console.error("[finance] checkout walk stopped early:", err instanceof Error ? err.message : err);
+      return map;
+    }
     for (const sess of page.data) {
       if (sess.payment_status !== "paid" || !sess.payment_intent) continue;
       map.set(sess.payment_intent, (sess.line_items?.data ?? []).map((l) => l.description ?? "").join(" | "));
