@@ -49,7 +49,7 @@ export function captureAttribution(): void {
   const utmContent = params.get("utm_content") ?? undefined;
   const utmTerm = params.get("utm_term") ?? undefined;
 
-  const hasAdSignal = !!(gclid || utmSource || utmCampaign);
+  const hasAdSignal = cameFromAnAd({ gclid, utmSource, utmCampaign });
 
   // Load existing record (if any) to preserve first-touch attribution when
   // the user is just bouncing around the site with no new ad signal.
@@ -137,6 +137,17 @@ function consentGranted(): boolean {
 const PENDING_KEY = "ss_attribution_pending";
 
 /**
+ * Whether a record came from an ad, by the one definition.
+ *
+ * The durable write, the park and the flush each decided this for themselves
+ * and one of them left out utmCampaign, which is the difference between
+ * keeping a paid visit and discarding it.
+ */
+function cameFromAnAd(r: Partial<Attribution> | null | undefined): boolean {
+  return Boolean(r && (r.gclid || r.utmSource || r.utmCampaign));
+}
+
+/**
  * Holds one attribution record until consent, then writes it.
  *
  * The queue is on window so CookieBanner can drain it without importing this
@@ -167,6 +178,24 @@ function writeWhenConsented(record: Attribution): void {
   }
 
   try {
+    /*
+     * First touch wins in here too, and it did not.
+     *
+     * The durable write keeps the earliest record carrying an ad signal
+     * ("if (existing && !hasAdSignal) return"). This park had no such guard,
+     * so it was overwritten on every page view: a visitor who clicked an ad
+     * and read one more page before answering the cookie banner had their
+     * click id replaced by a record for whatever page they were on, and by
+     * the time they accepted there was nothing left to promote. Google then
+     * has no click to tie the sale to, and the sale never appears in the ad
+     * account. That is most visitors, because most people do not answer the
+     * banner on the page they land on.
+     */
+    const parked = sessionStorage.getItem(PENDING_KEY);
+    if (parked && !cameFromAnAd(record)) {
+      const prior = JSON.parse(parked) as Attribution;
+      if (cameFromAnAd(prior)) return;
+    }
     sessionStorage.setItem(PENDING_KEY, JSON.stringify(record));
   } catch {
     // ignore, the window queue below still covers a same-page acceptance
@@ -202,7 +231,9 @@ export function flushPendingAttribution(): void {
      * which is the exact visitor the whole fix exists for.
      */
     const parked = JSON.parse(raw) as Attribution;
-    const hasAdSignal = Boolean(parked.gclid || parked.utmSource);
+    /* utmCampaign was missing here, so a paid visit tagged with a campaign
+       but no source was thrown away on acceptance. */
+    const hasAdSignal = cameFromAnAd(parked);
     const existing = localStorage.getItem(STORAGE_KEY);
     if (!existing || hasAdSignal) localStorage.setItem(STORAGE_KEY, raw);
     sessionStorage.removeItem(PENDING_KEY);

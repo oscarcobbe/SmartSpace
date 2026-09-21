@@ -114,6 +114,57 @@ try {
       : fail(`accepted a page later, expected TEST_TWO, stored ${JSON.stringify(got)}`);
   }
 
+  // 2b. The one that was actually costing the money, and that case 2 above
+  //     walks straight past because it only reads a single page before
+  //     deciding. Real visitors read two or three. The park had no first-touch
+  //     guard, so page two overwrote the landing record and the click id was
+  //     gone before the banner was ever answered. Reproduced against
+  //     production on 21 Sep 2026: land on /?gclid=..., move to /reviews,
+  //     accept there, and the stored record is {"landingPage":"/reviews"}
+  //     with no gclid on it. Google then has no click to tie the sale to.
+  {
+    const { local } = browser();
+    window.location.search = "?gclid=TEST_JOURNEY";
+    attribution.captureAttribution();          // page one, the ad landing
+
+    delete globalThis.window.__ssOnConsent;
+    window.location.search = "";
+    window.location.pathname = "/reviews";
+    attribution.captureAttribution();          // page two, still undecided
+
+    delete globalThis.window.__ssOnConsent;
+    window.location.pathname = "/contact";
+    local.setItem("ss_consent", consentValue("granted"));
+    attribution.captureAttribution();          // page three, accepts here
+
+    const got = JSON.parse(local.getItem("ss_attribution") ?? "{}").gclid;
+    got === "TEST_JOURNEY"
+      ? pass("two pages read before accepting, the click id still survives")
+      : fail(`read two pages then accepted, expected TEST_JOURNEY, stored ${JSON.stringify(got)}`);
+  }
+
+  // 2c. Same journey, arriving on a campaign with no gclid. utmCampaign was
+  //     missing from one of the three ad-signal checks, so these were dropped.
+  {
+    const { local } = browser();
+    window.location.search = "?utm_campaign=autumn_falls&utm_medium=cpc";
+    attribution.captureAttribution();
+
+    delete globalThis.window.__ssOnConsent;
+    window.location.search = "";
+    window.location.pathname = "/reviews";
+    attribution.captureAttribution();
+
+    delete globalThis.window.__ssOnConsent;
+    local.setItem("ss_consent", consentValue("granted"));
+    attribution.captureAttribution();
+
+    const got = JSON.parse(local.getItem("ss_attribution") ?? "{}").utmCampaign;
+    got === "autumn_falls"
+      ? pass("a campaign with no click id survives the same journey")
+      : fail(`campaign-only visit, expected autumn_falls, stored ${JSON.stringify(got)}`);
+  }
+
   // 3. A returning visitor who already has an organic record, then clicks an
   //    ad and accepts a page later. First touch holds against another organic
   //    visit and must not hold against an ad click, which is the rule
@@ -181,5 +232,5 @@ try {
 if (process.exitCode) {
   console.error("\nThe consent gate and attribution capture disagree.");
 } else {
-  console.log("\nConsent and attribution capture agree on all six cases.");
+  console.log("\nConsent and attribution capture agree on all eight cases.");
 }
