@@ -7,8 +7,14 @@ import { Activity, BarChart3, CalendarDays, CheckSquare, Euro, Home, Receipt, Se
 import type { Site } from "@/lib/crm/db";
 
 /**
- * Two groups, because the two halves of this job are different jobs. Today is
- * what Nigel does before nine; Performance is what he looks at on a Sunday.
+ * Grouped the way Nigel described his own week on the call: today, this week,
+ * money, marketing. The previous split was ours rather than his, two groups
+ * called Today and Performance, which put the money and the advertising in one
+ * undifferentiated pile at the bottom.
+ *
+ * Marketing leads its own group because the return on ad spend is now the
+ * headline of the whole CRM, and Visitors and Outreach sit under it because
+ * they are how that number is fed.
  *
  * Outreach appears for SmartCare Living only. It is the one section that sends
  * email to people who have not asked for it, and Smart Space does no outreach,
@@ -26,18 +32,28 @@ const GROUPS: { heading: string; items: { href: string; label: string; icon: typ
     heading: "Today",
     items: [
       { href: "/crm", label: "Overview", icon: Home },
-      { href: "/crm/week", label: "This week", icon: CalendarDays },
-      { href: "/crm/orders", label: "Orders", icon: Receipt },
-      { href: "/crm/contacts", label: "Customers", icon: Users },
       { href: "/crm/tasks", label: "Next steps", icon: CheckSquare },
     ],
   },
   {
-    heading: "Performance",
+    heading: "This week",
     items: [
-      { href: "/crm/insights", label: "Visitors", icon: Activity },
+      { href: "/crm/week", label: "The diary", icon: CalendarDays },
+      { href: "/crm/orders", label: "Orders", icon: Receipt },
+      { href: "/crm/contacts", label: "Customers", icon: Users },
+    ],
+  },
+  {
+    heading: "Money",
+    items: [
       { href: "/crm/finance", label: "Finance", icon: Euro },
-      { href: "/crm/marketing", label: "Marketing", icon: BarChart3 },
+    ],
+  },
+  {
+    heading: "Marketing",
+    items: [
+      { href: "/crm/marketing", label: "Ads and return", icon: BarChart3 },
+      { href: "/crm/insights", label: "Visitors", icon: Activity },
       { href: "/crm/outreach", label: "Outreach", icon: Send, sites: ["smartcareliving"] },
     ],
   },

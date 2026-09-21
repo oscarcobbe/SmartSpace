@@ -68,6 +68,9 @@ export function TrendChart({
   const [metricId, setMetricId] = useState<MetricId>("cpa");
   const [windowId, setWindowId] = useState("w12");
   const [hover, setHover] = useState<number | null>(null);
+  /* Clicking pins, so the figures can be read without holding the pointer
+     still and so they survive on a touch screen with no hover at all. */
+  const [pinned, setPinned] = useState<number | null>(null);
 
   const metric = METRICS.find((m) => m.id === metricId)!;
   const win = WINDOWS.find((w) => w.id === windowId)!;
@@ -134,7 +137,10 @@ export function TrendChart({
   const pct = first > 0 ? Math.abs(((last - first) / first) * 100) : 0;
   const hue = good === null ? "#475569" : good ? "#047857" : "#be123c";
 
-  const active = hover === null ? null : points[hover] ?? null;
+  /* Hover wins over a pin while the pointer is on the chart, so a pinned
+     point never blocks reading a neighbour. */
+  const activeIdx = hover ?? pinned;
+  const active = activeIdx === null ? null : points[activeIdx] ?? null;
   const step = Math.max(1, Math.ceil(points.length / 6));
 
   return (
@@ -178,11 +184,16 @@ export function TrendChart({
 
           {points.map((p, i) => (
             <g key={p.key}>
-              <circle cx={x(i)} cy={y(p.v)} r={hover === i ? 5 : points.length > 40 ? 1.8 : 3}
+              <circle cx={x(i)} cy={y(p.v)} r={activeIdx === i ? 5 : points.length > 40 ? 1.8 : 3}
                       fill={p.changes > 0 ? "#0ea5e9" : hue} className="transition-all duration-150" />
-              {/* A generous invisible target: 3px circles are not hoverable. */}
+              {/* A generous invisible target: 3px circles are not hoverable,
+                  and a keyboard cannot reach them at all without this. */}
               <rect x={x(i) - (W / points.length) / 2} y={padT} width={W / points.length} height={H - padT - padB}
-                    fill="transparent" onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)} />
+                    fill="transparent" onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}
+                    onFocus={() => setHover(i)} onBlur={() => setHover(null)}
+                    onClick={() => setPinned(pinned === i ? null : i)}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPinned(pinned === i ? null : i); } }}
+                    tabIndex={0} role="button" aria-label={`${p.label}: ${metric.fmt(p.v)}`} />
             </g>
           ))}
 
@@ -197,6 +208,9 @@ export function TrendChart({
           {active ? (
             <p className="text-slate-700">
               <b className="text-slate-900">{active.label}.</b>{" "}
+              {pinned !== null && hover === null && (
+                <span className="mr-1 rounded bg-slate-200 px-1.5 py-0.5 text-[11px] font-medium text-slate-600">pinned</span>
+              )}
               {money(active.cost)} spent, {active.conversions % 1 === 0 ? active.conversions : active.conversions.toFixed(1)} enquiries
               {active.cpa !== null && <> at {money(active.cpa)} each</>}, {money(active.value)} of work won
               {active.roas !== null && <>, {active.roas.toFixed(1)}x back</>}.
@@ -204,7 +218,7 @@ export function TrendChart({
             </p>
           ) : (
             <p className="text-slate-500">
-              Hover a point for everything behind it. A dashed line marks a {win.grain} we changed something.
+              Hover or tap a point for everything behind it. A dashed line marks a {win.grain} we changed something.
               {changeNote && <> {changeNote}</>}
             </p>
           )}

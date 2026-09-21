@@ -14,7 +14,7 @@
  * came first in the document.
  */
 "use client";
-import { useId } from "react";
+import { useId, useState } from "react";
 
 export function Sparkline({
   series,
@@ -22,6 +22,8 @@ export function Sparkline({
   baseline = null,
   width = 104,
   height = 28,
+  labels,
+  format,
 }: {
   series: number[];
   tone?: "good" | "watch" | "bad" | "none";
@@ -31,8 +33,20 @@ export function Sparkline({
   baseline?: number | null;
   width?: number;
   height?: number;
+  /** One per point, for the readout. Falls back to a position if absent. */
+  labels?: string[];
+  /**
+   * How to write the numbers out, named rather than passed as a function.
+   * A server component cannot hand a function to a client one: React refuses
+   * it at render time with "Functions cannot be passed directly to Client
+   * Components", and the whole page falls to the error boundary.
+   */
+  format?: "money" | "count" | "ratio";
 }) {
   const id = useId().replace(/:/g, "");
+  /* Even a sparkline has to be able to say what a point is. Without this the
+     only readable figure on the card was the last one. */
+  const [at, setAt] = useState<number | null>(null);
   if (series.length < 2) {
     return <div style={{ width, height }} className="text-[10px] leading-7 text-slate-400" aria-hidden="true">not enough history</div>;
   }
@@ -55,7 +69,15 @@ export function Sparkline({
      a rule pinned to the top or bottom reads as the chart's own border. */
   const showBaseline = baseline !== null && baseline > min && baseline < max;
 
+  const money = new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+  const fmt = (n: number) =>
+    format === "money" ? money.format(n)
+      : format === "ratio" ? `${n.toFixed(2)}\u00d7`
+      : format === "count" ? n.toFixed(0)
+      : Number.isInteger(n) ? String(n) : n.toFixed(1);
+
   return (
+    <div className="relative">
     <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="img"
          aria-label={`Trend, ${series.length} points, ending ${series[series.length - 1]!.toFixed(0)}`}
          className="overflow-visible">
@@ -72,6 +94,28 @@ export function Sparkline({
       )}
       <path d={line} fill="none" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
       <circle cx={x(series.length - 1)} cy={y(series[series.length - 1]!)} r="2.4" fill={stroke} />
+      {at !== null && (
+        <>
+          <line x1={x(at)} x2={x(at)} y1={0} y2={height} stroke="#94a3b8" strokeWidth="1" />
+          <circle cx={x(at)} cy={y(series[at]!)} r="3" fill="#fff" stroke={stroke} strokeWidth="1.6" />
+        </>
+      )}
+      {/* One hit area per point. A 1.6px line cannot be hovered, and a
+          keyboard could not reach any of this at all. */}
+      {series.map((v, i) => (
+        <rect key={i} x={x(i) - (width / series.length) / 2} y={0}
+              width={width / series.length} height={height} fill="transparent"
+              onMouseEnter={() => setAt(i)} onFocus={() => setAt(i)}
+              onMouseLeave={() => setAt(null)} onBlur={() => setAt(null)}
+              tabIndex={0} role="button"
+              aria-label={`${labels?.[i] ?? `Point ${i + 1}`}: ${fmt(v)}`} />
+      ))}
     </svg>
+    {at !== null && (
+      <p className="pointer-events-none absolute -top-5 left-0 whitespace-nowrap rounded bg-slate-900 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+        {labels?.[at] ? `${labels[at]}: ` : ""}{fmt(series[at]!)}
+      </p>
+    )}
+    </div>
   );
 }

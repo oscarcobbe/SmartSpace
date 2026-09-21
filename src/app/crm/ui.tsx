@@ -79,9 +79,23 @@ export function Explain({ term, label }: { term: GlossaryKey; label?: string }) 
   );
 }
 
-export function Stat({ label, value, note, tone = "plain", explain }: {
+export function Stat({ label, value, note, tone = "plain", explain, source, trend }: {
   label: string; value: string; note?: string; tone?: "plain" | "good" | "warn" | "bad";
   explain?: GlossaryKey;
+  /**
+   * Where the rows behind this figure live. Nigel's rule: no number that
+   * cannot be checked. A definition says what a figure is made of; this is
+   * how he gets to the thing it is made of.
+   */
+  source?: { href: string; label: string };
+  /**
+   * The same figure's recent shape, drawn under it.
+   *
+   * Marketing used to carry a row of four sparkline cards directly above a row
+   * of five figures, both saying spend, enquiries, cost each and work won. Two
+   * rows answering one question is exactly the clutter D2 is about.
+   */
+  trend?: ReactNode;
 }) {
   const toneClass = {
     plain: "text-slate-900",
@@ -105,6 +119,14 @@ export function Stat({ label, value, note, tone = "plain", explain }: {
       {/* Reserved height rather than conditional, so tiles with a note and
           tiles without still sit on the same baseline in the same row. */}
       <p className="mt-1.5 min-h-[2rem] text-xs leading-4 text-slate-500">{note ?? ""}</p>
+      {trend && <div className="mt-1.5">{trend}</div>}
+      {source && (
+        <a href={source.href}
+           className="-mt-0.5 inline-flex w-fit items-center gap-1 text-xs font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 transition-colors hover:text-slate-900 hover:decoration-slate-600">
+          {source.label}
+          <span aria-hidden="true">&rarr;</span>
+        </a>
+      )}
     </div>
   );
 }

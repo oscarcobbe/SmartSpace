@@ -81,7 +81,7 @@ export default function NewCustomerForm() {
             <select id="source" name="source" defaultValue="phone"
               className="min-h-[44px] w-full rounded-lg border border-slate-300 bg-white px-3 text-sm">
               <option value="phone">Rang in</option>
-              <option value="in_person">Met on a job</option>
+              <option value="in_person">Met on an installation</option>
               <option value="referral">Recommended by somebody</option>
               <option value="walk_in">Walk in</option>
               <option value="other">Something else</option>

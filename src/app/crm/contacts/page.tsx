@@ -70,7 +70,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: { q
       />
 
       <StatRow>
-        <Stat label="People" value={String(people.length)} explain="people" />
+        <Stat label="People" value={String(people.length)} explain="people" source={{ href: "/crm/contacts", label: "See the people" }} />
         <Stat label="Paying customers" value={String(customers.length)} tone="good" />
         <Stat label="Spent with you" value={money(paid)} />
         <Stat label="Open" value={String(open)} note="Not yet won or lost" tone={open ? "warn" : "plain"} />

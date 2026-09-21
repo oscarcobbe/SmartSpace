@@ -161,6 +161,8 @@ async function LiveSections({ site }: { site: Site }) {
     cpa: sparkWeeks.map((w) => w.cpa ?? 0),
     value: sparkWeeks.map((w) => w.value),
   };
+  /* So a point on a sparkline can say which week it is, not just its height. */
+  const sparkLabels = sparkWeeks.map((w) => w.label);
   const prior = (xs: number[]) => (xs.length > 1 ? xs[xs.length - 2]! : null);
 
   const changeList = changes.ok ? summariseChanges(changes.data) : [];
@@ -178,28 +180,14 @@ async function LiveSections({ site }: { site: Site }) {
         Live from Google Ads, {own.window.from} to {own.window.to}.
       </p>
 
-      {sparkWeeks.length > 1 && (
-        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {([
-            ["Spend", spark.cost, "none" as const],
-            ["Enquiries", spark.conversions, "good" as const],
-            ["Cost each", spark.cpa, "bad" as const],
-            ["Work won", spark.value, "good" as const],
-          ]).map(([label, series, tone]) => (
-            <div key={label as string} className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition-shadow duration-200 hover:shadow-md">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">{label as string}</p>
-              <p className="mt-0.5 text-[11px] text-slate-400">Last eight weeks</p>
-              <div className="mt-1.5">
-                <Sparkline series={series as number[]} tone={tone as "good" | "bad" | "none"} baseline={prior(series as number[])} />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
+      {/* One row, not two. The four sparkline cards that used to sit here
+          repeated the four figures below them, which is the clutter D2 is
+          about: the same question asked twice in a row. */}
       <StatRow>
-        <Stat label="Spend" value={money(own.cost)} note="Last twelve months" explain="spend" />
-        <Stat label="Work won" value={money(own.value)} note="Value recorded against ads" tone={own.value > 0 ? "good" : "plain"} explain="workWon" />
+        <Stat label="Spend" value={money(own.cost)} note="Last twelve months" explain="spend" source={{ href: "#every-period", label: "See it day by day" }}
+          trend={sparkWeeks.length > 1 ? <Sparkline series={spark.cost} tone="none" baseline={prior(spark.cost)} labels={sparkLabels} format="money" /> : undefined} />
+        <Stat label="Work won" value={money(own.value)} note="Value recorded against ads" tone={own.value > 0 ? "good" : "plain"} explain="workWon"
+          trend={sparkWeeks.length > 1 ? <Sparkline series={spark.value} tone="good" baseline={prior(spark.value)} labels={sparkLabels} format="money" /> : undefined} />
         <Stat
           label="Return on spend"
           explain="returnOnSpend"
@@ -207,7 +195,8 @@ async function LiveSections({ site }: { site: Site }) {
           note={own.cost ? `${money(own.value)} back on ${money(own.cost)}` : undefined}
           tone={roas >= 3 ? "good" : roas >= 1 ? "warn" : "bad"}
         />
-        <Stat label="Enquiries" value={own.conversions.toFixed(0)} note={own.conversions ? `${moneyExact(cpa)} each` : undefined} explain="enquiries" />
+        <Stat label="Enquiries" value={own.conversions.toFixed(0)} note={own.conversions ? `${moneyExact(cpa)} each` : undefined} explain="enquiries" source={{ href: "#every-period", label: "See it day by day" }}
+          trend={sparkWeeks.length > 1 ? <Sparkline series={spark.conversions} tone="good" baseline={prior(spark.conversions)} labels={sparkLabels} format="count" /> : undefined} />
         <Stat label="Clicks" value={int(own.clicks)} note={`${moneyExact(cpc)} each, ${ctr.toFixed(1)}% of views`} explain="clicks" />
       </StatRow>
 
@@ -232,7 +221,7 @@ async function LiveSections({ site }: { site: Site }) {
         </div>
       )}
 
-      <div className="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div id="every-period" className="mb-6 scroll-mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 px-4 py-3">
           <h2 className="text-sm font-semibold text-slate-900">Every period, and how it moved</h2>
           <p className="mt-0.5 text-xs text-slate-500">
@@ -251,7 +240,7 @@ async function LiveSections({ site }: { site: Site }) {
         <div className="mb-6">
           <Note tone="warn">
             No revenue is recorded against these ads yet, so return on spend cannot be worked out. That figure
-            appears once completed jobs are sent back to Google, which is what the nightly upload does.
+            appears once completed installations are sent back to Google, which is what the nightly upload does.
           </Note>
         </div>
       )}

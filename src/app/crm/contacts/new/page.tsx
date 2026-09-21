@@ -17,7 +17,7 @@ export default function NewCustomerPage() {
       </Link>
       <PageHeader
         title="Add a customer"
-        sub="For somebody who rang, or who you met on a job. Everything else arrives here on its own."
+        sub="For somebody who rang, or who you met on an installation. Everything else arrives here on its own."
       />
       {!crmConfigured()
         ? <Note tone="warn">The database is not connected on this deployment yet.</Note>
