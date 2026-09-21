@@ -145,6 +145,21 @@ interface Lead {
   details?: QA[];
 }
 
+/*
+ * Sixty seconds, declared rather than assumed.
+ *
+ * The Sheet read below reasons in its own comment about "Vercel Pro tier gives
+ * us 60s total function budget so the worst case (~28.5s) still fits". The
+ * budget was never set, so the route ran on whatever the platform defaults to
+ * and could be killed part way through the cold-start retry. The caller then
+ * sees an aborted fetch and the dashboard says the orders feed could not be
+ * read, which is true and says nothing about why.
+ *
+ * A comment that reasons about a limit nobody configured is the same class as
+ * a check that cannot fail.
+ */
+export const maxDuration = 60;
+
 export async function GET(request: Request) {
   // IP-based rate limiting to blunt brute-force guessing of ADMIN_KEY
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
@@ -186,18 +201,67 @@ export async function GET(request: Request) {
   // are silent and the admin makes decisions on incomplete data.
   const sourceErrors: { source: string; message: string }[] = [];
 
+  /*
+   * Stripe, Calendly and the Sheet are started here and awaited where they
+   * were before.
+   *
+   * They are three independent sources and they were read one after another,
+   * so the response took as long as all of them added together. The Sheet
+   * alone is documented right where it is read as taking up to 28.5 seconds:
+   * an Apps Script cold start can be 8 to 12, the ceiling is 15, and a timed
+   * out first attempt waits 1.5 and retries at 12. The comment there reasons
+   * about a 60 second function budget and is correct about that, but the CRM
+   * page calling this allows the whole endpoint 30 seconds, so the sum blew
+   * through it and the dashboard showed "the orders feed could not be read"
+   * with no bookings at all.
+   *
+   * Started together, the response takes as long as the slowest one rather
+   * than the sum, and the worst single source fits inside the budget.
+   *
+   * Nothing else moves. Each is awaited at exactly the point it used to be
+   * fetched, so the error handling, the retry and the ordering below are
+   * untouched.
+   */
+  const stripeKey = process.env.STRIPE_SECRET_KEY;
+  const calendlyTokenEarly = process.env.CALENDLY_PERSONAL_TOKEN;
+  const sheetUrlEarly = process.env.GOOGLE_SHEET_WEBHOOK_URL;
+  const readTokenEarly = process.env.GOOGLE_SHEET_READ_TOKEN;
+
+  const calPastWindow = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const calFuture = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
+
+  /* A rejected promise nobody is awaiting yet is an unhandled rejection, which
+     Node treats as fatal. Each is given a catch that parks the error until the
+     await below asks for it. */
+  const park = <T,>(pr: Promise<T>) =>
+    pr.then((v) => ({ v }), (e: unknown) => ({ e })) as Promise<{ v?: T; e?: unknown }>;
+  const take = async <T,>(pr: Promise<{ v?: T; e?: unknown }>): Promise<T> => {
+    const r = await pr;
+    if (r.e) throw r.e;
+    return r.v as T;
+  };
+
+  const stripeStarted = park(fetch(
+    "https://api.stripe.com/v1/checkout/sessions?limit=100&status=complete&expand[]=data.custom_fields",
+    { headers: { Authorization: `Bearer ${stripeKey}` }, cache: "no-store", signal: AbortSignal.timeout(10000) },
+  ));
+
+  const calendlyStarted = calendlyTokenEarly
+    ? park(fetch(
+        `https://api.calendly.com/scheduled_events?user=https://api.calendly.com/users/88f48d46-ddd1-4222-8aa6-5bd8c93a9c00&min_start_time=${calPastWindow}&max_start_time=${calFuture}&status=active&sort=start_time:asc`,
+        { headers: { Authorization: `Bearer ${calendlyTokenEarly}`, "Content-Type": "application/json" },
+          cache: "no-store", signal: AbortSignal.timeout(10000) },
+      ))
+    : null;
+
+  const sheetStarted = sheetUrlEarly && readTokenEarly
+    ? park(fetch(`${sheetUrlEarly}?token=${encodeURIComponent(readTokenEarly)}&type=All&limit=500`,
+        { cache: "no-store", redirect: "follow", signal: AbortSignal.timeout(15000) }))
+    : null;
+
   // 1. Fetch recent Stripe checkout sessions (paid orders)
   try {
-    const stripeRes = await fetch(
-      "https://api.stripe.com/v1/checkout/sessions?limit=100&status=complete&expand[]=data.custom_fields",
-      {
-        headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}` },
-        cache: "no-store",
-        // 10s ceiling, Stripe list usually <1s, but a hung call would
-        // otherwise pin the whole admin page render.
-        signal: AbortSignal.timeout(10000),
-      }
-    );
+    const stripeRes = await take(stripeStarted);
     if (!stripeRes.ok) {
       const errBody = await stripeRes.text().catch(() => "");
       throw new Error(`Stripe API ${stripeRes.status}: ${errBody.slice(0, 200)}`);
@@ -302,16 +366,7 @@ export async function GET(request: Request) {
       // invoice-reconciliation cadence without bloating the response.
       // The Sheet writes from logLead() persist independently, so this
       // is purely a dashboard-visibility fix, no data was lost.
-      const pastWindow = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-      const future = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
-      const calRes = await fetch(
-        `https://api.calendly.com/scheduled_events?user=https://api.calendly.com/users/88f48d46-ddd1-4222-8aa6-5bd8c93a9c00&min_start_time=${pastWindow}&max_start_time=${future}&status=active&sort=start_time:asc`,
-        {
-          headers: { Authorization: `Bearer ${calendlyToken}`, "Content-Type": "application/json" },
-          cache: "no-store",
-          signal: AbortSignal.timeout(10000),
-        }
-      );
+      const calRes = await take(calendlyStarted!);
       if (!calRes.ok) {
         const errBody = await calRes.text().catch(() => "");
         throw new Error(`Calendly API ${calRes.status}: ${errBody.slice(0, 200)}`);
@@ -519,11 +574,7 @@ export async function GET(request: Request) {
       // logLead: 15s first attempt, then if AbortError, wait 1.5s for
       // the warm-up and retry at 12s. Vercel Pro tier gives us 60s
       // total function budget so the worst case (~28.5s) still fits.
-      let sheetRes = await fetch(url, {
-        cache: "no-store",
-        redirect: "follow",
-        signal: AbortSignal.timeout(15000),
-      }).catch((err: unknown) => {
+      let sheetRes = await take(sheetStarted!).catch((err: unknown) => {
         // Return a Response-like sentinel so the retry path below
         // can decide whether to re-attempt. AbortSignal.timeout()
         // rejects with a TimeoutError DOMException; we treat both
