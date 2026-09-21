@@ -56,7 +56,22 @@ export interface Bar {
   hrefLabel?: string;
 }
 
-export function BarChart({ bars: given, height = 220, ariaLabel }: { bars: Bar[]; height?: number; ariaLabel: string }) {
+export function BarChart({ bars: given, height = 220, ariaLabel, trimLeadingEmpty = false }: {
+  bars: Bar[];
+  height?: number;
+  ariaLabel: string;
+  /**
+   * Drop leading empty buckets. Off by default, and it has to stay off by
+   * default: only the caller knows whether an empty bucket means "this period
+   * did not exist" or "this period happened and nothing came in".
+   *
+   * Finance asks Stripe for twelve months against an account that has traded
+   * six, so its first six bars are an absence. Insights draws visits per week
+   * on a live site, where an empty week is a real week with nobody in it, and
+   * hiding it would delete the finding.
+   */
+  trimLeadingEmpty?: boolean;
+}) {
   const [hover, setHover] = useState<number | null>(null);
   const [pinned, setPinned] = useState<number | null>(null);
 
@@ -73,7 +88,7 @@ export function BarChart({ bars: given, height = 220, ariaLabel }: { bars: Bar[]
    * that quietly changes its own range is how a reader gets misled.
    */
   const firstReal = given.findIndex((b) => b.value + (b.secondary ?? 0) > 0);
-  const trimmable = firstReal >= 2 && given.length - firstReal >= 3;
+  const trimmable = trimLeadingEmpty && firstReal >= 2 && given.length - firstReal >= 3;
   const bars = trimmable ? given.slice(firstReal) : given;
   const dropped = trimmable ? given.slice(0, firstReal) : [];
 

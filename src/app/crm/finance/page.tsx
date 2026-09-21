@@ -86,6 +86,7 @@ export default async function FinancePage() {
         <Panel title="What was kept, month by month">
           <div className="px-4 pt-4">
             <BarChart
+              trimLeadingEmpty
               bars={bars}
               ariaLabel="Monthly amount kept after card fees and refunds, over the last twelve months"
             />

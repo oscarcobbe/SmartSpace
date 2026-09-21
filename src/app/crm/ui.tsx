@@ -71,7 +71,12 @@ export function Explain({ term, label }: { term: GlossaryKey; label?: string }) 
   const d = GLOSSARY[term];
   if (!d) return null;
   return (
-    <details className="relative inline-block align-middle">
+    /* z-10 is not decoration. A Stat that carries a source link paints a
+       full-tile overlay to make the whole card clickable, and that overlay sat
+       on top of this button: every "?" on Finance, Marketing, Contacts and
+       Overview stopped opening. Anything interactive inside a Stat has to sit
+       above the overlay, which is pinned to z-0. */
+    <details className="relative z-10 inline-block align-middle">
       <summary
         className="ml-1 inline-flex h-4 w-4 cursor-pointer list-none items-center justify-center rounded-full border border-slate-300 text-[10px] font-bold leading-none text-slate-500 transition-colors hover:border-slate-500 hover:text-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slate-900 [&::-webkit-details-marker]:hidden"
         aria-label={label ? `What ${label} means` : "What this figure means"}
@@ -149,10 +154,14 @@ export function Stat({ label, value, note, tone = "plain", explain, source, tren
       {/* Reserved height rather than conditional, so tiles with a note and
           tiles without still sit on the same baseline in the same row. */}
       <p className="mt-1.5 min-h-[2rem] text-xs leading-4 text-slate-500">{note ?? ""}</p>
-      {trend && <div className="mt-1.5">{trend}</div>}
+      {trend && <div className="relative z-10 mt-1.5">{trend}</div>}
       {source && (
         <a href={source.href}
-           className="-mt-0.5 inline-flex w-fit items-center gap-1 text-xs font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 transition-colors before:absolute before:inset-0 before:content-[''] group-hover:text-slate-900 group-hover:decoration-slate-600">
+           /* Deliberately NOT relative. before:inset-0 resolves against the
+              nearest positioned ancestor, which has to be the tile: making the
+              anchor itself positioned shrinks the overlay to the width of the
+              words and the rest of the card stops being clickable. */
+           className="-mt-0.5 inline-flex w-fit items-center gap-1 text-xs font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 transition-colors before:absolute before:inset-0 before:z-0 before:content-[''] group-hover:text-slate-900 group-hover:decoration-slate-600">
           {source.label}
           <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">&rarr;</span>
         </a>
