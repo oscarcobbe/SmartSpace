@@ -7,7 +7,7 @@ import { STATUS_PILL } from "@/lib/crm/labels";
 import { PageHeader, Panel, Note, Pill } from "../ui";
 import ExportButton from "../export-button";
 import RoasChart from "../roas-chart";
-import { fetchRoas } from "@/lib/crm/roas";
+import { fetchRoasLive } from "@/lib/crm/roas-live";
 import Findings from "../findings-panel";
 import { marketingFindings } from "@/lib/crm/findings";
 import { fetchPeriods, dailyReport } from "@/lib/crm/ads-periods";
@@ -324,15 +324,15 @@ export default async function MarketingPage() {
   const session = requireSession();
   /* The headline reads the daily record, which is one short database query and
      cannot be held up by Google. */
-  const roasStore = await fetchRoas(session.site);
+  const roas = await fetchRoasLive(session.site);
 
   return (
     <>
       <PageHeader
         title="Marketing"
         sub={
-          roasStore.ok
-            ? `${SITE_LABEL[session.site]}, ${roasStore.data.from} to ${roasStore.data.to}.`
+          roas.ok && roas.data.months.length
+            ? `${SITE_LABEL[session.site]}, ${roas.data.from} to ${roas.data.to}.`
             : SITE_LABEL[session.site]
         }
       />
@@ -342,26 +342,14 @@ export default async function MarketingPage() {
       <div className="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 px-4 py-3">
           <h2 className="text-base font-semibold text-slate-900">What the advertising cost, and what came back</h2>
-          <p className="mt-0.5 text-xs text-slate-500">
-            Read from the daily record rather than live, so the history does not change shape between two loads of
-            this page.
-          </p>
+          <p className="mt-0.5 text-xs text-slate-500">Live from Google Ads and Stripe, by month.</p>
         </div>
-        {roasStore.ok ? (
-          <RoasChart
-            day={roasStore.data.day}
-            week={roasStore.data.week}
-            month={roasStore.data.month}
-            counted={roasStore.data.counted}
-            excluded={roasStore.data.excluded}
-            lastAttributed={roasStore.data.lastAttributed}
-            revenueKnown={roasStore.data.revenueKnown}
-            capturedAt={roasStore.data.capturedAt}
-            siteLabel={SITE_LABEL[session.site]}
-          />
+        {roas.ok ? (
+          <RoasChart months={roas.data.months} spend={roas.data.spend} back={roas.data.back}
+                     siteLabel={SITE_LABEL[session.site]} />
         ) : (
           <div className="px-4 py-4">
-            <Note tone="warn">The daily record could not be read, so this chart is empty. {roasStore.reason}</Note>
+            <Note tone="warn">This chart could not be read. {roas.reason}</Note>
           </div>
         )}
       </div>

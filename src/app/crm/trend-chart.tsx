@@ -153,7 +153,8 @@ export function TrendChart({
     );
   }
 
-  const W = 720, H = 190, padL = 52, padR = 14, padT = 16, padB = 34;
+  /* Shorter: this is a supporting chart and was taking the room of the headline one. */
+  const W = 720, H = 132, padL = 52, padR = 14, padT = 12, padB = 30;
   const vals = points.map((p) => p.v);
   /* Zero-based, because these are money and counts and a truncated axis turns
      an ordinary wobble into a cliff. */

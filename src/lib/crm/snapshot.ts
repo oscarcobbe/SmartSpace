@@ -34,7 +34,7 @@ export interface SnapshotSiteResult {
 }
 
 interface AdDay { cost: number; clicks: number; impressions: number; conversions: number; value: number }
-interface RevDay { gross: number; orders: number; attributed: number }
+export interface RevDay { gross: number; orders: number; attributed: number }
 
 /** Spend by day for one business, with the other business's campaigns dropped. */
 async function adsByDay(site: AdSite, from: string, to: string): Promise<Map<string, AdDay>> {
@@ -80,7 +80,7 @@ async function adsByDay(site: AdSite, from: string, to: string): Promise<Map<str
  * Read once per run rather than per payment. There are a handful of these a
  * week and a round trip each would turn a snapshot into a crawl.
  */
-async function paymentLinkRefs(): Promise<Map<string, string>> {
+export async function paymentLinkRefs(): Promise<Map<string, string>> {
   const out = new Map<string, string>();
   try {
     const rows = await crm<{ token: string; gclid: string }[]>(
@@ -96,7 +96,7 @@ async function paymentLinkRefs(): Promise<Map<string, string>> {
   return out;
 }
 
-async function revenueByDay(site: AdSite, sinceUnix: number, refs: Map<string, string>): Promise<Map<string, RevDay>> {
+export async function revenueByDay(site: AdSite, sinceUnix: number, refs: Map<string, string>): Promise<Map<string, RevDay>> {
   const key = process.env.STRIPE_SECRET_KEY?.trim();
   /* Only Smart Space sells online. SmartCare Living's ads produce enquiries
      that are invoiced elsewhere, so it has no takings to record and a zero
