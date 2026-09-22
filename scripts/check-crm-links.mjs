@@ -67,7 +67,14 @@ for (const f of files) {
     seen.pages++;
     const rel = m[1].replace(/^\/crm\/?/, "");
     const dir = rel ? join(CRM, rel) : CRM;
-    const ok = existsSync(join(dir, "page.tsx")) || existsSync(`${dir}.tsx`);
+    /* A dynamic segment serves every value of its last part, so /crm/marketing/spend
+       is served by marketing/[metric]/page.tsx. Without this the check called six
+       working links dead the day the metric pages were added, which is the failure
+       mode that gets a guard switched off rather than fixed. */
+    const parent = dirname(dir);
+    const dynamicParent = existsSync(parent) &&
+      readdirSync(parent).some((e) => /^\[.+\]$/.test(e) && existsSync(join(parent, e, "page.tsx")));
+    const ok = existsSync(join(dir, "page.tsx")) || existsSync(`${dir}.tsx`) || dynamicParent;
     if (!ok) problems.push(`${where(m.index)}: link to ${m[1]}, which has no page`);
   }
 

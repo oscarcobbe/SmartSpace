@@ -386,6 +386,19 @@ p {
     box-shadow: 0 10px 28px -8px currentColor;
   }
 
+  /* A tile that opens says so on hover, and only then. Six "Open" labels sitting
+     on the row all the time is six words of furniture on the one thing that has
+     to read at a glance. */
+  .crm-root .kpi-open .kpi-chev {
+    transition: color .16s, transform .16s;
+    transform: translateX(-3px);
+  }
+  .crm-root .kpi-open:hover .kpi-chev,
+  .crm-root .kpi-open:focus-visible .kpi-chev {
+    color: rgb(255 255 255 / 0.85);
+    transform: none;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .crm-root button,
     .crm-root a[role="button"],
@@ -395,5 +408,7 @@ p {
     .crm-root button:hover,
     .crm-root a[role="button"]:hover,
     .crm-root .kpi-tile:hover { transform: none; }
+    .crm-root .kpi-open .kpi-chev,
+    .crm-root .kpi-open:hover .kpi-chev { transition: color .18s; transform: none; }
   }
 }

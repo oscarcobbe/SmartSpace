@@ -12,6 +12,7 @@
 import { revalidateTag } from "next/cache";
 import { LEADS_TAG } from "@/lib/crm/leads";
 import { FINANCE_TAG } from "@/lib/crm/stripe-finance";
+import { ROAS_TAG } from "@/lib/crm/roas";
 import { requireSession } from "@/lib/crm/session";
 
 export async function refreshCrmData(): Promise<void> {
@@ -20,4 +21,5 @@ export async function refreshCrmData(): Promise<void> {
   requireSession();
   revalidateTag(LEADS_TAG);
   revalidateTag(FINANCE_TAG);
+  revalidateTag(ROAS_TAG);
 }

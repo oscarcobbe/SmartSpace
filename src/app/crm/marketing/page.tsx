@@ -190,27 +190,27 @@ async function LiveSections({ site }: { site: Site }) {
           never the latest week against the first: on this budget a single
           week can be one enquiry. */}
       <KpiRow>
-        <Kpi label="Spend" hue="orange" icon={<CreditCard className="h-4.5 w-4.5" />}
+        <Kpi href="/crm/marketing/spend" label="Spend" hue="orange" icon={<CreditCard className="h-4.5 w-4.5" />}
              value={money(own.cost)} note="Last twelve months"
              delta={compareTail(spark.cost, "neither", (n) => money(Math.abs(n)))}
              spark={sparkWeeks.length > 1 ? <Sparkline series={spark.cost} tone="light" width={120} height={26} labels={sparkLabels} format="money" /> : undefined} />
-        <Kpi label="Clicks" hue="blue" icon={<MousePointerClick className="h-4.5 w-4.5" />}
+        <Kpi href="/crm/marketing/clicks" label="Clicks" hue="blue" icon={<MousePointerClick className="h-4.5 w-4.5" />}
              value={int(own.clicks)} note={`${moneyExact(cpc)} each`}
              delta={compareTail(spark.clicks, "up", (n) => int(Math.abs(n)))}
              spark={sparkWeeks.length > 1 ? <Sparkline series={spark.clicks} tone="light" width={120} height={26} labels={sparkLabels} format="count" /> : undefined} />
-        <Kpi label="Click rate" hue="violet" icon={<Activity className="h-4.5 w-4.5" />}
+        <Kpi href="/crm/marketing/rate" label="Click rate" hue="violet" icon={<Activity className="h-4.5 w-4.5" />}
              value={`${ctr.toFixed(1)}%`} note="of the times ads were shown"
              delta={compareTail(sparkWeeks.map((w) => (w.impressions ? (w.clicks / w.impressions) * 100 : 0)), "up",
                                 (n) => `${Math.abs(n).toFixed(1)}pt`)} />
-        <Kpi label="Enquiries" hue="indigo" icon={<Inbox className="h-4.5 w-4.5" />}
+        <Kpi href="/crm/marketing/enquiries" label="Enquiries" hue="indigo" icon={<Inbox className="h-4.5 w-4.5" />}
              value={own.conversions.toFixed(0)} note={own.conversions ? `${moneyExact(cpa)} each` : undefined}
              delta={compareTail(spark.conversions, "up", (n) => Math.abs(n).toFixed(1))}
              spark={sparkWeeks.length > 1 ? <Sparkline series={spark.conversions} tone="light" width={120} height={26} labels={sparkLabels} format="count" /> : undefined} />
-        <Kpi label="Work won" hue="green" icon={<Euro className="h-4.5 w-4.5" />}
+        <Kpi href="/crm/marketing/won" label="Work won" hue="green" icon={<Euro className="h-4.5 w-4.5" />}
              value={money(own.value)} note="Value recorded against ads"
              delta={compareTail(spark.value, "up", (n) => money(Math.abs(n)))}
              spark={sparkWeeks.length > 1 ? <Sparkline series={spark.value} tone="light" width={120} height={26} labels={sparkLabels} format="money" /> : undefined} />
-        <Kpi label="Back per €1" hue="red" icon={<TrendingUp className="h-4.5 w-4.5" />}
+        <Kpi href="/crm/marketing/back" label="Back per €1" hue="red" icon={<TrendingUp className="h-4.5 w-4.5" />}
              value={own.cost ? `${roas.toFixed(1)}x` : "–"}
              note={own.cost ? `${money(own.value)} on ${money(own.cost)}` : undefined}
              delta={compareTail(spark.roas, "up", (n) => `${Math.abs(n).toFixed(1)}x`)}
@@ -238,20 +238,21 @@ async function LiveSections({ site }: { site: Site }) {
         </div>
       )}
 
-      <div id="every-period" className="mb-6 scroll-mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 px-4 py-3">
-          <h2 className="text-sm font-semibold text-slate-900">Every period, and how it moved</h2>
+      <details id="every-period" className="group mb-6 scroll-mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <summary className="cursor-pointer list-none px-4 py-3 hover:bg-slate-50">
+          <h2 className="inline text-sm font-semibold text-slate-900">Every period, and how it moved</h2>
+          <span className="ml-2 text-xs text-slate-500 group-open:hidden">open the day by day figures</span>
           <p className="mt-0.5 text-xs text-slate-500">
             Each row is compared with the one before it, so a day is measured against the day before and a month
             against the month before. Click a row for the clicks behind it.
           </p>
-        </div>
+        </summary>
         {periods.ok ? (
           <Periods day={periods.data.day} week={periods.data.week} month={periods.data.month} />
         ) : (
           <div className="px-4 py-4"><Note tone="warn">The day by day figures could not be read. {periods.reason}</Note></div>
         )}
-      </div>
+      </details>
 
       {own.value === 0 && own.cost > 0 && (
         <div className="mb-6">

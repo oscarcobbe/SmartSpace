@@ -37,7 +37,7 @@ const eur = new Intl.NumberFormat("en-IE", { minimumFractionDigits: 0, maximumFr
 const nf = new Intl.NumberFormat("en-IE", { maximumFractionDigits: 0 });
 const money = (n: number) => `€${eur.format(n)}`;
 
-type MetricId = "cpa" | "cost" | "conversions" | "value" | "roas" | "clicks";
+export type MetricId = "cpa" | "cost" | "conversions" | "value" | "roas" | "clicks" | "ctr";
 
 /*
  * How many enquiries a period needs before a ratio taken over it means
@@ -70,6 +70,10 @@ const METRICS: {
   { id: "roas",        label: "Back per €1",      short: "Return",     better: "up",   ratio: true, get: p => p.roas, fmt: n => `${n.toFixed(1)}x` },
   { id: "cost",        label: "Spend",            short: "Spend",      better: "neither", get: p => p.cost,        fmt: money },
   { id: "clicks",      label: "Clicks",           short: "Clicks",     better: "neither", get: p => p.clicks,      fmt: n => nf.format(n) },
+  /* A rate, so it needs a denominator worth dividing by in the same way the
+     money ratios do: a day with nine impressions can read as 33% or as 0%. */
+  { id: "ctr",         label: "Click rate",       short: "Click rate", better: "up",   ratio: true,
+    get: p => (p.impressions ? (p.clicks / p.impressions) * 100 : null), fmt: n => `${n.toFixed(1)}%` },
 ];
 
 const WINDOWS = [
@@ -80,10 +84,12 @@ const WINDOWS = [
 ];
 
 export function TrendChart({
-  day, week, month, changeNote,
-}: { day: TrendPoint[]; week: TrendPoint[]; month: TrendPoint[]; changeNote: string | null }) {
+  day, week, month, changeNote, initial = "cpa",
+}: { day: TrendPoint[]; week: TrendPoint[]; month: TrendPoint[]; changeNote: string | null;
+     /** Which metric the chart opens on. The detail pages open on their own. */
+     initial?: MetricId }) {
   const id = useId().replace(/:/g, "");
-  const [metricId, setMetricId] = useState<MetricId>("cpa");
+  const [metricId, setMetricId] = useState<MetricId>(initial);
   const [windowId, setWindowId] = useState("w12");
   const [hover, setHover] = useState<number | null>(null);
   /* Clicking pins, so the figures can be read without holding the pointer

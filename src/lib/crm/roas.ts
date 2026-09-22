@@ -28,6 +28,7 @@
  * The truth for any month sits between `ad` and `all`. Both are shown, and the
  * chart says which is on screen rather than calling either of them ROAS.
  */
+import { unstable_cache } from "next/cache";
 import { crm, type Site } from "./db";
 
 export type Grain = "day" | "week" | "month";
@@ -193,7 +194,47 @@ function roll(cells: DayCell[], keyOf: (d: string) => string, labelOf: (k: strin
   return out;
 }
 
+export const ROAS_TAG = "crm-roas";
+
+/**
+ * ── WHY THIS IS CACHED, AND WHY IT THROWS INSIDE THE CACHE ───────
+ *
+ * This was the only fetcher on the CRM with no cache at all, so every load of
+ * /crm/marketing did two fresh Supabase reads of up to a thousand rows each,
+ * and the page is force-dynamic so every visit paid it. On a cold function
+ * that was reliably over the ten second abort, and the reader got
+ * "The operation was aborted due to timeout" where the chart should be.
+ *
+ * Two changes. The reads get twenty seconds rather than ten, because a cold
+ * Postgres connection plus two thousand rows does not fit in ten. And the
+ * result is cached for a minute, throwing inside the cache so a failure is
+ * never the thing stored: the next request retries instead of being served
+ * the same bad news for the rest of the minute. That was the bug that made
+ * the Overview look unfixed after it had been fixed twice.
+ */
 export async function fetchRoas(site: Site, days = 400): Promise<RoasResult> {
+  try {
+    return await unstable_cache(
+      async () => {
+        const r = await readRoas(site, days);
+        if (!r.ok) throw new Error(r.reason);
+        return r;
+      },
+      ["crm-roas", site, String(days)],
+      { revalidate: 60, tags: [ROAS_TAG, `${ROAS_TAG}:${site}`] },
+    )();
+  } catch (err) {
+    const raw = err instanceof Error ? err.message : String(err);
+    /* "The operation was aborted due to timeout" tells the reader nothing
+       they can act on, so say which read was slow and what happens next. */
+    const reason = /abort|timeout/i.test(raw)
+      ? "The daily record took too long to read. It is usually back on the next load."
+      : raw;
+    return { ok: false, reason };
+  }
+}
+
+async function readRoas(site: Site, days: number): Promise<RoasResult> {
   const since = new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10);
 
   let ads: AdRow[] | null;
@@ -204,10 +245,12 @@ export async function fetchRoas(site: Site, days = 400): Promise<RoasResult> {
         `crm_ads_daily?site=eq.${site}&on_date=gte.${since}` +
         `&select=on_date,cost_cents,clicks,impressions,conversions,conv_value_cents,captured_at` +
         `&order=on_date.asc&limit=1000`,
+        { signal: AbortSignal.timeout(20_000) },
       ),
       crm<RevRow[]>(
         `crm_revenue_daily?site=eq.${site}&on_date=gte.${since}` +
         `&select=on_date,gross_cents,orders,attributed_cents&order=on_date.asc&limit=1000`,
+        { signal: AbortSignal.timeout(20_000) },
       ),
     ]);
   } catch (err) {

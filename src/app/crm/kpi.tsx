@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 
 /**
@@ -103,8 +104,21 @@ function Movement({ delta }: { delta: Delta }) {
   );
 }
 
+/**
+ * ── WHY A TILE IS A LINK ─────────────────────────────────────────
+ *
+ * The row answers "what is the number". It cannot answer "why", and six tiles
+ * of numbers with nowhere to go is the thing that read as a poster rather than
+ * a dashboard. Each tile now opens the one metric on its own page: its full
+ * history, the periods behind it, which campaigns made it and what we changed
+ * while it moved.
+ *
+ * A tile without an href stays a plain div rather than a link that goes
+ * nowhere, because a cursor that changes over something unclickable is worse
+ * than no affordance at all.
+ */
 export function Kpi({
-  label, value, hue = "slate", icon, delta, note, spark,
+  label, value, hue = "slate", icon, delta, note, spark, href,
 }: {
   label: string;
   value: string;
@@ -114,10 +128,11 @@ export function Kpi({
   note?: string;
   /** A sparkline, drawn light so it reads on the tile's own colour. */
   spark?: ReactNode;
+  /** Where the tile opens. Omit and it is not clickable. */
+  href?: string;
 }) {
-  return (
-    <div className="kpi-tile relative overflow-hidden rounded-xl p-4 sm:p-5"
-         style={{ background: HUE[hue], color: HUE[hue] }}>
+  const inner = (
+    <>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="text-[12.5px] font-semibold uppercase tracking-wide text-white/85">{label}</div>
@@ -136,7 +151,27 @@ export function Kpi({
       </div>
       {note && delta && <div className="mt-1 text-[11.5px] text-white/70">{note}</div>}
       {spark && <div className="mt-2 -mb-1 opacity-80">{spark}</div>}
-    </div>
+    </>
+  );
+
+  const shell = "kpi-tile relative block overflow-hidden rounded-xl p-4 sm:p-5";
+  const style = { background: HUE[hue], color: HUE[hue] };
+
+  if (!href) return <div className={shell} style={style}>{inner}</div>;
+
+  return (
+    <Link
+      href={href}
+      className={`${shell} kpi-open transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2`}
+      style={style}
+      aria-label={`${label}: ${value}. Open the detail.`}
+    >
+      {inner}
+      <span aria-hidden="true"
+            className="kpi-chev pointer-events-none absolute bottom-3 right-3 text-[11px] font-semibold text-white/0">
+        Open &rsaquo;
+      </span>
+    </Link>
   );
 }
 
