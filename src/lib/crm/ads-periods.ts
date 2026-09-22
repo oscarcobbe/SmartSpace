@@ -11,6 +11,7 @@
  * through a Date, which on a machine set to America/Denver would shift every
  * row back a day.
  */
+import { unstable_cache } from "next/cache";
 import { ADS_ACCOUNT, isForeign, iso, num, search, type AdSite } from "./google-ads";
 
 export type Grain = "day" | "week" | "month";
@@ -104,7 +105,43 @@ function roll(rows: DayRow[], keyOf: (d: string) => string, labelOf: (k: string)
   return out;
 }
 
+/**
+ * ── WHY THIS IS CACHED, AND WHY IT THROWS INSIDE THE CACHE ───────
+ *
+ * Google Ads is quota'd and this was read fresh on every page load. Once each
+ * headline tile opened a page of its own, a reader clicking along the row paid
+ * for the same reads seven times in a minute: the same shape of problem the
+ * ROAS timeout fix set out to stop, on an API that answers with a quota rather
+ * than with a slow read.
+ *
+ * Sixty seconds, throwing inside the cache so a failure is never what gets
+ * stored. A bad read is retried by the next request rather than served for the
+ * rest of the minute, which is the bug that made the Overview look unfixed
+ * after it had been fixed twice.
+ */
+export const PERIODS_TAG = "crm-ads-periods";
+
 export async function fetchPeriods(site: AdSite, days = 400): Promise<PeriodsResult> {
+  try {
+    return await unstable_cache(
+      async () => {
+        const r = await readPeriods(site, days);
+        if (!r.ok) throw new Error(r.reason);
+        return r;
+      },
+      ["crm-ads-periods", site, String(days)],
+      { revalidate: 60, tags: [PERIODS_TAG, `${PERIODS_TAG}:${site}`] },
+    )();
+  } catch (err) {
+    const raw = err instanceof Error ? err.message : String(err);
+    const reason = /abort|timeout/i.test(raw)
+      ? "Google Ads took too long to answer. It is usually back on the next load."
+      : raw;
+    return { ok: false, reason };
+  }
+}
+
+async function readPeriods(site: AdSite, days = 400): Promise<PeriodsResult> {
   const customerId = ADS_ACCOUNT[site];
   if (!customerId) return { ok: false, reason: "No Google Ads account is configured for this business." };
 

@@ -12,6 +12,8 @@
  * cost_micros / 1e6 is euro.
  */
 
+import { unstable_cache } from "next/cache";
+
 const VERSION = "v25";
 
 export type AdSite = "smart-space" | "smartcareliving";
@@ -189,7 +191,43 @@ function totals(months: MonthSpend[]) {
   };
 }
 
+/**
+ * ── WHY THIS IS CACHED, AND WHY IT THROWS INSIDE THE CACHE ───────
+ *
+ * Google Ads is quota'd and this was read fresh on every page load. Once each
+ * headline tile opened a page of its own, a reader clicking along the row paid
+ * for the same reads seven times in a minute: the same shape of problem the
+ * ROAS timeout fix set out to stop, on an API that answers with a quota rather
+ * than with a slow read.
+ *
+ * Sixty seconds, throwing inside the cache so a failure is never what gets
+ * stored. A bad read is retried by the next request rather than served for the
+ * rest of the minute, which is the bug that made the Overview look unfixed
+ * after it had been fixed twice.
+ */
+export const ADS_TAG = "crm-ads";
+
 export async function fetchAds(site: AdSite, monthsBack = 12): Promise<AdsResult> {
+  try {
+    return await unstable_cache(
+      async () => {
+        const r = await readAds(site, monthsBack);
+        if (!r.ok) throw new Error(r.reason);
+        return r;
+      },
+      ["crm-ads", site, String(monthsBack)],
+      { revalidate: 60, tags: [ADS_TAG, `${ADS_TAG}:${site}`] },
+    )();
+  } catch (err) {
+    const raw = err instanceof Error ? err.message : String(err);
+    const reason = /abort|timeout/i.test(raw)
+      ? "Google Ads took too long to answer. It is usually back on the next load."
+      : raw;
+    return { ok: false, reason };
+  }
+}
+
+async function readAds(site: AdSite, monthsBack = 12): Promise<AdsResult> {
   const customerId = ADS_ACCOUNT[site];
   try {
     const now = new Date();
@@ -329,7 +367,43 @@ export type ChangesResult = { ok: true; data: AccountChange[] } | { ok: false; r
  * so this asks for fourteen: enough to cover the fortnight a change is usually
  * judged over, and well inside what the API will answer.
  */
+/**
+ * ── WHY THIS IS CACHED, AND WHY IT THROWS INSIDE THE CACHE ───────
+ *
+ * Google Ads is quota'd and this was read fresh on every page load. Once each
+ * headline tile opened a page of its own, a reader clicking along the row paid
+ * for the same reads seven times in a minute: the same shape of problem the
+ * ROAS timeout fix set out to stop, on an API that answers with a quota rather
+ * than with a slow read.
+ *
+ * Sixty seconds, throwing inside the cache so a failure is never what gets
+ * stored. A bad read is retried by the next request rather than served for the
+ * rest of the minute, which is the bug that made the Overview look unfixed
+ * after it had been fixed twice.
+ */
+export const CHANGES_TAG = "crm-ads-changes";
+
 export async function fetchChanges(site: AdSite, days = 14): Promise<ChangesResult> {
+  try {
+    return await unstable_cache(
+      async () => {
+        const r = await readChanges(site, days);
+        if (!r.ok) throw new Error(r.reason);
+        return r;
+      },
+      ["crm-ads-changes", site, String(days)],
+      { revalidate: 60, tags: [CHANGES_TAG, `${CHANGES_TAG}:${site}`] },
+    )();
+  } catch (err) {
+    const raw = err instanceof Error ? err.message : String(err);
+    const reason = /abort|timeout/i.test(raw)
+      ? "Google Ads took too long to answer. It is usually back on the next load."
+      : raw;
+    return { ok: false, reason };
+  }
+}
+
+async function readChanges(site: AdSite, days = 14): Promise<ChangesResult> {
   const customerId = ADS_ACCOUNT[site];
   if (!customerId) return { ok: false, reason: "No Google Ads account is mapped to this site." };
   try {

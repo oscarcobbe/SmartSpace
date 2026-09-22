@@ -31,7 +31,7 @@ import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 
 export type KpiHue = "blue" | "red" | "violet" | "green" | "orange" | "indigo" | "slate";
 
-const HUE: Record<KpiHue, string> = {
+export const HUE: Record<KpiHue, string> = {
   blue: "#1d4ed8",
   red: "#b91c1c",
   violet: "#6d28d9",

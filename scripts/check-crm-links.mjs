@@ -36,6 +36,7 @@ function walk(dir) {
 const files = walk(CRM);
 const ids = new Set();
 const problems = [];
+const unverified = [];
 
 /* Every id the CRM defines, wherever it defines it. */
 for (const f of files) {
@@ -70,11 +71,47 @@ for (const f of files) {
     /* A dynamic segment serves every value of its last part, so /crm/marketing/spend
        is served by marketing/[metric]/page.tsx. Without this the check called six
        working links dead the day the metric pages were added, which is the failure
-       mode that gets a guard switched off rather than fixed. */
+       mode that gets a guard switched off rather than fixed.
+
+       But "the parent has a dynamic child" on its own passes ANY last segment,
+       including /crm/marketing/bogus, so the one failure the metric pages can
+       actually have, a link naming a key the route does not serve, became the
+       one thing this could not see. So the segment is checked against the keys
+       the route itself declares: the page holds them in a `const METRICS = {`
+       object and the check reads them out of it rather than being told. A
+       dynamic route that does not declare its keys that way is reported as
+       unverified rather than waved through. */
     const parent = dirname(dir);
-    const dynamicParent = existsSync(parent) &&
-      readdirSync(parent).some((e) => /^\[.+\]$/.test(e) && existsSync(join(parent, e, "page.tsx")));
-    const ok = existsSync(join(dir, "page.tsx")) || existsSync(`${dir}.tsx`) || dynamicParent;
+    const segment = m[1].split("/").filter(Boolean).pop();
+    const dyn = existsSync(parent)
+      ? readdirSync(parent).find((e) => /^\[.+\]$/.test(e) && existsSync(join(parent, e, "page.tsx")))
+      : undefined;
+    let dynamicOk = false;
+    if (dyn) {
+      const src = readFileSync(join(parent, dyn, "page.tsx"), "utf8");
+      const block = /const METRICS\s*:[^=]*=\s*\{([\s\S]*?)\n\};/.exec(src);
+      if (block) {
+        const keys = [...block[1].matchAll(/^\s{2}([a-zA-Z0-9_]+)\s*:/gm)].map((k) => k[1]);
+        if (keys.length === 0) {
+          unverified.push(`${m[1]}, because ${dyn} declares no keys`);
+          dynamicOk = true;
+        } else if (keys.includes(segment)) {
+          dynamicOk = true;
+        } else {
+          problems.push(
+            `${where(m.index)}: link to ${m[1]}, and ${dyn} serves only ${keys.join(", ")}`);
+          dynamicOk = true; /* Reported once, not twice. */
+        }
+      } else {
+        /* A route keyed on a real id, /crm/contacts/[id], has no list to check
+           against and cannot have one. Counted and named rather than passed in
+           silence, so the number of links this check cannot see is a number
+           somebody can look at. */
+        unverified.push(`${m[1]}, served by ${dyn}`);
+        dynamicOk = true;
+      }
+    }
+    const ok = existsSync(join(dir, "page.tsx")) || existsSync(`${dir}.tsx`) || dynamicOk;
     if (!ok) problems.push(`${where(m.index)}: link to ${m[1]}, which has no page`);
   }
 
@@ -95,3 +132,9 @@ if (problems.length) {
 console.log(
   `CRM links check out: ${seen.anchors} anchors, ${seen.pages} page links, ` +
   `${seen.explains} glossary references, ${ids.size} ids and ${terms.size} terms defined.`);
+if (unverified.length) {
+  /* Said out loud. A check that silently waves through the links it cannot see
+     reports "all clear" for a coverage it does not have. */
+  console.log(`  ${unverified.length} link(s) this check cannot verify:`);
+  for (const u of unverified) console.log(`    ${u}`);
+}

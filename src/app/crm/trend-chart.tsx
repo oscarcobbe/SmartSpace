@@ -55,12 +55,22 @@ export type MetricId = "cpa" | "cost" | "conversions" | "value" | "roas" | "clic
  */
 const ENOUGH_TO_DIVIDE = 3;
 
+/* The same argument for a rate: a day with nine impressions reads as 0% or as
+   11% depending on one click, and neither is a fact about the ads. */
+const ENOUGH_IMPRESSIONS = 200;
+
 const METRICS: {
   id: MetricId; label: string; short: string;
   /** Which direction is good news for THIS number. */
   better: "down" | "up" | "neither";
   /** True when the number is a division, so a small period cannot support it. */
   ratio?: boolean;
+  /** Does this period have enough behind it to divide? Defaults to enquiries,
+      which is right for the money ratios and wrong for a rate over
+      impressions. */
+  enough?: (p: TrendPoint) => boolean;
+  /** What the denominator is, in the reader's words, for the note on screen. */
+  denominator?: string;
   get: (p: TrendPoint) => number | null;
   fmt: (n: number) => string;
 }[] = [
@@ -73,6 +83,7 @@ const METRICS: {
   /* A rate, so it needs a denominator worth dividing by in the same way the
      money ratios do: a day with nine impressions can read as 33% or as 0%. */
   { id: "ctr",         label: "Click rate",       short: "Click rate", better: "up",   ratio: true,
+    enough: p => p.impressions >= ENOUGH_IMPRESSIONS, denominator: "impressions",
     get: p => (p.impressions ? (p.clicks / p.impressions) * 100 : null), fmt: n => `${n.toFixed(1)}%` },
 ];
 
@@ -164,7 +175,8 @@ export function TrendChart({
    * Comparing the earliest third against the latest third survives one odd
    * week, which is the only kind of movement worth telling somebody about.
    */
-  const solid = points.filter((p) => !metric.ratio || p.conversions >= ENOUGH_TO_DIVIDE);
+  const enough = metric.enough ?? ((p: TrendPoint) => p.conversions >= ENOUGH_TO_DIVIDE);
+  const solid = points.filter((p) => !metric.ratio || enough(p));
   const basis = solid.length >= 4 ? solid : points;
   const chunk = Math.max(1, Math.floor(basis.length / 3));
   const mean = (xs: typeof basis) => xs.reduce((n, p) => n + p.v, 0) / xs.length;
@@ -197,7 +209,7 @@ export function TrendChart({
           {metric.ratio && thin > 0 && (
             <span className="text-slate-500">
               {" "}{thin} {thin === 1 ? "period is" : "periods are"} drawn hollow and left out of that
-              comparison: under {ENOUGH_TO_DIVIDE} enquiries there is nothing to divide by.
+              comparison: too little {metric.denominator ?? "enquiries"} behind {thin === 1 ? "it" : "them"} to divide by.
             </span>
           )}
         </p>
@@ -236,7 +248,7 @@ export function TrendChart({
                   a cost per enquiry, and drawing it solid alongside a week of
                   nine says the two are the same kind of number. */}
               {(() => {
-                const thinPoint = Boolean(metric.ratio) && p.conversions < ENOUGH_TO_DIVIDE;
+                const thinPoint = Boolean(metric.ratio) && !enough(p);
                 const r = activeIdx === i ? 5 : points.length > 40 ? 1.8 : 3;
                 return (
                   <circle cx={x(i)} cy={y(p.v)} r={r}

@@ -242,11 +242,11 @@ async function LiveSections({ site }: { site: Site }) {
         <summary className="cursor-pointer list-none px-4 py-3 hover:bg-slate-50">
           <h2 className="inline text-sm font-semibold text-slate-900">Every period, and how it moved</h2>
           <span className="ml-2 text-xs text-slate-500 group-open:hidden">open the day by day figures</span>
-          <p className="mt-0.5 text-xs text-slate-500">
-            Each row is compared with the one before it, so a day is measured against the day before and a month
-            against the month before. Click a row for the clicks behind it.
-          </p>
         </summary>
+        <p className="border-b border-slate-100 px-4 pb-3 text-xs text-slate-500">
+          Each row is compared with the one before it, so a day is measured against the day before and a month
+          against the month before. Click a row for the clicks behind it.
+        </p>
         {periods.ok ? (
           <Periods day={periods.data.day} week={periods.data.week} month={periods.data.month} />
         ) : (

@@ -9,9 +9,12 @@ import { PageHeader, Panel, Note } from "../../ui";
 import { TrendChart, type TrendPoint, type MetricId } from "../../trend-chart";
 import { Periods } from "../../periods";
 import ExportButton from "../../export-button";
-import { compareTail, type Delta } from "../../kpi";
+import { compareTail, HUE, type Delta, type KpiHue } from "../../kpi";
 
 export const dynamic = "force-dynamic";
+/* Three Google Ads reads and a Supabase one. Declared rather than assumed:
+   the platform default is not something to find out from a 504. */
+export const maxDuration = 60;
 
 const int = (n: number) => new Intl.NumberFormat("en-IE", { maximumFractionDigits: 0 }).format(n);
 
@@ -42,11 +45,15 @@ interface Metric {
   /** Which chart series this opens on. */
   chart: MetricId;
   label: string;
-  /** The tile's own colour, so arriving here feels like the tile opening. */
-  hue: string;
+  /** The tile's own hue, by name, so the page and the tile cannot drift apart. */
+  hue: KpiHue;
   better: Delta["better"];
   of: (r: Row) => number | null;
   fmt: (n: number) => string;
+  /** How a movement in the number is written. A rate moves in points, not in
+      per cent: "up 12%, 0.3%" is one sentence with two different per cents in
+      it, which is what the tile already avoids by writing "0.3pt". */
+  move: (n: number) => string;
   /** What the number is, in the reader's words. */
   what: string;
   /** What it is made of, so nobody has to guess the denominator. */
@@ -61,49 +68,49 @@ interface Metric {
 
 const METRICS: Record<string, Metric> = {
   spend: {
-    chart: "cost", label: "Spend", hue: "#c2410c", better: "neither",
-    of: (r) => r.cost, fmt: money,
+    chart: "cost", label: "Spend", hue: "orange", better: "neither",
+    of: (r) => r.cost, fmt: money, move: money,
     what: "What the advertising cost, before anything came back.",
     basis: (r) => `${int(r.clicks)} clicks at ${r.clicks ? moneyExact(r.cost / r.clicks) : "–"} each`,
     reading: "Spend on its own is neither good nor bad news. It is the denominator of every other figure on this page, so read it beside enquiries and work won rather than on its own. A rise with no rise in enquiries is the thing to act on.",
     rank: (c) => c.cost,
   },
   clicks: {
-    chart: "clicks", label: "Clicks", hue: "#1d4ed8", better: "neither",
-    of: (r) => r.clicks, fmt: (n) => int(n),
+    chart: "clicks", label: "Clicks", hue: "blue", better: "neither",
+    of: (r) => r.clicks, fmt: (n) => int(n), move: (n) => int(n),
     what: "How many people came through to the site from an ad.",
     basis: (r) => `${moneyExact(r.clicks ? r.cost / r.clicks : 0)} each, from ${int(r.impressions)} times the ads were shown`,
     reading: "Clicks are what the money buys. They are not the point: a click that leaves in four seconds cost the same as one that books. Read this against enquiries, and if clicks hold while enquiries fall the problem is on the site, not in the account.",
     rank: (c) => c.clicks,
   },
   rate: {
-    chart: "ctr", label: "Click rate", hue: "#6d28d9", better: "up",
+    chart: "ctr", label: "Click rate", hue: "violet", better: "up",
     of: (r) => (r.impressions ? (r.clicks / r.impressions) * 100 : null),
-    fmt: (n) => `${n.toFixed(1)}%`,
+    fmt: (n) => `${n.toFixed(1)}%`, move: (n) => `${n.toFixed(1)}pt`,
     what: "How often somebody who saw an ad clicked it.",
     basis: (r) => `${int(r.clicks)} clicks from ${int(r.impressions)} times the ads were shown`,
     reading: "This is the ads and the keywords being judged by the people searching. A fall usually means the ads are being shown for searches they do not answer, which is a keyword problem rather than a copy one. It moves slowly, so a single day means very little.",
     rank: (c) => (c.impressions ? c.clicks / c.impressions : 0),
   },
   enquiries: {
-    chart: "conversions", label: "Enquiries", hue: "#4338ca", better: "up",
-    of: (r) => r.conversions, fmt: (n) => n.toFixed(0),
+    chart: "conversions", label: "Enquiries", hue: "indigo", better: "up",
+    of: (r) => r.conversions, fmt: (n) => n.toFixed(0), move: (n) => n.toFixed(1),
     what: "How many people got in touch after an ad.",
     basis: (r) => `${moneyExact(r.conversions ? r.cost / r.conversions : 0)} each`,
     reading: "The figure the account is bid to produce. It counts what Google was told about, so it can only be as complete as the tracking underneath it: an enquiry Google never heard about is not here and is not being bid for either.",
     rank: (c) => c.conversions,
   },
   won: {
-    chart: "value", label: "Work won", hue: "#15803d", better: "up",
-    of: (r) => r.value, fmt: money,
+    chart: "value", label: "Work won", hue: "green", better: "up",
+    of: (r) => r.value, fmt: money, move: money,
     what: "The value recorded back against the ads.",
     basis: (r) => `against ${money(r.cost)} spent`,
     reading: "Mostly placeholder values set per conversion action rather than real prices, mixed with a few real Stripe amounts, so treat the shape as the signal and not the total. The real euro figure lives on the money page.",
     rank: (c) => c.value,
   },
   back: {
-    chart: "roas", label: "Back per €1", hue: "#b91c1c", better: "up",
-    of: (r) => (r.cost ? r.value / r.cost : null), fmt: (n) => `${n.toFixed(1)}x`,
+    chart: "roas", label: "Back per €1", hue: "red", better: "up",
+    of: (r) => (r.cost ? r.value / r.cost : null), fmt: (n) => `${n.toFixed(1)}x`, move: (n) => `${n.toFixed(1)}x`,
     what: "What came back for every euro that went out.",
     basis: (r) => `${money(r.value)} recorded against ${money(r.cost)} spent`,
     reading: "A division, so a period with one or two enquiries cannot support it and is drawn hollow on the chart rather than compared. It is built from the value recorded against the ads, which is not the same as money Stripe took.",
@@ -113,10 +120,11 @@ const METRICS: Record<string, Metric> = {
 
 export default async function MetricPage({ params }: { params: Promise<{ metric: string }> }) {
   const { metric: key } = await params;
-  const m = METRICS[key];
-  if (!m) notFound();
-
+  /* Session first. notFound() used to run before it, so an unauthenticated
+     probe could tell a real metric (a redirect) from a made up one (a 404). */
   const session = await requireSession();
+  const m = Object.hasOwn(METRICS, key) ? METRICS[key] : undefined;
+  if (!m) notFound();
   const site = session.site;
 
   const [ads, periods, changes] = await Promise.all([
@@ -138,11 +146,35 @@ export default async function MetricPage({ params }: { params: Promise<{ metric:
   /* The same four against four the tile uses, so the movement here and the
      movement on the row can never disagree. */
   const series = weeks.map((w) => m.of(w) ?? 0);
-  const delta = compareTail(series, m.better, (n) => m.fmt(Math.abs(n)));
+  const delta = compareTail(series, m.better, (n) => m.move(Math.abs(n)));
 
-  const points = (rows: typeof weeks): TrendPoint[] => rows.map((r) => ({ ...r, changes: 0 }));
+  /* Our own edits, counted against the bucket they happened in. Every point
+     used to be given changes: 0 while the chart printed "a dashed line marks a
+     week we changed something" underneath it, on a page that lists those very
+     changes three panels further down. */
+  const byDay = new Map<string, number>();
+  const byWeek = new Map<string, number>();
+  const byMonth = new Map<string, number>();
+  if (changes.ok) {
+    for (const c of changes.data) {
+      const d = new Date(c.at);
+      if (Number.isNaN(d.getTime())) continue;
+      const iso = d.toISOString().slice(0, 10);
+      const [yy, mm, dd] = iso.split("-").map(Number);
+      const utc = Date.UTC(yy!, mm! - 1, dd!);
+      const dow = new Date(utc).getUTCDay();
+      const monday = new Date(utc - (dow === 0 ? 6 : dow - 1) * 86_400_000).toISOString().slice(0, 10);
+      byDay.set(iso, (byDay.get(iso) ?? 0) + 1);
+      byWeek.set(monday, (byWeek.get(monday) ?? 0) + 1);
+      byMonth.set(iso.slice(0, 7), (byMonth.get(iso.slice(0, 7)) ?? 0) + 1);
+    }
+  }
+  const points = (rows: typeof weeks, counts: Map<string, number>): TrendPoint[] =>
+    rows.map((r) => ({ ...r, changes: counts.get(r.key) ?? 0 }));
   const trend = periods.ok
-    ? { day: points(periods.data.day.slice(-90)), week: points(periods.data.week), month: points(periods.data.month) }
+    ? { day: points(periods.data.day.slice(-90), byDay),
+        week: points(periods.data.week, byWeek),
+        month: points(periods.data.month, byMonth) }
     : { day: [], week: [], month: [] };
 
   const campaigns = m.rank
@@ -155,20 +187,14 @@ export default async function MetricPage({ params }: { params: Promise<{ metric:
       <Back />
       <PageHeader title={m.label} sub={`${SITE_LABEL[site]} · ${own.window.from} to ${own.window.to}`} />
 
-      <div className="mb-6 overflow-hidden rounded-xl p-5 sm:p-6" style={{ background: m.hue }}>
-        <div className="text-[12.5px] font-semibold uppercase tracking-wide text-white/85">{m.label}</div>
+      <div className="mb-6 overflow-hidden rounded-xl p-5 sm:p-6" style={{ background: HUE[m.hue] }}>
+        <div className="text-[12.5px] font-semibold uppercase tracking-wide text-white">{m.label}</div>
         <div className="mt-2 text-[44px] font-bold leading-none tracking-tight tabular-nums text-white">
           {now === null ? "–" : m.fmt(now)}
         </div>
-        <p className="mt-2 text-[13px] text-white/80">{m.basis(own)}</p>
-        <p className="mt-3 max-w-[70ch] text-[13.5px] leading-relaxed text-white/90">{m.what}</p>
-        <p className="mt-1.5 text-[12.5px] text-white/75">
-          {delta.pct === null
-            ? "Not enough history to compare against the four weeks before."
-            : `${Math.abs(delta.pct) < 0.5 ? "Level" : delta.pct > 0 ? "Up" : "Down"} ${
-                Math.abs(delta.pct) < 0.5 ? "" : `${Math.abs(delta.pct).toFixed(0)}% `
-              }on the four weeks before${delta.absolute && Math.abs(delta.pct) >= 0.5 ? `, ${delta.absolute}` : ""}.`}
-        </p>
+        <p className="mt-2 text-[13px] text-white/90">{m.basis(own)}</p>
+        <p className="mt-3 max-w-[70ch] text-[13.5px] leading-relaxed text-white">{m.what}</p>
+        <p className="mt-1.5 text-[13px] text-white">{movement(delta, m)}</p>
       </div>
 
       <Panel title="How to read this one">
@@ -184,7 +210,10 @@ export default async function MetricPage({ params }: { params: Promise<{ metric:
               checked against the one beside it without leaving the page.
             </p>
           </div>
-          <TrendChart day={trend.day} week={trend.week} month={trend.month} initial={m.chart} changeNote={null} />
+          <TrendChart day={trend.day} week={trend.week} month={trend.month} initial={m.chart}
+                      changeNote={changes.ok
+                        ? "We ask Google for fourteen days of change history, so only recent periods can be marked."
+                        : null} />
         </div>
       )}
 
@@ -208,7 +237,9 @@ export default async function MetricPage({ params }: { params: Promise<{ metric:
             headers={["Campaign", "Status", m.label, "Spend", "Clicks", "Enquiries", "Work won"]}
             rows={campaigns.map((c) => {
               const v = m.of(c);
-              return [c.name, c.status, v === null ? "" : String(v), c.cost.toFixed(2), c.clicks,
+              /* Formatted, not raw: String(3091.4400000000005) beside three
+                 neighbours at two decimal places is a column nobody can total. */
+              return [c.name, c.status, v === null ? "" : m.fmt(v), c.cost.toFixed(2), c.clicks,
                       c.conversions.toFixed(0), c.value.toFixed(2)];
             })}
           />
@@ -232,7 +263,7 @@ export default async function MetricPage({ params }: { params: Promise<{ metric:
                     <td className="max-w-[20rem] px-4 py-2">
                       <span className="block truncate text-slate-900" title={c.name}>{c.name}</span>
                     </td>
-                    <td className="px-4 py-2 text-right font-semibold tabular-nums" style={{ color: m.hue }}>
+                    <td className="px-4 py-2 text-right font-semibold tabular-nums" style={{ color: HUE[m.hue] }}>
                       {v === null ? "–" : m.fmt(v)}
                     </td>
                     <td className="px-4 py-2 text-right tabular-nums text-slate-700">{moneyExact(c.cost)}</td>
@@ -263,13 +294,34 @@ export default async function MetricPage({ params }: { params: Promise<{ metric:
             </ul>
           )}
           <p className="border-t border-slate-100 px-4 py-2 text-xs text-slate-500">
-            Straight from the account&apos;s own change log. Google keeps fourteen days of it, so this cannot
-            explain anything older than that.
+            Straight from the account&apos;s own change log. Google keeps thirty days of it and we ask for
+            fourteen, so this cannot explain anything older than a fortnight.
           </p>
         </Panel>
       </div>
     </>
   );
+}
+
+/**
+ * The movement, with which way is good news attached to it.
+ *
+ * `better` was declared on every metric, handed to compareTail and then read
+ * by nothing, so the spend page said a bare "Up 20% on the four weeks before"
+ * and a reader had no way to know that is the one number where up is not good
+ * news. The tile they clicked to get here does carry that signal, so losing it
+ * on the way in was the worst place to lose it.
+ */
+function movement(delta: Delta, m: Metric): string {
+  if (delta.pct === null) return "Not enough history to compare against the four weeks before.";
+  const flat = Math.abs(delta.pct) < 0.5;
+  if (flat) return "Level against the four weeks before.";
+  const up = delta.pct > 0;
+  const size = `${Math.abs(delta.pct).toFixed(0)}%`;
+  const by = delta.absolute ? `, ${delta.absolute}` : "";
+  const verdict = m.better === "neither" ? ""
+    : (m.better === "up") === up ? " That is the right direction." : " That is the wrong direction.";
+  return `${up ? "Up" : "Down"} ${size} on the four weeks before${by}.${verdict}`;
 }
 
 function Back() {

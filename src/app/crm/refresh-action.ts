@@ -13,6 +13,8 @@ import { revalidateTag } from "next/cache";
 import { LEADS_TAG } from "@/lib/crm/leads";
 import { FINANCE_TAG } from "@/lib/crm/stripe-finance";
 import { ROAS_TAG } from "@/lib/crm/roas";
+import { ADS_TAG, CHANGES_TAG } from "@/lib/crm/google-ads";
+import { PERIODS_TAG } from "@/lib/crm/ads-periods";
 import { requireSession } from "@/lib/crm/session";
 
 export async function refreshCrmData(): Promise<void> {
@@ -22,4 +24,7 @@ export async function refreshCrmData(): Promise<void> {
   revalidateTag(LEADS_TAG);
   revalidateTag(FINANCE_TAG);
   revalidateTag(ROAS_TAG);
+  revalidateTag(ADS_TAG);
+  revalidateTag(CHANGES_TAG);
+  revalidateTag(PERIODS_TAG);
 }
