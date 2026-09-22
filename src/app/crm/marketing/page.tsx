@@ -96,7 +96,23 @@ async function LiveSections({ site }: { site: Site }) {
   const { own, other } = adsSplit(result.data);
   const otherLabel = site === "smart-space" ? SITE_LABEL.smartcareliving : SITE_LABEL["smart-space"];
 
-  const roas = own.cost ? own.value / own.cost : 0;
+  /*
+   * The two money tiles read what the chart reads, not what Google recorded.
+   *
+   * The chart said 2.01x and the tile under it said 1.4x, on the same screen,
+   * both labelled "back per euro". The tile was Google's own figure, which is
+   * placeholder values per conversion type rather than prices anyone paid; the
+   * chart is Stripe money on a payment tied to an ad click. Two numbers for
+   * one question is worse than either alone. Both tiles now come from the
+   * same live read the chart is drawn from, and the answer is the same
+   * wherever the eye lands.
+   */
+  const live = await fetchRoasLive(site);
+  const back = live.ok ? live.data.back : 0;
+  const roas = live.ok && live.data.spend > 0 ? live.data.back / live.data.spend : 0;
+  const backByMonth = live.ok ? live.data.months.map((m) => m.back) : [];
+  const roasByMonth = live.ok ? live.data.months.map((m) => (m.spend > 0 ? m.back / m.spend : 0)) : [];
+  const monthLabels = live.ok ? live.data.months.map((m) => m.label) : [];
   const cpc = own.clicks ? own.cost / own.clicks : 0;
   const cpa = own.conversions ? own.cost / own.conversions : 0;
   const ctr = own.impressions ? (own.clicks / own.impressions) * 100 : 0;
@@ -206,15 +222,15 @@ async function LiveSections({ site }: { site: Site }) {
              value={own.conversions.toFixed(0)} note={own.conversions ? `${moneyExact(cpa)} each` : undefined}
              delta={compareTail(spark.conversions, "up", (n) => Math.abs(n).toFixed(1))}
              spark={sparkWeeks.length > 1 ? <Sparkline series={spark.conversions} tone="light" width={120} height={26} labels={sparkLabels} format="count" /> : undefined} />
-        <Kpi href="/crm/marketing/won" label="Work won" hue="green" icon={<Euro className="h-4.5 w-4.5" />}
-             value={money(own.value)} note="Value recorded against ads"
-             delta={compareTail(spark.value, "up", (n) => money(Math.abs(n)))}
-             spark={sparkWeeks.length > 1 ? <Sparkline series={spark.value} tone="light" width={120} height={26} labels={sparkLabels} format="money" /> : undefined} />
+        <Kpi href="/crm/marketing/won" label="Back from ads" hue="green" icon={<Euro className="h-4.5 w-4.5" />}
+             value={money(back)} note="Real euro through Stripe, tied to an ad"
+             delta={compareTail(backByMonth, "up", (n) => money(Math.abs(n)), "the three months before")}
+             spark={backByMonth.length > 1 ? <Sparkline series={backByMonth} tone="light" width={120} height={26} labels={monthLabels} format="money" /> : undefined} />
         <Kpi href="/crm/marketing/back" label="Back per €1" hue="red" icon={<TrendingUp className="h-4.5 w-4.5" />}
-             value={own.cost ? `${roas.toFixed(1)}x` : "–"}
-             note={own.cost ? `${money(own.value)} on ${money(own.cost)}` : undefined}
-             delta={compareTail(spark.roas, "up", (n) => `${Math.abs(n).toFixed(1)}x`)}
-             spark={sparkWeeks.length > 1 ? <Sparkline series={spark.roas} tone="light" width={120} height={26} labels={sparkLabels} format="ratio" /> : undefined} />
+             value={live.ok && live.data.spend > 0 ? `${roas.toFixed(1)}x` : "–"}
+             note={live.ok && live.data.spend > 0 ? `${money(back)} on ${money(live.data.spend)}` : undefined}
+             delta={compareTail(roasByMonth, "up", (n) => `${Math.abs(n).toFixed(1)}x`, "the three months before")}
+             spark={roasByMonth.length > 1 ? <Sparkline series={roasByMonth} tone="light" width={120} height={26} labels={monthLabels} format="ratio" /> : undefined} />
       </KpiRow>
 
       {report && <DailyReport report={report} />}
