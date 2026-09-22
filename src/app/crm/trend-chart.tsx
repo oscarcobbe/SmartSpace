@@ -76,7 +76,10 @@ const METRICS: {
 }[] = [
   { id: "cpa",         label: "Cost per enquiry", short: "Cost each",  better: "down", ratio: true, get: p => p.cpa,  fmt: money },
   { id: "conversions", label: "Enquiries",        short: "Enquiries",  better: "up",      get: p => p.conversions, fmt: n => nf.format(n) },
-  { id: "value",       label: "Work won",         short: "Work won",   better: "up",      get: p => p.value,       fmt: money },
+  /* Google's own recorded value, not money through the till. The tile at the
+     top of the page is real euro and says "back from ads"; this must not wear
+     the same words for a different number. */
+  { id: "value",       label: "Google's value",   short: "Google's value", better: "up",  get: p => p.value,       fmt: money },
   { id: "roas",        label: "Back per €1",      short: "Return",     better: "up",   ratio: true, get: p => p.roas, fmt: n => `${n.toFixed(1)}x` },
   { id: "cost",        label: "Spend",            short: "Spend",      better: "neither", get: p => p.cost,        fmt: money },
   { id: "clicks",      label: "Clicks",           short: "Clicks",     better: "neither", get: p => p.clicks,      fmt: n => nf.format(n) },

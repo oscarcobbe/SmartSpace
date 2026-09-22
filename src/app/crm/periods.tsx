@@ -119,7 +119,7 @@ export function Periods({ day, week, month }: { day: Row[]; week: Row[]; month: 
               <th scope="col" className="px-4 py-2 text-right font-semibold">Enquiries</th>
               <th scope="col" className="px-4 py-2 text-right font-semibold">vs before</th>
               <th scope="col" className="px-4 py-2 text-right font-semibold">Cost each</th>
-              <th scope="col" className="px-4 py-2 text-right font-semibold">Work won</th>
+              <th scope="col" className="px-4 py-2 text-right font-semibold">Google&apos;s value</th>
               <th scope="col" className="px-4 py-2 text-right font-semibold">Back per €1</th>
             </tr>
           </thead>
