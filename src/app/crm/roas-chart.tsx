@@ -87,11 +87,8 @@ const BASIS: Record<Basis, { label: string; short: string; blurb: string }> = {
  * rule at one times is drawn in the strip, which is the only line on the
  * chart a reader actually needs to judge a ratio against.
  */
-const PAD = { top: 22, right: 58, bottom: 30, left: 56 };
+const PAD = { top: 30, right: 58, bottom: 30, left: 56 };
 const WIDTH = 760;
-/** The ratio strip under the bars, and the gap that separates them. */
-const STRIP = 74;
-const GUTTER = 16;
 
 const eur = (n: number) =>
   Math.abs(n) >= 1000 ? `€${(n / 1000).toFixed(Math.abs(n) >= 10000 ? 0 : 1)}k` : `€${Math.round(n)}`;
@@ -119,11 +116,9 @@ export default function RoasChart({
   const uid = useId();
 
   const buckets = grain === "day" ? day : grain === "week" ? week : month;
-  const height = 340;
+  const height = 320;
   const plotW = WIDTH - PAD.left - PAD.right;
-  /* The bars own everything above the strip; the strip owns the ratio. */
-  const plotH = height - PAD.top - PAD.bottom - STRIP - GUTTER;
-  const stripTop = PAD.top + plotH + GUTTER;
+  const plotH = height - PAD.top - PAD.bottom;
 
   const revenue = (b: RoasBucket) =>
     basis === "ad" ? b.adRevenue : basis === "all" ? b.allRevenue : b.googleValue;
@@ -147,15 +142,16 @@ export default function RoasChart({
   }, [buckets, basis, lastAttributed, revenueKnown]);
 
   const y = (v: number) => PAD.top + plotH - (v / view.top) * plotH;
-  /* Inside the strip, on its own floor, so a ratio is never drawn at a height
-     that could be mistaken for an amount of money. */
-  const ry = (v: number) => stripTop + STRIP - (Math.min(v, view.rTop) / view.rTop) * STRIP;
+  const ry = (v: number) => PAD.top + plotH - (Math.min(v, view.rTop) / view.rTop) * plotH;
 
   const slot = plotW / Math.max(1, buckets.length);
   /* One label per this many columns. 58px is the widest label these formats
      produce plus a gap. */
   const labelEvery = Math.max(1, Math.ceil(buckets.length / Math.max(1, Math.floor(plotW / 58))));
-  const barW = Math.max(2, Math.min(18, slot * 0.32));
+  const barW = Math.max(2, Math.min(26, slot * 0.36));
+  /* Rounded only when the bar is wide enough for a radius to read as a shape
+     rather than as a smudge. */
+  const barR = barW >= 8 ? 4 : 1;
 
   /* Totals come from the day-level summary rather than from whatever buckets
      are on screen, so switching grain redraws the shape and never moves the
@@ -351,6 +347,10 @@ export default function RoasChart({
             <stop offset="0%" stopColor="#19a99b" />
             <stop offset="100%" stopColor="#0b7168" />
           </linearGradient>
+          <linearGradient id={`${uid}-ratefill`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#0d9488" stopOpacity=".20" />
+            <stop offset="100%" stopColor="#0d9488" stopOpacity="0" />
+          </linearGradient>
           <filter id={`${uid}-lift`} x="-60%" y="-60%" width="220%" height="220%">
             <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#0f172a" floodOpacity="0.28" />
           </filter>
@@ -368,7 +368,7 @@ export default function RoasChart({
           const frac = state === "all" ? 1 : Math.max(0, Math.min(1, after / span));
           return (
             <rect key={`b-${b.key}`} x={PAD.left + slot * (i + 1 - frac)} y={PAD.top}
-              width={slot * frac} height={stripTop + STRIP - PAD.top} fill={`url(#${uid}-blind)`}
+              width={slot * frac} height={plotH} fill={`url(#${uid}-blind)`}
               fillOpacity={state === "all" ? 1 : 0.55} pointerEvents="none" />
           );
         })}
@@ -380,21 +380,25 @@ export default function RoasChart({
           </g>
         ))}
 
-        {/* The strip. Its own floor, its own top, and the break-even rule,
-            which is the only height on a ratio chart worth reading against:
-            above it the advertising paid for itself and below it did not. */}
-        <line x1={PAD.left} x2={WIDTH - PAD.right} y1={stripTop + STRIP} y2={stripTop + STRIP}
-          stroke="#cbd5e1" strokeWidth="1" />
-        <text x={PAD.left - 8} y={stripTop + STRIP + 4} textAnchor="end" fontSize="10.5" fill="#94a3b8">0×</text>
-        <text x={PAD.left - 8} y={stripTop + 8} textAnchor="end" fontSize="10.5" fill="#0d9488">
-          {view.rTop.toFixed(view.rTop < 10 ? 1 : 0)}×
-        </text>
+        {/* The rate's own axis, on the right, sharing the gridlines the money
+            axis already drew. The reference the client sent does exactly this:
+            one plot, money on the left, the rate on the right. Splitting them
+            into two stacked boxes left a band of dead space with a line
+            stranded in the middle of it. */}
+        {view.rTicks.map((r, i) => (
+          <text key={r} x={WIDTH - PAD.right + 8} y={y(view.ticks[i] ?? 0) + 4}
+                fontSize="11" fill="#0d9488">
+            {r.toFixed(r < 10 ? 1 : 0)}×
+          </text>
+        ))}
+
+        {/* Break even: the one height on a rate worth reading against. */}
         {view.rTop > 1 && (
           <g>
             <line x1={PAD.left} x2={WIDTH - PAD.right} y1={ry(1)} y2={ry(1)}
               stroke="#94a3b8" strokeWidth="1" strokeDasharray="4 3" />
-            <text x={WIDTH - PAD.right} y={ry(1) - 4} textAnchor="end" fontSize="9.5" fill="#64748b"
-              stroke="#fff" strokeWidth="3" paintOrder="stroke">break even, 1× back</text>
+            <text x={PAD.left + 5} y={ry(1) - 5} fontSize="9.5" fill="#64748b"
+              stroke="#fff" strokeWidth="3" paintOrder="stroke">break even</text>
           </g>
         )}
 
@@ -406,7 +410,7 @@ export default function RoasChart({
           return (
             <g key={b.key}>
               <rect className="roas-hit" x={PAD.left + slot * i} y={PAD.top} width={slot}
-                height={stripTop + STRIP - PAD.top}
+                height={plotH}
                 fill="transparent"
                 stroke={activeIdx === i ? "#0f172a" : "transparent"} strokeWidth="1" strokeDasharray="3 3"
                 onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} onBlur={() => setHover(null)}
@@ -424,7 +428,7 @@ export default function RoasChart({
                 }
               />
               <rect className="roas-bar" x={centre - barW - 1} y={y(b.spend)} width={barW}
-                height={Math.max(0, PAD.top + plotH - y(b.spend))} rx="2"
+                height={Math.max(0, PAD.top + plotH - y(b.spend))} rx={barR}
                 fill={`url(#${uid}-spend)`} fillOpacity={b.partial ? 0.5 : 1} pointerEvents="none"
                 filter={activeIdx === i ? `url(#${uid}-lift)` : undefined} />
               {/* The top slice of the spend bar is money spent after the click
@@ -437,7 +441,7 @@ export default function RoasChart({
               )}
               {!blind && (
                 <rect className="roas-bar" x={centre + 1} y={y(rev)} width={barW}
-                  height={Math.max(0, PAD.top + plotH - y(rev))} rx="2"
+                  height={Math.max(0, PAD.top + plotH - y(rev))} rx={barR}
                   fill={`url(#${uid}-rev)`} fillOpacity={b.partial ? 0.5 : 1} pointerEvents="none"
                   filter={activeIdx === i ? `url(#${uid}-lift)` : undefined} />
               )}
@@ -472,9 +476,22 @@ export default function RoasChart({
           );
         })}
 
+        {/* The area beneath the rate. This is most of what gives the chart the
+            client sent its depth, and a line on its own is what made ours read
+            as a wireframe. Drawn before the line so the line sits on it. */}
+        {segments.map((pts) => {
+          const xy = pts.split(" ");
+          const firstX = xy[0]!.split(",")[0]!;
+          const lastX = xy[xy.length - 1]!.split(",")[0]!;
+          const floor = PAD.top + plotH;
+          return (
+            <path key={`fill-${pts}`} pointerEvents="none" fill={`url(#${uid}-ratefill)`}
+              d={`M ${firstX},${floor} L ${xy.join(" L ")} L ${lastX},${floor} Z`} />
+          );
+        })}
         {segments.map((pts) => (
           <polyline key={pts} className="roas-line" pathLength={1} points={pts} fill="none" stroke="#0d9488"
-            strokeWidth="2" strokeDasharray="4 3" pointerEvents="none" />
+            strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" pointerEvents="none" />
         ))}
         {buckets.map((b, i) => {
           const r = ratioOf(b);
