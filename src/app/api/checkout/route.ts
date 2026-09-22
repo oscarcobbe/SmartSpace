@@ -26,6 +26,21 @@ interface CheckoutBody {
   /** GA4 client + session id from the _ga cookies, for server-side attribution. */
   gaClientId?: string;
   gaSessionId?: string;
+  /** The cookie banner's stored answer, read in the browser at checkout. */
+  consent?: { decision?: unknown; decidedAt?: unknown } | null;
+}
+
+/**
+ * The banner answer, or nothing. Anything that is not exactly one of the two
+ * answers the banner can store, with a plausible time, is dropped rather than
+ * written: this value is later sent to Google as a consent signal, so a
+ * malformed one must become "unspecified", never "granted".
+ */
+function consentFrom(raw: CheckoutBody["consent"]): { decision: "granted" | "denied"; at: string } | null {
+  if (!raw || (raw.decision !== "granted" && raw.decision !== "denied")) return null;
+  const t = Number(raw.decidedAt);
+  if (!Number.isFinite(t) || t < Date.UTC(2026, 0, 1) || t > Date.now() + 5 * 60_000) return null;
+  return { decision: raw.decision, at: new Date(t).toISOString() };
 }
 
 interface ResolvedItem {
@@ -144,7 +159,8 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    const { items, attribution, gclid: legacyGclid, gaClientId, gaSessionId } = parsed;
+    const { items, attribution, gclid: legacyGclid, gaClientId, gaSessionId, consent: rawConsent } = parsed;
+    const consent = consentFrom(rawConsent);
     const gclid = attribution?.gclid ?? legacyGclid ?? "";
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -183,6 +199,12 @@ export async function POST(request: Request) {
     params.append("custom_fields[0][optional]", "true");
     params.append("allow_promotion_codes", "true");
     params.append("metadata[gclid]", gclid);
+    /* The buyer's cookie answer, so the offline upload can tell Google what
+       this customer actually agreed to instead of inferring it. */
+    if (consent) {
+      params.append("metadata[ad_consent]", consent.decision);
+      params.append("metadata[ad_consent_at]", consent.at);
+    }
     // GA4 client + session id (from the _ga cookies, sent by the browser at
     // checkout) so the server-side purchase event attributes to the real
     // session/channel instead of (not set)/Unassigned.

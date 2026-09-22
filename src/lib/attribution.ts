@@ -122,14 +122,35 @@ const CONSENT_TTL_MS = 365 * 24 * 60 * 60 * 1000;
  * CookieBanner's own loadStored, so the two cannot disagree again.
  */
 function consentGranted(): boolean {
+  return consentRecord()?.decision === "granted";
+}
+
+/**
+ * The visitor's answer to the cookie banner, exactly as the banner stored it.
+ *
+ * Sent with a checkout so the sale carries a record of consent. Google will
+ * not use an EEA conversion without an affirmative consent signal, and the
+ * offline upload had nothing to give it: it once inferred consent from the
+ * presence of a click id, which is false for any id stored before 6 September
+ * 2026, when this file still wrote attribution on page load whatever the
+ * visitor chose. The choice itself, read at the moment of purchase, is the
+ * only thing that can be stood over.
+ *
+ * Null when there is no answer or it has expired, which the upload reports
+ * to Google as unspecified rather than guessing either way.
+ */
+export function consentRecord(): { decision: "granted" | "denied"; decidedAt: number } | null {
+  if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(CONSENT_KEY);
-    if (!raw) return false;
+    if (!raw) return null;
     const parsed = JSON.parse(raw) as { decision?: string; decidedAt?: number };
-    if (parsed?.decision !== "granted") return false;
-    return Date.now() - (parsed.decidedAt ?? 0) <= CONSENT_TTL_MS;
+    if (parsed?.decision !== "granted" && parsed?.decision !== "denied") return null;
+    const decidedAt = Number(parsed.decidedAt);
+    if (!Number.isFinite(decidedAt) || Date.now() - decidedAt > CONSENT_TTL_MS) return null;
+    return { decision: parsed.decision, decidedAt };
   } catch {
-    return false;
+    return null;
   }
 }
 

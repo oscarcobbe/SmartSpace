@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useCart } from "@/context/CartContext";
-import { getAttribution, getGaIds } from "@/lib/attribution";
+import { consentRecord, getAttribution, getGaIds } from "@/lib/attribution";
 import { X, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 
 export default function CartDrawer() {
@@ -52,7 +52,7 @@ export default function CartDrawer() {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items, attribution, gaClientId: ga.clientId, gaSessionId: ga.sessionId }),
+        body: JSON.stringify({ items, attribution, consent: consentRecord(), gaClientId: ga.clientId, gaSessionId: ga.sessionId }),
       });
       const data = await res.json();
       if (data.url) {

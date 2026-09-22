@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useCart } from "@/context/CartContext";
-import { getAttribution, getGaIds } from "@/lib/attribution";
+import { consentRecord, getAttribution, getGaIds } from "@/lib/attribution";
 import { ShoppingBag, Check, Loader2, ArrowRight } from "lucide-react";
 
 interface AddToCartButtonProps {
@@ -93,6 +93,7 @@ export default function AddToCartButton({
             attribution,
             gaClientId: ga.clientId,
             gaSessionId: ga.sessionId,
+            consent: consentRecord(),
           }),
         });
         const data = await res.json();
