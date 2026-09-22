@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import SiteChrome from "@/components/SiteChrome";
 import { AGGREGATE_RATING, AGGREGATE_REVIEW_COUNT } from "@/lib/business-constants";
+import { COMPANY } from "@/lib/company";
 
 // next/font self-hosts the font, eliminates the render-blocking
 // `<link href="fonts.googleapis.com/...">` request, removes the need for
@@ -92,6 +93,24 @@ const jsonLd = {
       "@type": "Organization",
       "@id": `${SITE}/#organization`,
       name: "Smart Space",
+      /* The registered particulars, the same ones section 151 puts in the
+         footer. Google cross-checks a business against the public register
+         during advertiser verification, and an Organization that names no
+         legal entity gives it nothing to match against. */
+      legalName: COMPANY.legalName,
+      identifier: {
+        "@type": "PropertyValue",
+        name: "CRO",
+        value: COMPANY.number,
+      },
+      foundingDate: "2018-04-20",
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "Fourwinds Cottage, Cuckoo Corner",
+        addressLocality: "Ballymerrigan",
+        addressRegion: "Co. Wicklow",
+        addressCountry: "IE",
+      },
       url: SITE,
       logo: {
         "@type": "ImageObject",
@@ -121,10 +140,19 @@ const jsonLd = {
       telephone: BUSINESS_PHONE,
       email: "info@smart-space.ie",
       priceRange: "€€",
+      /*
+       * Where the business actually is, which is Wicklow.
+       *
+       * This said Dublin with no street and no postcode. The business serves
+       * Dublin, it is not in it, and naming a city you are not in is the
+       * thing Google penalises a local listing for. areaServed below is the
+       * right place to say where the work is done, and it already does.
+       */
       address: {
         "@type": "PostalAddress",
-        addressLocality: "Dublin",
-        addressRegion: "Leinster",
+        streetAddress: "Fourwinds Cottage, Cuckoo Corner",
+        addressLocality: "Ballymerrigan",
+        addressRegion: "Co. Wicklow",
         addressCountry: "IE",
       },
       areaServed: [
