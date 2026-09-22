@@ -187,12 +187,28 @@ export default function CookieBanner() {
       aria-label="Cookie consent"
       className="fixed bottom-4 left-4 right-4 sm:left-6 sm:right-auto sm:bottom-6 sm:max-w-md z-[1000] bg-white border border-gray-200 rounded-2xl shadow-xl p-5 sm:p-6"
     >
-      <h2 className="text-sm font-bold text-gray-900 mb-2">Cookies on Smart Space</h2>
+      <h2 className="text-sm font-bold text-gray-900 mb-2">Can we see which pages helped?</h2>
+      {/*
+       * The old wording said we measure ad performance and how visitors use
+       * the site. Both are about us, and neither gives a reader any reason to
+       * agree. Refusing cannot lawfully be made harder, so an honest reason to
+       * agree is the only lever there is.
+       */}
       <p className="text-xs sm:text-sm text-gray-600 leading-relaxed mb-4">
-        We use cookies to measure ad performance and understand how visitors use the site. You can
-        accept all, or only essential cookies. You can change your choice anytime. See our{" "}
-        <a href="/privacy" className="text-brand-700 hover:underline">privacy policy</a> for details.
+        It tells us which pages actually lead to a job being booked, so we stop
+        paying to send people to the ones that do not. No names and no personal
+        details. Change your mind any time. See our{" "}
+        <a href="/privacy" className="text-brand-700 hover:underline">privacy policy</a>.
       </p>
+      {/*
+       * Equal prominence, which is not a preference.
+       *
+       * Accept was a filled brand button and refuse was a pale outline. That
+       * difference is the dark pattern the DPC and the EDPB both name, and it
+       * is the one thing about a consent banner a regulator will look at
+       * first. Same size, same weight, same depth of colour now: only the
+       * label and the hue differ.
+       */}
       <div className="flex flex-col sm:flex-row gap-2">
         <button
           type="button"
@@ -204,7 +220,7 @@ export default function CookieBanner() {
         <button
           type="button"
           onClick={() => decide("denied")}
-          className="flex-1 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold px-4 py-2.5 rounded-full border border-gray-200 transition-colors"
+          className="flex-1 bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold px-4 py-2.5 rounded-full transition-colors"
         >
           Essential only
         </button>
