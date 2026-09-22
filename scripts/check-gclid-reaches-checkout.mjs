@@ -112,57 +112,71 @@ try {
     say(`ok    the click id survives the banner`);
   }
 
-  /* 4. The thing this check exists for: what the checkout request carries.
-        Driving the real basket would tie this to whatever the buttons are
-        called this month, so it calls the same function the drawer calls and
-        posts the same shape, then reads what came out the other end. */
-  await cdp("Network.setRequestInterception", { patterns: [] }, sessionId).catch(() => {});
-  const body = await evaluate(`(async () => {
-    /* The drawer builds its body from getAttribution(). The module is bundled,
-       so it is read back out of storage exactly as the drawer reads it. */
-    let attribution = null;
-    try { attribution = JSON.parse(localStorage.getItem("ss_attribution") || "null"); } catch {}
-    const res = await fetch("/api/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        items: [{ id: "guard", name: "Attribution guard", price: 100, quantity: 1 }],
-        attribution: attribution ?? undefined,
-        gaClientId: "GA1.1.guard", gaSessionId: "guard",
-      }),
-    });
-    return { status: res.status, text: (await res.text()).slice(0, 400) };
+  /*
+   * 4. Press the real button, the way a customer does.
+   *
+   * This used to build the request itself: read storage, call fetch with the
+   * body it expected the drawer to send, then check that its own request
+   * carried what it had just put in. A review caught it on 22 September. It
+   * proved only that the check agreed with itself; a button that stopped
+   * sending attribution, or never sent consent, would still have passed.
+   *
+   * Now it goes to the paid landing page, answers the one required question,
+   * picks a date and a time, and presses "Book Installation Now". The request
+   * is paused at the browser, read, and then failed there, so it never reaches
+   * the server and no Stripe session is ever created by this check.
+   */
+  await cdp("Fetch.enable", { patterns: [{ urlPattern: "*/api/checkout", requestStage: "Request" }] }, sessionId);
+  await cdp("Page.navigate", { url: `${SITE}/ring-installation` }, sessionId);
+  await wait(5000);
+  const press = (re) => evaluate(`(() => {
+    const b = [...document.querySelectorAll("button")].filter((x) => x.offsetParent && !x.disabled)
+      .find((x) => ${re}.test(((x.textContent || "") + " " + (x.getAttribute("aria-label") || "")).replace(/\\s+/g, " ")));
+    if (!b) return "missing";
+    b.click();
+    return "ok";
   })()`);
-
-  /* The request is expected to be refused: "guard" is not a real product, and
-     this must never create a live Stripe session. What matters is which
-     refusal, because a 400 about the item proves the body reached the handler
-     with attribution attached. */
-  const reached = body.status >= 200 && body.status < 500;
-  if (!reached) {
-    problems.push(`/api/checkout answered ${body.status}: ${body.text}`);
-  } else {
-    say(`ok    /api/checkout takes the drawer's shape (answered ${body.status})`);
+  const steps = [
+    ["the wiring answer", "/^Yes/"],
+    ["an installation date", "/(Mon|Tue|Wed|Thu|Fri) \\d{1,2} [A-Z][a-z]{2}/"],
+    ["a time", "/\\d{1,2}:\\d{2}/"],
+    ["Book Installation Now", "/Book Installation Now/"],
+  ];
+  for (const [what, re] of steps) {
+    const r = await press(re);
+    if (r !== "ok") { problems.push(`could not press ${what} on /ring-installation: the page has changed`); break; }
+    await wait(1200);
   }
 
-  /* 5. And the request that was actually sent, off the wire, with the click id
-        in it. This is the assertion; everything above is setup. */
-  const sent = events
-    .filter((e) => e.method === "Network.requestWillBeSent")
-    .filter((e) => String(e.params.request.url).includes("/api/checkout"))
-    .pop();
-  if (!sent) {
-    problems.push("no request to /api/checkout was seen on the wire at all");
+  /* 5. The request the button sent, paused before it left the browser. */
+  let paused = null;
+  for (let i = 0; i < 20 && !paused; i++) {
+    paused = events.find((e) => e.method === "Fetch.requestPaused") ?? null;
+    if (!paused) await wait(250);
+  }
+  if (!paused) {
+    if (!problems.length) problems.push("pressing Book Installation Now sent no request to /api/checkout");
   } else {
+    await cdp("Fetch.failRequest", { requestId: paused.params.requestId, errorReason: "Aborted" }, sessionId);
     let parsed = null;
-    try { parsed = JSON.parse(sent.params.request.postData ?? "null"); } catch { /* below */ }
+    try { parsed = JSON.parse(paused.params.request.postData ?? "null"); } catch { /* below */ }
     const onWire = parsed?.attribution?.gclid ?? null;
     if (onWire !== GCLID) {
       problems.push(
         `the checkout request carries no click id (attribution.gclid = ${JSON.stringify(onWire)}). ` +
         `Every sale made this way is unattributable, whatever the offline upload does afterwards.`);
     } else {
-      say(`ok    the click id is in the checkout request, so Stripe will carry it`);
+      say(`ok    the real button sends the click id, so Stripe will carry it`);
+    }
+    /* The banner was accepted above, so the request must say so. Without it
+       the offline upload sends the sale as unspecified and Google, for a
+       customer in Ireland, discards it. */
+    if (parsed?.consent?.decision !== "granted") {
+      problems.push(
+        `the checkout request does not carry the cookie answer (consent = ${JSON.stringify(parsed?.consent ?? null)}). ` +
+        `Google will discard this sale when it is uploaded.`);
+    } else {
+      say(`ok    the real button sends the cookie answer, so Google may count the sale`);
     }
   }
 } finally {
