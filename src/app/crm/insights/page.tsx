@@ -1,8 +1,10 @@
 import { requireSession, SITE_LABEL } from "@/lib/crm/session";
 import { fetchInsights, EVENT_LABEL } from "@/lib/crm/ga4";
 import { fetchScans, scanLabel } from "@/lib/crm/scans";
-import { PageHeader, Panel, Stat, StatRow, Note, Empty } from "../ui";
+import { PageHeader, Panel, Stat, Note, Empty } from "../ui";
 import { BarChart, Legend } from "../chart";
+import { Kpi, KpiRow, compareTail } from "../kpi";
+import { Users, Footprints, BookOpen, Eye, Timer, Megaphone } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -107,22 +109,31 @@ export default async function InsightsPage({ searchParams }: { searchParams: { d
         aside={<Range />}
       />
 
-      <StatRow>
-        <Stat label="People" value={int(users)} note={`${int(sessions)} visits`} explain="people" />
-        <Stat label="Pages read" value={int(views)} note={sessions ? `${(views / sessions).toFixed(1)} a visit` : undefined} />
-        <Stat
-          label="Stayed to read"
-          value={pct(engaged, sessions)}
-          note={`${int(engaged)} of ${int(sessions)} visits`}
-          tone={sessions && engaged / sessions >= 0.5 ? "good" : "warn"}
-        />
-        <Stat label="Average visit" value={mmss(avgSeconds)} />
-        <Stat
-          label="From search ads"
-          value={int(g.sources.find((s) => /paid/i.test(s.label))?.sessions ?? 0)}
-          note="Visits you paid for"
-        />
-      </StatRow>
+      {/* Same treatment as Google Ads, and every tile earns its change
+          indicator: the daily query now returns all four of these per day
+          rather than sessions alone, so none of them is a figure with nothing
+          to compare against. */}
+      <KpiRow>
+        <Kpi label="People" hue="blue" icon={<Users className="h-4.5 w-4.5" />}
+             value={int(users)} note={`${int(sessions)} visits`}
+             delta={compareTail(g.daily.map((d) => d.users), "up", (n) => int(Math.abs(n)), "the half before")} />
+        <Kpi label="Visits" hue="indigo" icon={<Footprints className="h-4.5 w-4.5" />}
+             value={int(sessions)} note={`${days} days`}
+             delta={compareTail(g.daily.map((d) => d.sessions), "up", (n) => int(Math.abs(n)), "the half before")} />
+        <Kpi label="Pages read" hue="violet" icon={<BookOpen className="h-4.5 w-4.5" />}
+             value={int(views)} note={sessions ? `${(views / sessions).toFixed(1)} a visit` : undefined}
+             delta={compareTail(g.daily.map((d) => d.views), "up", (n) => int(Math.abs(n)), "the half before")} />
+        <Kpi label="Stayed to read" hue="green" icon={<Eye className="h-4.5 w-4.5" />}
+             value={pct(engaged, sessions)} note={`${int(engaged)} of ${int(sessions)} visits`}
+             delta={compareTail(
+               g.daily.map((d) => (d.sessions ? (d.engaged / d.sessions) * 100 : 0)), "up",
+               (n) => `${Math.abs(n).toFixed(0)}pt`, "the half before")} />
+        <Kpi label="Average visit" hue="slate" icon={<Timer className="h-4.5 w-4.5" />}
+             value={mmss(avgSeconds)} note="time on the site" />
+        <Kpi label="From search ads" hue="orange" icon={<Megaphone className="h-4.5 w-4.5" />}
+             value={int(g.sources.find((s) => /paid/i.test(s.label))?.sessions ?? 0)}
+             note="visits you paid for" />
+      </KpiRow>
 
       <div className="space-y-6">
         <Panel title="Visits, week by week">

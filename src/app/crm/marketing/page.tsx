@@ -4,7 +4,7 @@ import { fetchAds, adsSplit, fetchChanges, summariseChanges } from "@/lib/crm/go
 import { fetchFinance } from "@/lib/crm/stripe-finance";
 import { money, moneyExact } from "@/lib/crm/leads";
 import { STATUS_PILL } from "@/lib/crm/labels";
-import { PageHeader, Panel, Stat, StatRow, Note, Pill } from "../ui";
+import { PageHeader, Panel, Note, Pill } from "../ui";
 import ExportButton from "../export-button";
 import RoasChart from "../roas-chart";
 import { fetchRoas } from "@/lib/crm/roas";
@@ -16,6 +16,8 @@ import { DailyReport } from "../daily-report";
 import { Sparkline } from "../sparkline";
 import { TrendChart, type TrendPoint } from "../trend-chart";
 import type { AdsData } from "@/lib/crm/google-ads";
+import { Kpi, KpiRow, compareTail } from "../kpi";
+import { CreditCard, MousePointerClick, Activity, Inbox, Euro, TrendingUp } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -165,7 +167,6 @@ async function LiveSections({ site }: { site: Site }) {
   };
   /* So a point on a sparkline can say which week it is, not just its height. */
   const sparkLabels = sparkWeeks.map((w) => w.label);
-  const prior = (xs: number[]) => (xs.length > 1 ? xs[xs.length - 2]! : null);
 
   const changeList = changes.ok ? summariseChanges(changes.data) : [];
   const findings = marketingFindings({
@@ -182,37 +183,39 @@ async function LiveSections({ site }: { site: Site }) {
         Live from Google Ads, {own.window.from} to {own.window.to}.
       </p>
 
-      {/* One row, not two. The four sparkline cards that used to sit here
-          repeated the four figures below them, which is the clutter D2 is
-          about: the same question asked twice in a row.
-
-          Every tile in this row carries the same furniture: a figure, a
-          sparkline, and the link through to the day by day table. It used to
-          be three of five with a sparkline and two of five with the link,
-          which reads as tiles that were never finished rather than as tiles
-          that had nothing to show. Every one of these five has eight weeks of
-          history behind it and the same table underneath it, so there was
-          never a reason for the difference. */}
-      <StatRow>
-        <Stat label="Spend" value={money(own.cost)} note="Last twelve months" explain="spend" source={{ href: "#every-period", label: "See it day by day" }}
-          trend={sparkWeeks.length > 1 ? <Sparkline series={spark.cost} tone="none" baseline={prior(spark.cost)} labels={sparkLabels} format="money" /> : undefined} />
-        <Stat label="Work won" value={money(own.value)} note="Value recorded against ads" tone={own.value > 0 ? "good" : "plain"} explain="workWon"
-          source={{ href: "#every-period", label: "See it day by day" }}
-          trend={sparkWeeks.length > 1 ? <Sparkline series={spark.value} tone="good" baseline={prior(spark.value)} labels={sparkLabels} format="money" /> : undefined} />
-        <Stat
-          label="Return on spend"
-          explain="returnOnSpend"
-          value={own.cost ? `${roas.toFixed(1)}x` : "–"}
-          note={own.cost ? `${money(own.value)} back on ${money(own.cost)}` : undefined}
-          tone={roas >= 3 ? "good" : roas >= 1 ? "warn" : "bad"}
-          source={{ href: "#every-period", label: "See it day by day" }}
-          trend={sparkWeeks.length > 1 ? <Sparkline series={spark.roas} tone={roas >= 1 ? "good" : "bad"} baseline={prior(spark.roas)} labels={sparkLabels} format="ratio" /> : undefined} />
-        <Stat label="Enquiries" value={own.conversions.toFixed(0)} note={own.conversions ? `${moneyExact(cpa)} each` : undefined} explain="enquiries" source={{ href: "#every-period", label: "See it day by day" }}
-          trend={sparkWeeks.length > 1 ? <Sparkline series={spark.conversions} tone="good" baseline={prior(spark.conversions)} labels={sparkLabels} format="count" /> : undefined} />
-        <Stat label="Clicks" value={int(own.clicks)} note={`${moneyExact(cpc)} each, ${ctr.toFixed(1)}% of views`} explain="clicks"
-          source={{ href: "#every-period", label: "See it day by day" }}
-          trend={sparkWeeks.length > 1 ? <Sparkline series={spark.clicks} tone="none" baseline={prior(spark.clicks)} labels={sparkLabels} format="count" /> : undefined} />
-      </StatRow>
+      {/* The headline row, in the shape the client asked for: a colour per
+          tile so the row is scannable, and a change indicator on every one of
+          them, because a figure with nothing to compare it against is the
+          reason this page read as flat. Four weeks against the four before,
+          never the latest week against the first: on this budget a single
+          week can be one enquiry. */}
+      <KpiRow>
+        <Kpi label="Spend" hue="orange" icon={<CreditCard className="h-4.5 w-4.5" />}
+             value={money(own.cost)} note="Last twelve months"
+             delta={compareTail(spark.cost, "neither", (n) => money(Math.abs(n)))}
+             spark={sparkWeeks.length > 1 ? <Sparkline series={spark.cost} tone="light" width={120} height={26} labels={sparkLabels} format="money" /> : undefined} />
+        <Kpi label="Clicks" hue="blue" icon={<MousePointerClick className="h-4.5 w-4.5" />}
+             value={int(own.clicks)} note={`${moneyExact(cpc)} each`}
+             delta={compareTail(spark.clicks, "up", (n) => int(Math.abs(n)))}
+             spark={sparkWeeks.length > 1 ? <Sparkline series={spark.clicks} tone="light" width={120} height={26} labels={sparkLabels} format="count" /> : undefined} />
+        <Kpi label="Click rate" hue="violet" icon={<Activity className="h-4.5 w-4.5" />}
+             value={`${ctr.toFixed(1)}%`} note="of the times ads were shown"
+             delta={compareTail(sparkWeeks.map((w) => (w.impressions ? (w.clicks / w.impressions) * 100 : 0)), "up",
+                                (n) => `${Math.abs(n).toFixed(1)}pt`)} />
+        <Kpi label="Enquiries" hue="indigo" icon={<Inbox className="h-4.5 w-4.5" />}
+             value={own.conversions.toFixed(0)} note={own.conversions ? `${moneyExact(cpa)} each` : undefined}
+             delta={compareTail(spark.conversions, "up", (n) => Math.abs(n).toFixed(1))}
+             spark={sparkWeeks.length > 1 ? <Sparkline series={spark.conversions} tone="light" width={120} height={26} labels={sparkLabels} format="count" /> : undefined} />
+        <Kpi label="Work won" hue="green" icon={<Euro className="h-4.5 w-4.5" />}
+             value={money(own.value)} note="Value recorded against ads"
+             delta={compareTail(spark.value, "up", (n) => money(Math.abs(n)))}
+             spark={sparkWeeks.length > 1 ? <Sparkline series={spark.value} tone="light" width={120} height={26} labels={sparkLabels} format="money" /> : undefined} />
+        <Kpi label="Back per €1" hue="red" icon={<TrendingUp className="h-4.5 w-4.5" />}
+             value={own.cost ? `${roas.toFixed(1)}x` : "–"}
+             note={own.cost ? `${money(own.value)} on ${money(own.cost)}` : undefined}
+             delta={compareTail(spark.roas, "up", (n) => `${Math.abs(n).toFixed(1)}x`)}
+             spark={sparkWeeks.length > 1 ? <Sparkline series={spark.roas} tone="light" width={120} height={26} labels={sparkLabels} format="ratio" /> : undefined} />
+      </KpiRow>
 
       {report && <DailyReport report={report} />}
 

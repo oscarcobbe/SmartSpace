@@ -52,8 +52,8 @@ const GROUPS: { heading: string; items: { href: string; label: string; icon: typ
   {
     heading: "Marketing",
     items: [
-      { href: "/crm/marketing", label: "Ads and return", icon: BarChart3 },
-      { href: "/crm/insights", label: "Visitors", icon: Activity },
+      { href: "/crm/marketing", label: "Google Ads", icon: BarChart3 },
+      { href: "/crm/insights", label: "GA4", icon: Activity },
       { href: "/crm/outreach", label: "Outreach", icon: Send, sites: ["smartcareliving"] },
     ],
   },

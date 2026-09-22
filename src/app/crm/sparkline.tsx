@@ -26,7 +26,9 @@ export function Sparkline({
   format,
 }: {
   series: number[];
-  tone?: "good" | "watch" | "bad" | "none";
+  /* "light" is for a sparkline drawn on a coloured tile, where every other
+     tone disappears into the background it is sitting on. */
+  tone?: "good" | "watch" | "bad" | "none" | "light";
   /** The previous period's figure, drawn as a dashed rule. Without it a
       sparkline says where a number has been and not whether that is better
       than last time, which is the only question anybody was asking. */
@@ -73,7 +75,8 @@ export function Sparkline({
   const area = `${line} L ${x(series.length - 1).toFixed(1)} ${height} L ${x(0).toFixed(1)} ${height} Z`;
 
   const stroke =
-    tone === "good" ? "#047857" : tone === "bad" ? "#be123c" : tone === "watch" ? "#b45309" : "#64748b";
+    tone === "good" ? "#047857" : tone === "bad" ? "#be123c"
+      : tone === "watch" ? "#b45309" : tone === "light" ? "#ffffff" : "#64748b";
 
   /* Only inside the plotted range, with a pixel of room at each edge, because
      a rule pinned to the top or bottom reads as the chart's own border. */

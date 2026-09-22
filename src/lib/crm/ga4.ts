@@ -99,7 +99,7 @@ export interface Insights {
   devices: { label: string; sessions: number; engaged: number }[];
   counties: { label: string; sessions: number }[];
   /** Sessions per day, oldest first, for the chart. */
-  daily: { date: string; sessions: number }[];
+  daily: { date: string; sessions: number; users: number; views: number; engaged: number }[];
 }
 
 const dateKey = (raw: string) =>
@@ -186,7 +186,12 @@ export async function fetchInsights(site: Site, days = 28): Promise<Ga4Result<In
       runReport(property, {
         dateRanges: range,
         dimensions: [{ name: "date" }],
-        metrics: [{ name: "sessions" }],
+        /* The same four the headline tiles show, per day.
+           It used to ask for sessions alone, so only one of those tiles could
+           say whether its number was moving and the rest were a figure with
+           nothing to compare against. One request either way. */
+        metrics: [{ name: "sessions" }, { name: "totalUsers" },
+                  { name: "screenPageViews" }, { name: "engagedSessions" }],
         orderBys: [{ dimension: { dimensionName: "date" } }],
       }),
     ]);
@@ -207,7 +212,10 @@ export async function fetchInsights(site: Site, days = 28): Promise<Ga4Result<In
         events: events.map((r) => ({ name: r.key[0], count: r.values[0] })),
         devices: devices.map((r) => ({ label: r.key[0] || "Unknown", sessions: r.values[0], engaged: r.values[1] })),
         counties: counties.map((r) => ({ label: r.key[0] || "Unknown", sessions: r.values[0] })),
-        daily: daily.map((r) => ({ date: dateKey(r.key[0]), sessions: r.values[0] })),
+        daily: daily.map((r) => ({
+          date: dateKey(r.key[0]), sessions: r.values[0] ?? 0, users: r.values[1] ?? 0,
+          views: r.values[2] ?? 0, engaged: r.values[3] ?? 0,
+        })),
       },
     };
   } catch (err) {

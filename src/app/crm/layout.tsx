@@ -21,7 +21,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900 antialiased">
+      <div className="crm-root min-h-screen bg-slate-50 text-slate-900 antialiased">
         <main id="crm-main" className="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center px-6 py-16">
           {children}
         </main>
@@ -30,7 +30,7 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 antialiased">
+    <div className="crm-root min-h-screen bg-slate-50 text-slate-900 antialiased">
       <a href="#crm-main" className="skip-link">Skip to content</a>
       <div className="flex min-h-screen">
         <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-slate-200 bg-white lg:flex">

@@ -316,3 +316,84 @@ p {
   .roas-bar { animation: none; }
   .roas-line { animation: none; stroke-dashoffset: 0; }
 }
+
+/*
+ * Buttons in the CRM: something happens when you touch them.
+ *
+ * ── WHY A GLOBAL RULE AND NOT A COMPONENT ────────────────────────
+ *
+ * The CRM's controls are written inline with Tailwind across a dozen files:
+ * the grain and basis toggles on the return chart, the metric chips on the
+ * trend chart, the range links on Visitors, the refresh button. Adding a
+ * shared component would mean touching every one of them and would still miss
+ * the next one somebody writes. Scoping it to .crm-root catches them all,
+ * including the ones not written yet, and leaves the public site alone.
+ *
+ * ── WHAT THE GLOW IS FOR ─────────────────────────────────────────
+ *
+ * Not decoration. A control that does not respond reads as disabled, and this
+ * dashboard already had a real version of that problem: the chart's toggles
+ * were painted and dead until React hydrated, and were reported as broken
+ * because nothing about them moved. A press that lifts and settles says the
+ * click landed, which is the one thing a reader needs to know.
+ *
+ * Reduced motion gets the colour and the ring and none of the movement.
+ */
+@layer components {
+  .crm-root button:not(:disabled),
+  .crm-root a[role="button"]:not([aria-disabled="true"]) {
+    transition: transform .14s cubic-bezier(.4, 0, .2, 1),
+                box-shadow .18s cubic-bezier(.4, 0, .2, 1),
+                background-color .18s, border-color .18s, color .18s;
+    will-change: transform;
+  }
+
+  .crm-root button:not(:disabled):hover,
+  .crm-root a[role="button"]:not([aria-disabled="true"]):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px -1px rgb(15 23 42 / 0.12),
+                0 8px 20px -6px rgb(15 23 42 / 0.18);
+  }
+
+  /* The press itself. Down and flat, so the up-state reads as a release. */
+  .crm-root button:not(:disabled):active,
+  .crm-root a[role="button"]:not([aria-disabled="true"]):active {
+    transform: translateY(0) scale(.985);
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.14);
+  }
+
+  /* The one that is already chosen sits lit rather than raised, so a row of
+     toggles says which is on without needing the pointer. */
+  .crm-root button[aria-pressed="true"]:not(:disabled) {
+    box-shadow: 0 0 0 1px rgb(15 23 42 / 0.10),
+                0 4px 14px -4px rgb(15 23 42 / 0.30);
+  }
+
+  .crm-root button:focus-visible,
+  .crm-root a:focus-visible {
+    outline: 2px solid #0f172a;
+    outline-offset: 2px;
+    border-radius: 8px;
+  }
+
+  /* A coloured tile glows in its own colour rather than in slate, which on a
+     saturated card would read as a smudge. */
+  .crm-root .kpi-tile {
+    transition: transform .16s cubic-bezier(.4, 0, .2, 1), box-shadow .2s;
+  }
+  .crm-root .kpi-tile:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px -8px currentColor;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .crm-root button,
+    .crm-root a[role="button"],
+    .crm-root .kpi-tile {
+      transition: background-color .18s, border-color .18s, color .18s;
+    }
+    .crm-root button:hover,
+    .crm-root a[role="button"]:hover,
+    .crm-root .kpi-tile:hover { transform: none; }
+  }
+}
