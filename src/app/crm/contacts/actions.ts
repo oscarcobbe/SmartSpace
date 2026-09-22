@@ -12,6 +12,13 @@ import { requireSession } from "@/lib/crm/session";
 import { crm, upsertContact, type Site } from "@/lib/crm/db";
 import { STATUSES, type LeadStatus } from "@/lib/crm/contacts";
 import { getPerson } from "@/lib/crm/people";
+import { createPaymentLink } from "@/lib/crm/payment-link";
+
+/* Our own origin, for the one call that goes back through the front door. */
+function siteBase(): string {
+  const fromEnv = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "").trim();
+  return fromEnv ? fromEnv.replace(/\/$/, "") : "https://smart-space.ie";
+}
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -136,4 +143,111 @@ export async function completeTask(formData: FormData) {
   });
   if (UUID.test(contactId)) revalidatePath(`/crm/contacts/${contactId}`);
   revalidatePath("/crm/tasks");
+}
+
+/**
+ * Make a payment link for this customer and send it, tagged.
+ *
+ * ── WHY THIS IS HERE AND NOT IN STRIPE ───────────────────────────
+ *
+ * Measured 22 September 2026: every Smart Space charge that month carries
+ * empty Stripe metadata. Not one of them went through the website's checkout,
+ * so not one carries a click id, so Google cannot credit the ad that produced
+ * it. That is the entirety of "the ads make sales the account never sees", and
+ * no amount of work on the upload touches it.
+ *
+ * A link made by hand in Stripe cannot carry attribution. A link made here
+ * can, because the customer's own click id is on the record already open on
+ * the screen. The point of putting it on this page is that it removes the trip
+ * to Stripe: the previous tagged-link tool lived in a different app behind a
+ * different key and needed a URL pasted into it, and the evidence that it was
+ * not used is that no September sale carries a tag.
+ *
+ * ── WHY IT CALLS OUR OWN ROUTE ───────────────────────────────────
+ *
+ * /api/admin/send-payment-link owns the customer-facing email, the host
+ * allow-list and the token minting that keeps the click id off the URL. It has
+ * been in front of customers for months. Copying any of it here to save an
+ * internal hop would leave two templates to keep in step, which is how one of
+ * them goes stale and starts quoting the wrong terms.
+ */
+export async function sendPaymentLink(_prev: unknown, formData: FormData): Promise<{
+  status: "idle" | "ok" | "error"; message: string;
+}> {
+  const { site, email: actor } = requireSession();
+  if (site !== "smart-space") {
+    return { status: "error", message: "Only Smart Space takes payment through Stripe." };
+  }
+
+  const given = String(formData.get("contactId") ?? "");
+  const to = String(formData.get("email") ?? "").trim();
+  const name = String(formData.get("name") ?? "").trim().slice(0, 80);
+  const description = String(formData.get("description") ?? "").trim();
+  const gclid = String(formData.get("gclid") ?? "").trim();
+  const amount = Number(String(formData.get("amount") ?? "").replace(/[^0-9.]/g, ""));
+
+  if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(to)) {
+    return { status: "error", message: "This customer has no email address on file." };
+  }
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return { status: "error", message: "How much is it for?" };
+  }
+
+  const adminKey = process.env.ADMIN_KEY?.trim();
+  if (!adminKey) {
+    return { status: "error", message: "ADMIN_KEY is not set, so nothing can be sent." };
+  }
+
+  let url: string;
+  try {
+    url = await createPaymentLink({ amountCents: Math.round(amount * 100), description });
+  } catch (err) {
+    return { status: "error", message: err instanceof Error ? err.message : "Stripe refused that." };
+  }
+
+  try {
+    const res = await fetch(`${siteBase()}/api/admin/send-payment-link`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${adminKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ mode: "payment", email: to, name, paymentUrl: url, gclid: gclid || undefined }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(25_000),
+    });
+    const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; attributed?: boolean };
+    if (!res.ok || !data.ok) {
+      /* The link exists and is live at this point, so it is handed over rather
+         than lost: the sale matters more than the send. */
+      return {
+        status: "error",
+        message: `${data.error || `The email did not go (${res.status}).`} The link is made and live: ${url}`,
+      };
+    }
+
+    const contactId = await materialise(site, given);
+    if (contactId) {
+      await crm("crm_activity", {
+        method: "POST",
+        prefer: "return=minimal",
+        body: JSON.stringify({
+          site, contact_id: contactId, lead_id: null, kind: "note",
+          summary: `Payment link sent, €${amount.toFixed(2)} for ${description.slice(0, 60)}`
+            + (data.attributed ? ", traced back to their ad click" : ", with no ad click on file"),
+          actor, detail: {},
+        }),
+      });
+      revalidatePath(`/crm/contacts/${contactId}`);
+    }
+
+    return {
+      status: "ok",
+      message: data.attributed
+        ? `Sent to ${to}. This one traces back to the ad they clicked.`
+        : `Sent to ${to}. There is no ad click on their record, so this payment cannot be credited to the advertising.`,
+    };
+  } catch (err) {
+    return {
+      status: "error",
+      message: `${err instanceof Error ? err.message : "The email did not go."} The link is made and live: ${url}`,
+    };
+  }
 }

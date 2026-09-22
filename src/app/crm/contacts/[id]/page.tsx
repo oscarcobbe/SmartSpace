@@ -8,6 +8,7 @@ import { STATUS_PILL, STATUS_LABEL, sourceLabel, kindLabel, telHref } from "@/li
 import { moneyExact, money } from "@/lib/crm/leads";
 import { PageHeader, Panel, Empty, Pill, Note } from "../../ui";
 import { saveNote, setLeadStatus, addTask, completeTask } from "../actions";
+import PaymentLinkForm from "../payment-link-form";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +48,17 @@ export default async function ContactPage({ params }: { params: { id: string } }
   const openTasks = tasks.filter((t) => !t.done_at);
   const doneTasks = tasks.filter((t) => t.done_at);
   const newestLead = person.leads[0];
+  /*
+   * The newest enquiry that actually carries a click id, not simply the newest.
+   *
+   * Leads arrive created_at.desc, so leads[0] is the latest, and the latest is
+   * often a phone call or a repeat visit with nothing on it. Somebody who
+   * clicked an ad in July and rang in September has their click on the July
+   * row, and that is the click the September payment belongs to. The offline
+   * feed applies the same rule when it joins an enquiry to a payment, so the
+   * two cannot credit different clicks for the same sale.
+   */
+  const clickedLead = person.leads.find((l) => (l.gclid ?? "").trim().length > 0);
 
   return (
     <>
@@ -201,6 +213,26 @@ export default async function ContactPage({ params }: { params: { id: string } }
         </div>
 
         <div className="space-y-6">
+          {/*
+            * Above Details on purpose.
+            *
+            * This is the one action on this page that decides whether a sale
+            * can ever be credited to the advertising that produced it. Every
+            * Smart Space charge in September carried empty Stripe metadata,
+            * because every one of them was a link made by hand, and a
+            * hand-made link has no browser behind it and no click id on it.
+            */}
+          {site === "smart-space" && person.email && (
+            <Panel title={clickedLead ? "Send a payment link, traced to their ad" : "Send a payment link"}>
+              <PaymentLinkForm
+                contactId={person.id}
+                email={person.email}
+                name={person.name ?? ""}
+                gclid={clickedLead?.gclid ?? null}
+              />
+            </Panel>
+          )}
+
           <Panel title="Details">
             <dl className="space-y-2.5 px-4 py-4 text-sm">
               {person.email && (
