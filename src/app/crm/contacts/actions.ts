@@ -13,6 +13,7 @@ import { crm, upsertContact, type Site } from "@/lib/crm/db";
 import { STATUSES, type LeadStatus } from "@/lib/crm/contacts";
 import { getPerson } from "@/lib/crm/people";
 import { createPaymentLink } from "@/lib/crm/payment-link";
+import { parseMoney } from "@/lib/crm/money-input";
 
 /* Our own origin, for the one call that goes back through the front door. */
 function siteBase(): string {
@@ -184,14 +185,12 @@ export async function sendPaymentLink(_prev: unknown, formData: FormData): Promi
   const name = String(formData.get("name") ?? "").trim().slice(0, 80);
   const description = String(formData.get("description") ?? "").trim();
   const gclid = String(formData.get("gclid") ?? "").trim();
-  const amount = Number(String(formData.get("amount") ?? "").replace(/[^0-9.]/g, ""));
+  const money = parseMoney(formData.get("amount"));
 
   if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(to)) {
     return { status: "error", message: "This customer has no email address on file." };
   }
-  if (!Number.isFinite(amount) || amount <= 0) {
-    return { status: "error", message: "How much is it for?" };
-  }
+  if (!money.ok) return { status: "error", message: money.reason };
 
   const adminKey = process.env.ADMIN_KEY?.trim();
   if (!adminKey) {
@@ -200,7 +199,7 @@ export async function sendPaymentLink(_prev: unknown, formData: FormData): Promi
 
   let url: string;
   try {
-    url = await createPaymentLink({ amountCents: Math.round(amount * 100), description });
+    url = await createPaymentLink({ amountCents: money.cents, description });
   } catch (err) {
     return { status: "error", message: err instanceof Error ? err.message : "Stripe refused that." };
   }
@@ -223,26 +222,44 @@ export async function sendPaymentLink(_prev: unknown, formData: FormData): Promi
       };
     }
 
-    const contactId = await materialise(site, given);
-    if (contactId) {
-      await crm("crm_activity", {
-        method: "POST",
-        prefer: "return=minimal",
-        body: JSON.stringify({
-          site, contact_id: contactId, lead_id: null, kind: "note",
-          summary: `Payment link sent, €${amount.toFixed(2)} for ${description.slice(0, 60)}`
-            + (data.attributed ? ", traced back to their ad click" : ", with no ad click on file"),
-          actor, detail: {},
-        }),
-      });
-      revalidatePath(`/crm/contacts/${contactId}`);
+    /*
+     * ── THE TRAIL IS NEVER WORTH FAILING THE SEND FOR ────────────────
+     *
+     * This ran inside the same try as the send, and crm() throws on any
+     * non-2xx or on its ten second timeout. So a Supabase hiccup AFTER the
+     * customer had already been emailed landed in the catch below and told
+     * Nigel "the email did not go", with a live payment link printed beside
+     * it. He presses Send again: a second Stripe price, a second live link,
+     * a second "Pay securely" email to the same person, and Stripe payment
+     * links stay payable, so both of them work.
+     *
+     * db.ts has the right pattern already and says why: "The trail is worth
+     * having and never worth failing a request for."
+     */
+    try {
+      const contactId = await materialise(site, given);
+      if (contactId) {
+        await crm("crm_activity", {
+          method: "POST",
+          prefer: "return=minimal",
+          body: JSON.stringify({
+            site, contact_id: contactId, lead_id: null, kind: "note",
+            summary: `Payment link sent, ${money.formatted} for ${description.slice(0, 60)}`
+              + (data.attributed ? ", traced back to their ad click" : ", with no ad click on file"),
+            actor, detail: {},
+          }),
+        });
+        revalidatePath(`/crm/contacts/${contactId}`);
+      }
+    } catch (err) {
+      console.error("[send-payment-link] the link went out, the note did not:", err);
     }
 
     return {
       status: "ok",
-      message: data.attributed
-        ? `Sent to ${to}. This one traces back to the ad they clicked.`
-        : `Sent to ${to}. There is no ad click on their record, so this payment cannot be credited to the advertising.`,
+      message: `${money.formatted} to ${to}. ` + (data.attributed
+        ? "This one traces back to the ad they clicked."
+        : "There is no ad click on their record, so this payment cannot be credited to the advertising."),
     };
   } catch (err) {
     return {

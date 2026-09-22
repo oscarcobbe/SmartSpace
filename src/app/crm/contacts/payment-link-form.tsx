@@ -19,9 +19,10 @@
  * have thrown the moment Nigel opened a customer. The server action is called
  * directly instead, which is supported here and needs no hook at all.
  */
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { Euro, Send } from "lucide-react";
 import { sendPaymentLink } from "./actions";
+import { parseMoney } from "@/lib/crm/money-input";
 
 type Result = { status: "idle" | "ok" | "error"; message: string };
 
@@ -29,13 +30,31 @@ export default function PaymentLinkForm({
   contactId, email, name, gclid,
 }: { contactId: string; email: string; name: string; gclid: string | null }) {
   const [state, setState] = useState<Result>({ status: "idle", message: "" });
-  const [pending, start] = useTransition();
+  /*
+   * A plain flag, not useTransition's pending.
+   *
+   * On React 18 startTransition does not keep a transition open across an
+   * await: it calls the scope function, and the moment that function hits its
+   * first await the transition is already finished, so `pending` went false
+   * while the Stripe calls and the email were still in flight. The button
+   * re-enabled itself about a hundred milliseconds in. Pressing it twice sends
+   * two live payment links for the same job to the same customer, and Stripe
+   * links stay payable.
+   */
+  const [sending, setSending] = useState(false);
+  /* Echoed back under the field as it is typed. A comma typed as a decimal
+     point used to multiply the amount by a hundred with nothing on screen
+     disagreeing, and the send confirmation named only the email address. */
+  const [typed, setTyped] = useState("");
+  const reading = typed.trim() ? parseMoney(typed) : null;
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (sending) return;
     const data = new FormData(e.currentTarget);
     setState({ status: "idle", message: "" });
-    start(async () => {
+    setSending(true);
+    void (async () => {
       try {
         setState(await sendPaymentLink(null, data));
       } catch (err) {
@@ -43,8 +62,11 @@ export default function PaymentLinkForm({
           status: "error",
           message: err instanceof Error ? err.message : "That did not go through.",
         });
+      } finally {
+        /* In the finally, so a thrown action cannot leave the button dead. */
+        setSending(false);
       }
-    });
+    })();
   }
 
   return (
@@ -62,9 +84,14 @@ export default function PaymentLinkForm({
         <Euro className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
         <input
           id="pl-amount" name="amount" inputMode="decimal" required placeholder="479.00"
+          value={typed} onChange={(e) => setTyped(e.target.value)}
           className="min-h-[38px] w-full rounded-lg border border-slate-300 bg-white pl-8 pr-3 text-sm tabular-nums text-slate-900 focus:border-slate-900 focus:outline-none"
         />
       </div>
+
+      <p className={`min-h-[1.1rem] text-[11.5px] ${reading && !reading.ok ? "text-red-700" : "text-slate-500"}`}>
+        {reading ? (reading.ok ? `Charges ${reading.formatted}` : reading.reason) : ""}
+      </p>
 
       <label className="block text-xs font-medium text-slate-600" htmlFor="pl-what">What it is for</label>
       <input
@@ -74,11 +101,15 @@ export default function PaymentLinkForm({
 
       <button
         type="submit"
-        disabled={pending}
+        disabled={sending || !reading?.ok}
         className="inline-flex min-h-[38px] w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-60"
       >
         <Send className="h-4 w-4" aria-hidden="true" />
-        {pending ? "Making the link…" : gclid ? "Send it, traced to their ad" : "Send it"}
+        {sending
+          ? "Making the link…"
+          : reading?.ok
+            ? `Send ${reading.formatted}${gclid ? ", traced to their ad" : ""}`
+            : gclid ? "Send it, traced to their ad" : "Send it"}
       </button>
 
       {state.status !== "idle" && (
