@@ -35,7 +35,7 @@ function CampaignTable({ campaigns }: { campaigns: AdsData["campaigns"] }) {
             <th scope="col" className="px-4 py-2 text-right font-semibold">Clicks</th>
             <th scope="col" className="px-4 py-2 text-right font-semibold">Enquiries</th>
             <th scope="col" className="px-4 py-2 text-right font-semibold">Cost each</th>
-            <th scope="col" className="px-4 py-2 text-right font-semibold">Work won</th>
+            <th scope="col" className="px-4 py-2 text-right font-semibold">Google&apos;s value</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
@@ -248,7 +248,7 @@ async function LiveSections({ site }: { site: Site }) {
             week={trend.week}
             month={trend.month}
             changeNote={changes.ok
-              ? "Google keeps change history for fourteen days, so only recent weeks can be marked."
+              ? "We ask Google for fourteen days of change history, so only recent weeks can be marked."
               : null}
           />
         </div>
@@ -308,7 +308,7 @@ async function LiveSections({ site }: { site: Site }) {
           aside={
             <ExportButton
               filename="marketing-by-campaign"
-              headers={["Campaign", "Status", "Spend", "Clicks", "Impressions", "Enquiries", "Cost each", "Work won"]}
+              headers={["Campaign", "Status", "Spend", "Clicks", "Impressions", "Enquiries", "Cost each", "Google's value"]}
               rows={own.campaigns.map((c) => [
                 c.name, c.status, c.cost.toFixed(2), c.clicks, c.impressions,
                 c.conversions.toFixed(0), c.conversions ? (c.cost / c.conversions).toFixed(2) : "", c.value.toFixed(2),
