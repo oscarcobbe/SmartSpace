@@ -71,7 +71,25 @@ export async function commitStatement(_prev: PreviewState, formData: FormData): 
     return { status: "error", message: "There was nothing to import." };
   }
 
-  const rows = lines.map((l) => ({ ...l, site, imported_by: email }));
+  /*
+   * Only the columns a bank statement has.
+   *
+   * The payload is a hidden form field that round trips through the browser,
+   * so a signed-in user editing it could set ANY column on crm_bank_lines to
+   * any value: `{ ...l }` spread whatever the field contained. site and
+   * imported_by were overridden so tenancy held, and nothing else was. An
+   * allow-list is the only version of this that stays correct when a column is
+   * added to the table.
+   */
+  const KEEP = [
+    "external_id", "happened_on", "description", "counterparty",
+    "amount_cents", "fee_cents", "balance_cents", "kind",
+  ] as const;
+  const rows = lines.map((l) => {
+    const row: Record<string, unknown> = { site, imported_by: email };
+    for (const k of KEEP) if (k in l) row[k] = l[k];
+    return row;
+  });
 
   try {
     /* merge-duplicates on the unique index, so the same statement imported

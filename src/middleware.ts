@@ -40,7 +40,13 @@ export function middleware(request: Request) {
     // googleadservices.com serves enhanced-conversion code. Missing either from
     // script-src makes the browser refuse them and silently kills paid-conversion
     // measurement (same failure class as the connect-src note below).
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.gstatic.com https://js.stripe.com https://assets.calendly.com",
+    /* The CRM loads no gtag, no Stripe.js and no Calendly, so it was being
+       served 'unsafe-inline' and 'unsafe-eval' for measurement it does not do.
+       Next's own runtime still needs inline, but eval and every ad host come
+       off the pages that hold the customer list. */
+    isCrm
+      ? "script-src 'self' 'unsafe-inline'"
+      : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.gstatic.com https://js.stripe.com https://assets.calendly.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://assets.calendly.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob: https:",
@@ -80,6 +86,9 @@ export function middleware(request: Request) {
     "connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://td.doubleclick.net https://stats.g.doubleclick.net https://ad.doubleclick.net https://*.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://*.google.ie https://*.google.co.uk https://api.calendly.com https://*.myshopify.com",
     "frame-src https://js.stripe.com https://hooks.stripe.com https://calendly.com https://*.calendly.com https://www.google.com https://maps.google.com",
     "base-uri 'self'",
+    /* The modern half of the X-Frame-Options header set above. Same rule,
+       said in the language current browsers actually read. */
+    "frame-ancestors 'self'",
     "form-action 'self' https://checkout.stripe.com",
     "object-src 'none'",
   ].join("; ");

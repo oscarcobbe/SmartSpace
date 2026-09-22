@@ -172,16 +172,26 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Admin not configured" }, { status: 500 });
   }
 
-  // Prefer Authorization: Bearer <key>. Fall back to ?key= for one release,
-  // but log it so we know when it's safe to remove the fallback.
+  /*
+   * The key comes in a header and nowhere else.
+   *
+   * ?key= was a fallback "for one release" and outlived every client that used
+   * it. This route returns the full customer feed, so a key in a query string
+   * is a key in Vercel's access log, in any proxy in front of it, in the
+   * address bar, in browser history, and in the Referer of anything the
+   * response links to. One screenshot is a permanent disclosure of a
+   * credential that reads every customer's name, address and phone number.
+   *
+   * Every caller in this repo sends the header: src/app/admin/leads/page.tsx
+   * at four call sites, and src/lib/crm/leads.ts.
+   */
   const authHeader = request.headers.get("authorization") ?? "";
   const headerKey = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
   const { searchParams } = new URL(request.url);
-  const queryKey = searchParams.get("key") ?? "";
-  if (queryKey && !headerKey) {
-    console.warn("[admin] deprecated ?key= query auth used; switch client to Authorization header");
+  if (searchParams.get("key")) {
+    console.warn("[admin] a request tried ?key= auth, which was removed. Use Authorization: Bearer.");
   }
-  const submittedKey = headerKey || queryKey;
+  const submittedKey = headerKey;
 
   if (!submittedKey || !safeEqual(submittedKey, adminKey)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

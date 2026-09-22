@@ -128,12 +128,28 @@ export async function GET(request: Request) {
   const authorized =
     !!process.env.CRON_SECRET && safeBearerEqual(auth, expected);
 
-  // Accept ?force=true so an operator can hit /api/cron/health-check?force=true
-  // from a browser to see the JSON report without provisioning CRON_SECRET.
-  // Force-mode runs every check but never sends the email, auth-only.
+  /*
+   * ?force=true used to skip the check entirely.
+   *
+   * It existed so an operator could read the JSON report from a browser
+   * without provisioning CRON_SECRET, and it ran every check for anybody who
+   * typed the URL. The report names which of STRIPE_SECRET_KEY,
+   * GOOGLE_SHEET_WEBHOOK_URL and GOOGLE_SHEET_READ_TOKEN are configured, says
+   * whether the live Stripe key currently works, gives the resolved base URL,
+   * and includes 200 characters of any Apps Script error body. It also fires
+   * about fifteen outbound requests per call with no limit, which makes it an
+   * unauthenticated amplifier against our own origin and against Apps Script's
+   * daily quota.
+   *
+   * force now only means "run the checks and do not send the email". It no
+   * longer means "and skip the authentication".
+   */
   const force = url.searchParams.get("force") === "true";
-  if (!authorized && !force) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!authorized) {
+    const adminKey = process.env.ADMIN_KEY?.trim();
+    const offered = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+    const byAdmin = Boolean(adminKey && offered && safeBearerEqual(auth, `Bearer ${adminKey}`));
+    if (!byAdmin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const base = getBaseUrl();
