@@ -39,17 +39,35 @@ const money = (n: number) => `€${eur.format(n)}`;
 
 type MetricId = "cpa" | "cost" | "conversions" | "value" | "roas" | "clicks";
 
+/*
+ * How many enquiries a period needs before a ratio taken over it means
+ * anything.
+ *
+ * Cost per enquiry and return are both a division, and on a twenty euro a day
+ * budget the denominator is often one. A week with a single enquiry at EUR 148
+ * was drawn as a precise point at the top of the chart and then compared
+ * against another single week at the other end, which produced "down 85%" as
+ * though it were a trend. It is not a trend, it is two coin flips.
+ *
+ * Periods under this still appear, drawn hollow, and are kept out of the
+ * comparison. Hiding them would be worse: a week with one enquiry is a fact
+ * about the week.
+ */
+const ENOUGH_TO_DIVIDE = 3;
+
 const METRICS: {
   id: MetricId; label: string; short: string;
   /** Which direction is good news for THIS number. */
   better: "down" | "up" | "neither";
+  /** True when the number is a division, so a small period cannot support it. */
+  ratio?: boolean;
   get: (p: TrendPoint) => number | null;
   fmt: (n: number) => string;
 }[] = [
-  { id: "cpa",         label: "Cost per enquiry", short: "Cost each",  better: "down",    get: p => p.cpa,         fmt: money },
+  { id: "cpa",         label: "Cost per enquiry", short: "Cost each",  better: "down", ratio: true, get: p => p.cpa,  fmt: money },
   { id: "conversions", label: "Enquiries",        short: "Enquiries",  better: "up",      get: p => p.conversions, fmt: n => nf.format(n) },
   { id: "value",       label: "Work won",         short: "Work won",   better: "up",      get: p => p.value,       fmt: money },
-  { id: "roas",        label: "Back per €1",      short: "Return",     better: "up",      get: p => p.roas,        fmt: n => `${n.toFixed(1)}x` },
+  { id: "roas",        label: "Back per €1",      short: "Return",     better: "up",   ratio: true, get: p => p.roas, fmt: n => `${n.toFixed(1)}x` },
   { id: "cost",        label: "Spend",            short: "Spend",      better: "neither", get: p => p.cost,        fmt: money },
   { id: "clicks",      label: "Clicks",           short: "Clicks",     better: "neither", get: p => p.clicks,      fmt: n => nf.format(n) },
 ];
@@ -131,7 +149,23 @@ export function TrendChart({
   const line = points.map((p, i) => `${i === 0 ? "M" : "L"} ${x(i).toFixed(1)} ${y(p.v).toFixed(1)}`).join(" ");
   const area = `${line} L ${x(points.length - 1).toFixed(1)} ${H - padB} L ${x(0).toFixed(1)} ${H - padB} Z`;
 
-  const first = points[0]!.v, last = points[points.length - 1]!.v;
+  /*
+   * Ends against ends, averaged, and only over periods big enough to divide.
+   *
+   * This used to take the very first point and the very last one. On a ratio
+   * that is two single weeks, and it produced sentences like "down 85 per
+   * cent" out of a week with one enquiry at the start and one at the end.
+   * Comparing the earliest third against the latest third survives one odd
+   * week, which is the only kind of movement worth telling somebody about.
+   */
+  const solid = points.filter((p) => !metric.ratio || p.conversions >= ENOUGH_TO_DIVIDE);
+  const basis = solid.length >= 4 ? solid : points;
+  const chunk = Math.max(1, Math.floor(basis.length / 3));
+  const mean = (xs: typeof basis) => xs.reduce((n, p) => n + p.v, 0) / xs.length;
+  const first = mean(basis.slice(0, chunk));
+  const last = mean(basis.slice(-chunk));
+  const thin = points.length - solid.length;
+
   const rose = last > first;
   const good = metric.better === "neither" ? null : metric.better === "up" ? rose : !rose;
   const pct = first > 0 ? Math.abs(((last - first) / first) * 100) : 0;
@@ -148,11 +182,18 @@ export function TrendChart({
       {controls}
       <div className="px-4 pb-4 pt-3">
         <p className="mb-2 text-sm text-slate-700">
-          {metric.label} is{" "}
+          {metric.label} averaged{" "}
           <b style={{ color: hue }}>{metric.fmt(last)}</b>{" "}
-          against {metric.fmt(first)} at the start of this window
+          over the latest {chunk === 1 ? win.grain : `${chunk} ${win.grain}s`} of this window,
+          against {metric.fmt(first)} over the earliest {chunk === 1 ? "one" : chunk}
           {pct > 0 && <>, {rose ? "up" : "down"} {pct.toFixed(0)}%</>}.
           {metric.better !== "neither" && <> {metric.better === "down" ? "Down" : "Up"} is better.</>}
+          {metric.ratio && thin > 0 && (
+            <span className="text-slate-500">
+              {" "}{thin} {thin === 1 ? "period is" : "periods are"} drawn hollow and left out of that
+              comparison: under {ENOUGH_TO_DIVIDE} enquiries there is nothing to divide by.
+            </span>
+          )}
         </p>
 
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img"
@@ -184,8 +225,21 @@ export function TrendChart({
 
           {points.map((p, i) => (
             <g key={p.key}>
-              <circle cx={x(i)} cy={y(p.v)} r={activeIdx === i ? 5 : points.length > 40 ? 1.8 : 3}
-                      fill={p.changes > 0 ? "#0ea5e9" : hue} className="transition-all duration-150" />
+              {/* Hollow where the period had too few enquiries to divide by.
+                  A single enquiry at EUR 148 is a fact about that week and not
+                  a cost per enquiry, and drawing it solid alongside a week of
+                  nine says the two are the same kind of number. */}
+              {(() => {
+                const thinPoint = Boolean(metric.ratio) && p.conversions < ENOUGH_TO_DIVIDE;
+                const r = activeIdx === i ? 5 : points.length > 40 ? 1.8 : 3;
+                return (
+                  <circle cx={x(i)} cy={y(p.v)} r={r}
+                          fill={thinPoint ? "#ffffff" : p.changes > 0 ? "#0ea5e9" : hue}
+                          stroke={thinPoint ? (p.changes > 0 ? "#0ea5e9" : hue) : "none"}
+                          strokeWidth={thinPoint ? 1.6 : 0}
+                          className="transition-all duration-150" />
+                );
+              })()}
               {/* A generous invisible target: 3px circles are not hoverable,
                   and a keyboard cannot reach them at all without this. */}
               <rect x={x(i) - (W / points.length) / 2} y={padT} width={W / points.length} height={H - padT - padB}
