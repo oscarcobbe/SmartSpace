@@ -23,8 +23,9 @@ import { scaleFor } from "./roas-scale";
  * they belong.
  *
  * The back bar has two shades, because the owner asked for exactly that:
- * solid for money traced to an ad click, grey on top for what probably came
- * from ads but cannot be traced. Without the grey, September read 0.0x and
+ * solid for money from customers an ad is known to have reached, read from
+ * the payment or from the customer's own enquiry; grey on top for the money
+ * whose customer cannot be traced either way, estimated. Without the grey, September read 0.0x and
  * looked like the ads had stopped working; with every euro counted instead, it
  * would have read about 13x and credited organic search to the ads. The grey is
  * the honest middle, worked out in src/lib/crm/roas-live.ts.
@@ -40,8 +41,8 @@ const eurShort = (n: number) => (n >= 1000 ? `€${(n / 1000).toFixed(n >= 10000
 const GREY = "#cbd5e1";
 
 export default function RoasChart({
-  months, spend, back, estimated = 0, siteLabel,
-}: { months: RoasMonth[]; spend: number; back: number; estimated?: number; siteLabel: string }) {
+  months, spend, back, estimated = 0, trailRead = true, siteLabel,
+}: { months: RoasMonth[]; spend: number; back: number; estimated?: number; trailRead?: boolean; siteLabel: string }) {
   const [hover, setHover] = useState<number | null>(null);
   const [pinned, setPinned] = useState<number | null>(null);
   const uid = useId().replace(/:/g, "");
@@ -173,16 +174,21 @@ export default function RoasChart({
             </dl>
             <p className="mt-1.5 text-xs text-slate-500">
               {eur(shown.taken)} taken in all.{" "}
+              {shown.backViaEnquiry > 0 &&
+                `${eur(shown.backViaEnquiry)} of the traced money was paid by link or invoice and traced through the customer's own enquiry. `}
+              {shown.notFromAds > 0 &&
+                `${eur(shown.notFromAds)} came from customers who found you another way, through search, a referral or a business card. `}
               {shown.unseen > 0
-                ? `${eur(shown.unseen)} of it was paid by hand-made link or invoice, where nobody can see how the customer found you. The grey assumes ${Math.round(shown.share * 100)}% of that came from ads, the share of website buyers who arrived through an ad over the three months to here.`
-                : "Every sale this month came through the website, so there was nothing to estimate."}
+                ? `${eur(shown.unseen)} could not be traced either way. The grey counts ${Math.round(shown.share * 100)}% of it, the share of traceable customers who came through an ad over the three months to here.`
+                : "Every customer this month could be traced, so nothing is estimated."}
             </p>
           </div>
         ) : (
           <p className="text-slate-600">
-            {siteLabel}. Green is money traced to an ad click. Grey is an estimate for jobs paid by hand-made link or
-            invoice, which can never be traced: they are assumed to have come from ads as often as website buyers
-            did. Hover a month to see the working.
+            {siteLabel}. Green is money from customers an ad reached before they paid, read from the payment or from
+            the customer&apos;s own enquiry. Grey is an estimate for payments whose customer cannot be traced either
+            way. Hover a month to see the working.
+            {!trailRead && " The enquiry log could not be read just now, so every payment without a click id is estimated."}
           </p>
         )}
       </div>

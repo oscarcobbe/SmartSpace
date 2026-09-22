@@ -3,47 +3,51 @@
  *
  * ── WHAT THE TWO SHADES MEAN ─────────────────────────────────────
  *
- * Solid: money Stripe took on a payment that carried a Google click id. Known.
- * Every website sale that landed on a tagged ad URL since May was captured with
- * its click id, so on the website this is exact.
+ * Solid: money from a customer an ad is known to have reached before they
+ * paid. Either the payment itself carried a Google click id, or the customer's
+ * own enquiry did: they booked a consultation or sent the form after landing
+ * on an ad URL, then paid later by link or invoice. Both are read, not guessed.
  *
- * Grey: an estimate, and only for the money whose source cannot be seen. A job
- * paid through a payment link made by hand in Stripe, or through an invoice,
- * has no browser behind it and can never carry a click id, so nobody can say
- * whether that customer first came from an ad. For those the grey assumes they
- * found the business the same way website buyers did over the previous three
- * months: if a third of website money came in through an ad, a third of the
- * unseen money is drawn grey.
+ * Grey: an estimate, and only for money whose customer cannot be traced
+ * either way. Each untraced payment is first matched to its customer in the
+ * enquiry log (src/lib/crm/how-they-came.ts). A customer whose visits show
+ * organic search, a referral or a business card counts as not from ads, and
+ * adds nothing. Only a payment with no usable trail at all is estimated, at
+ * the share of traceable customers who came through an ad over this month and
+ * the two before it.
  *
  * ── TWO PREMISES THIS REPLACES, BOTH WRONG ───────────────────────
  *
- * "The click id capture died on 12 August." It did not. Reading the landing
- * page on each paid website session: every ad sale landed on a gbraid URL and
- * was captured. From 17 August not one website buyer landed on an ad URL at all.
- * They came through organic Google search, one through ChatGPT.
+ * "The click id capture died on 12 August." It did not. Every ad sale landed
+ * on a gbraid URL and was captured, and from 17 August to 5 September every
+ * website buyer with a record arrived through organic search or ChatGPT. The
+ * capture did break later, from 6 to 21 September, when the consent gate lost
+ * most records; those buyers read as unknown here, not as organic.
  *
  * "Google Ads is the only marketing this business does, so every euro is the
- * ad return." Also not true, for the same reason: organic search carried
- * September. Counting every euro would have drawn September at about 13x, the
- * mirror image of the 0.0x the strict version drew. Both were wrong, and the
- * swing between them is why the owner saw different figures every time.
+ * ad return." Also not true: organic search carried late August. Counting
+ * every euro drew September at about 13x, the strict version drew 0.0x, and
+ * the swing between them is why the owner saw different figures every time.
  *
  * ── WHAT IS LEFT OUT ─────────────────────────────────────────────
  *
  * Subscription renewals. They are real revenue and they are recurring billing
  * from customers won months ago, so no ad can claim one as a sale in the month
- * it is charged. Counting them would credit this month's ads with last year's
- * customers.
+ * it is charged.
  *
- * ── ONE SOURCE ───────────────────────────────────────────────────
+ * ── ONE SOURCE FOR THE MONEY ─────────────────────────────────────
  *
  * Charges, every one that succeeded and was not refunded, the same list
- * Stripe's own dashboard adds up. Checkout sessions are read only to learn
- * which charge carried a click id and which came through a payment link.
+ * Stripe's own dashboard adds up. Checkout sessions and the enquiry log are
+ * read only to learn who paid and how they came.
  */
 import { unstable_cache } from "next/cache";
 import { fetchPeriods } from "./ads-periods";
 import type { Site } from "./db";
+import {
+  EnquiryIndex, dublinStamp, fetchEnquiries, readTrail,
+  type Came, type Payer, type Visit,
+} from "./how-they-came";
 
 export interface RoasMonth {
   /** yyyy-mm */
@@ -51,16 +55,20 @@ export interface RoasMonth {
   /** "May 2026" */
   label: string;
   spend: number;
-  /** Money on a payment that carried a Google click id. Drawn solid. */
+  /** Money from customers an ad is known to have reached. Drawn solid. */
   back: number;
-  /** Estimated from ads, of the money whose source cannot be seen. Drawn grey. */
+  /** The part of `back` traced through the customer's enquiry rather than the payment. */
+  backViaEnquiry: number;
+  /** Estimated from ads, of the money whose customer cannot be traced. Drawn grey. */
   estimated: number;
   /** Every euro Stripe took that month, subscription renewals excluded. */
   taken: number;
-  /** Money on hand-made links and invoices, whose source cannot be seen. */
+  /** Money from customers whose visits show they came some other way. */
+  notFromAds: number;
+  /** Money whose customer cannot be traced either way. The grey is a share of this. */
   unseen: number;
-  /** The share of website money that came through an ad, over this month and
-      the two before it. What the grey is worked out from. */
+  /** Of the customers who could be traced, the share that came through an ad,
+      over this month and the two before it. What the grey is worked out at. */
   share: number;
   sales: number;
   tiedSales: number;
@@ -75,6 +83,9 @@ export interface RoasLive {
   estimated: number;
   from: string;
   to: string;
+  /** False when the enquiry log could not be read, so every payment without
+      a click id fell to the estimate. Said on the chart when it happens. */
+  trailRead: boolean;
 }
 
 export type RoasLiveResult = { ok: true; data: RoasLive } | { ok: false; reason: string };
@@ -86,68 +97,74 @@ const label = (key: string) =>
   new Intl.DateTimeFormat("en-IE", { month: "short", year: "numeric", timeZone: "Europe/Dublin" })
     .format(new Date(`${key}-01T12:00:00Z`));
 
-interface MonthMoney {
-  taken: number; sales: number; tied: number; tiedSales: number;
-  site: number; siteTied: number; unseen: number;
+interface Payment {
+  month: string;
+  amount: number;
+  /** Who, for counting customers rather than payments when working out the share. */
+  person: string;
+  came: Came;
+  /** How an "ad" verdict was reached: on the payment, or on the customer's enquiry. */
+  via: "click" | "enquiry" | null;
 }
-const emptyMoney = (): MonthMoney => ({ taken: 0, sales: 0, tied: 0, tiedSales: 0, site: 0, siteTied: 0, unseen: 0 });
+
+interface Session {
+  id: string; created: number; payment_intent?: string | null; client_reference_id?: string | null;
+  metadata?: Record<string, string>; payment_link?: string | null;
+  customer_details?: { email?: string | null; phone?: string | null; name?: string | null } | null;
+}
 
 /**
- * Every charge, by month, and how much of it carried a click id.
+ * Every charge since `sinceUnix`, each with a verdict on how its customer came.
  *
  * A charge knows nothing about click ids; they live on the checkout session
- * that produced it. So the sessions are read too, only to mark which
- * payment_intents were tied, and the money itself is counted once, from the
- * charge. Refunds and failures are left out.
+ * that produced it, and on the customer's earlier enquiries. So both are read
+ * and joined to the charge. The money itself is counted once, from the charge.
+ * Refunds and failures are left out.
  */
-async function chargesByMonth(sinceUnix: number): Promise<Map<string, MonthMoney>> {
+async function payments(sinceUnix: number): Promise<{ list: Payment[]; trailRead: boolean }> {
   const key = process.env.STRIPE_SECRET_KEY?.trim();
-  if (!key) return new Map();
+  if (!key) return { list: [], trailRead: true };
   const headers = { Authorization: `Bearer ${key}` };
 
-  const tiedIntents = new Set<string>();
-  /* Which payments came through the website's own checkout, as opposed to a
-     payment link made by hand. Only the website ones say where the buyer came
-     from, so only they can set the rate the grey is drawn at. */
-  const siteIntents = new Set<string>();
-  const linkIntents = new Set<string>();
+  const [enquiries, sessionList] = await Promise.all([
+    fetchEnquiries(),
+    (async () => {
+      const out: Session[] = [];
+      let after: string | null = null;
+      for (let page = 0; page < 40; page++) {
+        const qs = new URLSearchParams({ limit: "100", "created[gte]": String(sinceUnix) });
+        if (after) qs.set("starting_after", after);
+        const res = await fetch(`https://api.stripe.com/v1/checkout/sessions?${qs}`, {
+          headers, cache: "no-store", signal: AbortSignal.timeout(20_000),
+        });
+        const body = (await res.json()) as { data?: Session[]; has_more?: boolean; error?: { message?: string } };
+        if (body.error) throw new Error(`Stripe: ${body.error.message ?? "unknown error"}`);
+        const data = body.data ?? [];
+        out.push(...data);
+        if (!body.has_more || data.length === 0) break;
+        after = data[data.length - 1]!.id;
+      }
+      return out;
+    })(),
+  ]);
+  const index = enquiries ? new EnquiryIndex(enquiries) : null;
+
+  const sessionByIntent = new Map<string, Session>();
+  for (const s of sessionList) if (s.payment_intent) sessionByIntent.set(s.payment_intent, s);
+
+  const list: Payment[] = [];
   let after: string | null = null;
   for (let page = 0; page < 40; page++) {
-    const qs = new URLSearchParams({ limit: "100", "created[gte]": String(sinceUnix) });
-    if (after) qs.set("starting_after", after);
-    const res = await fetch(`https://api.stripe.com/v1/checkout/sessions?${qs}`, {
-      headers, cache: "no-store", signal: AbortSignal.timeout(20_000),
-    });
-    const body = (await res.json()) as {
-      data?: { id: string; payment_intent?: string | null; client_reference_id?: string | null;
-               metadata?: Record<string, string>; payment_link?: string | null }[];
-      has_more?: boolean; error?: { message?: string };
-    };
-    if (body.error) throw new Error(`Stripe: ${body.error.message ?? "unknown error"}`);
-    const data = body.data ?? [];
-    for (const s of data) {
-      const tied = Boolean((s.metadata?.gclid ?? "").trim() || (s.client_reference_id ?? "").trim());
-      if (!s.payment_intent) continue;
-      if (tied) tiedIntents.add(s.payment_intent);
-      if (s.payment_link) linkIntents.add(s.payment_intent);
-      else siteIntents.add(s.payment_intent);
-    }
-    if (!body.has_more || data.length === 0) break;
-    after = data[data.length - 1]!.id;
-  }
-
-  const by = new Map<string, MonthMoney>();
-  after = null;
-  for (let page = 0; page < 40; page++) {
-    const qs = new URLSearchParams({ limit: "100", "created[gte]": String(sinceUnix) });
+    const qs = new URLSearchParams({ limit: "100", "created[gte]": String(sinceUnix), "expand[]": "data.customer" });
     if (after) qs.set("starting_after", after);
     const res = await fetch(`https://api.stripe.com/v1/charges?${qs}`, {
       headers, cache: "no-store", signal: AbortSignal.timeout(20_000),
     });
+    type Who = { email?: string | null; phone?: string | null; name?: string | null };
     const body = (await res.json()) as {
       data?: { id: string; created: number; amount: number; status: string; refunded: boolean;
-               payment_intent?: string | null; description?: string | null;
-               billing_details?: { name?: string | null } | null }[];
+               payment_intent?: string | null; description?: string | null; receipt_email?: string | null;
+               billing_details?: Who | null; customer?: (Who & { id: string }) | string | null }[];
       has_more?: boolean; error?: { message?: string };
     };
     if (body.error) throw new Error(`Stripe: ${body.error.message ?? "unknown error"}`);
@@ -161,27 +178,43 @@ async function chargesByMonth(sinceUnix: number): Promise<Map<string, MonthMoney
       /* Recurring billing, not a sale an ad can claim this month. */
       if (/^subscription (creation|update|cycle)/i.test(c.description ?? "")) continue;
 
-      const k = new Date(c.created * 1000).toISOString().slice(0, 7);
-      const cur = by.get(k) ?? emptyMoney();
+      const s = c.payment_intent ? sessionByIntent.get(c.payment_intent) : undefined;
+      const cust = c.customer && typeof c.customer === "object" ? c.customer : null;
+      const who = [c.billing_details, cust, s?.customer_details].filter(Boolean) as Who[];
+      const payer: Payer = {
+        emails: [c.receipt_email, ...who.map((w) => w.email)].filter((x): x is string => Boolean(x)),
+        phones: who.map((w) => w.phone).filter((x): x is string => Boolean(x)),
+        names: who.map((w) => w.name).filter((x): x is string => Boolean(x)),
+      };
+      const person = (payer.emails[0] ?? payer.phones[0] ?? payer.names[0] ?? c.id).trim().toLowerCase();
+      const month = new Date(c.created * 1000).toISOString().slice(0, 7);
       const amount = c.amount / 100;
-      const pi = c.payment_intent ?? "";
-      const tied = Boolean(pi && tiedIntents.has(pi));
-      cur.taken += amount; cur.sales += 1;
-      if (tied) { cur.tied += amount; cur.tiedSales += 1; }
-      if (pi && siteIntents.has(pi)) {
-        cur.site += amount;
-        if (tied) cur.siteTied += amount;
-      } else if (!tied) {
-        /* A hand-made link or an invoice with no click id: somebody paid, and
-           nothing says how they first found the business. */
-        cur.unseen += amount;
+
+      const clicked = Boolean(s && ((s.metadata?.gclid ?? "").trim() || (s.client_reference_id ?? "").trim()));
+      if (clicked) {
+        list.push({ month, amount, person, came: "ad", via: "click" });
+        continue;
       }
-      by.set(k, cur);
+
+      /* The website checkout records its own visit; a payment link does not. */
+      const visits: Visit[] = [];
+      if (s && !s.payment_link) {
+        const m = s.metadata ?? {};
+        visits.push({
+          at: dublinStamp(s.created), gclid: m.gclid, landingPage: m.landing_page, referrer: m.referrer,
+          utmSource: m.utm_source, utmMedium: m.utm_medium,
+        });
+      }
+      /* Enquiries up to a day after the payment, because the log writes the
+         order row for a payment a moment after Stripe records it. */
+      if (index) visits.push(...index.find(payer, dublinStamp(c.created + 86_400)));
+      const came = readTrail(visits);
+      list.push({ month, amount, person, came, via: came === "ad" ? "enquiry" : null });
     }
     if (!body.has_more || data.length === 0) break;
     after = data[data.length - 1]!.id;
   }
-  return by;
+  return { list, trailRead: index !== null };
 }
 
 async function read(site: Site): Promise<RoasLive> {
@@ -195,9 +228,12 @@ async function read(site: Site): Promise<RoasLive> {
 
   /* Only Smart Space sells through Stripe. A chart with no money bars is the
      truth for anyone else, not a fault. */
-  const money = site === "smart-space"
-    ? await chargesByMonth(Math.floor(since.getTime() / 1000))
-    : new Map<string, MonthMoney>();
+  const { list, trailRead } = site === "smart-space"
+    ? await payments(Math.floor(since.getTime() / 1000))
+    : { list: [] as Payment[], trailRead: true };
+
+  const byMonth = new Map<string, Payment[]>();
+  for (const p of list) byMonth.set(p.month, [...(byMonth.get(p.month) ?? []), p]);
 
   const spendByMonth = new Map<string, number>();
   for (const m of periods.data.month) {
@@ -206,38 +242,48 @@ async function read(site: Site): Promise<RoasLive> {
 
   const keySet = new Set<string>();
   spendByMonth.forEach((_, k) => keySet.add(k));
-  money.forEach((_, k) => keySet.add(k));
+  byMonth.forEach((_, k) => keySet.add(k));
   const keys = Array.from(keySet).sort();
-  const kept = keys.filter((k) => (spendByMonth.get(k) ?? 0) > 0 || (money.get(k)?.taken ?? 0) > 0).slice(-MONTHS);
+  const sum = (ps: Payment[]) => ps.reduce((t, p) => t + p.amount, 0);
+  const kept = keys.filter((k) => (spendByMonth.get(k) ?? 0) > 0 || sum(byMonth.get(k) ?? []) > 0).slice(-MONTHS);
 
   /*
-   * The rate the grey is drawn at: website money through an ad, over this
-   * month and the two before it.
+   * The rate the grey is drawn at: of the customers whose way in is known,
+   * the share who came through an ad, over this month and the two before it.
    *
-   * Three months rather than one, because a job paid by link in September was
-   * usually quoted in August from an enquiry in July. The consultation comes
-   * first and the payment weeks later, so this month's website buyers are the
-   * wrong sample for this month's link payments.
+   * Customers, not euros. The question for each untraced payment is how likely
+   * it is that this one customer came from an ad, and one large job should not
+   * swing that for everybody. Three months rather than one, because a job paid
+   * by link in September was usually quoted in August from an enquiry in July.
    */
   const shareAt = (i: number) => {
-    let site = 0, siteTied = 0;
+    const known = new Map<string, boolean>();
     for (let j = Math.max(0, i - 2); j <= i; j++) {
-      const m = money.get(kept[j]!);
-      if (!m) continue;
-      site += m.site; siteTied += m.siteTied;
+      for (const p of byMonth.get(kept[j]!) ?? []) {
+        if (p.came === "unknown") continue;
+        known.set(p.person, (known.get(p.person) ?? false) || p.came === "ad");
+      }
     }
-    return site > 0 ? siteTied / site : 0;
+    if (known.size === 0) return 0;
+    let ads = 0;
+    known.forEach((v) => { if (v) ads++; });
+    return ads / known.size;
   };
 
   const months: RoasMonth[] = kept.map((k, i) => {
-    const m = money.get(k) ?? emptyMoney();
+    const ps = byMonth.get(k) ?? [];
+    const ad = ps.filter((p) => p.came === "ad");
+    const unseen = sum(ps.filter((p) => p.came === "unknown"));
     const share = shareAt(i);
     return {
       key: k, label: label(k), spend: spendByMonth.get(k) ?? 0,
-      back: m.tied,
-      estimated: Math.round(m.unseen * share),
-      taken: m.taken, unseen: m.unseen, share,
-      sales: m.sales, tiedSales: m.tiedSales,
+      back: sum(ad),
+      backViaEnquiry: sum(ad.filter((p) => p.via === "enquiry")),
+      estimated: Math.round(unseen * share),
+      taken: sum(ps),
+      notFromAds: sum(ps.filter((p) => p.came === "not-ad")),
+      unseen, share,
+      sales: ps.length, tiedSales: ad.length,
       partial: k === thisMonth,
     };
   });
@@ -249,6 +295,7 @@ async function read(site: Site): Promise<RoasLive> {
     estimated: months.reduce((s, m) => s + m.estimated, 0),
     from: months[0]?.label ?? "",
     to: months[months.length - 1]?.label ?? "",
+    trailRead,
   };
 }
 

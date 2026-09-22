@@ -38,17 +38,17 @@ const chart = compile("src/app/crm/roas-chart.tsx", "roas-chart.mjs", [
 ]);
 const { default: RoasChart } = await import(pathToFileURL(chart).href);
 
-/* The real months, as read live from Stripe and Google Ads on 22 September
-   2026, so what this renders is what the owner sees rather than a guess at it. */
-const m = (key, label, spend, back, estimated, taken, unseen, share, partial = false) =>
-  ({ key, label, spend, back, estimated, taken, unseen, share, sales: 0, tiedSales: 0, partial });
+/* The real months, as read live from Stripe, Google Ads and the enquiry log on
+   22 September 2026, so what this renders is what the owner sees rather than a guess at it. */
+const m = (key, label, spend, back, backViaEnquiry, estimated, taken, notFromAds, unseen, share, partial = false) =>
+  ({ key, label, spend, back, backViaEnquiry, estimated, taken, notFromAds, unseen, share, sales: 0, tiedSales: 0, partial });
 const months = [
-  m("2026-04", "Apr 2026", 412, 0, 0, 762, 322, 0),
-  m("2026-05", "May 2026", 451, 2403, 1261, 5167, 1930, 0.65),
-  m("2026-06", "Jun 2026", 551, 1793, 1284, 3648, 1716, 0.75),
-  m("2026-07", "Jul 2026", 608, 1141, 2947, 6157, 4029, 0.73),
-  m("2026-08", "Aug 2026", 608, 908, 1416, 7059, 2995, 0.47),
-  m("2026-09", "Sept 2026", 484, 0, 806, 6188, 3495, 0.23, true),
+  m("2026-04", "Apr 2026", 412, 0, 0, 0, 762, 438, 324, 0),
+  m("2026-05", "May 2026", 451, 2403, 0, 826, 5167, 1250, 1514, 0.55),
+  m("2026-06", "Jun 2026", 551, 2519, 726, 421, 3648, 479, 650, 0.65),
+  m("2026-07", "Jul 2026", 608, 3782, 2641, 1620, 6157, 329, 2046, 0.79),
+  m("2026-08", "Aug 2026", 608, 908, 0, 755, 7059, 4829, 1322, 0.57),
+  m("2026-09", "Sept 2026", 484, 0, 0, 553, 6188, 4781, 1407, 0.39, true),
 ];
 const sum = (k) => months.reduce((a, x) => a + x[k], 0);
 

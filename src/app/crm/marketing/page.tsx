@@ -362,11 +362,11 @@ export default async function MarketingPage() {
       <div className="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 px-4 py-3">
           <h2 className="text-base font-semibold text-slate-900">What the advertising cost, and what came back</h2>
-          <p className="mt-0.5 text-xs text-slate-500">Live from Google Ads and Stripe, by month.</p>
+          <p className="mt-0.5 text-xs text-slate-500">Live from Google Ads, Stripe and the enquiry log, by month.</p>
         </div>
         {roas.ok ? (
           <RoasChart months={roas.data.months} spend={roas.data.spend} back={roas.data.back}
-                     estimated={roas.data.estimated}
+                     estimated={roas.data.estimated} trailRead={roas.data.trailRead}
                      siteLabel={SITE_LABEL[session.site]} />
         ) : (
           <div className="px-4 py-4">
