@@ -2,7 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { Send, Check } from "lucide-react";
-import { getAttribution } from "@/lib/attribution";
+import { getAttribution, consentRecord } from "@/lib/attribution";
 
 // Google Ads conversion send_to value. Pulled from env so the user can
 // fix in Vercel without a code redeploy if the label changes (e.g. the
@@ -108,6 +108,7 @@ export default function ContactForm() {
       message: (form.elements.namedItem("message") as HTMLTextAreaElement).value,
       homepage_url: (form.elements.namedItem("homepage_url") as HTMLInputElement | null)?.value ?? "",
       attribution: getAttribution() ?? undefined,
+      consent: consentRecord(),
     };
 
     try {

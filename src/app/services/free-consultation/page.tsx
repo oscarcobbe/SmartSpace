@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ClipboardCheck, Home, MessageCircle, Lightbulb, Shield, Star, Wrench, Award, Loader2 } from "lucide-react";
 import BookingCalendar from "@/components/BookingCalendar";
-import { getAttribution } from "@/lib/attribution";
+import { getAttribution, consentRecord } from "@/lib/attribution";
 
 const SITE = "https://smart-space.ie";
 
@@ -98,6 +98,7 @@ export default function FreeConsultationPage() {
             address: address.trim(),
           },
           attribution: getAttribution() ?? undefined,
+          consent: consentRecord(),
         }),
       });
       const data = await res.json();

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { recordEnquiryConsent, type ConsentInput } from "@/lib/ad-consent";
 import { randomUUID } from "crypto";
 import { Resend } from "resend";
 import { logLead, type AttributionRecord } from "@/lib/leads";
@@ -69,7 +70,8 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    const { name, email, phone, subject, message, attribution, gclid, homepage_url } = body as {
+    const { name, email, phone, subject, message, attribution, gclid, homepage_url, consent } = body as {
+      consent?: ConsentInput | null;
       name?: string;
       email?: string;
       phone?: string;
@@ -393,6 +395,10 @@ export async function POST(request: Request) {
       extraParams: { lead_source: "contact_form", topic: subjectLabel },
     });
 
+    /* The enquirer's cookie answer, kept so a job they later pay by payment
+       link can be reported to Google with the consent they gave here. */
+    const consentTask = recordEnquiryConsent({ email, phone, consent, source: "contact_form" });
+
     const crmTask = sendToCrm({
       source: "contact_form",
       source_detail: subjectLabel,
@@ -416,7 +422,7 @@ export async function POST(request: Request) {
     // failure doesn't block the response or the other tasks.
     const [autoReplyResult] = await Promise.all([
       autoReplyTask,
-      Promise.allSettled([logLeadTask, fireConversionTask, crmTask]),
+      Promise.allSettled([logLeadTask, fireConversionTask, crmTask, consentTask]),
     ]);
 
     return NextResponse.json({

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { recordEnquiryConsent, type ConsentInput } from "@/lib/ad-consent";
 import { randomUUID } from "crypto";
 import { Resend } from "resend";
 import { createBookingEvent } from "@/lib/calendly";
@@ -33,6 +34,8 @@ interface FreeCheckoutBody {
   items: CartItem[];
   customer?: CustomerDetails;
   attribution?: AttributionRecord;
+  /** The cookie banner's stored answer, read in the browser. */
+  consent?: ConsentInput | null;
   gclid?: string; // legacy
 }
 
@@ -60,7 +63,7 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    const { items, customer, attribution, gclid } = parsed;
+    const { items, customer, attribution, gclid, consent } = parsed;
     const finalAttribution = attribution ?? (gclid ? { gclid } : undefined);
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -186,6 +189,10 @@ export async function POST(request: Request) {
         });
       }
     }
+
+    /* The enquirer's cookie answer, kept so a job they later pay by payment
+       link can be reported to Google with the consent they gave here. */
+    await recordEnquiryConsent({ email: customer?.email, phone: customer?.phone, consent, source: "free_consultation" });
 
     // Await so the row reaches the sheet before the function exits.
     // Fire-and-forget gets killed by Vercel's serverless runtime.

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { consentFrom, type ConsentInput } from "@/lib/ad-consent";
 import { getProductByHandle } from "@/lib/shopify";
 import type { AttributionRecord } from "@/lib/leads";
 
@@ -28,19 +29,6 @@ interface CheckoutBody {
   gaSessionId?: string;
   /** The cookie banner's stored answer, read in the browser at checkout. */
   consent?: { decision?: unknown; decidedAt?: unknown } | null;
-}
-
-/**
- * The banner answer, or nothing. Anything that is not exactly one of the two
- * answers the banner can store, with a plausible time, is dropped rather than
- * written: this value is later sent to Google as a consent signal, so a
- * malformed one must become "unspecified", never "granted".
- */
-function consentFrom(raw: CheckoutBody["consent"]): { decision: "granted" | "denied"; at: string } | null {
-  if (!raw || (raw.decision !== "granted" && raw.decision !== "denied")) return null;
-  const t = Number(raw.decidedAt);
-  if (!Number.isFinite(t) || t < Date.UTC(2026, 0, 1) || t > Date.now() + 5 * 60_000) return null;
-  return { decision: raw.decision, at: new Date(t).toISOString() };
 }
 
 interface ResolvedItem {
@@ -160,7 +148,7 @@ export async function POST(request: Request) {
       );
     }
     const { items, attribution, gclid: legacyGclid, gaClientId, gaSessionId, consent: rawConsent } = parsed;
-    const consent = consentFrom(rawConsent);
+    const consent = consentFrom(rawConsent as ConsentInput | null | undefined);
     const gclid = attribution?.gclid ?? legacyGclid ?? "";
 
     if (!Array.isArray(items) || items.length === 0) {

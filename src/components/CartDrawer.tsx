@@ -37,7 +37,7 @@ export default function CartDrawer() {
         const res = await fetch("/api/checkout/free", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ items, attribution, gaClientId: ga.clientId, gaSessionId: ga.sessionId }),
+          body: JSON.stringify({ items, attribution, consent: consentRecord(), gaClientId: ga.clientId, gaSessionId: ga.sessionId }),
         });
         const data = await res.json();
         if (data.success) {

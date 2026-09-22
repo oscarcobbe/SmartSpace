@@ -33,7 +33,7 @@
 import { useState, type FormEvent } from "react";
 import { PhoneCall, Check } from "lucide-react";
 
-import { getAttribution } from "@/lib/attribution";
+import { getAttribution, consentRecord } from "@/lib/attribution";
 import { fireLeadConversion } from "@/lib/lead-conversion";
 
 export default function CallbackForm() {
@@ -71,6 +71,7 @@ export default function CallbackForm() {
         `They have not booked or paid, they asked to be called back.`,
       homepage_url: value("homepage_url"),
       attribution: getAttribution() ?? undefined,
+      consent: consentRecord(),
     };
 
     try {
