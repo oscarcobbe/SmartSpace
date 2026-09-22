@@ -136,7 +136,11 @@ export function Kpi({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="text-[12.5px] font-semibold uppercase tracking-wide text-white/85">{label}</div>
-          <div className="mt-1.5 text-[30px] font-bold leading-none tracking-tight tabular-nums text-white">
+          {/* A long value steps down a size rather than running off the
+              tile. "~€13,959" clipped its last digit at six tiles across,
+              and a figure missing a digit is a different figure. */}
+          <div className={`mt-1.5 font-bold leading-none tracking-tight tabular-nums text-white ${
+            value.length > 7 ? "text-[23px]" : "text-[30px]"}`}>
             {value}
           </div>
         </div>
