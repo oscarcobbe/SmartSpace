@@ -38,32 +38,22 @@ const chart = compile("src/app/crm/roas-chart.tsx", "roas-chart.mjs", [
 ]);
 const { default: RoasChart } = await import(pathToFileURL(chart).href);
 
-/* Shaped like the real months: small spend, lumpy revenue, the click id
-   stopping part way through the last month but one. */
+/* The real months, as read live from Stripe and Google Ads on 22 September
+   2026, so what this renders is what the owner sees rather than a guess at it. */
+const m = (key, label, spend, back, estimated, taken, unseen, share, partial = false) =>
+  ({ key, label, spend, back, estimated, taken, unseen, share, sales: 0, tiedSales: 0, partial });
 const months = [
-  { key: "2026-04", label: "Apr 2026", start: "2026-04-13", end: "2026-04-30", days: 18, partial: true, spend: 180, spendBlind: 0, adRevenue: 0, allRevenue: 900, googleValue: 120, conversions: 1, orders: 2 },
-  { days: 31, key: "2026-05", label: "May 2026", start: "2026-05-01", end: "2026-05-31", spend: 451, spendBlind: 0, adRevenue: 2404, allRevenue: 3100, googleValue: 1055, conversions: 9, orders: 7 },
-  { days: 30, key: "2026-06", label: "Jun 2026", start: "2026-06-01", end: "2026-06-30", spend: 551, spendBlind: 0, adRevenue: 1791, allRevenue: 2600, googleValue: 1444, conversions: 8, orders: 6 },
-  { days: 31, key: "2026-07", label: "Jul 2026", start: "2026-07-01", end: "2026-07-31", spend: 608, spendBlind: 0, adRevenue: 1143, allRevenue: 4200, googleValue: 1186, conversions: 7, orders: 5 },
-  { days: 31, key: "2026-08", label: "Aug 2026", start: "2026-08-01", end: "2026-08-31", spend: 608, spendBlind: 260, adRevenue: 1218, allRevenue: 6167, googleValue: 492, conversions: 6, orders: 16 },
-  { days: 22, key: "2026-09", label: "Sept 2026", start: "2026-09-01", end: "2026-09-30", spend: 438, spendBlind: 438, adRevenue: 0, allRevenue: 4386, googleValue: 33, conversions: 2, orders: 11, partial: true },
+  m("2026-04", "Apr 2026", 412, 0, 0, 762, 322, 0),
+  m("2026-05", "May 2026", 451, 2403, 1261, 5167, 1930, 0.65),
+  m("2026-06", "Jun 2026", 551, 1793, 1284, 3648, 1716, 0.75),
+  m("2026-07", "Jul 2026", 608, 1141, 2947, 6157, 4029, 0.73),
+  m("2026-08", "Aug 2026", 608, 908, 1416, 7059, 2995, 0.47),
+  m("2026-09", "Sept 2026", 484, 0, 806, 6188, 3495, 0.23, true),
 ];
-const totals = (xs) => xs.reduce((a, b) => ({
-  spend: a.spend + b.spend, adRevenue: a.adRevenue + b.adRevenue,
-  allRevenue: a.allRevenue + b.allRevenue, googleValue: a.googleValue + b.googleValue,
-  days: a.days + 30,
-}), { spend: 0, adRevenue: 0, allRevenue: 0, googleValue: 0, days: 0 });
-
-const counted = totals(months.slice(0, 5));
-const excluded = totals(months.slice(5));
+const sum = (k) => months.reduce((a, x) => a + x[k], 0);
 
 const html = renderToStaticMarkup(React.createElement(RoasChart, {
-  day: [], week: [], month: months,
-  counted, excluded,
-  lastAttributed: "2026-08-12",
-  revenueKnown: true,
-  capturedAt: "2026-09-21T08:00:00.000Z",
-  siteLabel: "Smart Space",
+  months, spend: sum("spend"), back: sum("back"), estimated: sum("estimated"), siteLabel: "Smart Space",
 }));
 
 rmSync(dir, { recursive: true, force: true });
