@@ -59,6 +59,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         cache: "no-store",
       });
       if (res.status === 401) {
+        /* Not the admin key, so try it as the dashboard password.
+           Since 17 September the admin key and the dashboard password are
+           two different things: ADMIN_KEY was rotated to 64 characters
+           because the customer feed it guards is also read by other systems.
+           The dashboard password is still the short one Nigel was given, and
+           he types it here, where it used to work, and was told "Incorrect
+           admin key". The value goes to the CRM's own sign-in, which checks
+           it exactly as /crm does (same compare, same rate limit, same thirty
+           day session). If it is the dashboard password he lands in the CRM
+           signed in. What the admin key unlocks does not change at all. */
+        const crm = await fetch("/api/crm/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: k }),
+        }).catch(() => null);
+        if (crm?.ok) {
+          window.location.href = "/crm";
+          return;
+        }
         setError("Incorrect admin key.");
         setChecking(false);
         return;
