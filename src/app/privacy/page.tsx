@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-const lastUpdated = "4 May 2026";
+const lastUpdated = "23 September 2026";
 
 export default function PrivacyPage() {
   return (
@@ -67,7 +67,9 @@ export default function PrivacyPage() {
               <li>
                 <strong>Website analytics:</strong> Google Analytics 4 records anonymous interactions (pages viewed,
                 scroll depth, clicks). We use Google&apos;s Consent Mode v2: by default we collect no personal
-                advertising or analytics data until you accept cookies.
+                advertising or analytics data until you accept cookies. Google&apos;s tags still load, and until you
+                accept they send only anonymised pings that set no cookies and carry no identifier. Google uses
+                these to estimate, as a total, how many visits led to an enquiry or a sale.
               </li>
             </ul>
           </section>
