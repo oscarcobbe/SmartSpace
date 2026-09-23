@@ -140,6 +140,23 @@ function fireConsentUpdate(decision: Decision) {
   }
 }
 
+/**
+ * One count per banner shown and per answer, first party, with nothing that
+ * identifies anybody (see /api/track/consent). This is how the acceptance
+ * rate becomes a number: the dataLayer event above never reached GA4 on this
+ * site, because gtag ignores GTM-style events.
+ */
+function tally(event: "shown" | Decision) {
+  try {
+    void fetch("/api/track/consent", {
+      method: "POST",
+      headers: { "content-type": "text/plain" },
+      body: JSON.stringify({ event }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch { /* a count is never worth breaking the banner over */ }
+}
+
 export default function CookieBanner() {
   const [visible, setVisible] = useState(false);
 
@@ -161,7 +178,7 @@ export default function CookieBanner() {
     // saved: gtag waits for a consent update and then gives up, so a
     // banner that is not on screen yet is a banner nobody can answer in
     // time.
-    const t = window.setTimeout(() => setVisible(true), 0);
+    const t = window.setTimeout(() => { setVisible(true); tally("shown"); }, 0);
     return () => window.clearTimeout(t);
   }, []);
 
@@ -176,6 +193,7 @@ export default function CookieBanner() {
       // applies for this session at least.
     }
     fireConsentUpdate(decision);
+    tally(decision);
     setVisible(false);
   }
 
