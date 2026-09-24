@@ -17,6 +17,7 @@
 
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
+import { crmSessionFrom } from "@/lib/crm/auth";
 
 const SS_FROM = process.env.RESEND_FROM_EMAIL || "Smart Space <bookings@bookings.smart-space.ie>";
 const SS_REPLY_TO = process.env.RESEND_REPLY_TO || "bookings@smart-space.ie";
@@ -84,7 +85,11 @@ export async function POST(req: Request) {
   const adminKey = process.env.ADMIN_KEY || "";
   const authz = req.headers.get("authorization") || "";
   const token = authz.startsWith("Bearer ") ? authz.slice(7) : "";
-  if (!adminKey || !token || !safeEqual(token, adminKey)) {
+  /* Or signed in to the CRM: see crmSessionFrom. It is the same kind of act as
+     the payment links the CRM already sends, a Stripe link emailed to a
+     customer, and Nigel reaches it from the same page. */
+  const keyOk = !!adminKey && !!token && safeEqual(token, adminKey);
+  if (!keyOk && !(adminKey && crmSessionFrom(req))) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   }
 

@@ -74,3 +74,34 @@ export function passwordOk(supplied: string): boolean {
   };
   return timingSafeEqual(pad(supplied), pad(expected));
 }
+
+/**
+ * Is this request from someone signed in to the CRM.
+ *
+ * For the /admin API routes, which take the long ADMIN_KEY and, since
+ * 24 September, the CRM sign-in as well. /admin/leads is the page Nigel calls
+ * "the dashboard" and he signs in to it with the dashboard password. The CRM
+ * already shows these same leads and already sends payment links, both server
+ * side with ADMIN_KEY, so a CRM session reaching them here can do nothing it
+ * could not already do from /crm.
+ *
+ * A POST is only accepted from this site's own pages. The cookie is SameSite
+ * Lax, so another site's form never carries it anyway; the Origin check means
+ * that is not the only thing standing there.
+ */
+export function crmSessionFrom(request: Request): { email: string; site: Site } | null {
+  const raw = request.headers.get("cookie") ?? "";
+  const hit = raw.split(/;\s*/).find((c) => c.startsWith(`${COOKIE}=`));
+  if (!hit) return null;
+  if (request.method !== "GET") {
+    const origin = request.headers.get("origin");
+    if (!origin || origin !== new URL(request.url).origin) return null;
+  }
+  try {
+    return readSessionCookie(decodeURIComponent(hit.slice(COOKIE.length + 1)));
+  } catch {
+    /* CRM_SESSION_SECRET missing: the CRM is not set up here, so nobody is
+       signed in to it. */
+    return null;
+  }
+}

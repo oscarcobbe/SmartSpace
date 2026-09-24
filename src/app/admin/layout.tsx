@@ -5,7 +5,8 @@
  * every /admin/* page so the menu is always one click away. No more
  * navigating back to a hub to switch tools.
  *
- * Auth lives at the layout level (sessionStorage["admin_key"]). When
+ * Auth lives at the layout level: sessionStorage["admin_key"], or the CRM
+ * session cookie from the dashboard password (see crmSessionFrom). When
  * empty, the layout renders a full-screen password form INSTEAD of the
  * children, so no admin sub-page ever shows its content unauthenticated.
  * Sub-pages can therefore drop their own auth gates and assume access.
@@ -16,30 +17,50 @@
 
 import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const NAV_ITEMS: { href: string; label: string; blurb: string }[] = [
   { href: "/admin/leads", label: "Leads dashboard", blurb: "Bookings, contacts, revenue" },
   { href: "/admin/conversion-test", label: "Conversion test", blurb: "Verify Google Ads pipeline" },
 ];
 
+/* Signed in with the dashboard password, the leads dashboard works and the
+   conversion test does not: that one still takes the admin key. */
+const DASHBOARD_ONLY = ["/admin/leads"];
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [authed, setAuthed] = useState<boolean | null>(null);
+  const [withKey, setWithKey] = useState(false);
+  const router = useRouter();
   const [keyInput, setKeyInput] = useState("");
   const [error, setError] = useState("");
   const [checking, setChecking] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
-    const stored = sessionStorage.getItem("admin_key");
-    setAuthed(!!stored);
     // If a page kicked us back here because the key stopped working mid
     // session, say so instead of silently showing a blank login.
     if (sessionStorage.getItem("admin_key_expired")) {
       sessionStorage.removeItem("admin_key_expired");
       setError("Your session expired, please sign in again.");
     }
+    if (sessionStorage.getItem("admin_key")) {
+      setWithKey(true);
+      setAuthed(true);
+      return;
+    }
+    // No key: already signed in with the dashboard password? The cookie lasts
+    // thirty days, so he types it once a month, here or at /crm.
+    fetch("/api/admin/leads?verify=1", { cache: "no-store" })
+      .then((r) => setAuthed(r.ok))
+      .catch(() => setAuthed(false));
   }, []);
+
+  useEffect(() => {
+    if (authed && !withKey && !DASHBOARD_ONLY.some((p) => pathname.startsWith(p))) {
+      router.replace("/admin/leads");
+    }
+  }, [authed, withKey, pathname, router]);
 
   async function handleAuth(e: FormEvent) {
     e.preventDefault();
@@ -68,14 +89,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
            admin key". The value goes to the CRM's own sign-in, which checks
            it exactly as /crm does (same compare, same rate limit, same thirty
            day session). If it is the dashboard password he lands in the CRM
-           signed in. What the admin key unlocks does not change at all. */
+           signed in, and since 24 September that session opens the leads
+           dashboard here as well. The admin key itself does not change. */
         const crm = await fetch("/api/crm/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ password: k }),
         }).catch(() => null);
         if (crm?.ok) {
-          window.location.href = "/crm";
+          window.location.href = "/admin/leads";
           return;
         }
         setError("Incorrect admin key.");
@@ -102,8 +124,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }
 
-  function clearKey() {
+  async function clearKey() {
     sessionStorage.removeItem("admin_key");
+    // Signed in with the dashboard password, signing out ends that session,
+    // which is also the /crm one.
+    if (!withKey) await fetch("/api/crm/logout", { method: "POST" }).catch(() => null);
     setAuthed(false);
     setKeyInput("");
     window.location.reload();
@@ -117,8 +142,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <style>{`header, footer, header + div, .fixed.top-0.bg-brand-500 { display: none !important; }`}</style>
   );
 
-  // Initial mount before sessionStorage read
-  if (authed === null) {
+  // Initial mount before the sign-in is known, or a key-only page about to be
+  // swapped for the leads dashboard.
+  const leaving = !!authed && !withKey && !DASHBOARD_ONLY.some((p) => pathname.startsWith(p));
+  if (authed === null || leaving) {
     return (
       <>
         {hideSiteChrome}
@@ -190,7 +217,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {/* Nav */}
           <nav className="px-3 py-3 lg:py-4 flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible">
-            {NAV_ITEMS.map((item) => {
+            {NAV_ITEMS.filter((item) => withKey || DASHBOARD_ONLY.includes(item.href)).map((item) => {
               const active = pathname === item.href || pathname.startsWith(item.href + "/");
               return (
                 <Link

@@ -29,6 +29,7 @@
 import { NextResponse } from "next/server";
 import { timingSafeEqual, createHash } from "node:crypto";
 import { crm } from "@/lib/crm/db";
+import { crmSessionFrom } from "@/lib/crm/auth";
 import { isUsableGclid, mintToken, withReference } from "@/lib/crm/payment-link-ref";
 
 // Payment mode is Smart Space work. Booking mode points at a SmartCare Living
@@ -236,7 +237,9 @@ export async function POST(request: Request) {
   }
   const authHeader = request.headers.get("authorization") ?? "";
   const submittedKey = /^Bearer /i.test(authHeader) ? authHeader.slice(7) : "";
-  if (!submittedKey || !safeEqual(submittedKey, adminKey)) {
+  /* Or signed in to the CRM, which already sends these links: see crmSessionFrom. */
+  const keyOk = !!submittedKey && safeEqual(submittedKey, adminKey);
+  if (!keyOk && !crmSessionFrom(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

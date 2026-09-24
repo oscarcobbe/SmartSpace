@@ -81,6 +81,13 @@ interface SourceError {
   message: string;
 }
 
+/* The admin key when signed in with it. Signed in with the dashboard password
+   there is no key: the CRM session cookie goes with the request on its own and
+   the API routes accept it (crmSessionFrom in src/lib/crm/auth.ts). */
+function authHeader(adminKey: string): Record<string, string> {
+  return adminKey ? { Authorization: `Bearer ${adminKey}` } : {};
+}
+
 export default function AdminLeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [sourceErrors, setSourceErrors] = useState<SourceError[]>([]);
@@ -148,19 +155,12 @@ export default function AdminLeadsPage() {
     async (e: React.FormEvent) => {
       e.preventDefault();
       const adminKey = key || sessionStorage.getItem("admin_key") || "";
-      if (!adminKey) {
-        setSpStatus({ ok: false, msg: "Session expired , sign in again." });
-        return;
-      }
       setSpSending(true);
       setSpStatus(null);
       try {
         const res = await fetch("/api/admin/send-payment-link", {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${adminKey}`,
-            "Content-Type": "application/json",
-          },
+          headers: { ...authHeader(adminKey), "Content-Type": "application/json" },
           body: JSON.stringify({
             mode: "payment",
             email: spEmail,
@@ -208,19 +208,12 @@ export default function AdminLeadsPage() {
     async (e: React.FormEvent) => {
       e.preventDefault();
       const adminKey = key || sessionStorage.getItem("admin_key") || "";
-      if (!adminKey) {
-        setBlStatus({ ok: false, msg: "Session expired , sign in again." });
-        return;
-      }
       setBlSending(true);
       setBlStatus(null);
       try {
         const res = await fetch("/api/admin/send-payment-link", {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${adminKey}`,
-            "Content-Type": "application/json",
-          },
+          headers: { ...authHeader(adminKey), "Content-Type": "application/json" },
           body: JSON.stringify({
             mode: "booking",
             email: blEmail,
@@ -273,10 +266,6 @@ export default function AdminLeadsPage() {
     async (e: React.FormEvent) => {
       e.preventDefault();
       const adminKey = key || sessionStorage.getItem("admin_key") || "";
-      if (!adminKey) {
-        setEbResult({ ok: false, msg: "Session expired , sign in again." });
-        return;
-      }
       const prod = PRODUCT_CATALOGUE.find((p) => p.handle === ebProduct);
       if (!prod) {
         setEbResult({ ok: false, msg: "Pick a product." });
@@ -314,7 +303,7 @@ export default function AdminLeadsPage() {
       try {
         const res = await fetch("/api/admin/emergency-booking", {
           method: "POST",
-          headers: { Authorization: `Bearer ${adminKey}`, "Content-Type": "application/json" },
+          headers: { ...authHeader(adminKey), "Content-Type": "application/json" },
           body: JSON.stringify({
             name: ebName,
             email: ebEmail,
@@ -361,7 +350,7 @@ export default function AdminLeadsPage() {
     setError("");
     try {
       const res = await fetch("/api/admin/leads", {
-        headers: { Authorization: `Bearer ${adminKey}` },
+        headers: authHeader(adminKey),
         cache: "no-store",
       });
       if (res.status === 401) {
@@ -390,12 +379,11 @@ export default function AdminLeadsPage() {
   }, []);
 
   useEffect(() => {
-    // Key is guaranteed populated by the time this runs because
-    // src/app/admin/layout.tsx blocks rendering until auth succeeds.
+    // src/app/admin/layout.tsx blocks rendering until auth succeeds, with the
+    // admin key (kept in sessionStorage) or the dashboard password (a cookie).
     const stored = sessionStorage.getItem("admin_key") || "";
     setKey(stored);
-    if (stored) fetchLeads(stored);
-    else setLoading(false);
+    fetchLeads(stored);
   }, [fetchLeads]);
 
   const filtered = leads.filter((l) => {

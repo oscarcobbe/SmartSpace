@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { PRODUCT_CATALOGUE } from "@/data/productCatalogue";
 import { formatEuro } from "@/lib/format";
+import { crmSessionFrom } from "@/lib/crm/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -193,7 +194,9 @@ export async function GET(request: Request) {
   }
   const submittedKey = headerKey;
 
-  if (!submittedKey || !safeEqual(submittedKey, adminKey)) {
+  /* Or signed in to the CRM with the dashboard password: see crmSessionFrom. */
+  const keyOk = !!submittedKey && safeEqual(submittedKey, adminKey);
+  if (!keyOk && !crmSessionFrom(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
