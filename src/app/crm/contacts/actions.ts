@@ -11,6 +11,7 @@ import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/crm/session";
 import { crm, upsertContact, type Site } from "@/lib/crm/db";
 import { STATUSES, type LeadStatus } from "@/lib/crm/contacts";
+import { FOUND_US } from "@/lib/crm/labels";
 import { getPerson } from "@/lib/crm/people";
 import { createPaymentLink } from "@/lib/crm/payment-link";
 import { parseMoney } from "@/lib/crm/money-input";
@@ -69,18 +70,33 @@ export async function setLeadStatus(formData: FormData) {
   const contactId = String(formData.get("contactId") ?? "");
   const status = String(formData.get("status") ?? "") as LeadStatus;
   if (!UUID.test(leadId) || !STATUSES.includes(status)) return;
+  /* How they found us is saved with the status, from the same row, because
+     that is when Nigel knows it: on the call. Checked against the one list, so
+     a hand-made request cannot write a value the report does not know. */
+  const found = String(formData.get("found_us") ?? "");
+  const [before] = (await crm<{ status: string; custom: Record<string, unknown> | null }[]>(
+    `crm_leads?site=eq.${site}&id=eq.${leadId}&select=status,custom&limit=1`,
+  )) ?? [];
+  if (!before) return;
+  const custom = { ...(before.custom ?? {}) };
+  const foundChanged = !!FOUND_US[found] && custom.found_us !== found;
+  if (foundChanged) custom.found_us = found;
 
   await crm(`crm_leads?site=eq.${site}&id=eq.${leadId}`, {
     method: "PATCH",
     prefer: "return=minimal",
-    body: JSON.stringify({ status }),
+    body: JSON.stringify(foundChanged ? { status, custom } : { status }),
   });
-  await crm("crm_activity", {
+  const said = [
+    before.status !== status ? `Moved to ${status}` : null,
+    foundChanged ? `Found us: ${FOUND_US[found]}` : null,
+  ].filter(Boolean).join(". ");
+  if (said) await crm("crm_activity", {
     method: "POST",
     prefer: "return=minimal",
     body: JSON.stringify({
       site, lead_id: leadId, contact_id: UUID.test(contactId) ? contactId : null,
-      kind: "status", summary: `Moved to ${status}`, actor: email, detail: {},
+      kind: "status", summary: said, actor: email, detail: foundChanged ? { found_us: found } : {},
     }),
   });
   if (UUID.test(contactId)) revalidatePath(`/crm/contacts/${contactId}`);

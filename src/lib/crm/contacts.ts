@@ -45,6 +45,8 @@ export interface LeadRow {
   booked_for: string | null;
   installed_at: string | null;
   created_at: string;
+  /** Free-form extras; custom.found_us is how they found the business. */
+  custom?: Record<string, unknown> | null;
 }
 
 export interface ActivityRow {

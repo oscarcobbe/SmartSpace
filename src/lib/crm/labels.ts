@@ -40,6 +40,19 @@ export const FOUND_US: Record<string, string> = {
   other: "Something else",
 };
 
+/*
+ * How this enquiry found the business. What somebody chose by hand wins; a
+ * website enquiry carrying a Google Ads click id is a Google ad without anyone
+ * having to say so; anything else is not known. The weekly report counts the
+ * same way, so what Nigel sees here is what the report counts.
+ */
+export function foundUsOf(l: { gclid?: string | null; custom?: Record<string, unknown> | null }): string {
+  const chosen = typeof l.custom?.found_us === "string" ? (l.custom.found_us as string) : "";
+  if (chosen && chosen !== "unknown" && FOUND_US[chosen]) return chosen;
+  if ((l.gclid ?? "").trim()) return "google_ads";
+  return "unknown";
+}
+
 export const sourceLabel = (key: string | null | undefined) =>
   key ? SOURCES[key] ?? tidy(key) : "Enquiry";
 

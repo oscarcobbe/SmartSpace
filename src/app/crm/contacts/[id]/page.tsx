@@ -4,7 +4,7 @@ import { ArrowLeft, Mail, MapPin, Phone } from "lucide-react";
 import { requireSession } from "@/lib/crm/session";
 import { getPerson, fullAddress, distinctLeads } from "@/lib/crm/people";
 import { getContact, STATUSES, type ActivityRow, type TaskRow } from "@/lib/crm/contacts";
-import { STATUS_PILL, STATUS_LABEL, sourceLabel, kindLabel, telHref } from "@/lib/crm/labels";
+import { STATUS_PILL, STATUS_LABEL, sourceLabel, kindLabel, telHref, FOUND_US, foundUsOf } from "@/lib/crm/labels";
 import { moneyExact, money } from "@/lib/crm/leads";
 import { PageHeader, Panel, Empty, Pill, Note } from "../../ui";
 import { saveNote, setLeadStatus, addTask, completeTask } from "../actions";
@@ -155,16 +155,14 @@ export default async function ContactPage({ params }: { params: { id: string } }
                       </p>
                     )}
 
-                    {(l.utm_campaign || l.gclid || l.booked_for || l.installed_at) && (
-                      <dl className="mt-2.5 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-500">
-                        {l.gclid && <div><dt className="inline">Came from a Google ad</dt></div>}
+                    <dl className="mt-2.5 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-500">
+                        <div><dt className="inline">Found us: </dt><dd className="inline text-slate-700">{FOUND_US[foundUsOf(l)]}{l.gclid ? " (the click was recorded)" : ""}</dd></div>
                         {l.utm_campaign && <div><dt className="inline">Campaign: </dt><dd className="inline text-slate-700">{l.utm_campaign}</dd></div>}
                         {l.booked_for && <div><dt className="inline">Booked for: </dt><dd className="inline text-slate-700">{day(l.booked_for)}</dd></div>}
                         {l.installed_at && <div><dt className="inline">Installed: </dt><dd className="inline text-slate-700">{day(l.installed_at)}</dd></div>}
-                      </dl>
-                    )}
+                    </dl>
 
-                    <form action={setLeadStatus} className="mt-3 flex items-center gap-2">
+                    <form action={setLeadStatus} className="mt-3 flex flex-wrap items-center gap-2">
                       <input type="hidden" name="leadId" value={l.id} />
                       <input type="hidden" name="contactId" value={person.id} />
                       <label htmlFor={`status-${l.id}`} className="text-xs text-slate-500">Move to</label>
@@ -175,6 +173,15 @@ export default async function ContactPage({ params }: { params: { id: string } }
                         className="min-h-[36px] rounded-lg border border-slate-300 bg-white px-2 text-sm"
                       >
                         {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+                      </select>
+                      <label htmlFor={`found-${l.id}`} className="text-xs text-slate-500">Found us</label>
+                      <select
+                        id={`found-${l.id}`}
+                        name="found_us"
+                        defaultValue={foundUsOf(l)}
+                        className="min-h-[36px] rounded-lg border border-slate-300 bg-white px-2 text-sm"
+                      >
+                        {Object.entries(FOUND_US).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                       </select>
                       <button type="submit" className="min-h-[36px] rounded-lg border border-slate-300 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
                         Save
