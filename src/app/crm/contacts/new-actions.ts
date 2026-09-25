@@ -50,6 +50,13 @@ export async function addCustomer(_prev: NewCustomerState, form: FormData): Prom
 
   const wanted = get("wanted").slice(0, 2000);
   const source = get("source") || "phone";
+  /* Checked against the lists in form.tsx, so a hand-edited request cannot
+     write a status the enum refuses or a found_us value the report does not
+     know. */
+  const FOUND = ["unknown", "google_ads", "google_search", "website", "recommended", "organisation", "existing_customer", "other"];
+  const OUTCOMES = ["contacted", "quoted", "booked", "won", "lost"];
+  const foundUs = FOUND.includes(get("found_us")) ? get("found_us") : "unknown";
+  const outcome = OUTCOMES.includes(get("outcome")) ? get("outcome") : "contacted";
 
   try {
     const made = await crm<{ id: string }[]>("crm_leads", {
@@ -61,15 +68,16 @@ export async function addCustomer(_prev: NewCustomerState, form: FormData): Prom
         source,
         source_detail: get("source_detail").slice(0, 200) || null,
         message: wanted || null,
-        status: "contacted",
+        status: outcome,
+        custom: { found_us: foundUs },
       }),
     });
     await logActivity(site, {
       contact_id: contactId,
       lead_id: made?.[0]?.id ?? null,
       kind: "lead_created",
-      summary: source === "phone" ? "Rang in" : "Added by hand",
-      detail: {},
+      summary: source === "phone" ? "Rang in" : source === "voicemail" ? "Left a voicemail" : "Added by hand",
+      detail: { found_us: foundUs },
       actor,
     });
   } catch (err) {

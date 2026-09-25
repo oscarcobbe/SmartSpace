@@ -20,7 +20,24 @@ const SOURCES: Record<string, string> = {
   urgent_callback: "Urgent callback",
   checkout_free: "Free consultation",
   website: "Website",
+  phone: "Rang in",
+  voicemail: "Left a voicemail",
+  in_person: "Met on an installation",
+  referral: "Recommended",
+  walk_in: "Walk in",
   unknown: "Enquiry",
+};
+
+/** How somebody found the business, for enquiries logged by hand (custom.found_us). */
+export const FOUND_US: Record<string, string> = {
+  unknown: "Did not say",
+  google_ads: "A Google ad",
+  google_search: "Google search, not an ad",
+  website: "Our website",
+  recommended: "Recommended",
+  organisation: "An organisation",
+  existing_customer: "Already a customer",
+  other: "Something else",
 };
 
 export const sourceLabel = (key: string | null | undefined) =>

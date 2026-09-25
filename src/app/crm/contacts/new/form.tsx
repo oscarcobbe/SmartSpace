@@ -81,10 +81,40 @@ export default function NewCustomerForm() {
             <select id="source" name="source" defaultValue="phone"
               className="min-h-[44px] w-full rounded-lg border border-slate-300 bg-white px-3 text-sm">
               <option value="phone">Rang in</option>
+              <option value="voicemail">Left a voicemail</option>
               <option value="in_person">Met on an installation</option>
               <option value="referral">Recommended by somebody</option>
               <option value="walk_in">Walk in</option>
               <option value="other">Something else</option>
+            </select>
+          </div>
+          {/* How they found us is a different question from how they got in
+              touch, and it is the one the weekly report counts. A caller has
+              no click id, so this answer is the only record of where a phone
+              enquiry came from. The values are what the report groups by. */}
+          <div>
+            <label htmlFor="found_us" className="mb-1.5 block text-sm font-medium text-slate-700">How they found us</label>
+            <select id="found_us" name="found_us" defaultValue="unknown"
+              className="min-h-[44px] w-full rounded-lg border border-slate-300 bg-white px-3 text-sm">
+              <option value="unknown">Did not say</option>
+              <option value="google_ads">A Google ad</option>
+              <option value="google_search">Searched on Google, not an ad</option>
+              <option value="website">Our website</option>
+              <option value="recommended">Recommended by somebody</option>
+              <option value="organisation">An organisation (HSE, Age Action and so on)</option>
+              <option value="existing_customer">Already a customer</option>
+              <option value="other">Something else</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="outcome" className="mb-1.5 block text-sm font-medium text-slate-700">Where it stands</label>
+            <select id="outcome" name="outcome" defaultValue="contacted"
+              className="min-h-[44px] w-full rounded-lg border border-slate-300 bg-white px-3 text-sm">
+              <option value="contacted">Spoken to, waiting to hear back</option>
+              <option value="quoted">Quoted</option>
+              <option value="booked">Booked in</option>
+              <option value="won">Became a customer</option>
+              <option value="lost">Not going ahead</option>
             </select>
           </div>
           <div>
