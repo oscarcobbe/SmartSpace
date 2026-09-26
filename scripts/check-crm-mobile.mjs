@@ -23,11 +23,15 @@ const BASE = process.argv[2] || "https://smart-space.ie";
 const OUT = process.argv[3] || "/tmp/crm-mobile";
 mkdirSync(OUT, { recursive: true });
 
+/* Two ways in. CRM_SESSION_COOKIE is a session minted with a throwaway
+   CRM_SESSION_SECRET for a local server, so the check can run without the
+   production password ever being typed anywhere. Otherwise it signs in. */
+const COOKIE = process.env.CRM_SESSION_COOKIE?.trim();
 let PASSWORD = process.env.CRM_PASSWORD;
-if (!PASSWORD && existsSync(".env.local")) {
+if (!COOKIE && !PASSWORD && existsSync(".env.local")) {
   PASSWORD = readFileSync(".env.local", "utf8").match(/^CRM_PASSWORD=(.*)$/m)?.[1]?.trim().replace(/^["']|["']$/g, "");
 }
-if (!PASSWORD) { console.error("CRM_PASSWORD not set, so this cannot sign in."); process.exit(1); }
+if (!COOKIE && !PASSWORD) { console.error("Neither CRM_SESSION_COOKIE nor CRM_PASSWORD is set, so this cannot sign in."); process.exit(1); }
 
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const dir = mkdtempSync(join(tmpdir(), "crm-mobile-"));
@@ -82,8 +86,9 @@ const OVERFLOW = `(() => {
 
 console.log(`\nCRM on a phone, 390x844, against ${BASE}\n`);
 
+if (COOKIE) await cdp("Network.setCookie", { name: "crm_session", value: COOKIE, url: BASE, httpOnly: true, sameSite: "Lax" }, sessionId);
 await go("/crm");
-await evalIn(`(async () => {
+if (!COOKIE) await evalIn(`(async () => {
   const input = document.querySelector('input[type="password"]');
   if (!input) return 'no password field';
   const set = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
@@ -98,6 +103,8 @@ await new Promise((r) => setTimeout(r, 1500));
 for (const [path, name, must] of [
   ["/crm", "overview", "Money"],
   ["/crm/week", "week", null],
+  ["/crm/tasks", "tasks", null],
+  ["/crm/contacts", "contacts", null],
   ["/crm/orders", "orders", null],
   ["/crm/finance", "finance", "bank"],
   ["/crm/marketing", "marketing", null],
@@ -127,9 +134,14 @@ await shot("week-job-open");
 console.log(`  job expand      ${opened === "true" ? "opens" : opened}`);
 if (opened !== "true" && opened !== "no job to open") problems.push(`the job expander did not open: ${opened}`);
 
+/* The VISIBLE switcher. The first one in the document is the desktop
+   sidebar's, which is display:none on a phone, and a script click on it
+   succeeds anyway: this check passed for weeks while a phone had no way to
+   reach SmartCare Living at all. */
 const switched = await evalIn(`(async () => {
-  const b = document.querySelector('button[aria-haspopup="listbox"]');
-  if (!b) return 'no switcher';
+  const b = [...document.querySelectorAll('button[aria-haspopup="listbox"]')]
+    .find(e => { const r = e.getBoundingClientRect(); return r.width >= 44 && r.height >= 44 && getComputedStyle(e).visibility !== 'hidden'; });
+  if (!b) return 'no visible switcher of at least 44 by 44';
   b.click(); await new Promise(r => setTimeout(r, 300));
   const opts = [...document.querySelectorAll('[role="option"]')].map(o => o.textContent.trim());
   return opts.join(' | ') || 'no options';

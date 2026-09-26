@@ -64,6 +64,36 @@ for (const file of walk(SRC)) {
   });
 }
 
+/*
+ * No en dashes on the CRM's screens either.
+ *
+ * Oscar's rule for the CRM is no em or en dashes in any text. The em dash was
+ * already banned sitewide; the en dash was not, and it had become the CRM's
+ * placeholder for an empty value in thirty places ("–" in a table cell, "–"
+ * for a cost per enquiry with no enquiries). Comments are left alone, because
+ * several explain the feed's own slot formats by quoting them. Parsing code
+ * that has to match a dash in incoming data spells it "\u2013".
+ */
+const CRM_DIRS = ["app/crm", "lib/crm", "app/api/crm"].map((d) => join(SRC, d));
+for (const file of walk(SRC).filter((f) => CRM_DIRS.some((d) => f.startsWith(d)))) {
+  const src = readFileSync(file, "utf8");
+  /* Blank out comments but keep line numbers, so a finding points at its line. */
+  const code = src
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
+    .replace(/(^|[^:"'`])\/\/.*$/gm, (m, lead) => lead + " ".repeat(m.length - lead.length));
+  code.split("\n").forEach((line, i) => {
+    if (!line.includes("\u2013")) return;
+    const original = src.split("\n")[i] ?? "";
+    if (original.includes("guard-ignore")) return;
+    violations.push({
+      file: file.slice(file.indexOf("src")),
+      line: i + 1,
+      rule: "en-dash U+2013 (banned on CRM screens)",
+      text: original.trim().slice(0, 110),
+    });
+  });
+}
+
 if (violations.length) {
   console.error(`\n✗ string-guard: ${violations.length} issue(s) found\n`);
   for (const v of violations) {
