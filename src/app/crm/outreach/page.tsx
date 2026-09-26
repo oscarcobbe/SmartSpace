@@ -7,7 +7,7 @@ import { LinkedInSection, PartnersSection } from "./sections";
 export const dynamic = "force-dynamic";
 
 const day = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleDateString("en-IE", { timeZone: "Europe/Dublin", day: "2-digit", month: "short", year: "2-digit" }) : "–";
+  iso ? new Date(iso).toLocaleDateString("en-IE", { timeZone: "Europe/Dublin", day: "numeric", month: "short", year: "2-digit" }) : "Not yet";
 
 /**
  * The one section that writes to people who did not ask to hear from us, so it
@@ -70,6 +70,12 @@ export default async function OutreachPage() {
         <LinkedInSection />
       </div>
 
+      {data.problems.length > 0 && (
+        <div className="mb-6 space-y-2">
+          {data.problems.map((p) => <Note key={p} tone="warn">{p} The figures below leave it out rather than counting it as none.</Note>)}
+        </div>
+      )}
+
       <StatRow>
         <Stat label="On the list" value={String(data.prospects.length)} />
         <Stat
@@ -125,10 +131,10 @@ export default async function OutreachPage() {
                     <tr key={p.id}>
                       <td className="px-4 py-2.5 font-medium text-slate-900">{p.business}</td>
                       <td className="px-4 py-2.5 text-slate-600">
-                        <span className="block">{p.contact_name ?? "–"}</span>
+                        <span className="block">{p.contact_name ?? <span className="text-slate-400">No name</span>}</span>
                         {p.role && <span className="block text-xs text-slate-500">{p.role}</span>}
                       </td>
-                      <td className="px-4 py-2.5 text-slate-600">{p.county ?? "–"}</td>
+                      <td className="px-4 py-2.5 text-slate-600">{p.county ?? <span className="text-slate-400">Not given</span>}</td>
                       <td className="px-4 py-2.5">
                         <Pill className={OUTREACH_PILL[p.status]}>{OUTREACH_LABEL[p.status]}</Pill>
                       </td>

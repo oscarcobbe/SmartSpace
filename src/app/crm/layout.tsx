@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import SiteSwitch from "./site-switch";
 import Link from "next/link";
-import { LogOut } from "lucide-react";
-import { currentSession, SITE_LABEL } from "@/lib/crm/session";
+import { LogOut, Search } from "lucide-react";
+import { currentSession } from "@/lib/crm/session";
 import CrmNav from "./nav";
 import Refresh from "./refresh";
 
@@ -67,26 +67,34 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
+          {/* The phone header carries the business switch and search, which
+              used to exist only in the desktop sidebar: on a phone there was
+              no way to reach SmartCare Living at all. Every control here is
+              at least 44 pixels square, because it is used with a thumb. */}
           <div className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur lg:hidden">
-            <header className="flex h-14 items-center justify-between gap-4 px-4">
-              <Link href="/crm" className="flex items-center gap-2 text-sm font-semibold tracking-tight">
-                <span className="h-2.5 w-2.5 rounded-full bg-brand-500" aria-hidden="true" />
-                {SITE_LABEL[session.site]}
-              </Link>
-              <div className="flex items-center gap-2">
-              <Refresh />
-              <form action="/api/crm/logout" method="post">
-                <button
-                  type="submit"
-                  aria-label="Sign out"
-                  className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
+            <header className="flex h-14 items-center justify-between gap-1 pl-2 pr-1.5">
+              <SiteSwitch site={session.site} compact />
+              <div className="flex shrink-0 items-center">
+                <Link
+                  href="/crm/search"
+                  aria-label="Search everything"
+                  className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100"
                 >
-                  <LogOut className="h-4 w-4" aria-hidden="true" />
-                </button>
-              </form>
+                  <Search className="h-[18px] w-[18px]" aria-hidden="true" />
+                </Link>
+                <Refresh />
+                <form action="/api/crm/logout" method="post">
+                  <button
+                    type="submit"
+                    aria-label="Sign out"
+                    className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
+                  >
+                    <LogOut className="h-[18px] w-[18px]" aria-hidden="true" />
+                  </button>
+                </form>
               </div>
             </header>
-            <div className="px-3">
+            <div className="px-2">
               <CrmNav site={session.site} horizontal />
             </div>
           </div>

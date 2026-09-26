@@ -7,6 +7,9 @@ import { STATUS_PILL, STATUS_LABEL, telHref } from "@/lib/crm/labels";
 import { PageHeader, Panel, Empty, Pill, Note } from "../ui";
 
 export const dynamic = "force-dynamic";
+/* Searches the orders feed, and SmartCare Living's sheet can take most of a
+   minute to wake. */
+export const maxDuration = 60;
 
 /** Digits only, so 087 123 4567 finds 0871234567 and +353871234567. */
 const digits = (v: string) => v.replace(/[^\d]/g, "");
@@ -95,7 +98,7 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
                       {p.name}
                     </Link>
                     <p className="mt-0.5 truncate text-sm text-slate-600">
-                      {[p.email, p.phone].filter(Boolean).join("  ·  ") || "No contact details"}
+                      {[p.email, p.phone].filter(Boolean).join(", ") || "No contact details"}
                     </p>
                     <p className="mt-0.5 truncate text-xs text-slate-500">{fullAddress(p) || "No address"}</p>
                   </div>
@@ -103,7 +106,7 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
                     {p.paid > 0 && <p className="text-sm font-medium tabular-nums text-slate-900">{money(p.paid)}</p>}
                     {p.status && <Pill className={STATUS_PILL[p.status]}>{STATUS_LABEL[p.status]}</Pill>}
                     {tel && (
-                      <a href={tel} className="block text-xs font-medium text-slate-600 hover:text-slate-900">Ring</a>
+                      <a href={tel} className="-mr-2 inline-flex min-h-[44px] items-center rounded-lg px-2 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 sm:min-h-[32px]">Ring</a>
                     )}
                   </div>
                 </li>

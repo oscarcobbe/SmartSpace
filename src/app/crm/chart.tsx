@@ -225,7 +225,6 @@ export function BarChart({ bars: given, height = 220, ariaLabel, trimLeadingEmpt
                     pointerEvents="none" />
                 )}
                 <rect x={x} y={y(b.value)} width={barW} height={hMain} rx="2" pointerEvents="none"
-                  className="transition-[filter] duration-200"
                   filter={on ? `url(#${glow})` : undefined}
                   fill={`url(#${on ? fillOn : fill})`} />
               </g>
@@ -264,7 +263,7 @@ export function BarChart({ bars: given, height = 220, ariaLabel, trimLeadingEmpt
               ))}
               {shown.href && (
                 <Link href={shown.href}
-                  className="text-xs font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 transition-colors hover:text-slate-900 hover:decoration-slate-600">
+                  className="text-xs font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-slate-900 hover:decoration-slate-600">
                   {shown.hrefLabel ?? "See the rows"} <span aria-hidden="true">&rarr;</span>
                 </Link>
               )}

@@ -6,6 +6,8 @@ import { fetchMarks } from "@/lib/crm/order-marks";
 import { isMonthKey } from "@/lib/crm/month";
 
 export const dynamic = "force-dynamic";
+/* SmartCare Living's sheet can take most of a minute to wake. */
+export const maxDuration = 60;
 
 export default async function OrdersPage({
   searchParams,
@@ -22,8 +24,8 @@ export default async function OrdersPage({
   if (!result.ok) {
     return (
       <>
-        <PageHeader title="Orders" />
-        <Note tone="warn">Orders could not be loaded. {result.reason}</Note>
+        <PageHeader title={site === "smartcareliving" ? "Enquiries" : "Orders"} />
+        <Note tone="warn">{site === "smartcareliving" ? "The enquiries" : "The orders"} could not be loaded, so none are shown. {result.reason}</Note>
       </>
     );
   }
@@ -92,6 +94,10 @@ export default async function OrdersPage({
       {/* A source that failed is named rather than hidden. A dashboard that
           quietly drops Calendly and still shows a confident total is how a
           quiet day and a broken integration come to look identical. */}
+      {marks.problem && (
+        <div className="mb-4"><Note tone="warn">{marks.problem}</Note></div>
+      )}
+
       {sourceErrors?.length ? (
         <div className="mb-4">
           <Note tone="warn">

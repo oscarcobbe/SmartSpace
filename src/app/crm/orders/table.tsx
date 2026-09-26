@@ -4,10 +4,12 @@ import { Fragment, useMemo, useState } from "react";
 import { monthOf, monthLabel } from "@/lib/crm/month";
 import { orderKey } from "@/lib/crm/order-marks";
 import { setOrderMark } from "./actions";
+import { ActionForm, SubmitButton } from "../action-form";
 import { joinBookings } from "@/lib/crm/order-bookings";
 import { ChevronDown, Download, MapPin, Search } from "lucide-react";
 import type { Lead } from "@/lib/crm/leads";
 import { telHref } from "@/lib/crm/labels";
+import { plainText, slotText } from "@/lib/crm/display";
 import { toCsv, downloadCsv } from "@/lib/crm/csv";
 import { Empty, Pill, PILL_KIND } from "../ui";
 
@@ -32,8 +34,10 @@ const KIND: Record<string, string> = {
   "Contact Enquiry": PILL_KIND.enquiry,
 };
 
-/** The feed writes "-" for an absent value, which should render as nothing. */
-const dash = (v: string | undefined) => (!v || v === "-" ? "" : v);
+/** The feed writes "-" for an absent value, which should render as nothing,
+ *  and some of its text carries en dashes, which the house rule keeps off
+ *  the screen. */
+const dash = (v: string | undefined) => plainText(v);
 
 /** Stripe rows arrive as "18/07/2026, 21:20". The time is noise in a list of
  *  ninety of them; it is kept and shown in the expanded detail instead. */
@@ -167,25 +171,25 @@ export default function OrdersTable({
         */}
         <div className="sm:col-span-2">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Is this still happening?</p>
-          <form action={setOrderMark} className="flex flex-wrap items-center gap-2">
+          <ActionForm action={setOrderMark} className="flex flex-wrap items-center gap-2">
             <input type="hidden" name="ref" value={ref} />
             <input type="hidden" name="state" value={mark === "cancelled" ? "" : "cancelled"} />
-            <button
-              type="submit"
-              className={`min-h-[40px] rounded-lg border px-3 text-sm font-medium ${
+            <SubmitButton
+              pendingLabel="Saving"
+              className={`min-h-[44px] rounded-lg border px-3 text-sm font-medium sm:min-h-[40px] ${
                 mark === "cancelled"
                   ? "border-slate-300 text-slate-700 hover:bg-white"
                   : "border-rose-300 text-rose-700 hover:bg-rose-50"
               }`}
             >
               {mark === "cancelled" ? "Put it back, it is happening" : "Mark cancelled"}
-            </button>
+            </SubmitButton>
             <span className="text-xs text-slate-500">
               {mark === "cancelled"
                 ? "Hidden from the diary. The payment in Stripe is untouched."
                 : "Takes it out of the diary. Does not refund anything."}
             </span>
-          </form>
+          </ActionForm>
         </div>
 
         {/* The map matters more than it looks on an installer's job: half the
@@ -238,7 +242,7 @@ export default function OrdersTable({
           <button
             type="button"
             onClick={() => setMonthOn(false)}
-            className="ml-auto inline-flex min-h-[28px] items-center gap-1 rounded-md border border-brand-300 bg-white px-2 text-xs font-medium text-brand-800 transition-colors hover:border-brand-500 hover:bg-brand-100"
+            className="ml-auto inline-flex min-h-[44px] items-center sm:min-h-[28px] gap-1 rounded-md border border-brand-300 bg-white px-2 text-xs font-medium text-brand-800 hover:border-brand-500 hover:bg-brand-100"
           >
             Show every month
           </button>
@@ -257,7 +261,7 @@ export default function OrdersTable({
               onClick={() => setTab(t)}
               aria-pressed={tab === t}
               className={[
-                "flex min-h-[36px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-sm font-medium transition-colors",
+                "flex min-h-[44px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-sm font-medium sm:min-h-[36px]",
                 tab === t ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100",
               ].join(" ")}
             >
@@ -276,13 +280,13 @@ export default function OrdersTable({
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Name, email, phone, Eircode"
-              className="min-h-[36px] w-full rounded-lg border border-slate-300 pl-8 pr-3 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 lg:w-64"
+              className="min-h-[44px] w-full rounded-lg border border-slate-300 pl-8 text-base sm:min-h-[36px] sm:text-sm pr-3 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 lg:w-64"
             />
           </div>
           <button
             type="button"
             onClick={download}
-            className="flex min-h-[36px] shrink-0 items-center gap-1.5 rounded-lg border border-slate-300 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-lg border border-slate-300 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 sm:min-h-[36px]"
           >
             <Download className="h-4 w-4" aria-hidden="true" />
             <span className="hidden sm:inline">Export</span>
@@ -350,7 +354,7 @@ export default function OrdersTable({
                         onClick={() => setOpen(expanded ? null : id)}
                         className={`cursor-pointer ${expanded ? "bg-slate-50" : "hover:bg-slate-50"}`}
                       >
-                        <td className="whitespace-nowrap px-4 py-3 tabular-nums text-slate-600">{dayOnly(l.date) || "–"}</td>
+                        <td className="whitespace-nowrap px-4 py-3 tabular-nums text-slate-600">{dayOnly(l.date) || <span className="text-slate-400">Not dated</span>}</td>
                         <td className="px-4 py-3">
                           <button
                             type="button"
@@ -369,8 +373,8 @@ export default function OrdersTable({
                             <Pill className={KIND[l.type]}>{SHORT[l.type] ?? l.type}</Pill>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-slate-700">{dash(l.product) || "–"}</td>
-                        <td className="px-4 py-3 text-right font-medium tabular-nums text-slate-900">{dash(l.amount) || "–"}</td>
+                        <td className="px-4 py-3 text-slate-700">{dash(l.product) || <span className="text-slate-400">Not given</span>}</td>
+                        <td className="px-4 py-3 text-right font-medium tabular-nums text-slate-900">{dash(l.amount) || <span className="font-normal text-slate-400">No charge</span>}</td>
                         <td className="px-4 py-3 text-slate-700">
                           {(() => {
                             const own = dash(l.bookingDate);
@@ -378,7 +382,7 @@ export default function OrdersTable({
                               return (
                                 <>
                                   {own}
-                                  {dash(l.bookingSlot) && <span className="block text-xs text-slate-500">{l.bookingSlot}</span>}
+                                  {slotText(l.bookingSlot) && <span className="block text-xs text-slate-500">{slotText(l.bookingSlot)}</span>}
                                 </>
                               );
                             }

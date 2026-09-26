@@ -99,7 +99,7 @@ export default function CrmNav({ site, horizontal = false }: { site: Site; horiz
               ref={active ? activeRef : undefined}
               aria-current={active ? "page" : undefined}
               className={[
-                "flex min-h-[40px] shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 text-sm font-medium transition-colors",
+                "flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 text-sm font-medium",
                 active ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100",
               ].join(" ")}
             >
@@ -128,7 +128,7 @@ export default function CrmNav({ site, horizontal = false }: { site: Site; horiz
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                   className={[
-                    "flex min-h-[38px] items-center gap-2.5 rounded-lg px-3 text-sm font-medium transition-colors",
+                    "flex min-h-[38px] items-center gap-2.5 rounded-lg px-3 text-sm font-medium",
                     active
                       ? "bg-slate-900 text-white"
                       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",

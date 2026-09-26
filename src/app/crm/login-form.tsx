@@ -61,7 +61,7 @@ export default function LoginForm() {
       <button
         type="submit"
         disabled={busy}
-        className="min-h-[44px] w-full rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:opacity-60"
+        className="min-h-[44px] w-full rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
       >
         {busy ? "Checking" : "Sign in"}
       </button>

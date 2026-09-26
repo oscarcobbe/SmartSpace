@@ -4,7 +4,9 @@ import { fetchAds, adsSplit, fetchChanges, summariseChanges } from "@/lib/crm/go
 import { fetchFinance } from "@/lib/crm/stripe-finance";
 import { money, moneyExact } from "@/lib/crm/leads";
 import { STATUS_PILL } from "@/lib/crm/labels";
-import { PageHeader, Panel, Note, Pill } from "../ui";
+import { plainText } from "@/lib/crm/display";
+import { PageHeader, Panel, Note, Pill, Skeleton } from "../ui";
+import { Suspense } from "react";
 import ExportButton from "../export-button";
 import RoasChart from "../roas-chart";
 import { fetchRoasLive } from "@/lib/crm/roas-live";
@@ -20,6 +22,9 @@ import { Kpi, KpiRow, compareTail } from "../kpi";
 import { CreditCard, MousePointerClick, Activity, Inbox, Euro, TrendingUp } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+/* Several Google Ads reads and a Stripe walk, streamed. Declared rather than
+   assumed: the platform default is not something to find out from a 504. */
+export const maxDuration = 60;
 
 const int = (n: number) => new Intl.NumberFormat("en-IE", { maximumFractionDigits: 0 }).format(n);
 
@@ -45,7 +50,7 @@ function CampaignTable({ campaigns }: { campaigns: AdsData["campaigns"] }) {
                   enable - ..." among them. Truncated with the full name on
                   hover, so one of them cannot push the numbers off the table. */}
               <td className="max-w-[18rem] px-4 py-2">
-                <span className="block truncate text-slate-900" title={c.name}>{c.name}</span>
+                <span className="block truncate text-slate-900" title={plainText(c.name)}>{plainText(c.name)}</span>
               </td>
               <td className="px-4 py-2">
                 <Pill className={c.status === "ENABLED" ? STATUS_PILL.won : STATUS_PILL.contacted}>
@@ -56,9 +61,9 @@ function CampaignTable({ campaigns }: { campaigns: AdsData["campaigns"] }) {
               <td className="px-4 py-2 text-right tabular-nums text-slate-700">{int(c.clicks)}</td>
               <td className="px-4 py-2 text-right tabular-nums text-slate-700">{c.conversions.toFixed(0)}</td>
               <td className="px-4 py-2 text-right tabular-nums text-slate-700">
-                {c.conversions ? moneyExact(c.cost / c.conversions) : "–"}
+                {c.conversions ? moneyExact(c.cost / c.conversions) : <span className="text-slate-400">None</span>}
               </td>
-              <td className="px-4 py-2 text-right tabular-nums text-slate-900">{c.value ? moneyExact(c.value) : "–"}</td>
+              <td className="px-4 py-2 text-right tabular-nums text-slate-900">{c.value ? moneyExact(c.value) : <span className="text-slate-400">None</span>}</td>
             </tr>
           ))}
         </tbody>
@@ -108,6 +113,8 @@ async function LiveSections({ site }: { site: Site }) {
    * wherever the eye lands.
    */
   const live = await fetchRoasLive(site);
+  /* Money back is read only for Smart Space; see RoasChart's measured prop. */
+  const measured = site === "smart-space";
   /* Traced plus the grey estimate, the same total the chart writes over its
      bars. The traced part alone is still in the note, so the known and the
      estimated are never blended without saying so. */
@@ -226,13 +233,17 @@ async function LiveSections({ site }: { site: Site }) {
              value={own.conversions.toFixed(0)} note={own.conversions ? `${moneyExact(cpa)} each` : undefined}
              delta={compareTail(spark.conversions, "up", (n) => Math.abs(n).toFixed(1))}
              spark={sparkWeeks.length > 1 ? <Sparkline series={spark.conversions} tone="light" width={120} height={26} labels={sparkLabels} format="count" /> : undefined} />
+        {/* When the live read failed these two were "~€0" and "0 traced",
+            which is a claim that the ads brought nothing back. They are not
+            zero, they are unread, and they say so. */}
         <Kpi href="/crm/marketing/won" label="Back from ads" hue="green" icon={<Euro className="h-4.5 w-4.5" />}
-             value={`~${money(back)}`} note={`${money(traced)} traced to an ad, the rest estimated`}
+             value={!measured ? "Not measured" : live.ok ? `~${money(back)}` : "Not read"}
+             note={!measured ? "Sales are not traced to ads for this business" : live.ok ? `${money(traced)} traced to an ad, the rest estimated` : live.reason}
              delta={compareTail(backByMonth, "up", (n) => money(Math.abs(n)), "the three months before")}
              spark={backByMonth.length > 1 ? <Sparkline series={backByMonth} tone="light" width={120} height={26} labels={monthLabels} format="money" /> : undefined} />
         <Kpi href="/crm/marketing/back" label="Back per €1" hue="red" icon={<TrendingUp className="h-4.5 w-4.5" />}
-             value={live.ok && live.data.spend > 0 ? `~${roas.toFixed(1)}x` : "–"}
-             note={live.ok && live.data.spend > 0 ? `${money(back)} on ${money(live.data.spend)}` : undefined}
+             value={!measured ? "Not measured" : !live.ok ? "Not read" : live.data.spend > 0 ? `~${roas.toFixed(1)}x` : "No spend"}
+             note={!measured ? "Enquiries are the measure here" : !live.ok ? "The return could not be worked out" : live.data.spend > 0 ? `${money(back)} on ${money(live.data.spend)}` : undefined}
              delta={compareTail(roasByMonth, "up", (n) => `${Math.abs(n).toFixed(1)}x`, "the three months before")}
              spark={roasByMonth.length > 1 ? <Sparkline series={roasByMonth} tone="light" width={120} height={26} labels={monthLabels} format="ratio" /> : undefined} />
       </KpiRow>
@@ -277,8 +288,9 @@ async function LiveSections({ site }: { site: Site }) {
       {own.value === 0 && own.cost > 0 && (
         <div className="mb-6">
           <Note tone="warn">
-            No revenue is recorded against these ads yet, so return on spend cannot be worked out. That figure
-            appears once completed installations are sent back to Google, which is what the nightly upload does.
+            {site === "smartcareliving"
+              ? "Google has no value recorded against these ads, so its own return figure is empty. SmartCare Living takes enquiries rather than payments online, so the enquiries above are the measure; what each one became is on Enquiries."
+              : "No revenue is recorded against these ads yet, so return on spend cannot be worked out. That figure appears once completed installations are sent back to Google, which is what the nightly upload does."}
           </Note>
         </div>
       )}
@@ -289,10 +301,10 @@ async function LiveSections({ site }: { site: Site }) {
         <Panel title="What we changed, last fourteen days">
           {changeList.length === 0 ? (
             <div className="px-4 py-4">
-              <Note tone="info">
+              <Note tone={changes.ok ? "info" : "warn"}>
                 {changes.ok
                   ? "Nothing was edited in the account over the last fourteen days, so any movement in the figures above is the market rather than us."
-                  : `The change history could not be read. ${changes.reason}`}
+                  : `The change history could not be read, so this does not mean nothing changed. ${changes.reason}`}
               </Note>
             </div>
           ) : (
@@ -340,6 +352,18 @@ async function LiveSections({ site }: { site: Site }) {
   );
 }
 
+function LiveSkeleton() {
+  return (
+    <div aria-busy="true" aria-label="Loading the figures from Google Ads">
+      <Skeleton className="mb-4 h-3 w-56" />
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-6">
+        {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-[132px] rounded-xl" />)}
+      </div>
+      <Skeleton className="mb-6 h-72 rounded-xl" />
+    </div>
+  );
+}
+
 export default async function MarketingPage() {
   const session = requireSession();
   /* The headline reads the daily record, which is one short database query and
@@ -367,7 +391,7 @@ export default async function MarketingPage() {
         {roas.ok ? (
           <RoasChart months={roas.data.months} spend={roas.data.spend} back={roas.data.back}
                      estimated={roas.data.estimated} trailRead={roas.data.trailRead}
-                     siteLabel={SITE_LABEL[session.site]} />
+                     siteLabel={SITE_LABEL[session.site]} measured={session.site === "smart-space"} />
         ) : (
           <div className="px-4 py-4">
             <Note tone="warn">This chart could not be read. {roas.reason}</Note>
@@ -375,7 +399,11 @@ export default async function MarketingPage() {
         )}
       </div>
 
-      <LiveSections site={session.site} />
+      {/* Streamed, so the headline chart is on screen while Google is still
+          answering for the tiles and tables below it. */}
+      <Suspense fallback={<LiveSkeleton />}>
+        <LiveSections site={session.site} />
+      </Suspense>
     </>
   );
 }

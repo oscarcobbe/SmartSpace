@@ -5,19 +5,15 @@ import { THIS_SITE, crmConfigured } from "@/lib/crm/db";
 import LoginForm from "./login-form";
 import { PageHeader } from "./ui";
 import { NeedsYou, LatestIn, MoneyThisMonth, AdsThisMonth, RecentActivity, PanelSkeleton } from "./overview-panels";
+import { greeting, slowNote, todayLine } from "./loading-copy";
 
 export const dynamic = "force-dynamic";
-
-/** "Good morning" at nine, not at nine at night. Dublin, because the machine
- *  this renders on is not in Ireland and has said so before. */
-function greeting(): string {
-  const hour = Number(
-    new Intl.DateTimeFormat("en-IE", { timeZone: "Europe/Dublin", hour: "2-digit", hour12: false }).format(new Date()),
-  );
-  if (hour < 12) return "Good morning";
-  if (hour < 18) return "Good afternoon";
-  return "Good evening";
-}
+/* SmartCare Living's enquiry sheet can take most of a minute to wake. The
+   panels stream, so the page is on screen long before that; this is the
+   budget for the last panel to arrive rather than a wait anybody sits
+   through. Declared, not assumed: the platform default is not something to
+   find out from a 504. */
+export const maxDuration = 60;
 
 export default function CrmHome() {
   const session = currentSession();
@@ -29,25 +25,19 @@ export default function CrmHome() {
   if (!session && !crmConfigured()) notFound();
 
   if (session) {
-    const today = new Intl.DateTimeFormat("en-IE", {
-      timeZone: "Europe/Dublin", weekday: "long", day: "numeric", month: "long",
-    }).format(new Date());
-
+    const slow = slowNote(session.site, "orders");
     return (
       <>
-        <PageHeader
-          title={greeting()}
-          sub={`${SITE_LABEL[session.site]}, ${today}.`}
-        />
+        <PageHeader title={greeting()} sub={todayLine(SITE_LABEL[session.site])} />
 
         {/* Four reads of three different services. Each panel streams in on its
             own, so the fastest is on screen while Google Ads is still
             answering, instead of the page waiting for the slowest. */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Suspense fallback={<PanelSkeleton title="Diary" rows={4} />}>
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
+          <Suspense fallback={<PanelSkeleton title="Diary" rows={4} slow={slow} />}>
             <NeedsYou site={session.site} />
           </Suspense>
-          <Suspense fallback={<PanelSkeleton title="Latest in" rows={4} />}>
+          <Suspense fallback={<PanelSkeleton title="Latest in" rows={4} slow={slow} />}>
             <LatestIn site={session.site} />
           </Suspense>
           <Suspense fallback={<PanelSkeleton title="Money" rows={2} />}>
@@ -57,7 +47,7 @@ export default function CrmHome() {
             <AdsThisMonth site={session.site} />
           </Suspense>
           <div className="lg:col-span-2">
-            <Suspense fallback={null}>
+            <Suspense fallback={<PanelSkeleton title="Recently" rows={3} />}>
               <RecentActivity site={session.site} />
             </Suspense>
           </div>

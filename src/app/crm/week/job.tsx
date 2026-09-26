@@ -4,12 +4,10 @@ import { useState } from "react";
 import { CalendarClock, MapPin, Phone, ChevronDown, Mail, Hash } from "lucide-react";
 import type { Lead } from "@/lib/crm/leads";
 import { telHref } from "@/lib/crm/labels";
+import { displayName, plainText, slotText } from "@/lib/crm/display";
 import { Pill } from "../ui";
 
-const dash = (v: string | undefined | null) => {
-  const s = String(v ?? "").trim();
-  return s && s !== "-" && s !== "–" ? s : "";
-};
+const dash = (v: string | undefined | null) => plainText(v);
 
 const PILL: Record<string, string> = {
   "Paid Order": "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
@@ -64,11 +62,11 @@ export default function Job({ lead, dateLabel }: { lead: Lead; dateLabel?: strin
           <p className="flex items-center gap-2 text-sm font-medium text-slate-900">
             <CalendarClock className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
             {dateLabel && <><span className="tabular-nums">{dateLabel}</span><span className="text-slate-400">·</span></>}
-            {dash(lead.bookingSlot) || "Time not set"}
+            {slotText(lead.bookingSlot) || "Time not set"}
             <span className="text-slate-400">·</span>
-            {dash(lead.name) || "Unnamed"}
+            {displayName(lead)}
           </p>
-          {dash(lead.product) && <p className="mt-0.5 pl-6 text-sm text-slate-600">{lead.product}</p>}
+          {dash(lead.product) && <p className="mt-0.5 pl-6 text-sm text-slate-600">{dash(lead.product)}</p>}
           {address && (
             <p className="mt-0.5 flex items-start gap-1.5 pl-6 text-sm text-slate-600">
               <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
@@ -89,7 +87,7 @@ export default function Job({ lead, dateLabel }: { lead: Lead; dateLabel?: strin
             <a
               href={tel}
               aria-label={`Ring ${dash(lead.name) || "this customer"}`}
-              className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50"
+              className="flex h-11 w-11 items-center justify-center rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50"
             >
               <Phone className="h-4 w-4" aria-hidden="true" />
             </a>
@@ -100,7 +98,7 @@ export default function Job({ lead, dateLabel }: { lead: Lead; dateLabel?: strin
               onClick={() => setOpen((v) => !v)}
               aria-expanded={open}
               aria-label={open ? "Hide what they ordered" : "Show what they ordered"}
-              className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50"
+              className="flex h-11 w-11 items-center justify-center rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50"
             >
               <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden="true" />
             </button>

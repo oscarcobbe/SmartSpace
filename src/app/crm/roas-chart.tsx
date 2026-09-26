@@ -41,8 +41,18 @@ const eurShort = (n: number) => (n >= 1000 ? `€${(n / 1000).toFixed(n >= 10000
 const GREY = "#cbd5e1";
 
 export default function RoasChart({
-  months, spend, back, estimated = 0, trailRead = true, siteLabel,
-}: { months: RoasMonth[]; spend: number; back: number; estimated?: number; trailRead?: boolean; siteLabel: string }) {
+  months, spend, back, estimated = 0, trailRead = true, siteLabel, measured = true,
+}: {
+  months: RoasMonth[]; spend: number; back: number; estimated?: number; trailRead?: boolean; siteLabel: string;
+  /**
+   * Whether money back is read for this business at all. SmartCare Living's
+   * sales are SmartGuardian subscriptions billed after an enquiry and are not
+   * traced to an ad here, so its "back" is not zero, it is unmeasured, and a
+   * "0.00x, less came in than went out" in amber asserted a failure nobody
+   * had measured.
+   */
+  measured?: boolean;
+}) {
   const [hover, setHover] = useState<number | null>(null);
   const [pinned, setPinned] = useState<number | null>(null);
   const uid = useId().replace(/:/g, "");
@@ -65,7 +75,7 @@ export default function RoasChart({
   const ratioOf = (m: RoasMonth) => (m.spend > 0 ? (m.back + m.estimated) / m.spend : null);
   const fmtRatio = (m: RoasMonth, dp = 1) => {
     const r = ratioOf(m);
-    return r === null ? "–" : `${m.estimated > 0 ? "~" : ""}${r.toFixed(dp)}×`;
+    return r === null ? "None" : `${m.estimated > 0 ? "~" : ""}${r.toFixed(dp)}×`;
   };
 
   return (
@@ -73,14 +83,18 @@ export default function RoasChart({
       <dl className="grid grid-cols-1 gap-px border-b border-slate-200 bg-slate-200 sm:grid-cols-3">
         {[
           { k: "Spent on ads", v: eur(spend), sub: `${months[0]?.label ?? ""} to ${months[months.length - 1]?.label ?? ""}` },
-          { k: "Back from ads", v: estimated > 0 ? `~${eur(total)}` : eur(total),
-            sub: estimated > 0 ? `${eur(back)} traced, ${eur(estimated)} estimated` : "real euro through Stripe, tied to an ad click" },
-          {
-            k: "Back per euro out",
-            v: multiple === null ? "–" : `${estimated > 0 ? "~" : ""}${multiple.toFixed(2)}×`,
-            sub: multiple === null ? "" : multiple >= 1 ? "more came in than went out" : "less came in than went out",
-            tone: multiple !== null && multiple >= 1 ? "text-teal-700" : "text-amber-700",
-          },
+          measured
+            ? { k: "Back from ads", v: estimated > 0 ? `~${eur(total)}` : eur(total),
+                sub: estimated > 0 ? `${eur(back)} traced, ${eur(estimated)} estimated` : "real euro through Stripe, tied to an ad click" }
+            : { k: "Back from ads", v: "Not measured", sub: "sales are not traced to ads for this business", tone: "text-slate-400" },
+          measured
+            ? {
+                k: "Back per euro out",
+                v: multiple === null ? "None" : `${estimated > 0 ? "~" : ""}${multiple.toFixed(2)}×`,
+                sub: multiple === null ? "" : multiple >= 1 ? "more came in than went out" : "less came in than went out",
+                tone: multiple !== null && multiple >= 1 ? "text-teal-700" : "text-amber-700",
+              }
+            : { k: "Back per euro out", v: "Not measured", sub: "enquiries are the measure here", tone: "text-slate-400" },
         ].map((c) => (
           <div key={c.k} className="bg-white px-4 py-3">
             <dt className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">{c.k}</dt>
@@ -185,9 +199,19 @@ export default function RoasChart({
           </div>
         ) : (
           <p className="text-slate-600">
-            {siteLabel}. Green is money from customers an ad reached before they paid, read from the payment or from
-            the customer&apos;s own enquiry. Grey is an estimate for payments whose customer cannot be traced either
-            way. Hover a month to see the working.
+            {measured ? (
+              <>
+                {siteLabel}. Green is money from customers an ad reached before they paid, read from the payment or from
+                the customer&apos;s own enquiry. Grey is an estimate for payments whose customer cannot be traced either
+                way. Hover a month to see the working.
+              </>
+            ) : (
+              <>
+                {siteLabel}. The bars are what the ads cost. What came back is not measured here: sales are
+                SmartGuardian subscriptions billed after an enquiry, and they are not yet traced to the ad that brought
+                the enquiry. The enquiries the ads brought are counted below.
+              </>
+            )}
             {!trailRead && " The enquiry log could not be read just now, so every payment without a click id is estimated."}
           </p>
         )}

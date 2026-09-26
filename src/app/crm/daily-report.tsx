@@ -22,11 +22,11 @@ export function DailyReport({ report }: { report: Report }) {
   const t = TONE[report.direction];
   return (
     <section
-      className={`mb-6 overflow-hidden rounded-xl bg-gradient-to-br ${t.bg} p-4 shadow-sm ring-1 ${t.ring} transition-shadow duration-300 hover:shadow-md`}
+      className={`mb-6 overflow-hidden rounded-xl bg-gradient-to-br ${t.bg} p-4 shadow-sm ring-1 ${t.ring} hover:shadow-md`}
       aria-label={`Report for ${report.label}`}
     >
       <div className="flex items-start gap-3">
-        <span className={`mt-1.5 h-2 w-2 shrink-0 animate-pulse rounded-full ${t.dot}`} aria-hidden="true" />
+        <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${t.dot}`} aria-hidden="true" />
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
             Yesterday

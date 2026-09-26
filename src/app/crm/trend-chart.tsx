@@ -123,7 +123,7 @@ export function TrendChart({
   );
 
   const chip = (on: boolean) =>
-    `rounded-md px-2.5 py-1 text-xs font-medium transition-all duration-200 ${
+    `rounded-md px-2.5 py-1 text-xs font-medium transition-transform duration-200 ${
       on ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200" : "text-slate-600 hover:bg-white/70 hover:text-slate-900"
     }`;
 
@@ -259,7 +259,7 @@ export function TrendChart({
                           fill={thinPoint ? "#ffffff" : p.changes > 0 ? "#0ea5e9" : hue}
                           stroke={thinPoint ? (p.changes > 0 ? "#0ea5e9" : hue) : "none"}
                           strokeWidth={thinPoint ? 1.6 : 0}
-                          className="transition-all duration-150" />
+                          className="transition-opacity duration-150" />
                 );
               })()}
               {/* A generous invisible target: 3px circles are not hoverable,

@@ -9,9 +9,10 @@
  */
 import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/crm/session";
-import { crm, upsertContact, type Site } from "@/lib/crm/db";
+import { crm, upsertContact, logActivity, type Site } from "@/lib/crm/db";
 import { STATUSES, type LeadStatus } from "@/lib/crm/contacts";
-import { FOUND_US } from "@/lib/crm/labels";
+import { FOUND_US, STATUS_LABEL } from "@/lib/crm/labels";
+import { done, failed, writeFailed, type ActionState } from "../action-state";
 import { getPerson } from "@/lib/crm/people";
 import { createPaymentLink } from "@/lib/crm/payment-link";
 import { parseMoney } from "@/lib/crm/money-input";
@@ -21,6 +22,20 @@ function siteBase(): string {
   const fromEnv = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "").trim();
   return fromEnv ? fromEnv.replace(/\/$/, "") : "https://smart-space.ie";
 }
+
+/*
+ * ── WHY THESE WRITES DO NOT CALL revalidatePath ──────────────────
+ *
+ * revalidatePath marks the page's own implicit cache tag, and every cached
+ * read made while rendering that page carries it, including the orders feed.
+ * So saving a note re-rendered the customer page with the feed forced cold:
+ * six to eight seconds of "Saving" on Smart Space, and up to a minute on
+ * SmartCare Living while its sheet woke, to change one textarea. Nothing
+ * these actions write is in any cache (every database read is no-store), so
+ * the form refreshes the page itself once the write succeeds, and the feed is
+ * served from its cache as normal.
+ */
+const NOT_IN_HISTORY = (what: string) => `${what}, but it could not be added to the history.`;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -34,7 +49,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  */
 async function materialise(site: Site, id: string): Promise<string | null> {
   if (UUID.test(id)) return id;
-  const person = await getPerson(site, id);
+  const { person } = await getPerson(site, id);
   if (!person) return null;
   return upsertContact(site, {
     email: person.email, phone: person.phone, name: person.name,
@@ -43,123 +58,135 @@ async function materialise(site: Site, id: string): Promise<string | null> {
   });
 }
 
-export async function saveNote(formData: FormData) {
+export async function saveNote(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const { site, email } = requireSession();
   const given = String(formData.get("contactId") ?? "");
   const notes = String(formData.get("notes") ?? "").slice(0, 8000);
-  const id = await materialise(site, given);
-  if (!id) return;
+  try {
+    const id = await materialise(site, given);
+    if (!id) return failed("This customer could not be found, so the note was not saved.");
 
-  await crm(`crm_contacts?site=eq.${site}&id=eq.${id}`, {
-    method: "PATCH",
-    prefer: "return=minimal",
-    body: JSON.stringify({ notes }),
-  });
-  await crm("crm_activity", {
-    method: "POST",
-    prefer: "return=minimal",
-    body: JSON.stringify({ site, contact_id: id, kind: "note", summary: "Note updated", actor: email, detail: {} }),
-  });
-  revalidatePath(`/crm/contacts/${id}`);
-  revalidatePath(`/crm/contacts/${given}`);
+    await crm(`crm_contacts?site=eq.${site}&id=eq.${id}`, {
+      method: "PATCH",
+      prefer: "return=minimal",
+      body: JSON.stringify({ notes }),
+    });
+    const logged = await logActivity(site, { contact_id: id, kind: "note", summary: "Note updated", actor: email, detail: {} });
+    return done(logged ? "Note saved." : NOT_IN_HISTORY("Note saved"));
+  } catch (err) {
+    return writeFailed("The note", err);
+  }
 }
 
-export async function setLeadStatus(formData: FormData) {
+export async function setLeadStatus(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const { site, email } = requireSession();
   const leadId = String(formData.get("leadId") ?? "");
   const contactId = String(formData.get("contactId") ?? "");
   const status = String(formData.get("status") ?? "") as LeadStatus;
-  if (!UUID.test(leadId) || !STATUSES.includes(status)) return;
+  if (!UUID.test(leadId) || !STATUSES.includes(status)) return failed("That is not a status this CRM knows.");
   /* How they found us is saved with the status, from the same row, because
      that is when Nigel knows it: on the call. Checked against the one list, so
      a hand-made request cannot write a value the report does not know. */
   const found = String(formData.get("found_us") ?? "");
-  const [before] = (await crm<{ status: string; custom: Record<string, unknown> | null }[]>(
-    `crm_leads?site=eq.${site}&id=eq.${leadId}&select=status,custom&limit=1`,
-  )) ?? [];
-  if (!before) return;
-  const custom = { ...(before.custom ?? {}) };
-  const foundChanged = !!FOUND_US[found] && custom.found_us !== found;
-  if (foundChanged) custom.found_us = found;
+  try {
+    const [before] = (await crm<{ status: string; custom: Record<string, unknown> | null }[]>(
+      `crm_leads?site=eq.${site}&id=eq.${leadId}&select=status,custom&limit=1`,
+    )) ?? [];
+    if (!before) return failed("This enquiry could not be found, so nothing was changed.");
+    const custom = { ...(before.custom ?? {}) };
+    const foundChanged = !!FOUND_US[found] && custom.found_us !== found;
+    if (foundChanged) custom.found_us = found;
+    const statusChanged = before.status !== status;
+    if (!statusChanged && !foundChanged) return done("Nothing to change.");
 
-  await crm(`crm_leads?site=eq.${site}&id=eq.${leadId}`, {
-    method: "PATCH",
-    prefer: "return=minimal",
-    body: JSON.stringify(foundChanged ? { status, custom } : { status }),
-  });
-  const said = [
-    before.status !== status ? `Moved to ${status}` : null,
-    foundChanged ? `Found us: ${FOUND_US[found]}` : null,
-  ].filter(Boolean).join(". ");
-  if (said) await crm("crm_activity", {
-    method: "POST",
-    prefer: "return=minimal",
-    body: JSON.stringify({
-      site, lead_id: leadId, contact_id: UUID.test(contactId) ? contactId : null,
+    await crm(`crm_leads?site=eq.${site}&id=eq.${leadId}`, {
+      method: "PATCH",
+      prefer: "return=minimal",
+      body: JSON.stringify(foundChanged ? { status, custom } : { status }),
+    });
+    const said = [
+      statusChanged ? `Moved to ${STATUS_LABEL[status] ?? status}` : null,
+      foundChanged ? `Found us: ${FOUND_US[found]}` : null,
+    ].filter(Boolean).join(". ");
+    const logged = await logActivity(site, {
+      lead_id: leadId, contact_id: UUID.test(contactId) ? contactId : null,
       kind: "status", summary: said, actor: email, detail: foundChanged ? { found_us: found } : {},
-    }),
-  });
-  if (UUID.test(contactId)) revalidatePath(`/crm/contacts/${contactId}`);
-  revalidatePath("/crm/contacts");
+    });
+    return done(logged ? `Saved. ${said}.` : NOT_IN_HISTORY(`Saved. ${said}`));
+  } catch (err) {
+    return writeFailed("The change", err);
+  }
 }
 
-export async function addTask(formData: FormData) {
+export async function addTask(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const { site, email } = requireSession();
   const givenLead = String(formData.get("leadId") ?? "");
   const given = String(formData.get("contactId") ?? "");
   const what = String(formData.get("what") ?? "").trim().slice(0, 500);
   const dueRaw = String(formData.get("dueOn") ?? "").trim();
-  if (!what) return;
+  if (!what) return failed("Write what the next step is first.");
 
-  const contactId = (await materialise(site, given)) ?? "";
-  if (!contactId) return;
+  try {
+    const contactId = (await materialise(site, given)) ?? "";
+    if (!contactId) return failed("This customer could not be found, so the next step was not saved.");
 
-  /* A person who came from Stripe has no crm_leads row to hang the step on, so
-     one is opened for them. Without this the only customers you could set a
-     next step against were the ones the website had already recorded. */
-  let leadId = UUID.test(givenLead) ? givenLead : "";
-  if (!leadId) {
-    const made = await crm<{ id: string }[]>("crm_leads", {
+    /* A person who came from Stripe has no crm_leads row to hang the step on, so
+       one is opened for them. Without this the only customers you could set a
+       next step against were the ones the website had already recorded. */
+    let leadId = UUID.test(givenLead) ? givenLead : "";
+    if (!leadId) {
+      const made = await crm<{ id: string }[]>("crm_leads", {
+        method: "POST",
+        prefer: "return=representation",
+        body: JSON.stringify({ site, contact_id: contactId, source: "crm", source_detail: "Opened from the CRM", status: "contacted" }),
+      });
+      leadId = made?.[0]?.id ?? "";
+      if (!leadId) return failed("The next step did not save: an enquiry to hang it on could not be opened.");
+    }
+
+    await crm("crm_tasks", {
       method: "POST",
-      prefer: "return=representation",
-      body: JSON.stringify({ site, contact_id: contactId, source: "crm", source_detail: "Opened from the CRM", status: "contacted" }),
+      prefer: "return=minimal",
+      body: JSON.stringify({ site, lead_id: leadId, what, due_on: /^\d{4}-\d{2}-\d{2}$/.test(dueRaw) ? dueRaw : null }),
     });
-    leadId = made?.[0]?.id ?? "";
-    if (!leadId) return;
-  }
-
-  await crm("crm_tasks", {
-    method: "POST",
-    prefer: "return=minimal",
-    body: JSON.stringify({ site, lead_id: leadId, what, due_on: /^\d{4}-\d{2}-\d{2}$/.test(dueRaw) ? dueRaw : null }),
-  });
-  await crm("crm_activity", {
-    method: "POST",
-    prefer: "return=minimal",
-    body: JSON.stringify({
-      site, lead_id: leadId, contact_id: contactId,
+    const logged = await logActivity(site, {
+      lead_id: leadId, contact_id: contactId,
       kind: "task", summary: `Next step added: ${what}`, actor: email, detail: {},
-    }),
-  });
-  revalidatePath(`/crm/contacts/${contactId}`);
-  revalidatePath(`/crm/contacts/${given}`);
-  revalidatePath("/crm/tasks");
+    });
+    return done(logged ? "Next step added." : NOT_IN_HISTORY("Next step added"));
+  } catch (err) {
+    return writeFailed("The next step", err);
+  }
 }
 
-export async function completeTask(formData: FormData) {
-  const { site } = requireSession();
+export async function completeTask(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const { site, email } = requireSession();
   const taskId = String(formData.get("taskId") ?? "");
   const contactId = String(formData.get("contactId") ?? "");
   const undo = String(formData.get("undo") ?? "") === "1";
-  if (!UUID.test(taskId)) return;
+  if (!UUID.test(taskId)) return failed("That next step could not be found.");
 
-  await crm(`crm_tasks?site=eq.${site}&id=eq.${taskId}`, {
-    method: "PATCH",
-    prefer: "return=minimal",
-    body: JSON.stringify({ done_at: undo ? null : new Date().toISOString() }),
-  });
-  if (UUID.test(contactId)) revalidatePath(`/crm/contacts/${contactId}`);
-  revalidatePath("/crm/tasks");
+  try {
+    const [task] = (await crm<{ what: string; lead_id: string | null }[]>(
+      `crm_tasks?site=eq.${site}&id=eq.${taskId}&select=what,lead_id&limit=1`,
+    )) ?? [];
+    if (!task) return failed("That next step could not be found.");
+    await crm(`crm_tasks?site=eq.${site}&id=eq.${taskId}`, {
+      method: "PATCH",
+      prefer: "return=minimal",
+      body: JSON.stringify({ done_at: undo ? null : new Date().toISOString() }),
+    });
+    /* Ticking a step off is something that happened to the customer, and the
+       history is where Nigel looks to see what has been done. It was the one
+       write that left no trace there. */
+    const logged = await logActivity(site, {
+      lead_id: task.lead_id, contact_id: UUID.test(contactId) ? contactId : null,
+      kind: "task", summary: `${undo ? "Reopened" : "Done"}: ${task.what}`, actor: email, detail: {},
+    });
+    return logged ? done(undo ? "Reopened." : "Done.") : done(NOT_IN_HISTORY(undo ? "Reopened" : "Done"));
+  } catch (err) {
+    return writeFailed("That", err);
+  }
 }
 
 /**

@@ -15,7 +15,9 @@ export const dynamic = "force-dynamic";
 
 export default async function FinancePage() {
   const { site } = requireSession();
-  const [result, bank] = await Promise.all([fetchFinance(12, site), fetchBank(site, 12)]);
+  const [result, bankResult] = await Promise.all([fetchFinance(12, site), fetchBank(site, 12)]);
+  const bankProblem = bankResult && "problem" in bankResult ? bankResult.problem : null;
+  const bank = bankResult && !("problem" in bankResult) ? bankResult : null;
   /* Cheap, pure, and derived from rows already fetched, so it costs nothing
      beyond the statement that is already on the page. */
   const cut = bankBreakdown(bank?.rows ?? []);
@@ -24,7 +26,7 @@ export default async function FinancePage() {
     return (
       <>
         <PageHeader title="Finance" />
-        <Note tone="warn">Finance could not be loaded. {result.reason}</Note>
+        <Note tone="warn">Stripe could not be read, so no figures are shown. {result.reason}</Note>
       </>
     );
   }
@@ -60,7 +62,7 @@ export default async function FinancePage() {
   /* The current month is only part way through. Without saying so, the last
      bar always looks like a collapse, on the first of the month most of all. */
   const thisMonth = f.months[f.months.length - 1];
-  const dayOfMonth = new Date().getDate();
+  const dayOfMonth = Number(new Intl.DateTimeFormat("en-IE", { timeZone: "Europe/Dublin", day: "numeric" }).format(new Date()));
 
   return (
     <>
@@ -70,7 +72,7 @@ export default async function FinancePage() {
         aside={
           <Link
             href="/crm/finance/import"
-            className="flex min-h-[38px] items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="flex min-h-[44px] items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 sm:min-h-[38px] sm:px-3"
           >
             <Upload className="h-4 w-4 text-slate-400" aria-hidden="true" />
             Import a statement
@@ -107,7 +109,11 @@ export default async function FinancePage() {
         </Panel>
 
         <Panel tone="quiet" title="At Stripe">
-          <div className="grid grid-cols-1 divide-slate-200 sm:grid-cols-3 sm:divide-x">
+          {f.balanceProblem ? (
+            /* Not three zeros. The months were read; the balance was not. */
+            <div className="px-4 py-4"><Note tone="warn">{f.balanceProblem} What Stripe is holding and the last payout are not shown.</Note></div>
+          ) : (
+          <div className="grid grid-cols-1 divide-y divide-slate-200 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
             {/* A negative balance is normal after a refund clears before the
                 next payment lands, and "ready to pay out" was the wrong
                 sentence to put under minus two euro. */}
@@ -124,6 +130,7 @@ export default async function FinancePage() {
               note={f.lastPayout ? `${f.lastPayout.arrival}, ${f.lastPayout.status}` : undefined}
             />
           </div>
+          )}
         </Panel>
 
         {/* Kept apart from the Stripe figures on purpose. A card payment appears
@@ -156,6 +163,12 @@ export default async function FinancePage() {
               {money(bank.netCents / 100)}, which includes money moved between our own accounts.
             </p>
           </Panel>
+        ) : bankProblem ? (
+          /* A failed read is not "nothing imported". Offering to import a
+             statement that is already there would be the wrong advice. */
+          <Panel tone="quiet" title="The bank account">
+            <div className="px-4 py-4"><Note tone="warn">{bankProblem}</Note></div>
+          </Panel>
         ) : (
           <Panel tone="quiet" title="The bank account">
             <div className="px-4 py-5">
@@ -165,7 +178,7 @@ export default async function FinancePage() {
               </p>
               <Link
                 href="/crm/finance/import"
-                className="inline-flex min-h-[38px] items-center gap-2 rounded-lg bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-800"
+                className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-800 sm:min-h-[38px] sm:px-3"
               >
                 <Upload className="h-4 w-4" aria-hidden="true" />
                 Import a statement
@@ -180,15 +193,15 @@ export default async function FinancePage() {
           <Panel title="Where the money went">
             <ul className="divide-y divide-slate-100">
               {cut.categories.map((c) => (
-                <li key={c.label} className="flex items-center gap-3 px-4 py-2.5">
-                  <span className="w-44 flex-none text-sm text-slate-700">{c.label}</span>
+                <li key={c.label} className="flex items-center gap-2 px-4 py-2.5 sm:gap-3">
+                  <span className="w-28 flex-none text-sm text-slate-700 sm:w-44">{c.label}</span>
                   <span className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
                     <span className="block h-full rounded-full bg-brand-500" style={{ width: `${Math.max(2, c.share * 100)}%` }} />
                   </span>
-                  <span className="w-28 flex-none text-right text-sm font-semibold tabular-nums text-slate-900">
+                  <span className="w-20 flex-none text-right text-sm font-semibold tabular-nums text-slate-900 sm:w-28">
                     {money(c.cents / 100)}
                   </span>
-                  <span className="w-12 flex-none text-right text-xs tabular-nums text-slate-500">
+                  <span className="w-9 flex-none text-right text-xs tabular-nums text-slate-500 sm:w-12">
                     {(c.share * 100).toFixed(0)}%
                   </span>
                 </li>

@@ -31,7 +31,7 @@ function Copy({ text, label = "Copy caption" }: { text: string; label?: string }
           setTimeout(() => setDone(false), 1800);
         } catch { /* a browser that refuses the clipboard is not an error worth shouting about */ }
       }}
-      className="min-h-[34px] rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-900 hover:text-slate-900"
+      className="min-h-[34px] rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:border-slate-900 hover:text-slate-900"
     >
       {done ? "Copied" : label}
     </button>
@@ -127,9 +127,9 @@ export function PartnersSection() {
         {[
           { k: "Per home, per month", v: price === null ? "not set" : `€${price}` ,
             note: price === null ? "Set the subscription price to fill in the rest" : "The subscription a share is taken of" },
-          { k: `Partner share at ${shareLow}%`, v: share(shareLow) === null ? "–" : `€${share(shareLow)!.toFixed(2)}`,
+          { k: `Partner share at ${shareLow}%`, v: share(shareLow) === null ? "None" : `€${share(shareLow)!.toFixed(2)}`,
             note: "Recurring, not a one-off referral fee" },
-          { k: `At ${shareHigh}%`, v: share(shareHigh) === null ? "–" : `€${share(shareHigh)!.toFixed(2)}`,
+          { k: `At ${shareHigh}%`, v: share(shareHigh) === null ? "None" : `€${share(shareHigh)!.toFixed(2)}`,
             note: "Per home, every month it stays on" },
         ].map((c) => (
           <div key={c.k} className="p-4">

@@ -101,10 +101,10 @@ export default function Refresh() {
         disabled={pending}
         aria-label="Read the figures again"
         title="Read the figures again (r)"
-        className="group inline-flex min-h-[36px] items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm transition-all hover:-translate-y-px hover:border-slate-400 hover:shadow focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 active:translate-y-0 disabled:opacity-60"
+        className="group inline-flex h-11 w-11 items-center justify-center gap-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-60 sm:h-auto sm:min-h-[36px] sm:w-auto sm:border sm:border-slate-300 sm:bg-white sm:px-3 sm:shadow-sm sm:hover:border-slate-400 sm:hover:bg-white"
       >
         <RefreshCw
-          className={`h-4 w-4 text-slate-500 transition-transform duration-500 ${
+          className={`h-[18px] w-[18px] text-slate-500 transition-transform duration-300 motion-reduce:transition-none sm:h-4 sm:w-4 ${
             pending ? "animate-spin" : "group-hover:rotate-180"
           }`}
           aria-hidden="true"

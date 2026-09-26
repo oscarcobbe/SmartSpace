@@ -102,7 +102,7 @@ export default function PaymentLinkForm({
       <button
         type="submit"
         disabled={sending || !reading?.ok}
-        className="inline-flex min-h-[38px] w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-60"
+        className="inline-flex min-h-[38px] w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
       >
         <Send className="h-4 w-4" aria-hidden="true" />
         {sending

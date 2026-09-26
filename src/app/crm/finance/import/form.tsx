@@ -105,7 +105,7 @@ export default function ImportForm() {
                         {money(l.amount_cents)}
                       </td>
                       <td className="px-4 py-2 text-right tabular-nums text-slate-500">
-                        {l.balance_cents == null ? "–" : money(l.balance_cents)}
+                        {l.balance_cents == null ? "None" : money(l.balance_cents)}
                       </td>
                     </tr>
                   ))}

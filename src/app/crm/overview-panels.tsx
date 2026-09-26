@@ -8,20 +8,23 @@
  */
 import Link from "next/link";
 import { AlertCircle, Inbox } from "lucide-react";
-import { fetchLeads, money, moneyExact } from "@/lib/crm/leads";
+import { fetchLeads, partialFeed, money, moneyExact } from "@/lib/crm/leads";
+import { displayName } from "@/lib/crm/diary";
+import { plainText, shortDay, slotText } from "@/lib/crm/display";
 import { fetchFinance } from "@/lib/crm/stripe-finance";
 import { fetchAds, adsSplit } from "@/lib/crm/google-ads";
-import { crm, crmConfigured, type Site } from "@/lib/crm/db";
+import { crm, crmConfigured, unlessWrongKey, type Site } from "@/lib/crm/db";
 import { fetchDiary } from "@/lib/crm/diary";
 import { DiaryToggle, type Row } from "./diary-toggle";
-import { Panel, Stat, Note, Empty, Skeleton } from "./ui";
+import { Panel, PanelLink, Stat, Note, Empty, Skeleton } from "./ui";
+import { SlowNote } from "./slow-note";
 
-const dash = (v: string | undefined) => (!v || v === "-" ? "" : v);
-const dayOnly = (v: string) => dash(v).split(",")[0] ?? "";
+const dash = (v: string | undefined) => plainText(v);
 
-export function PanelSkeleton({ title, rows = 3 }: { title: string; rows?: number }) {
+export function PanelSkeleton({ title, rows = 3, slow }: { title: string; rows?: number; slow?: string }) {
   return (
     <Panel title={title}>
+      {slow && <div className="px-4 pt-3 [&>p]:mb-0"><SlowNote>{slow}</SlowNote></div>}
       <div className="space-y-3 px-4 py-4" aria-busy="true">
         {Array.from({ length: rows }).map((_, i) => (
           <div key={i} className="flex items-center gap-3">
@@ -45,13 +48,26 @@ export function PanelSkeleton({ title, rows = 3 }: { title: string; rows?: numbe
  * toggle.
  */
 export async function NeedsYou({ site }: { site: Site }) {
+  /* Today in Dublin: after midnight UTC and before midnight here, the UTC date
+     called tomorrow's steps overdue a day early. */
+  const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Dublin", year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(new Date());
   const [diary, overdue] = await Promise.all([
     fetchDiary(site),
-    crmConfigured()
-      ? crm<{ id: string; what: string; due_on: string | null }[]>(
-          `crm_tasks?site=eq.${site}&done_at=is.null&due_on=lt.${new Date().toISOString().slice(0, 10)}&select=id,what,due_on&order=due_on.asc&limit=5`,
-        ).catch(() => null)
-      : Promise.resolve(null),
+    (async (): Promise<{ rows: { id: string; what: string; due_on: string | null }[] } | { problem: string }> => {
+      if (!crmConfigured()) return { problem: "The database is not connected, so overdue next steps cannot be shown." };
+      try {
+        const rows = await crm<{ id: string; what: string; due_on: string | null }[]>(
+          `crm_tasks?site=eq.${site}&done_at=is.null&due_on=lt.${today}&select=id,what,due_on&order=due_on.asc&limit=5`,
+        );
+        return { rows: await unlessWrongKey(rows) };
+      } catch (err) {
+        /* This used to be caught and dropped, so a database hiccup made the
+           red "overdue" strip vanish and read as "nothing is late". */
+        return { problem: `Overdue next steps could not be read (${err instanceof Error ? err.message.slice(0, 90) : "no answer"}).` };
+      }
+    })(),
   ]);
 
   const toRow = (r: (typeof diary.upcoming)[number], i: number): Row => ({
@@ -60,43 +76,51 @@ export async function NeedsYou({ site }: { site: Site }) {
     standIn: r.standIn,
     product: dash(r.job.product) || r.job.type,
     when: r.label,
-    slot: dash(r.job.bookingSlot),
+    slot: slotText(r.job.bookingSlot),
     amount: dash(r.job.amount),
   });
 
+  const late = "rows" in overdue ? overdue.rows : [];
+  const notes = [
+    diary.problem ? `The orders feed could not be read, so bookings are missing here. ${diary.problem}` : null,
+    ...diary.warnings,
+    "problem" in overdue ? overdue.problem : null,
+  ].filter((n): n is string => Boolean(n));
+
   return (
-    <Panel
-      title="Diary"
-      aside={<Link href="/crm/week" className="text-xs font-medium text-slate-600 hover:text-slate-900">Full week</Link>}
-    >
-      {diary.problem && (
-        <div className="px-4 pt-4">
-          <Note tone="warn">The orders feed could not be read, so bookings are missing here. {diary.problem}</Note>
+    <Panel title="Diary" aside={<PanelLink href="/crm/week">Full week</PanelLink>}>
+      {notes.length > 0 && (
+        <div className="space-y-2 px-4 pt-4">
+          {notes.map((n) => <Note key={n} tone="warn">{n}</Note>)}
         </div>
       )}
 
-      {(overdue?.length ?? 0) > 0 && (
-        <ul className="divide-y divide-slate-100 border-b border-slate-200 bg-rose-50/40">
-          {overdue!.map((t) => (
-            <li key={t.id} className="flex items-center gap-2.5 px-4 py-2.5 text-sm">
-              <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" aria-hidden="true" />
-              <span className="text-slate-800">{t.what}</span>
-              <span className="ml-auto shrink-0 text-xs font-medium tabular-nums text-rose-700">
-                {/* Europe/Dublin, not the machine's clock. A date-only column
-                    parses as UTC midnight, and on a host set to America/Denver
-                    that renders as the previous day: every due date on this
-                    panel was showing one day early. */}
-                due {new Date(t.due_on!).toLocaleDateString("en-IE", { timeZone: "Europe/Dublin", day: "2-digit", month: "short" })}
-              </span>
+      {late.length > 0 && (
+        <ul className="divide-y divide-rose-100 border-b border-rose-100 bg-rose-50/50">
+          {late.map((t) => (
+            <li key={t.id}>
+              <Link href="/crm/tasks" className="flex min-h-[44px] items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-rose-50">
+                <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" aria-hidden="true" />
+                <span className="min-w-0 truncate text-slate-800">{t.what}</span>
+                <span className="ml-auto shrink-0 text-xs font-medium tabular-nums text-rose-700">
+                  {/* Europe/Dublin, not the machine's clock. A date-only column
+                      parses as UTC midnight, and on a host set to America/Denver
+                      that renders as the previous day: every due date on this
+                      panel was showing one day early. */}
+                  due {new Date(t.due_on!).toLocaleDateString("en-IE", { timeZone: "Europe/Dublin", day: "numeric", month: "short" })}
+                </span>
+              </Link>
             </li>
           ))}
         </ul>
       )}
 
-      <DiaryToggle
-        upcoming={diary.upcoming.map(toRow)}
-        justBooked={diary.justBooked.map(toRow)}
-      />
+      {!diary.problem && (
+        <DiaryToggle
+          upcoming={diary.upcoming.map(toRow)}
+          justBooked={diary.justBooked.map(toRow)}
+        />
+      )}
     </Panel>
   );
 }
@@ -104,33 +128,36 @@ export async function NeedsYou({ site }: { site: Site }) {
 /** The last few things that came in, whatever they were. */
 export async function LatestIn({ site }: { site: Site }) {
   const feed = await fetchLeads(site);
+  const title = "Latest in";
+  const all = <PanelLink href="/crm/orders">{site === "smartcareliving" ? "All enquiries" : "All orders"}</PanelLink>;
   if (!feed.ok) {
     return (
-      <Panel title="Latest in">
+      <Panel title={title} aside={all}>
         <div className="px-4 py-4"><Note tone="warn">{feed.reason}</Note></div>
       </Panel>
     );
   }
   const rows = feed.data.leads.slice(0, 6);
+  const partial = partialFeed(feed.data);
   return (
-    <Panel
-      title="Latest in"
-      aside={<Link href="/crm/orders" className="text-xs font-medium text-slate-600 hover:text-slate-900">All orders</Link>}
-    >
+    <Panel title={title} aside={all}>
+      {partial && <div className="px-4 pt-4"><Note tone="warn">{partial}</Note></div>}
       {rows.length === 0 ? (
-        <Empty title="Nothing yet today" />
+        <Empty title="Nothing has come in yet" />
       ) : (
         <ul className="divide-y divide-slate-100">
           {rows.map((l, i) => (
             <li key={`${l.orderId}-${i}`} className="flex items-start gap-2.5 px-4 py-2.5 text-sm">
               <Inbox className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
               <span className="min-w-0">
-                <span className="block truncate text-slate-900">{dash(l.name) || "Unnamed"}</span>
+                {/* The same fallback the Diary uses, so one customer is not
+                    "Unnamed" here and "stackthedrummer" one panel over. */}
+                <span className="block truncate text-slate-900">{displayName(l)}</span>
                 <span className="block truncate text-xs text-slate-500">{dash(l.product) || dash(l.email) || l.type}</span>
               </span>
               <span className="ml-auto shrink-0 text-right">
                 {dash(l.amount) && <span className="block text-sm font-medium tabular-nums text-slate-900">{l.amount}</span>}
-                <span className="block text-xs tabular-nums text-slate-500">{dayOnly(l.date)}</span>
+                <span className="block text-xs tabular-nums text-slate-500">{shortDay(l.date)}</span>
               </span>
             </li>
           ))}
@@ -144,8 +171,8 @@ export async function MoneyThisMonth({ site }: { site: Site }) {
   const result = await fetchFinance(2, site);
   if (!result.ok) {
     return (
-      <Panel title="Money">
-        <div className="px-4 py-4"><Note tone="warn">Stripe could not be read. {result.reason}</Note></div>
+      <Panel title="Money" aside={<PanelLink href="/crm/finance">Finance</PanelLink>}>
+        <div className="px-4 py-4"><Note tone="warn">Stripe could not be read, so this month&rsquo;s money is not shown. {result.reason}</Note></div>
       </Panel>
     );
   }
@@ -174,10 +201,7 @@ export async function MoneyThisMonth({ site }: { site: Site }) {
     : prev?.label ?? "";
 
   return (
-    <Panel
-      title="Money"
-      aside={<Link href="/crm/finance" className="text-xs font-medium text-slate-600 hover:text-slate-900">Finance</Link>}
-    >
+    <Panel title="Money" aside={<PanelLink href="/crm/finance">Finance</PanelLink>}>
       <div className="grid grid-cols-2 divide-x divide-slate-200">
         <Stat
           label={`Kept in ${now.label}`}
@@ -189,12 +213,17 @@ export async function MoneyThisMonth({ site }: { site: Site }) {
              looking at it. */
           source={now.payments > 0 ? { href: `/crm/orders?month=${now.key}`, label: "See the payments" } : undefined}
         />
-        <Stat
-          label="Next payout"
-          value={moneyExact(f.available + f.pending)}
-          note="Available and pending at Stripe" explain="nextPayout"
-          source={{ href: "/crm/finance", label: "See the money" }}
-        />
+        {f.balanceProblem ? (
+          /* Not a zero. The months above were read; the balance was not. */
+          <Stat label="Next payout" value="Not read" tone="muted" note={f.balanceProblem} explain="nextPayout" />
+        ) : (
+          <Stat
+            label="Next payout"
+            value={moneyExact(f.available + f.pending)}
+            note={site === "smartcareliving" ? "At Stripe, one account for both businesses" : "Available and pending at Stripe"} explain="nextPayout"
+            source={{ href: "/crm/finance", label: "See the money" }}
+          />
+        )}
       </div>
     </Panel>
   );
@@ -204,8 +233,8 @@ export async function AdsThisMonth({ site }: { site: Site }) {
   const result = await fetchAds(site, 2);
   if (!result.ok) {
     return (
-      <Panel title="Advertising">
-        <div className="px-4 py-4"><Note tone="warn">Google Ads could not be read. {result.reason}</Note></div>
+      <Panel title="Advertising" aside={<PanelLink href="/crm/marketing">Marketing</PanelLink>}>
+        <div className="px-4 py-4"><Note tone="warn">Google Ads could not be read, so this month&rsquo;s spend is not shown. {result.reason}</Note></div>
       </Panel>
     );
   }
@@ -234,10 +263,7 @@ export async function AdsThisMonth({ site }: { site: Site }) {
   const perEnquiry = now.conversions ? now.cost / now.conversions : null;
 
   return (
-    <Panel
-      title="Advertising"
-      aside={<Link href="/crm/marketing" className="text-xs font-medium text-slate-600 hover:text-slate-900">Marketing</Link>}
-    >
+    <Panel title="Advertising" aside={<PanelLink href="/crm/marketing">Marketing</PanelLink>}>
       <div className="grid grid-cols-2 divide-x divide-slate-200">
         <Stat
           label={`Spent in ${now.label}`}
@@ -247,9 +273,9 @@ export async function AdsThisMonth({ site }: { site: Site }) {
         />
         <Stat
           label="Cost per enquiry"
-          value={perEnquiry === null ? "–" : moneyExact(perEnquiry)}
+          value={perEnquiry === null ? "None yet" : moneyExact(perEnquiry)}
           note={now.conversions ? `${now.conversions.toFixed(0)} enquiries in ${now.label}` : "No enquiries yet this month"}
-          tone={perEnquiry === null ? "plain" : perEnquiry <= 60 ? "good" : perEnquiry <= 100 ? "warn" : "bad"}
+          tone={perEnquiry === null ? "muted" : perEnquiry <= 60 ? "good" : perEnquiry <= 100 ? "warn" : "bad"}
           source={{ href: "/crm/marketing", label: "See what came back" }}
         />
       </div>
@@ -265,32 +291,43 @@ export async function AdsThisMonth({ site }: { site: Site }) {
 /** Small, because it is a reassurance rather than a working surface. */
 export async function RecentActivity({ site }: { site: Site }) {
   if (!crmConfigured()) return null;
-  const rows = await crm<{ id: string; summary: string; happened_at: string; actor: string | null; contact_id: string | null }[]>(
-    `crm_activity?site=eq.${site}&select=id,summary,happened_at,actor,contact_id&order=happened_at.desc&limit=8`,
-  ).catch(() => null);
+  let rows: { id: string; summary: string; happened_at: string; actor: string | null; contact_id: string | null }[] | null;
+  try {
+    rows = await unlessWrongKey(await crm<{ id: string; summary: string; happened_at: string; actor: string | null; contact_id: string | null }[]>(
+      `crm_activity?site=eq.${site}&select=id,summary,happened_at,actor,contact_id&order=happened_at.desc&limit=8`,
+    ));
+  } catch (err) {
+    /* It used to vanish on a failed read, which looks exactly like a quiet
+       week. Say so instead. */
+    return (
+      <Panel title="Recently">
+        <div className="px-4 py-4">
+          <Note tone="warn">The history could not be read ({err instanceof Error ? err.message.slice(0, 90) : "no answer"}).</Note>
+        </div>
+      </Panel>
+    );
+  }
   if (!rows?.length) return null;
 
   return (
     <Panel title="Recently">
       <ol className="divide-y divide-slate-100">
         {rows.map((a) => (
-          <li key={a.id} className="flex items-baseline gap-3 px-4 py-2 text-sm">
-            <span className="w-24 shrink-0 text-xs tabular-nums text-slate-500">
-              {new Date(a.happened_at).toLocaleDateString("en-IE", { timeZone: "Europe/Dublin", day: "2-digit", month: "short" })}
+          <li key={a.id} className="flex items-baseline gap-3 px-4 py-2.5 text-sm">
+            <span className="w-16 shrink-0 text-xs tabular-nums text-slate-500 sm:w-20">
+              {new Date(a.happened_at).toLocaleDateString("en-IE", { timeZone: "Europe/Dublin", day: "numeric", month: "short" })}
             </span>
-            <span className="min-w-0 text-slate-800">
+            <span className="min-w-0 flex-1 text-slate-800">
               {a.contact_id ? (
-                <Link href={`/crm/contacts/${a.contact_id}`} className="hover:underline hover:underline-offset-2">{a.summary}</Link>
+                <Link href={`/crm/contacts/${a.contact_id}`} className="hover:underline hover:underline-offset-2">{plainText(a.summary)}</Link>
               ) : (
-                a.summary
+                plainText(a.summary)
               )}
             </span>
-            {a.actor && <span className="ml-auto shrink-0 text-xs text-slate-400">{a.actor}</span>}
+            {a.actor && <span className="hidden shrink-0 text-xs text-slate-400 sm:inline">{a.actor}</span>}
           </li>
         ))}
       </ol>
     </Panel>
   );
 }
-
-

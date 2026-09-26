@@ -17,41 +17,10 @@ const clean = (v: string | undefined | null) => {
   return !s || s === "-" ? "" : s;
 };
 
-/**
- * Something to call a customer who arrived without a name.
- *
- * Five paid orders carry `name: "-"`, because Stripe does not require one and
- * nothing downstream insisted. The panel rendered every one of them as
- * "Unnamed", which is the least useful of the several things we do know: one of
- * them is a 479 euro doorbell going to a named street in Carpenterstown on
- * 5 October, with an email address and a mobile number attached.
- *
- * So fall through what we have rather than giving up at the first empty field.
- * The email local part is put in front of the address because it is usually
- * the person's actual name.
- */
-export function displayName(l: Lead): string {
-  const name = clean(l.name);
-  if (name) return name;
-
-  const email = clean(l.email);
-  if (email) {
-    const local = email.split("@")[0] ?? "";
-    /* Only when it reads like a name. "stackthedrummer" is better than an
-       address; "info" or "sales1" is not better than anything. */
-    if (local.length > 2 && !/^(info|sales|admin|contact|hello|enquiries|office)\d*$/i.test(local)) {
-      return local.replace(/[._]+/g, " ");
-    }
-  }
-
-  const address = clean(l.address);
-  if (address) return address.split(",")[0]!.trim();
-
-  const phone = clean(l.phone);
-  if (phone) return phone;
-
-  return "No name on the order";
-}
+/* Moved to display.ts so client components can use it without pulling the
+   feed readers into the browser bundle. Re-exported for the callers here. */
+import { displayName } from "./display";
+export { displayName };
 
 /** True when we are showing a stand-in rather than a name somebody gave us. */
 export const nameIsStandIn = (l: Lead) => clean(l.name) === "";

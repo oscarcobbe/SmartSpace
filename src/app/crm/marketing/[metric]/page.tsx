@@ -6,6 +6,7 @@ import { fetchAds, adsSplit, fetchChanges, summariseChanges } from "@/lib/crm/go
 import { fetchPeriods } from "@/lib/crm/ads-periods";
 import { money, moneyExact } from "@/lib/crm/leads";
 import { PageHeader, Panel, Note } from "../../ui";
+import { plainText } from "@/lib/crm/display";
 import { TrendChart, type TrendPoint, type MetricId } from "../../trend-chart";
 import { Periods } from "../../periods";
 import ExportButton from "../../export-button";
@@ -71,7 +72,7 @@ const METRICS: Record<string, Metric> = {
     chart: "cost", label: "Spend", hue: "orange", better: "neither",
     of: (r) => r.cost, fmt: money, move: money,
     what: "What the advertising cost, before anything came back.",
-    basis: (r) => `${int(r.clicks)} clicks at ${r.clicks ? moneyExact(r.cost / r.clicks) : "–"} each`,
+    basis: (r) => `${int(r.clicks)} clicks at ${r.clicks ? moneyExact(r.cost / r.clicks) : "no charge"} each`,
     reading: "Spend on its own is neither good nor bad news. It is the denominator of every other figure on this page, so read it beside enquiries and work won rather than on its own. A rise with no rise in enquiries is the thing to act on.",
     rank: (c) => c.cost,
   },
@@ -190,7 +191,7 @@ export default async function MetricPage({ params }: { params: Promise<{ metric:
       <div className="mb-6 overflow-hidden rounded-xl p-5 sm:p-6" style={{ background: HUE[m.hue] }}>
         <div className="text-[12.5px] font-semibold uppercase tracking-wide text-white">{m.label}</div>
         <div className="mt-2 text-[44px] font-bold leading-none tracking-tight tabular-nums text-white">
-          {now === null ? "–" : m.fmt(now)}
+          {now === null ? "None" : m.fmt(now)}
         </div>
         <p className="mt-2 text-[13px] text-white/90">{m.basis(own)}</p>
         <p className="mt-3 max-w-[70ch] text-[13.5px] leading-relaxed text-white">{m.what}</p>
@@ -261,10 +262,10 @@ export default async function MetricPage({ params }: { params: Promise<{ metric:
                 return (
                   <tr key={c.id} className={c.status === "ENABLED" ? undefined : "text-slate-500"}>
                     <td className="max-w-[20rem] px-4 py-2">
-                      <span className="block truncate text-slate-900" title={c.name}>{c.name}</span>
+                      <span className="block truncate text-slate-900" title={plainText(c.name)}>{plainText(c.name)}</span>
                     </td>
                     <td className="px-4 py-2 text-right font-semibold tabular-nums" style={{ color: HUE[m.hue] }}>
-                      {v === null ? "–" : m.fmt(v)}
+                      {v === null ? "None" : m.fmt(v)}
                     </td>
                     <td className="px-4 py-2 text-right tabular-nums text-slate-700">{moneyExact(c.cost)}</td>
                     <td className="px-4 py-2 text-right tabular-nums text-slate-700">{c.conversions.toFixed(0)}</td>

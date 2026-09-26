@@ -12,16 +12,23 @@
  * being able to point at anything.
  */
 import type { ReactNode } from "react";
+import Link from "next/link";
+import { AlertTriangle, ChevronRight } from "lucide-react";
 import { GLOSSARY, type GlossaryKey } from "@/lib/crm/glossary";
+import { SlowNote } from "./slow-note";
 
+/**
+ * One title size for every page, and room for the aside to drop under it on a
+ * phone rather than squeezing the title into two lines beside a button.
+ */
 export function PageHeader({ title, sub, aside }: { title: string; sub?: string; aside?: ReactNode }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-x-6 gap-y-3 sm:mb-6">
       <div className="min-w-0">
-        <h1 className="text-xl font-semibold tracking-tight text-slate-900">{title}</h1>
-        {sub && <p className="mt-1 max-w-2xl text-sm text-slate-600">{sub}</p>}
+        <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.015em] text-slate-900 sm:text-2xl">{title}</h1>
+        {sub && <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-slate-600">{sub}</p>}
       </div>
-      {aside && <div className="shrink-0 text-sm text-slate-500">{aside}</div>}
+      {aside && <div className="min-w-0 max-w-full text-sm text-slate-500">{aside}</div>}
     </div>
   );
 }
@@ -42,9 +49,9 @@ export function Panel({ title, children, aside, tone = "card" }: {
     : "border-slate-200 bg-white";
   const rule = tone === "quiet" ? "border-slate-200/80" : "border-slate-200";
   return (
-    <section className={`overflow-hidden rounded-xl border ${shell}`}>
+    <section className={`crm-enter overflow-hidden rounded-xl border shadow-[0_1px_2px_rgb(15_23_42/0.04)] ${shell}`}>
       {(title || aside) && (
-        <div className={`flex flex-wrap items-center justify-between gap-3 border-b ${rule} px-4 py-3`}>
+        <div className={`flex min-h-[52px] flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b ${rule} px-4 py-2.5`}>
           {title && <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-slate-900">{title}</h2>}
           {aside}
         </div>
@@ -82,7 +89,7 @@ export function Explain({ term, label }: { term: GlossaryKey; label?: string }) 
      */
     <details className="relative z-30 inline-block align-middle">
       <summary
-        className="ml-1 inline-flex h-4 w-4 cursor-pointer list-none items-center justify-center rounded-full border border-slate-300 text-[10px] font-bold leading-none text-slate-500 transition-colors hover:border-slate-500 hover:text-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slate-900 [&::-webkit-details-marker]:hidden"
+        className="ml-1 inline-flex h-4 w-4 cursor-pointer list-none items-center justify-center rounded-full border border-slate-300 text-[10px] font-bold leading-none text-slate-500 hover:border-slate-500 hover:text-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slate-900 [&::-webkit-details-marker]:hidden"
         aria-label={label ? `What ${label} means` : "What this figure means"}
       >
         ?
@@ -103,7 +110,7 @@ export function Explain({ term, label }: { term: GlossaryKey; label?: string }) 
 }
 
 export function Stat({ label, value, note, tone = "plain", explain, source, trend }: {
-  label: string; value: string; note?: string; tone?: "plain" | "good" | "warn" | "bad" | "cost";
+  label: string; value: string; note?: string; tone?: "plain" | "good" | "warn" | "bad" | "cost" | "muted";
   explain?: GlossaryKey;
   /**
    * Where the rows behind this figure live. Nigel's rule: no number that
@@ -136,6 +143,9 @@ export function Stat({ label, value, note, tone = "plain", explain, source, tren
     warn: "text-amber-700",
     bad: "text-rose-700",
     cost: "text-amber-700",
+    /* A figure that could not be read, or that does not exist yet. Grey, so
+       "Not read" never looks like a number. */
+    muted: "text-slate-400",
   }[tone];
   /*
    * A tile with rows behind it is the whole target, not just the small link
@@ -143,7 +153,7 @@ export function Stat({ label, value, note, tone = "plain", explain, source, tren
    * a whole-card hover state cannot.
    */
   const interactive = source
-    ? "group relative cursor-pointer transition-colors hover:bg-slate-50 focus-within:bg-slate-50"
+    ? "group relative cursor-pointer hover:bg-slate-50 focus-within:bg-slate-50"
     : "";
   return (
     <div className={`flex flex-col px-4 py-3.5 ${interactive}`}>
@@ -165,7 +175,7 @@ export function Stat({ label, value, note, tone = "plain", explain, source, tren
               nearest positioned ancestor, which has to be the tile: making the
               anchor itself positioned shrinks the overlay to the width of the
               words and the rest of the card stops being clickable. */
-           className="-mt-0.5 inline-flex w-fit items-center gap-1 text-xs font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 transition-colors before:absolute before:inset-0 before:z-0 before:content-[''] group-hover:text-slate-900 group-hover:decoration-slate-600">
+           className="mt-1 inline-flex w-fit items-center gap-1 text-xs font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 before:absolute before:inset-0 before:z-0 before:content-[''] group-hover:text-slate-900 group-hover:decoration-slate-600">
           {source.label}
           <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">&rarr;</span>
         </a>
@@ -208,11 +218,36 @@ export function Pill({ children, className }: { children: ReactNode; className?:
 
 export const PILL_KIND = PILL;
 
+/**
+ * A sentence the reader needs, above all when a source did not answer.
+ *
+ * The warning tone carries an icon and role="status", because it is the one
+ * thing on a page that says the figures around it are incomplete, and a pale
+ * amber box on its own was easy to read past.
+ */
 export function Note({ tone = "info", children }: { tone?: "info" | "warn"; children: ReactNode }) {
-  const cls = tone === "warn"
-    ? "border-amber-200 bg-amber-50 text-amber-900"
-    : "border-slate-200 bg-white text-slate-700";
-  return <p className={`rounded-xl border px-4 py-3 text-sm ${cls}`}>{children}</p>;
+  if (tone === "warn") {
+    return (
+      <div role="status" className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden="true" />
+        {/* anywhere, because these name environment variables, and
+            SCL_DASHBOARD_PASSWORD as one unbreakable word pushed the whole
+            overview eight pixels wider than a phone. */}
+        <div className="min-w-0 [overflow-wrap:anywhere]">{children}</div>
+      </div>
+    );
+  }
+  return <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm leading-relaxed text-slate-700 [overflow-wrap:anywhere]">{children}</div>;
+}
+
+/** Link a panel header offers, as a real target rather than a word. */
+export function PanelLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <Link href={href} className="-mr-2 inline-flex min-h-[44px] items-center gap-1 rounded-lg px-2 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 sm:min-h-[32px]">
+      {children}
+      <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+    </Link>
+  );
 }
 
 export function Empty({ title, detail }: { title: string; detail?: string }) {
@@ -230,13 +265,14 @@ export function Empty({ title, detail }: { title: string; detail?: string }) {
  * as broken rather than busy.
  */
 export function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`animate-pulse rounded-md bg-slate-200/70 ${className}`} aria-hidden="true" />;
+  return <div className={`crm-skeleton animate-pulse rounded-md bg-slate-200/70 ${className}`} aria-hidden="true" />;
 }
 
-export function LoadingPage({ title, rows = 6 }: { title: string; rows?: number }) {
+export function LoadingPage({ title, rows = 6, slow }: { title: string; rows?: number; slow?: string | null }) {
   return (
     <div role="status" aria-busy="true" aria-label={`Loading ${title.toLowerCase()}`}>
       <PageHeader title={title} />
+      {slow && <SlowNote>{slow}</SlowNote>}
       <div className="mb-6 grid grid-cols-2 divide-x divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white sm:grid-cols-3 sm:divide-y-0 lg:grid-cols-5">
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="px-4 py-3.5">

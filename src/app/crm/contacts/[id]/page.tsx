@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Mail, MapPin, Phone } from "lucide-react";
+import { ArrowLeft, Check, Mail, MapPin, Phone } from "lucide-react";
 import { requireSession } from "@/lib/crm/session";
 import { getPerson, fullAddress, distinctLeads } from "@/lib/crm/people";
 import { getContact, STATUSES, type ActivityRow, type TaskRow } from "@/lib/crm/contacts";
@@ -9,26 +9,47 @@ import { moneyExact, money } from "@/lib/crm/leads";
 import { PageHeader, Panel, Empty, Pill, Note } from "../../ui";
 import { saveNote, setLeadStatus, addTask, completeTask } from "../actions";
 import PaymentLinkForm from "../payment-link-form";
+import { ActionForm, SubmitButton } from "../../action-form";
+import { plainText, slotText } from "@/lib/crm/display";
 
 export const dynamic = "force-dynamic";
+/* The person is assembled from the orders feed, and SmartCare Living's sheet
+   can take most of a minute to wake. */
+export const maxDuration = 60;
 
 const stamp = (iso: string | null) =>
   iso
     ? new Date(iso).toLocaleString("en-IE", {
         timeZone: "Europe/Dublin", day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false,
       })
-    : "–";
+    : "Not recorded";
 
 const day = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleDateString("en-IE", { timeZone: "Europe/Dublin", day: "2-digit", month: "short", year: "numeric" }) : "–";
+  iso ? new Date(iso).toLocaleDateString("en-IE", { timeZone: "Europe/Dublin", day: "numeric", month: "short", year: "numeric" }) : "Never";
 
-const dash = (v: string | null | undefined) => (!v || v === "-" ? null : v);
+const dash = (v: string | null | undefined) => plainText(v) || null;
 
 export default async function ContactPage({ params }: { params: { id: string } }) {
   const { site } = requireSession();
   const id = decodeURIComponent(params.id);
-  const person = await getPerson(site, id);
-  if (!person) notFound();
+  const { person, problems } = await getPerson(site, id);
+  if (!person) {
+    /* Not "not found" when the reason is that a source did not answer: the
+       customer may well exist, and a 404 would say they do not. */
+    if (problems.length) {
+      return (
+        <>
+          <Link href="/crm/contacts" className="mb-4 inline-flex min-h-[44px] items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900 sm:min-h-0">
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            Customers
+          </Link>
+          <PageHeader title="This customer could not be loaded" />
+          <div className="space-y-2">{problems.map((p) => <Note key={p} tone="warn">{p}</Note>)}</div>
+        </>
+      );
+    }
+    notFound();
+  }
 
   /* Notes, next steps and the history trail only exist once somebody has typed
      something, which is the moment the contact row is created. Until then this
@@ -36,10 +57,18 @@ export default async function ContactPage({ params }: { params: { id: string } }
      empty rather than missing. */
   let activity: ActivityRow[] = [];
   let tasks: TaskRow[] = [];
+  let recordProblem: string | null = null;
   if (person.inDatabase) {
-    const record = await getContact(site, person.id);
-    activity = record?.activity ?? [];
-    tasks = record?.tasks ?? [];
+    try {
+      const record = await getContact(site, person.id);
+      activity = record?.activity ?? [];
+      tasks = record?.tasks ?? [];
+    } catch (err) {
+      /* This crashed the whole page. The orders and details above are still
+         worth showing; the history and next steps say they were not read
+         rather than looking empty. */
+      recordProblem = `The history and next steps could not be read (${err instanceof Error ? err.message.slice(0, 120) : "no answer"}), so they are not shown. Nothing has been lost.`;
+    }
   }
 
   const address = fullAddress(person);
@@ -62,7 +91,7 @@ export default async function ContactPage({ params }: { params: { id: string } }
 
   return (
     <>
-      <Link href="/crm/contacts" className="mb-4 inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900">
+      <Link href="/crm/contacts" className="mb-2 inline-flex min-h-[44px] items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900 sm:mb-3 sm:min-h-0">
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         Customers
       </Link>
@@ -75,13 +104,13 @@ export default async function ContactPage({ params }: { params: { id: string } }
              things Nigel actually does with a customer. */
           <div className="flex gap-2">
             {tel && (
-              <a href={tel} className="flex min-h-[38px] items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
+              <a href={tel} className="flex min-h-[44px] items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 sm:min-h-[38px] sm:px-3">
                 <Phone className="h-4 w-4 text-slate-400" aria-hidden="true" />
                 Call
               </a>
             )}
             {person.email && (
-              <a href={`mailto:${person.email}`} className="flex min-h-[38px] items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
+              <a href={`mailto:${person.email}`} className="flex min-h-[44px] items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 sm:min-h-[38px] sm:px-3">
                 <Mail className="h-4 w-4 text-slate-400" aria-hidden="true" />
                 Email
               </a>
@@ -90,8 +119,15 @@ export default async function ContactPage({ params }: { params: { id: string } }
         }
       />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <div className="space-y-6">
+      {(problems.length > 0 || recordProblem) && (
+        <div className="mb-6 space-y-2">
+          {problems.map((p) => <Note key={p} tone="warn">{p}</Note>)}
+          {recordProblem && <Note tone="warn">{recordProblem}</Note>}
+        </div>
+      )}
+
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="min-w-0 space-y-4 sm:space-y-6">
           <Panel title="Orders and enquiries">
             {person.feed.length === 0 && leads.length === 0 ? (
               <Empty title="Nothing filed yet" />
@@ -102,7 +138,7 @@ export default async function ContactPage({ params }: { params: { id: string } }
                     <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-slate-900">{row.type}</p>
-                        {dash(row.product) && <p className="text-sm text-slate-600">{row.product}</p>}
+                        {dash(row.product) && <p className="text-sm text-slate-600">{dash(row.product)}</p>}
                         <p className="mt-0.5 text-xs text-slate-500">{dash(row.date) ?? ""}</p>
                       </div>
                       <div className="flex shrink-0 items-center gap-3">
@@ -116,7 +152,7 @@ export default async function ContactPage({ params }: { params: { id: string } }
                     {dash(row.bookingDate) && (
                       <p className="mt-2 text-sm text-slate-700">
                         Booked for {row.bookingDate}
-                        {dash(row.bookingSlot) && <span className="text-slate-500">, {row.bookingSlot}</span>}
+                        {slotText(row.bookingSlot) && <span className="text-slate-500">, {slotText(row.bookingSlot)}</span>}
                       </p>
                     )}
 
@@ -162,39 +198,135 @@ export default async function ContactPage({ params }: { params: { id: string } }
                         {l.installed_at && <div><dt className="inline">Installed: </dt><dd className="inline text-slate-700">{day(l.installed_at)}</dd></div>}
                     </dl>
 
-                    <form action={setLeadStatus} className="mt-3 flex flex-wrap items-center gap-2">
+                    <ActionForm action={setLeadStatus} className="mt-3 flex flex-wrap items-end gap-2">
                       <input type="hidden" name="leadId" value={l.id} />
                       <input type="hidden" name="contactId" value={person.id} />
-                      <label htmlFor={`status-${l.id}`} className="text-xs text-slate-500">Move to</label>
-                      <select
-                        id={`status-${l.id}`}
-                        name="status"
-                        defaultValue={l.status}
-                        className="min-h-[36px] rounded-lg border border-slate-300 bg-white px-2 text-sm"
+                      <div className="min-w-0 flex-1 sm:flex-none">
+                        <label htmlFor={`status-${l.id}`} className="mb-1 block text-xs text-slate-500">Where it stands</label>
+                        <select
+                          id={`status-${l.id}`}
+                          name="status"
+                          defaultValue={l.status}
+                          className="min-h-[44px] w-full rounded-lg border border-slate-300 bg-white px-2 text-base sm:min-h-[36px] sm:w-auto sm:text-sm"
+                        >
+                          {STATUSES.map((st) => <option key={st} value={st}>{STATUS_LABEL[st]}</option>)}
+                        </select>
+                      </div>
+                      <div className="min-w-0 flex-1 sm:flex-none">
+                        <label htmlFor={`found-${l.id}`} className="mb-1 block text-xs text-slate-500">How they found us</label>
+                        <select
+                          id={`found-${l.id}`}
+                          name="found_us"
+                          defaultValue={foundUsOf(l)}
+                          className="min-h-[44px] w-full rounded-lg border border-slate-300 bg-white px-2 text-base sm:min-h-[36px] sm:w-auto sm:text-sm"
+                        >
+                          {Object.entries(FOUND_US).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                        </select>
+                      </div>
+                      <SubmitButton
+                        pendingLabel="Saving"
+                        className="min-h-[44px] w-full rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 sm:min-h-[36px] sm:w-auto sm:px-3"
                       >
-                        {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
-                      </select>
-                      <label htmlFor={`found-${l.id}`} className="text-xs text-slate-500">Found us</label>
-                      <select
-                        id={`found-${l.id}`}
-                        name="found_us"
-                        defaultValue={foundUsOf(l)}
-                        className="min-h-[36px] rounded-lg border border-slate-300 bg-white px-2 text-sm"
-                      >
-                        {Object.entries(FOUND_US).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                      </select>
-                      <button type="submit" className="min-h-[36px] rounded-lg border border-slate-300 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
                         Save
-                      </button>
-                    </form>
+                      </SubmitButton>
+                    </ActionForm>
                   </li>
                 ))}
               </ul>
             )}
           </Panel>
 
+          {/* The two things Nigel does on this page, next to the enquiry they
+              are about rather than at the bottom of the side column, under
+              the map. The reference details sit on the right. */}
+          <Panel title="Next steps">
+            {recordProblem ? (
+              <div className="px-4 pt-4"><Note tone="warn">Next steps were not read, so the list is not shown.</Note></div>
+            ) : openTasks.length === 0 && doneTasks.length === 0 ? (
+              <p className="px-4 pt-4 text-sm text-slate-500">Nothing outstanding.</p>
+            ) : (
+              <ul className="divide-y divide-slate-100">
+                {[...openTasks, ...doneTasks].map((t) => (
+                  <li key={t.id} className="flex items-start gap-1 px-1.5 py-1 text-sm">
+                    <ActionForm action={completeTask} quiet className="flex shrink-0 flex-wrap">
+                      <input type="hidden" name="taskId" value={t.id} />
+                      <input type="hidden" name="contactId" value={person.id} />
+                      <input type="hidden" name="undo" value={t.done_at ? "1" : "0"} />
+                      {/* Forty-four square. The old target was an eighteen pixel
+                          square, which is a miss on a phone more often than a
+                          hit. */}
+                      <SubmitButton
+                        ariaLabel={t.done_at ? `Reopen: ${t.what}` : `Mark done: ${t.what}`}
+                        className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-slate-100"
+                      >
+                        <span className={`flex h-[18px] w-[18px] items-center justify-center rounded border ${t.done_at ? "border-emerald-600 bg-emerald-600 text-white" : "border-slate-400 bg-white"}`}>
+                          {t.done_at ? <Check className="h-3 w-3" aria-hidden="true" /> : null}
+                        </span>
+                      </SubmitButton>
+                    </ActionForm>
+                    <span className={`min-w-0 py-2.5 ${t.done_at ? "text-slate-400 line-through" : "text-slate-800"}`}>
+                      {t.what}
+                      {t.due_on && !t.done_at && <span className="block text-xs text-slate-500">due {day(t.due_on)}</span>}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <ActionForm action={addTask} resetOnSuccess className="flex flex-wrap gap-2 border-t border-slate-200 px-4 pb-1 pt-3">
+              <input type="hidden" name="contactId" value={person.id} />
+              <label htmlFor="new-task" className="sr-only">Next step</label>
+              <input
+                id="new-task"
+                name="what"
+                required
+                maxLength={500}
+                placeholder="Add a next step"
+                className="min-h-[44px] w-full basis-full rounded-lg border border-slate-300 px-3 text-base outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 sm:min-h-[38px] sm:text-sm"
+              />
+              <label htmlFor="new-task-due" className="sr-only">Due date</label>
+              <input id="new-task-due" name="dueOn" type="date" className="min-h-[44px] min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-2 text-base sm:min-h-[38px] sm:text-sm" />
+              {leads.length > 1 ? (
+                <>
+                  <label htmlFor="new-task-lead" className="sr-only">Against which enquiry</label>
+                  <select id="new-task-lead" name="leadId" className="min-h-[44px] min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-2 text-base sm:min-h-[38px] sm:text-sm">
+                    {leads.map((l) => (
+                      <option key={l.id} value={l.id}>{sourceLabel(l.source)}, {day(l.created_at)}</option>
+                    ))}
+                  </select>
+                </>
+              ) : (
+                <input type="hidden" name="leadId" value={newestLead?.id ?? ""} />
+              )}
+              <SubmitButton pendingLabel="Adding" className="min-h-[44px] rounded-lg bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-800 sm:min-h-[38px] sm:px-3">
+                Add
+              </SubmitButton>
+            </ActionForm>
+          </Panel>
+
+          <Panel title="Notes">
+            <ActionForm action={saveNote} className="space-y-2 px-4 pb-2 pt-4">
+              <input type="hidden" name="contactId" value={person.id} />
+              <label htmlFor="notes" className="sr-only">Notes</label>
+              <textarea
+                id="notes"
+                name="notes"
+                rows={4}
+                maxLength={8000}
+                defaultValue={person.notes ?? ""}
+                placeholder="Gate codes, access, who to ask for, anything worth remembering."
+                className="w-full rounded-lg border border-slate-300 p-2.5 text-base outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 sm:text-sm"
+              />
+              <SubmitButton pendingLabel="Saving" className="min-h-[44px] rounded-lg bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-800 sm:min-h-[38px] sm:px-3">
+                Save note
+              </SubmitButton>
+            </ActionForm>
+          </Panel>
+
           <Panel title="History">
-            {activity.length === 0 ? (
+            {recordProblem ? (
+              <div className="px-4 py-4"><Note tone="warn">Not read. {recordProblem}</Note></div>
+            ) : activity.length === 0 ? (
               <Empty
                 title="Nothing recorded yet"
                 detail="Notes, status changes and next steps appear here once you start using them."
@@ -208,7 +340,7 @@ export default async function ContactPage({ params }: { params: { id: string } }
                         and broke the actor's email mid-word. */}
                     <span className="block shrink-0 text-xs tabular-nums text-slate-500 sm:w-36">{stamp(a.happened_at)}</span>
                     <span className="mt-0.5 block text-slate-800 sm:mt-0">
-                      {a.summary}
+                      {plainText(a.summary)}
                       <span className="ml-2 text-xs text-slate-400">{kindLabel(a.kind)}</span>
                     </span>
                     {a.actor && <span className="mt-0.5 block text-xs text-slate-400 sm:ml-auto sm:mt-0">{a.actor}</span>}
@@ -219,7 +351,7 @@ export default async function ContactPage({ params }: { params: { id: string } }
           </Panel>
         </div>
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-4 sm:space-y-6">
           {/*
             * Above Details on purpose.
             *
@@ -288,96 +420,13 @@ export default async function ContactPage({ params }: { params: { id: string } }
                   href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-900"
+                  className="mt-1 inline-flex min-h-[44px] items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 sm:min-h-0 sm:mt-2"
                 >
                   <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
                   Directions
                 </a>
               </div>
             )}
-          </Panel>
-
-          <Panel title="Next steps">
-            {openTasks.length === 0 && doneTasks.length === 0 ? (
-              <p className="px-4 pt-4 text-sm text-slate-500">Nothing outstanding.</p>
-            ) : (
-              <ul className="divide-y divide-slate-100">
-                {[...openTasks, ...doneTasks].map((t) => (
-                  <li key={t.id} className="flex items-start gap-2 px-2 py-1.5 text-sm">
-                    <form action={completeTask} className="shrink-0">
-                      <input type="hidden" name="taskId" value={t.id} />
-                      <input type="hidden" name="contactId" value={person.id} />
-                      <input type="hidden" name="undo" value={t.done_at ? "1" : "0"} />
-                      {/* Forty by forty. The old target was an eighteen pixel
-                          square, which is a miss on a phone more often than a
-                          hit. */}
-                      <button
-                        type="submit"
-                        aria-label={t.done_at ? `Reopen: ${t.what}` : `Mark done: ${t.what}`}
-                        className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-slate-100"
-                      >
-                        <span className={`flex h-[18px] w-[18px] items-center justify-center rounded border text-[11px] leading-none ${t.done_at ? "border-emerald-600 bg-emerald-600 text-white" : "border-slate-400"}`}>
-                          {t.done_at ? "✓" : ""}
-                        </span>
-                      </button>
-                    </form>
-                    <span className={`py-2.5 ${t.done_at ? "text-slate-400 line-through" : "text-slate-800"}`}>
-                      {t.what}
-                      {t.due_on && !t.done_at && <span className="block text-xs text-slate-500">due {day(t.due_on)}</span>}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            <form action={addTask} className="space-y-2 border-t border-slate-200 px-4 py-3">
-              <input type="hidden" name="contactId" value={person.id} />
-              <label htmlFor="new-task" className="sr-only">Next step</label>
-              <input
-                id="new-task"
-                name="what"
-                required
-                placeholder="Add a next step"
-                className="min-h-[38px] w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
-              />
-              <div className="flex gap-2">
-                <label htmlFor="new-task-due" className="sr-only">Due date</label>
-                <input id="new-task-due" name="dueOn" type="date" className="min-h-[38px] flex-1 rounded-lg border border-slate-300 px-2 text-sm" />
-                {person.leads.length > 1 ? (
-                  <>
-                    <label htmlFor="new-task-lead" className="sr-only">Against which enquiry</label>
-                    <select id="new-task-lead" name="leadId" className="min-h-[38px] flex-1 rounded-lg border border-slate-300 px-2 text-sm">
-                      {leads.map((l) => (
-                        <option key={l.id} value={l.id}>{sourceLabel(l.source)}, {day(l.created_at)}</option>
-                      ))}
-                    </select>
-                  </>
-                ) : (
-                  <input type="hidden" name="leadId" value={newestLead?.id ?? ""} />
-                )}
-                <button type="submit" className="min-h-[38px] rounded-lg bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-800">
-                  Add
-                </button>
-              </div>
-            </form>
-          </Panel>
-
-          <Panel title="Notes">
-            <form action={saveNote} className="space-y-2 px-4 py-4">
-              <input type="hidden" name="contactId" value={person.id} />
-              <label htmlFor="notes" className="sr-only">Notes</label>
-              <textarea
-                id="notes"
-                name="notes"
-                rows={7}
-                defaultValue={person.notes ?? ""}
-                placeholder="Gate codes, access, who to ask for, anything worth remembering."
-                className="w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
-              />
-              <button type="submit" className="min-h-[38px] rounded-lg bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-800">
-                Save note
-              </button>
-            </form>
           </Panel>
 
           {!person.inDatabase && (

@@ -1,3 +1,4 @@
+import { plainText } from "./display";
 /**
  * The reading, not the readout.
  *
@@ -235,7 +236,7 @@ export function marketingFindings(m: MarketingInput): Finding[] {
   for (const c of spendingNothing) {
     out.push({
       kind: "risk",
-      title: `${c.name} has spent ${eur(c.cost)} and brought nothing`,
+      title: `${plainText(c.name)} has spent ${eur(c.cost)} and brought nothing`,
       detail: `${c.clicks} clicks, no enquiry recorded. Either the tracking is not reporting them or the money is going nowhere.`,
     });
   }

@@ -9,7 +9,7 @@ import { Users, Footprints, BookOpen, Eye, Timer, Megaphone } from "lucide-react
 export const dynamic = "force-dynamic";
 
 const int = (n: number) => new Intl.NumberFormat("en-IE", { maximumFractionDigits: 0 }).format(n);
-const pct = (part: number, whole: number) => (whole ? `${Math.round((part / whole) * 100)}%` : "–");
+const pct = (part: number, whole: number) => (whole ? `${Math.round((part / whole) * 100)}%` : "None");
 
 const mmss = (seconds: number) => {
   const s = Math.round(seconds);
@@ -54,7 +54,7 @@ export default async function InsightsPage({ searchParams }: { searchParams: { d
     return (
       <>
         <PageHeader title="Visitors" />
-        <Note tone="warn">Analytics could not be loaded. {result.reason}</Note>
+        <Note tone="warn">Google Analytics could not be read, so no visitor figures are shown. {result.reason}</Note>
       </>
     );
   }
@@ -91,7 +91,7 @@ export default async function InsightsPage({ searchParams }: { searchParams: { d
           key={d}
           href={`/crm/insights?days=${d}`}
           className={[
-            "flex min-h-[32px] items-center rounded-lg px-3 text-sm font-medium",
+            "flex min-h-[44px] items-center rounded-lg px-3 text-sm font-medium sm:min-h-[32px]",
             d === days ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100",
           ].join(" ")}
         >
@@ -152,7 +152,8 @@ export default async function InsightsPage({ searchParams }: { searchParams: { d
         {/* Printed codes, kept out of Orders. A scan is somebody pointing a
             phone at a van at a traffic light, not an enquiry, and putting the
             two in one list makes both numbers useless. */}
-        {scans && scans.total > 0 && (
+        {scans && "problem" in scans && <Note tone="warn">{scans.problem}</Note>}
+        {scans && !("problem" in scans) && scans.total > 0 && (
           <Panel
             title="Printed codes scanned"
             aside={<span className="text-xs text-slate-500">last 90 days</span>}
@@ -162,7 +163,7 @@ export default async function InsightsPage({ searchParams }: { searchParams: { d
               <Stat label="Last seven days" value={int(scans.last7)} tone={scans.last7 ? "good" : "plain"} />
               <Stat
                 label="Most scanned"
-                value={scans.byCode[0] ? scanLabel(scans.byCode[0].code) : "–"}
+                value={scans.byCode[0] ? scanLabel(scans.byCode[0].code) : "None"}
                 note={scans.byCode[0] ? `${int(scans.byCode[0].count)} scans` : undefined}
               />
             </div>

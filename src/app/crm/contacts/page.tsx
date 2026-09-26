@@ -9,19 +9,21 @@ import ExportButton from "../export-button";
 import { fullAddress } from "@/lib/crm/people";
 
 export const dynamic = "force-dynamic";
+/* SmartCare Living's sheet can take most of a minute to wake. */
+export const maxDuration = 60;
 
 const matches = (p: Person, needle: string) =>
   [p.name, p.email, p.phone, p.address, p.city, p.county, p.eircode]
     .some((v) => String(v ?? "").toLowerCase().includes(needle));
 
 const when = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleDateString("en-IE", { timeZone: "Europe/Dublin", day: "2-digit", month: "short", year: "2-digit" }) : "–";
+  iso ? new Date(iso).toLocaleDateString("en-IE", { timeZone: "Europe/Dublin", day: "numeric", month: "short", year: "2-digit" }) : "Never";
 
 export default async function ContactsPage({ searchParams }: { searchParams: { q?: string } }) {
   const { site } = requireSession();
   const q = (searchParams.q ?? "").trim();
 
-  const { people, problems } = await listPeople(site);
+  const { people, problems, feedRead } = await listPeople(site);
   const rows = q ? people.filter((p) => matches(p, q.toLowerCase())) : people;
 
   const customers = people.filter((p) => p.paid > 0);
@@ -34,8 +36,8 @@ export default async function ContactsPage({ searchParams }: { searchParams: { q
   ]);
 
   const search = (
-    <form method="get" className="flex items-center gap-2">
-      <div className="relative">
+    <form method="get" className="flex min-w-0 flex-1 items-center gap-2 sm:flex-none">
+      <div className="relative min-w-0 flex-1">
         <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
         <label htmlFor="contact-search" className="sr-only">Search customers</label>
         <input
@@ -44,10 +46,10 @@ export default async function ContactsPage({ searchParams }: { searchParams: { q
           type="search"
           defaultValue={q}
           placeholder="Name, email, phone, Eircode"
-          className="min-h-[36px] w-48 rounded-lg border border-slate-300 pl-8 pr-3 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 sm:w-64"
+          className="min-h-[44px] w-full min-w-0 rounded-lg border border-slate-300 pl-8 pr-3 text-base outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 sm:min-h-[36px] sm:w-64 sm:text-sm"
         />
       </div>
-      <button type="submit" className="min-h-[36px] rounded-lg border border-slate-300 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
+      <button type="submit" className="min-h-[44px] shrink-0 rounded-lg border border-slate-300 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 sm:min-h-[36px]">
         Search
       </button>
     </form>
@@ -61,7 +63,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: { q
         aside={
           <Link
             href="/crm/contacts/new"
-            className="flex min-h-[38px] items-center gap-2 rounded-lg bg-slate-900 px-3 text-sm font-medium text-white hover:bg-slate-800"
+            className="flex min-h-[44px] items-center gap-2 rounded-lg bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-800 sm:min-h-[38px] sm:px-3"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             Add a customer
@@ -69,14 +71,18 @@ export default async function ContactsPage({ searchParams }: { searchParams: { q
         }
       />
 
+      {/* Paying customers, spend and average all come from the orders feed. When
+          it did not answer they are not zero, they are unknown, and they say so. */}
       <StatRow>
-        <Stat label="People" value={String(people.length)} explain="people" source={{ href: "/crm/contacts", label: "See the people" }} />
-        <Stat label="Paying customers" value={String(customers.length)} tone="good" />
-        <Stat label="Spent with you" value={money(paid)} />
+        <Stat label="People" value={String(people.length)} explain="people" note={feedRead ? undefined : "From the database only"} />
+        <Stat label="Paying customers" value={feedRead ? String(customers.length) : "Not read"} tone={feedRead ? "good" : "muted"} />
+        <Stat label="Spent with you" value={feedRead ? money(paid) : "Not read"} tone={feedRead ? "plain" : "muted"} />
         <Stat label="Open" value={String(open)} note="Not yet won or lost" tone={open ? "warn" : "plain"} />
         <Stat
           label="Average order"
-          value={customers.length ? money(paid / customers.length) : "–"} explain="averageOrder"
+          value={!feedRead ? "Not read" : customers.length ? money(paid / customers.length) : "None yet"}
+          tone={feedRead && customers.length ? "plain" : "muted"}
+          explain="averageOrder"
         />
       </StatRow>
 
@@ -89,7 +95,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: { q
       <Panel
         title="Customers"
         aside={
-          <div className="flex items-center gap-2">
+          <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto">
             {search}
             <ExportButton
               filename="customers"
@@ -151,12 +157,12 @@ export default async function ContactsPage({ searchParams }: { searchParams: { q
                         </Link>
                       </td>
                       <td className="px-4 py-2.5 text-slate-600">
-                        <span className="block">{p.email ?? "–"}</span>
+                        <span className="block">{p.email ?? <span className="text-slate-400">No email</span>}</span>
                         {p.phone && <span className="block text-xs tabular-nums text-slate-500">{p.phone}</span>}
                       </td>
                       <td className="max-w-[16rem] px-4 py-2.5 text-slate-600">
                         <span className="block truncate" title={p.address ?? undefined}>
-                          {[p.city, p.county].filter(Boolean).join(", ") || p.address || "–"}
+                          {[p.city, p.county].filter(Boolean).join(", ") || p.address || <span className="text-slate-400">No address</span>}
                         </span>
                       </td>
                       <td className="px-4 py-2.5">
@@ -168,9 +174,9 @@ export default async function ContactsPage({ searchParams }: { searchParams: { q
                           <Pill className={STATUS_PILL.new}>Enquiry</Pill>
                         )}
                       </td>
-                      <td className="px-4 py-2.5 text-right tabular-nums text-slate-700">{p.orders || "–"}</td>
+                      <td className="px-4 py-2.5 text-right tabular-nums text-slate-700">{p.orders || <span className="text-slate-400">0</span>}</td>
                       <td className="px-4 py-2.5 text-right font-medium tabular-nums text-slate-900">
-                        {p.paid > 0 ? money(p.paid) : "–"}
+                        {p.paid > 0 ? money(p.paid) : ""}
                       </td>
                       <td className="px-4 py-2.5 text-right tabular-nums text-slate-500">{when(p.lastActivity)}</td>
                     </tr>

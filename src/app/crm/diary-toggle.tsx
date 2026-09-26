@@ -25,7 +25,13 @@ export interface Row {
 
 function List({ rows, empty }: { rows: Row[]; empty: string }) {
   if (rows.length === 0) {
-    return <p className="px-4 py-6 text-center text-sm text-slate-500">{empty}</p>;
+    return (
+      <div className="px-4 py-10 text-center">
+        <CalendarClock className="mx-auto h-5 w-5 text-slate-300" aria-hidden="true" />
+        <p className="mt-2 text-sm font-medium text-slate-700">{empty}</p>
+        <p className="mt-1 text-xs text-slate-500">Bookings appear here the moment they are made.</p>
+      </div>
+    );
   }
   return (
     <ul className="divide-y divide-slate-100">
@@ -68,7 +74,7 @@ export function DiaryToggle({ upcoming, justBooked }: { upcoming: Row[]; justBoo
       type="button"
       onClick={() => setTab(id)}
       aria-pressed={tab === id}
-      className={`rounded-md px-2.5 py-1 text-xs font-medium transition ${
+      className={`min-h-[44px] rounded-md px-3 text-xs font-medium sm:min-h-[30px] sm:px-2.5 ${
         tab === id ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
       }`}
     >
