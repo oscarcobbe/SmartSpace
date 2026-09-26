@@ -63,3 +63,17 @@ const ALERT_TO_EMAIL_FALLBACK = "nigel@smart-space.ie";
 export function alertTo(): string {
   return process.env.CONTACT_TO_EMAIL?.trim() || ALERT_TO_EMAIL_FALLBACK;
 }
+
+/**
+ * FourWinds is copied on every email this site sends to Nigel, so what he
+ * is told is never a surprise to the people who built it. The site's alerts
+ * ("sheet append failed" and the like) reached Nigel alone, and nobody here
+ * saw them until he quoted them back. A blind copy, so a reply still goes to
+ * one person. MONITOR_BCC_EMAIL overrides the address; "off" turns it off.
+ * Pass it as `bcc` on any send whose `to` is alertTo() or CONTACT_TO_EMAIL.
+ */
+const MONITOR_BCC_FALLBACK = "oscar@fourwindsdigital.com";
+export function monitorBcc(): string[] | undefined {
+  const v = process.env.MONITOR_BCC_EMAIL?.trim() || MONITOR_BCC_FALLBACK;
+  return v.toLowerCase() === "off" ? undefined : [v];
+}

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { timingSafeEqual } from "crypto";
 import { getAvailableSlots, AVAILABLE_DAYS } from "@/lib/calendly";
-import { alertTo } from "@/lib/business-constants";
+import { alertTo, monitorBcc } from "@/lib/business-constants";
 
 export const dynamic = "force-dynamic";
 
@@ -106,6 +106,7 @@ export async function GET(request: Request) {
       await resend.emails.send({
         from: resendFrom,
         to: [to],
+        bcc: monitorBcc(),
         subject: "[Smart Space] ⚠️ Booking calendar may be broken",
         text: [
           "The daily Calendly health check failed.",

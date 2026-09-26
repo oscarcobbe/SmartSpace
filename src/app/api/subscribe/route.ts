@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { logLead } from "@/lib/leads";
-import { alertTo } from "@/lib/business-constants";
+import { alertTo, monitorBcc } from "@/lib/business-constants";
 
 
 // POST routes are inherently dynamic but explicit is better, without
@@ -83,6 +83,7 @@ export async function POST(request: Request) {
     await resend.emails.send({
       from,
       to: [to],
+      bcc: monitorBcc(),
       subject: `New mailing list subscriber: ${email}`,
       text: `New subscriber: ${email}\nSubscribed at: ${new Date().toISOString()}`,
     });

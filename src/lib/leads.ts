@@ -7,7 +7,7 @@
  *
  * The expected payload shape matches google-apps-script.js (doPost).
  */
-import { alertTo } from "@/lib/business-constants";
+import { alertTo, monitorBcc } from "@/lib/business-constants";
 
 export interface AttributionRecord {
   gclid?: string;
@@ -59,6 +59,7 @@ async function sendLeadLogFailureAlert(record: LeadRecord, reason: string): Prom
     await resend.emails.send({
       from,
       to: [to],
+      bcc: monitorBcc(),
       subject: `[ALERT] Lead-log write failed, ${record.type} from ${record.name ?? record.email ?? "(unknown)"}`,
       text:
         `The Sheet write FAILED. The customer's flow still completed, they got their confirmation, but the dashboard will NOT show this lead unless you add it manually.\n\n` +

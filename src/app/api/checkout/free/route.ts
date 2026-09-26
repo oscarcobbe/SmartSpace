@@ -6,7 +6,7 @@ import { createBookingEvent } from "@/lib/calendly";
 import { logLead, type AttributionRecord } from "@/lib/leads";
 import { fireServerConversion } from "@/lib/server-conversions";
 import { sendToCrm } from "@/lib/crm";
-import { alertTo } from "@/lib/business-constants";
+import { alertTo, monitorBcc } from "@/lib/business-constants";
 
 // POST routes are inherently dynamic but explicit is better, without
 // this, Next.js may try static optimization on a future major.
@@ -164,6 +164,7 @@ export async function POST(request: Request) {
         await resend.emails.send({
           from,
           to: [notifyTo],
+          bcc: monitorBcc(),
           replyTo: customerEmail,
           subject: `New Free Consultation Booking, ${customerName}`,
           text: [

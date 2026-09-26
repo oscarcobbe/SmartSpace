@@ -8,7 +8,7 @@ import { sendToCrm } from "@/lib/crm";
 import { sendSms } from "@/lib/sms";
 import { formatEuro } from "@/lib/format";
 import { sendSiteAlert } from "@/lib/site-alerts";
-import { alertTo } from "@/lib/business-constants";
+import { alertTo, monitorBcc } from "@/lib/business-constants";
 
 // EXPLICIT runtime + dynamic flags. The webhook calls req.text() to get
 // the raw body for Stripe signature verification (which uses Node's
@@ -95,6 +95,7 @@ async function sendOrderNotification(params: {
     await resend.emails.send({
       from,
       to: [to],
+      bcc: monitorBcc(),
       replyTo: params.email,
       subject: `New Paid Order, ${params.customerName}, ${formattedAmount}`,
       text: [
@@ -413,6 +414,7 @@ async function sendPurchaseAttemptAlert(params: {
     await resend.emails.send({
       from,
       to: [to],
+      bcc: monitorBcc(),
       replyTo: params.email || undefined,
       subject,
       text: [

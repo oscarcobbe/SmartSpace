@@ -25,7 +25,7 @@
  */
 
 import { Resend } from "resend";
-import { alertTo } from "@/lib/business-constants";
+import { alertTo, monitorBcc } from "@/lib/business-constants";
 
 const DEDUPE_WINDOW_MS = 60 * 60 * 1000; // 1h
 const MAX_ALERTS_PER_WINDOW = 10;
@@ -167,6 +167,7 @@ export async function sendSiteAlert(params: SiteAlertParams): Promise<SendSiteAl
     await resend.emails.send({
       from,
       to: [to],
+      bcc: monitorBcc(),
       subject,
       text,
       html,

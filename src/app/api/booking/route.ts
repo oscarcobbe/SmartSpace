@@ -6,7 +6,7 @@ import { logLead, type AttributionRecord } from "@/lib/leads";
 import { fireServerConversion } from "@/lib/server-conversions";
 import { sendToCrm } from "@/lib/crm";
 import { sendSiteAlert } from "@/lib/site-alerts";
-import { alertTo } from "@/lib/business-constants";
+import { alertTo, monitorBcc } from "@/lib/business-constants";
 
 
 // POST routes are inherently dynamic but explicit is better, without
@@ -199,6 +199,7 @@ export async function POST(request: Request) {
         await resend.emails.send({
           from,
           to: [to],
+          bcc: monitorBcc(),
           replyTo: email.trim(),
           subject: `New Site Visit Booking, ${name.trim()}, ${dateLabel}`,
           text: [
