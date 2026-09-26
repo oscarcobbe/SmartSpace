@@ -44,8 +44,13 @@ export function middleware(request: Request) {
        served 'unsafe-inline' and 'unsafe-eval' for measurement it does not do.
        Next's own runtime still needs inline, but eval and every ad host come
        off the pages that hold the customer list. */
+    /* Except under next dev, whose client bundle is built with eval source
+       maps: without 'unsafe-eval' there, React never hydrates on /crm, every
+       button is painted and dead, and the CRM cannot be exercised locally at
+       all. Production bundles use no eval, so production keeps the strict
+       policy. */
     isCrm
-      ? "script-src 'self' 'unsafe-inline'"
+      ? `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`
       : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.gstatic.com https://js.stripe.com https://assets.calendly.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://assets.calendly.com",
     "font-src 'self' https://fonts.gstatic.com data:",
