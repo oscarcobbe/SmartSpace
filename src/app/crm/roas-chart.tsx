@@ -143,7 +143,7 @@ export default function RoasChart({
               )}
 
               {/* The one number. Written, not plotted on a second axis. */}
-              {r !== null && (
+              {measured && r !== null && (
                 <text x={cx(i)} y={top - 8} textAnchor="middle" fontSize="12" fontWeight="700"
                   fill={r >= 1 ? "#0f766e" : "#b45309"} pointerEvents="none">
                   {fmtRatio(m)}
@@ -161,12 +161,16 @@ export default function RoasChart({
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 pb-2 text-xs text-slate-600">
         <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-amber-600" />Spent on ads</span>
-        <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-teal-600" />Traced to an ad</span>
-        <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: GREY }} />Probably from ads, estimated</span>
+        {measured && (
+          <>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-teal-600" />Traced to an ad</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: GREY }} />Probably from ads, estimated</span>
+          </>
+        )}
       </div>
 
       <div className="min-h-[4.5rem] border-t border-slate-100 px-4 py-3 text-sm">
-        {shown ? (
+        {shown && measured ? (
           <div>
             <p className="font-semibold text-slate-900">
               {shown.label}

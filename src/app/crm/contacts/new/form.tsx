@@ -37,7 +37,7 @@ function Field({ name, label, type = "text", placeholder, required, autoFocus }:
         /* inputMode so a phone keyboard opens on the number, which is where
            this form is most likely to be filled in: in a van, one handed. */
         inputMode={type === "tel" ? "tel" : type === "email" ? "email" : undefined}
-        className="min-h-[44px] w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
+        className="min-h-[44px] w-full rounded-lg border border-slate-300 px-3 text-base outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 sm:text-sm"
       />
     </div>
   );
@@ -79,7 +79,7 @@ export default function NewCustomerForm() {
           <div>
             <label htmlFor="source" className="mb-1.5 block text-sm font-medium text-slate-700">How they got in touch</label>
             <select id="source" name="source" defaultValue="phone"
-              className="min-h-[44px] w-full rounded-lg border border-slate-300 bg-white px-3 text-sm">
+              className="min-h-[44px] w-full rounded-lg border border-slate-300 bg-white px-3 text-base sm:text-sm">
               <option value="phone">Rang in</option>
               <option value="voicemail">Left a voicemail</option>
               <option value="in_person">Met on an installation</option>
@@ -95,7 +95,7 @@ export default function NewCustomerForm() {
           <div>
             <label htmlFor="found_us" className="mb-1.5 block text-sm font-medium text-slate-700">How they found us</label>
             <select id="found_us" name="found_us" defaultValue="unknown"
-              className="min-h-[44px] w-full rounded-lg border border-slate-300 bg-white px-3 text-sm">
+              className="min-h-[44px] w-full rounded-lg border border-slate-300 bg-white px-3 text-base sm:text-sm">
               <option value="unknown">Did not say</option>
               <option value="google_ads">A Google ad</option>
               <option value="google_search">Searched on Google, not an ad</option>
@@ -109,7 +109,7 @@ export default function NewCustomerForm() {
           <div>
             <label htmlFor="outcome" className="mb-1.5 block text-sm font-medium text-slate-700">Where it stands</label>
             <select id="outcome" name="outcome" defaultValue="contacted"
-              className="min-h-[44px] w-full rounded-lg border border-slate-300 bg-white px-3 text-sm">
+              className="min-h-[44px] w-full rounded-lg border border-slate-300 bg-white px-3 text-base sm:text-sm">
               <option value="contacted">Spoken to, waiting to hear back</option>
               <option value="quoted">Quoted</option>
               <option value="booked">Booked in</option>
@@ -122,7 +122,7 @@ export default function NewCustomerForm() {
             <textarea
               id="wanted" name="wanted" rows={4}
               placeholder="Wants a doorbell fitted, has the box already, no existing chime."
-              className="w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
+              className="w-full rounded-lg border border-slate-300 p-2.5 text-base outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 sm:text-sm"
             />
           </div>
         </div>

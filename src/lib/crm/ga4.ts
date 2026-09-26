@@ -31,7 +31,13 @@ async function accessToken(): Promise<string> {
   const raw = process.env.GA_SERVICE_ACCOUNT_JSON;
   if (!raw) throw new Error("GA_SERVICE_ACCOUNT_JSON is not set on this deployment.");
 
-  const sa = JSON.parse(Buffer.from(raw.trim(), "base64").toString("utf8"));
+  let sa: { client_email?: string; private_key?: string };
+  try {
+    sa = JSON.parse(Buffer.from(raw.trim(), "base64").toString("utf8"));
+  } catch {
+    throw new Error("GA_SERVICE_ACCOUNT_JSON on this deployment is not a base64 service account key, so Google Analytics cannot be asked.");
+  }
+  if (!sa.client_email || !sa.private_key) throw new Error("GA_SERVICE_ACCOUNT_JSON on this deployment is missing its email or key.");
   const now = Math.floor(Date.now() / 1000);
   const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString("base64url");
   const unsigned =

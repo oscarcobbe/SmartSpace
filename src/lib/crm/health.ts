@@ -14,7 +14,7 @@
  * why not. It never returns a customer's name, email or phone: a count at
  * most, which is what tells "answered" apart from "answered with nothing".
  */
-import { crm, crmConfigured, WRONG_KEY, type Site } from "./db";
+import { crm, crmConfigured, unlessWrongKey, WRONG_KEY, type Site } from "./db";
 import { readLeadsLive } from "./leads";
 import { search, ADS_ACCOUNT } from "./google-ads";
 import { probeGa4 } from "./ga4";
@@ -80,9 +80,9 @@ async function database(site: Site) {
  * It records its own failures, so the latest run says whether it worked.
  */
 async function nightly(site: Site) {
-  const [last] = (await crm<{ ran_at: string; ok: boolean; detail: string | null; days_written: number }[]>(
+  const [last] = await unlessWrongKey(await crm<{ ran_at: string; ok: boolean; detail: string | null; days_written: number }[]>(
     `crm_ads_snapshot_runs?site=eq.${site}&select=ran_at,ok,detail,days_written&order=ran_at.desc&limit=1`,
-  )) ?? [];
+  ));
   if (!last) throw new Error("The nightly record has never run for this business.");
   const hours = (Date.now() - Date.parse(last.ran_at)) / 3_600_000;
   if (!last.ok) throw new Error(`The last nightly run, ${Math.round(hours)} hours ago, failed: ${last.detail ?? "no reason recorded"}`);
@@ -109,7 +109,10 @@ async function stripe() {
     cache: "no-store",
     signal: AbortSignal.timeout(15_000),
   });
-  if (!res.ok) throw new Error(`Stripe answered ${res.status}: ${(await res.text()).slice(0, 160)}`);
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
+    throw new Error(`Stripe answered ${res.status}${res.status === 401 ? ", refusing STRIPE_SECRET_KEY" : ""}: ${body?.error?.message ?? "no reason given"}`);
+  }
 }
 
 async function googleAds(site: Site) {

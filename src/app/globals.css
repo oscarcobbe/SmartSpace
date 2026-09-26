@@ -376,12 +376,12 @@ p {
     outline-offset: 2px;
     border-radius: 8px;
   }
-  /* Fields had a ring on text inputs and nothing at all on the selects, so a
-     keyboard user moving through "Move to" and "Found us" could not see where
-     they were. One rule for every field. */
+  /* Text fields carry their own brand ring. Selects and date fields had no
+     focus indicator at all, so a keyboard user moving through "Where it
+     stands" and "How they found us" could not see where they were. */
   .crm-root select:focus-visible,
-  .crm-root input:focus-visible,
-  .crm-root textarea:focus-visible {
+  .crm-root input[type="date"]:focus-visible,
+  .crm-root input[type="checkbox"]:focus-visible {
     outline: 2px solid #0f172a;
     outline-offset: 1px;
   }

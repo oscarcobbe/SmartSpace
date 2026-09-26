@@ -79,7 +79,12 @@ export async function crm<T = unknown>(
     signal: init.signal ?? AbortSignal.timeout(10_000),
   });
   if (!res.ok) {
-    throw new Error(`CRM ${init.method ?? "GET"} ${path}: ${res.status} ${(await res.text()).slice(0, 200)}`);
+    /* PostgREST explains itself in JSON; keep its sentence and the table, and
+       leave the query string out of anything a person reads. */
+    const text = await res.text();
+    let why = text.slice(0, 200);
+    try { why = (JSON.parse(text) as { message?: string }).message ?? why; } catch { /* not JSON */ }
+    throw new Error(`the database answered ${res.status} for ${path.split("?")[0]}: ${why}`);
   }
   if (res.status === 204) return null;
   const text = await res.text();
@@ -103,7 +108,7 @@ export async function crm<T = unknown>(
  * five minutes, so a full page costs nothing extra.
  */
 export const WRONG_KEY =
-  "The database answered with nothing at all, which is what it does when this deployment's SMARTCRM_KEY is wrong. The records are not gone; they cannot be read.";
+  "The database refused this deployment's key (SMARTCRM_KEY), so nothing could be read. The records are not lost";
 
 let keyCheck: { at: number; ok: boolean } | null = null;
 

@@ -13,7 +13,7 @@
  * email first and phone second, the same rule upsertContact uses, so a customer
  * who paid with one address and rang from another stays one person.
  */
-import { fetchLeads, euros, type Lead } from "./leads";
+import { fetchLeads, euros, staleFeed, type Lead } from "./leads";
 import { listContacts, type Contact, type LeadRow } from "./contacts";
 import type { Site } from "./db";
 
@@ -88,7 +88,7 @@ export async function listPeople(site: Site): Promise<PeopleResult> {
   const [feedResult, dbResult] = await Promise.all([
     fetchLeads(site).catch((e) => ({ ok: false as const, reason: String(e) })),
     listContacts(site).catch((e) => {
-      dbReason = e instanceof Error ? e.message.slice(0, 120) : String(e);
+      dbReason = e instanceof Error ? e.message.slice(0, 240) : String(e);
       return null;
     }),
   ]);
@@ -108,6 +108,8 @@ export async function listPeople(site: Site): Promise<PeopleResult> {
   };
 
   if (feedResult.ok) {
+    const stale = staleFeed(feedResult.data);
+    if (stale) problems.push(stale);
     /* Oldest first, so the earliest row seeds the person and later rows only
        fill gaps. Taking the newest first meant a bare phone enquiry could
        overwrite the address a paid order had already supplied. */
@@ -136,7 +138,9 @@ export async function listPeople(site: Site): Promise<PeopleResult> {
       index(person);
     }
   } else {
-    problems.push(`The orders feed could not be read, so orders, payments and anyone known only from them are missing. ${feedResult.reason}`);
+    problems.push(site === "smartcareliving"
+      ? `Enquiries, and anyone known only from them, are missing. ${feedResult.reason}`
+      : `Orders, payments and anyone known only from them are missing. ${feedResult.reason}`);
   }
 
   if (dbResult) {

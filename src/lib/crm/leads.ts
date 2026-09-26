@@ -158,6 +158,28 @@ async function fetchSmartSpaceLeads(): Promise<LeadsResult> {
 }
 
 /**
+ * A sentence when what is on screen is an old read, or null.
+ *
+ * The feed sits behind a cache that serves the last good answer while it asks
+ * again in the background. That is what makes the pages quick, and it also
+ * means a feed that has stopped answering keeps showing its last good answer
+ * with nothing on screen to say how old it is. Past ten minutes the page says
+ * when the figures were read. If the feed is fine the next load is fresh and
+ * the sentence goes; if it is broken, the time stops moving and says so.
+ */
+export function staleFeed(data: LeadsPayload, now = Date.now()): string | null {
+  const at = Date.parse(data.generated);
+  if (!Number.isFinite(at)) return null;
+  const mins = Math.round((now - at) / 60_000);
+  if (mins < 10) return null;
+  const when = new Intl.DateTimeFormat("en-IE", {
+    timeZone: "Europe/Dublin", weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hour12: false,
+  }).format(new Date(at));
+  const ago = mins < 90 ? `${mins} minutes ago` : mins < 36 * 60 ? `${Math.round(mins / 60)} hours ago` : `${Math.round(mins / 1440)} days ago`;
+  return `These are as read at ${when}, ${ago}. A fresh read has been asked for; Refresh in a minute shows it. If this time does not move, the feed is not answering.`;
+}
+
+/**
  * Sources the feed says it could not read, in one sentence, or null.
  *
  * /api/admin/leads carries on when one of Stripe, Calendly or the sheet fails

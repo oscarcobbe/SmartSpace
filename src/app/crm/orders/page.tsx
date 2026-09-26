@@ -1,5 +1,5 @@
 import { requireSession } from "@/lib/crm/session";
-import { fetchLeads, euros, money } from "@/lib/crm/leads";
+import { fetchLeads, euros, money, staleFeed } from "@/lib/crm/leads";
 import { PageHeader, Stat, StatRow, Note } from "../ui";
 import OrdersTable from "./table";
 import { fetchMarks } from "@/lib/crm/order-marks";
@@ -94,6 +94,10 @@ export default async function OrdersPage({
       {/* A source that failed is named rather than hidden. A dashboard that
           quietly drops Calendly and still shows a confident total is how a
           quiet day and a broken integration come to look identical. */}
+      {staleFeed(result.data) && (
+        <div className="mb-4"><Note tone="warn">{staleFeed(result.data)}</Note></div>
+      )}
+
       {marks.problem && (
         <div className="mb-4"><Note tone="warn">{marks.problem}</Note></div>
       )}

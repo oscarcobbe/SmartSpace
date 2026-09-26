@@ -67,7 +67,7 @@ export default async function ContactPage({ params }: { params: { id: string } }
       /* This crashed the whole page. The orders and details above are still
          worth showing; the history and next steps say they were not read
          rather than looking empty. */
-      recordProblem = `The history and next steps could not be read (${err instanceof Error ? err.message.slice(0, 120) : "no answer"}), so they are not shown. Nothing has been lost.`;
+      recordProblem = `The history and next steps could not be read (${err instanceof Error ? err.message.slice(0, 240) : "no answer"}), so they are not shown. Nothing has been lost.`;
     }
   }
 

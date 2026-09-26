@@ -8,7 +8,7 @@
  */
 import Link from "next/link";
 import { AlertCircle, Inbox } from "lucide-react";
-import { fetchLeads, partialFeed, money, moneyExact } from "@/lib/crm/leads";
+import { fetchLeads, partialFeed, staleFeed, money, moneyExact } from "@/lib/crm/leads";
 import { displayName } from "@/lib/crm/diary";
 import { plainText, shortDay, slotText } from "@/lib/crm/display";
 import { fetchFinance } from "@/lib/crm/stripe-finance";
@@ -65,7 +65,7 @@ export async function NeedsYou({ site }: { site: Site }) {
       } catch (err) {
         /* This used to be caught and dropped, so a database hiccup made the
            red "overdue" strip vanish and read as "nothing is late". */
-        return { problem: `Overdue next steps could not be read (${err instanceof Error ? err.message.slice(0, 90) : "no answer"}).` };
+        return { problem: `Overdue next steps could not be read (${err instanceof Error ? err.message.slice(0, 240) : "no answer"}).` };
       }
     })(),
   ]);
@@ -82,7 +82,7 @@ export async function NeedsYou({ site }: { site: Site }) {
 
   const late = "rows" in overdue ? overdue.rows : [];
   const notes = [
-    diary.problem ? `The orders feed could not be read, so bookings are missing here. ${diary.problem}` : null,
+    diary.problem ? `Bookings are missing here. ${diary.problem}` : null,
     ...diary.warnings,
     "problem" in overdue ? overdue.problem : null,
   ].filter((n): n is string => Boolean(n));
@@ -90,7 +90,7 @@ export async function NeedsYou({ site }: { site: Site }) {
   return (
     <Panel title="Diary" aside={<PanelLink href="/crm/week">Full week</PanelLink>}>
       {notes.length > 0 && (
-        <div className="space-y-2 px-4 pt-4">
+        <div className={`space-y-2 px-4 pt-4 ${diary.problem ? "pb-4" : ""}`}>
           {notes.map((n) => <Note key={n} tone="warn">{n}</Note>)}
         </div>
       )}
@@ -138,10 +138,12 @@ export async function LatestIn({ site }: { site: Site }) {
     );
   }
   const rows = feed.data.leads.slice(0, 6);
-  const partial = partialFeed(feed.data);
+  const notes = [staleFeed(feed.data), partialFeed(feed.data)].filter((n): n is string => Boolean(n));
   return (
     <Panel title={title} aside={all}>
-      {partial && <div className="px-4 pt-4"><Note tone="warn">{partial}</Note></div>}
+      {notes.length > 0 && (
+        <div className="space-y-2 px-4 pt-4">{notes.map((n) => <Note key={n} tone="warn">{n}</Note>)}</div>
+      )}
       {rows.length === 0 ? (
         <Empty title="Nothing has come in yet" />
       ) : (
@@ -302,7 +304,7 @@ export async function RecentActivity({ site }: { site: Site }) {
     return (
       <Panel title="Recently">
         <div className="px-4 py-4">
-          <Note tone="warn">The history could not be read ({err instanceof Error ? err.message.slice(0, 90) : "no answer"}).</Note>
+          <Note tone="warn">The history could not be read ({err instanceof Error ? err.message.slice(0, 240) : "no answer"}).</Note>
         </div>
       </Panel>
     );

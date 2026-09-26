@@ -55,7 +55,7 @@ export async function fetchBank(site: Site, months = 12): Promise<BankResult> {
         `&order=happened_on.desc&limit=2000`,
     ));
   } catch (err) {
-    return { problem: `The imported bank statements could not be read (${err instanceof Error ? err.message.slice(0, 120) : "no answer"}).` };
+    return { problem: `The imported bank statements could not be read (${err instanceof Error ? err.message.slice(0, 240) : "no answer"}).` };
   }
 
   if (!rows || rows.length === 0) return null;

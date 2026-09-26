@@ -44,7 +44,7 @@ export async function fetchScans(site: Site, days = 90): Promise<ScanSummary | n
         `&select=id,code,placement,device,scanned_at&order=scanned_at.desc&limit=2000`,
     );
   } catch (err) {
-    return { problem: `Scans of the printed codes could not be read (${err instanceof Error ? err.message.slice(0, 100) : "no answer"}).` };
+    return { problem: `Scans of the printed codes could not be read (${err instanceof Error ? err.message.slice(0, 240) : "no answer"}).` };
   }
   if (!rows) return null;
 

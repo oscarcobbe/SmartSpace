@@ -6,7 +6,7 @@
  * arriving somewhere at a time, those are different questions and the second
  * one is the one asked every morning.
  */
-import { fetchLeads, partialFeed, type Lead } from "./leads";
+import { fetchLeads, partialFeed, staleFeed, type Lead } from "./leads";
 import { bookingIso } from "./booking-date";
 import { fetchMarks, orderKey } from "./order-marks";
 import type { Site } from "./db";
@@ -164,6 +164,6 @@ export async function fetchWeek(site: Site, daysAhead = 14): Promise<Week> {
     overdue: overdue.slice(0, 20),
     booked: days.reduce((n, d) => n + d.jobs.length, 0),
     problem: null,
-    warnings: [partialFeed(feed.data), marks.problem ?? null].filter((w): w is string => Boolean(w)),
+    warnings: [staleFeed(feed.data), partialFeed(feed.data), marks.problem ?? null].filter((w): w is string => Boolean(w)),
   };
 }

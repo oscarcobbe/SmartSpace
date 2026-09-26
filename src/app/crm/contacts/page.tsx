@@ -45,7 +45,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: { q
           name="q"
           type="search"
           defaultValue={q}
-          placeholder="Name, email, phone, Eircode"
+          placeholder="Search customers"
           className="min-h-[44px] w-full min-w-0 rounded-lg border border-slate-300 pl-8 pr-3 text-base outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200 sm:min-h-[36px] sm:w-64 sm:text-sm"
         />
       </div>

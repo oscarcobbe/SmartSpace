@@ -214,7 +214,15 @@ export async function fetchSclLeads(): Promise<LeadsResult> {
       return { ok: false, reason: "SmartCare Living's enquiry sheet answered with a web page instead of its data, which means the Apps Script behind it has an error." };
     }
     const body = (await res.json()) as { rows?: SheetRow[]; error?: string };
-    if (body.error) return { ok: false, reason: `SmartCare Living's enquiry sheet said: ${String(body.error).slice(0, 160)}` };
+    if (body.error) {
+      /* The Apps Script answers a wrong token with a 200 and {error:"Unauthorized"}. */
+      return {
+        ok: false,
+        reason: /unauth/i.test(String(body.error))
+          ? `SmartCare Living's enquiry sheet refused the token this deployment holds (${req.via === "sheet" ? "SCL_SHEETS_TOKEN" : "on smartcareliving.ie"}), so the enquiries cannot be read.`
+          : `SmartCare Living's enquiry sheet said: ${String(body.error).slice(0, 160)}`,
+      };
+    }
     if (!Array.isArray(body.rows)) return { ok: false, reason: "SmartCare Living's enquiry sheet answered without any rows in it." };
 
     /* Newest first, the order Orders and the overview both assume. The sheet

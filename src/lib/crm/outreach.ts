@@ -68,7 +68,7 @@ export async function fetchOutreach(site: Site): Promise<OutreachData | null> {
       if (what === "The prospect list" && Array.isArray(rows)) await unlessWrongKey(rows as unknown[]);
       return rows;
     } catch (err) {
-      problems.push(`${what} could not be read (${err instanceof Error ? err.message.slice(0, 100) : "no answer"}).`);
+      problems.push(`${what} could not be read (${err instanceof Error ? err.message.slice(0, 240) : "no answer"}).`);
       return null;
     }
   };

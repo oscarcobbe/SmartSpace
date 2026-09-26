@@ -64,7 +64,7 @@ export async function fetchMarks(site: Site): Promise<Marks> {
     ));
     for (const r of rows ?? []) out.set(r.order_ref, r);
   } catch (err) {
-    out.problem = `Which orders were marked cancelled or done could not be read (${err instanceof Error ? err.message.slice(0, 100) : "no answer"}), so a cancelled booking may still show here.`;
+    out.problem = `Which orders were marked cancelled or done could not be read (${err instanceof Error ? err.message.slice(0, 240) : "no answer"}), so a cancelled booking may still show here.`;
   }
   return out;
 }

@@ -77,7 +77,7 @@ export default async function TasksPage() {
       <>
         <PageHeader title="Next steps" />
         <Note tone="warn">
-          Next steps could not be read, so none are shown. ({err instanceof Error ? err.message.slice(0, 140) : "no answer"})
+          Next steps could not be read, so none are shown. ({err instanceof Error ? err.message.slice(0, 240) : "no answer"})
         </Note>
       </>
     );
@@ -85,7 +85,7 @@ export default async function TasksPage() {
   try {
     owners = await ownersOf(site, rows);
   } catch (err) {
-    ownersProblem = `Who each step is for could not be read (${err instanceof Error ? err.message.slice(0, 100) : "no answer"}).`;
+    ownersProblem = `Who each step is for could not be read (${err instanceof Error ? err.message.slice(0, 240) : "no answer"}).`;
   }
 
   const today = todayDublin();

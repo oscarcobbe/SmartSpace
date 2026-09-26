@@ -194,7 +194,11 @@ export function StatRow({ children }: { children: ReactNode }) {
     /* Deliberately not overflow-hidden. The glossary panel opens below its
        figure and is taller than the row, so clipping the row cut the
        explanation off mid-sentence. */
-    <div className="mb-6 grid grid-cols-2 divide-x divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white sm:grid-cols-3 sm:divide-y-0 lg:grid-cols-5 [&>*:last-child]:col-span-2 lg:[&>*:last-child]:col-span-1">
+    /* divide-x and divide-y are written for one row. In two columns they drew
+       a left border on the first tile of every row and a top border on the
+       second tile of the first, so the row showed stray double lines on a
+       phone. The first tile of each row loses its left border at each width. */
+    <div className="mb-6 grid grid-cols-2 divide-x divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgb(15_23_42/0.04)] max-sm:[&>*:nth-child(odd)]:border-l-0 max-sm:[&>*:nth-child(2)]:border-t-0 sm:grid-cols-3 sm:divide-y-0 sm:max-lg:[&>*:nth-child(3n+1)]:border-l-0 sm:max-lg:[&>*:nth-child(n+4)]:border-t lg:grid-cols-5 [&>*:last-child]:col-span-2 lg:[&>*:last-child]:col-span-1">
       {children}
     </div>
   );
@@ -273,7 +277,7 @@ export function LoadingPage({ title, rows = 6, slow }: { title: string; rows?: n
     <div role="status" aria-busy="true" aria-label={`Loading ${title.toLowerCase()}`}>
       <PageHeader title={title} />
       {slow && <SlowNote>{slow}</SlowNote>}
-      <div className="mb-6 grid grid-cols-2 divide-x divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white sm:grid-cols-3 sm:divide-y-0 lg:grid-cols-5">
+      <div className="mb-6 grid grid-cols-2 divide-x divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white max-sm:[&>*:nth-child(odd)]:border-l-0 max-sm:[&>*:nth-child(2)]:border-t-0 sm:grid-cols-3 sm:divide-y-0 sm:max-lg:[&>*:nth-child(3n+1)]:border-l-0 sm:max-lg:[&>*:nth-child(n+4)]:border-t lg:grid-cols-5 [&>*:last-child]:col-span-2 lg:[&>*:last-child]:col-span-1">
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="px-4 py-3.5">
             <Skeleton className="h-3 w-20" />

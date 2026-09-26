@@ -101,7 +101,11 @@ async function stripe<T>(path: string): Promise<T> {
     cache: "no-store",
     signal: AbortSignal.timeout(15_000),
   });
-  if (!res.ok) throw new Error(`Stripe ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  if (!res.ok) {
+    /* Stripe's error body is JSON; the page shows its sentence, not the braces. */
+    const body = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
+    throw new Error(`Stripe answered ${res.status}${res.status === 401 ? ", refusing STRIPE_SECRET_KEY" : ""}: ${body?.error?.message ?? "no reason given"}`);
+  }
   return res.json() as Promise<T>;
 }
 
@@ -322,7 +326,7 @@ async function readFinance(monthsBack: number, site: Site): Promise<FinanceResul
       /* Balance and payouts are extra detail. The months are the page, and
          losing the bank-side figures must not blank the chart, but it must
          not read as zero either. */
-      balanceProblem = `Stripe's balance could not be read (${err instanceof Error ? err.message.slice(0, 120) : "no answer"}).`;
+      balanceProblem = `Stripe's balance could not be read (${err instanceof Error ? err.message.slice(0, 240) : "no answer"}).`;
     }
 
     return {

@@ -218,7 +218,12 @@ export async function readEnquiries(): Promise<{ ok: true; rows: Enquiry[] } | {
       cache: "no-store", redirect: "follow", signal: AbortSignal.timeout(20_000),
     });
     if (!res.ok) return { ok: false, reason: `The enquiry log answered ${res.status}.` };
-    const body = (await res.json()) as { rows?: Record<string, unknown>[] };
+    const body = (await res.json()) as { rows?: Record<string, unknown>[]; error?: string };
+    if (body.error) {
+      return { ok: false, reason: /unauth/i.test(String(body.error))
+        ? "The enquiry log refused GOOGLE_SHEET_READ_TOKEN."
+        : `The enquiry log said: ${String(body.error).slice(0, 120)}` };
+    }
     if (!Array.isArray(body.rows)) return { ok: false, reason: "The enquiry log answered without any rows in it." };
     const s = (v: unknown) => (v === null || v === undefined ? "" : String(v));
     return {
