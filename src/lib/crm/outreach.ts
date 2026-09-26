@@ -7,7 +7,7 @@
  * file with its own approval path, and it will have to check
  * crm_outreach_blocks before every message.
  */
-import { crm, crmConfigured, type Site } from "./db";
+import { crm, crmConfigured, unlessWrongKey, type Site } from "./db";
 
 export type OutreachStatus =
   | "new" | "approved" | "sent" | "replied" | "bounced" | "unsubscribed" | "skip";
@@ -49,6 +49,8 @@ export interface OutreachData {
   approved: number;
   /** Rows with no basis recorded, which are the ones that cannot lawfully be sent. */
   withoutBasis: number;
+  /** Reads that failed. Named, because a failed read used to count as zero. */
+  problems: string[];
 }
 
 const EMPTY_COUNTS: Record<OutreachStatus, number> = {
@@ -58,19 +60,30 @@ const EMPTY_COUNTS: Record<OutreachStatus, number> = {
 export async function fetchOutreach(site: Site): Promise<OutreachData | null> {
   if (!crmConfigured()) return null;
 
+  const problems: string[] = [];
+  const read = async <T,>(what: string, path: string): Promise<T | null> => {
+    try {
+      const rows = await crm<T>(path);
+      /* Only the prospect list is checked: it is the one this page is about. */
+      if (what === "The prospect list" && Array.isArray(rows)) await unlessWrongKey(rows as unknown[]);
+      return rows;
+    } catch (err) {
+      problems.push(`${what} could not be read (${err instanceof Error ? err.message.slice(0, 100) : "no answer"}).`);
+      return null;
+    }
+  };
   const [prospects, sends, blocks] = await Promise.all([
-    crm<Prospect[]>(
+    read<Prospect[]>(
+      "The prospect list",
       `crm_outreach_prospects?site=eq.${site}` +
         `&select=id,business,contact_name,role,email,county,sector,status,basis,source,approved_by,created_at` +
         `&order=created_at.desc&limit=500`,
-    ).catch(() => null),
-    crm<Send[]>(
-      `crm_outreach_sends?site=eq.${site}&select=*&order=queued_at.desc&limit=200`,
-    ).catch(() => null),
+    ),
+    read<Send[]>("The record of what was sent", `crm_outreach_sends?site=eq.${site}&select=*&order=queued_at.desc&limit=200`),
     /* Count only. The suppression list is the one table nobody needs to read
        the contents of from a dashboard, and not rendering it is one fewer
        place a personal email address is displayed. */
-    crm<{ email: string }[]>("crm_outreach_blocks?select=email&limit=5000").catch(() => null),
+    read<{ email: string }[]>("The opt-out list", "crm_outreach_blocks?select=email&limit=5000"),
   ]);
 
   const counts = { ...EMPTY_COUNTS };
@@ -83,6 +96,7 @@ export async function fetchOutreach(site: Site): Promise<OutreachData | null> {
     counts,
     approved: counts.approved,
     withoutBasis: (prospects ?? []).filter((p) => !p.basis?.trim()).length,
+    problems,
   };
 }
 

@@ -8,7 +8,7 @@
  * because adding them to the Stripe figures would double count every card
  * payment on the day it settles into the bank.
  */
-import { crm, crmConfigured, type Site } from "./db";
+import { crm, crmConfigured, unlessWrongKey, type Site } from "./db";
 
 export interface BankRow {
   id: string;
@@ -32,19 +32,31 @@ export interface BankSummary {
   count: number;
 }
 
-/** Null when nothing has ever been imported, which the page renders as an offer. */
-export async function fetchBank(site: Site, months = 12): Promise<BankSummary | null> {
-  if (!crmConfigured()) return null;
+/**
+ * Null when nothing has ever been imported, which the page renders as an offer.
+ * A read that failed is a different answer and says so: it used to come back
+ * as null too, so a database hiccup told Nigel he had never imported a
+ * statement and offered to import one.
+ */
+export type BankResult = BankSummary | null | { problem: string };
+
+export async function fetchBank(site: Site, months = 12): Promise<BankResult> {
+  if (!crmConfigured()) return { problem: "The database is not connected on this deployment, so imported statements cannot be read." };
 
   const since = new Date();
   since.setUTCMonth(since.getUTCMonth() - months);
   const from = since.toISOString().slice(0, 10);
 
-  const rows = await crm<BankRow[]>(
-    `crm_bank_lines?site=eq.${site}&happened_on=gte.${from}` +
-      `&select=id,happened_on,description,counterparty,amount_cents,fee_cents,balance_cents,kind` +
-      `&order=happened_on.desc&limit=2000`,
-  ).catch(() => null);
+  let rows: BankRow[] | null;
+  try {
+    rows = await unlessWrongKey(await crm<BankRow[]>(
+      `crm_bank_lines?site=eq.${site}&happened_on=gte.${from}` +
+        `&select=id,happened_on,description,counterparty,amount_cents,fee_cents,balance_cents,kind` +
+        `&order=happened_on.desc&limit=2000`,
+    ));
+  } catch (err) {
+    return { problem: `The imported bank statements could not be read (${err instanceof Error ? err.message.slice(0, 120) : "no answer"}).` };
+  }
 
   if (!rows || rows.length === 0) return null;
 

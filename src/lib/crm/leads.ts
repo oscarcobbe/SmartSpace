@@ -12,6 +12,7 @@
  * the whole reason this is a server component and not a fetch from the page.
  */
 
+import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { THIS_SITE, type Site } from "./db";
 
@@ -97,13 +98,21 @@ export const LEADS_TAG = "crm-leads";
  * So the cache is given something to throw on. Nothing is stored, and the
  * very next request tries again instead of being told the stale bad news.
  */
-export async function fetchLeads(site: Site = THIS_SITE): Promise<LeadsResult> {
+/*
+ * One read per page, however many panels ask.
+ *
+ * The overview's Diary and Latest in both call this, and so does every page
+ * whose panels stream separately. On a cold cache each of them went out to
+ * the feed on its own: two reads of Stripe, Calendly and the sheet for one
+ * page, and on SmartCare Living two cold starts of an Apps Script that takes a
+ * minute to wake. React's cache() shares the one promise for the length of a
+ * render.
+ */
+export const fetchLeads = cache(async (site: Site = THIS_SITE): Promise<LeadsResult> => {
   try {
     return await unstable_cache(
       async () => {
-        const r = site === "smartcareliving"
-          ? await (await import("./leads-scl")).fetchSclLeads()
-          : await fetchSmartSpaceLeads();
+        const r = await readLeadsLive(site);
         if (!r.ok) throw new Error(r.reason);
         return r;
       },
@@ -113,11 +122,18 @@ export async function fetchLeads(site: Site = THIS_SITE): Promise<LeadsResult> {
   } catch (err) {
     return { ok: false, reason: err instanceof Error ? err.message : "The orders feed could not be read." };
   }
+});
+
+/** The feed, uncached. For the health check, which must never report a cached answer as a live one. */
+export async function readLeadsLive(site: Site): Promise<LeadsResult> {
+  return site === "smartcareliving"
+    ? (await import("./leads-scl")).fetchSclLeads()
+    : fetchSmartSpaceLeads();
 }
 
 async function fetchSmartSpaceLeads(): Promise<LeadsResult> {
   const key = process.env.ADMIN_KEY?.trim();
-  if (!key) return { ok: false, reason: "ADMIN_KEY is not set on this deployment." };
+  if (!key) return { ok: false, reason: "Smart Space's orders cannot be read: ADMIN_KEY is not set on this deployment." };
 
   try {
     const res = await fetch(`${baseUrl()}/api/admin/leads`, {
@@ -128,11 +144,30 @@ async function fetchSmartSpaceLeads(): Promise<LeadsResult> {
          dependency shows the reader an error instead of a spinner. */
       signal: AbortSignal.timeout(30_000),
     });
-    if (!res.ok) return { ok: false, reason: `The orders feed answered ${res.status}.` };
+    if (res.status === 401) return { ok: false, reason: "The orders feed refused this deployment's ADMIN_KEY, so Smart Space's orders cannot be read." };
+    if (res.status === 429) return { ok: false, reason: "The orders feed is rate limited for a minute. Refresh shortly." };
+    if (!res.ok) return { ok: false, reason: `The orders feed answered ${res.status}, so Smart Space's orders cannot be shown.` };
     return { ok: true, data: (await res.json()) as LeadsPayload };
   } catch (err) {
-    return { ok: false, reason: err instanceof Error ? err.message : "The orders feed could not be reached." };
+    const raw = err instanceof Error ? `${err.name} ${err.message}` : String(err);
+    if (/abort|timeout/i.test(raw)) {
+      return { ok: false, reason: "The orders feed did not answer within thirty seconds. Stripe, Calendly or the enquiry sheet behind it was slow; refresh in a moment." };
+    }
+    return { ok: false, reason: `The orders feed could not be reached (${raw.slice(0, 120)}).` };
   }
+}
+
+/**
+ * Sources the feed says it could not read, in one sentence, or null.
+ *
+ * /api/admin/leads carries on when one of Stripe, Calendly or the sheet fails
+ * and lists the failure in sourceErrors. Orders showed that; the overview did
+ * not, so a missing Calendly made the Diary look like a quiet week.
+ */
+export function partialFeed(data: LeadsPayload): string | null {
+  const errs = data.sourceErrors ?? [];
+  if (!errs.length) return null;
+  return `Part of the feed did not answer, so this list is incomplete: ${errs.map((e) => `${e.source} (${e.message})`).join("; ")}.`;
 }
 
 /** "€139.00" and "139" both become 139. Returns 0 for "-" and for junk. */

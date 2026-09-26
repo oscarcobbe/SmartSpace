@@ -6,7 +6,7 @@
  * from silently returning the row without its children, and a contact page that
  * shows a customer with no history looks exactly like a customer who has none.
  */
-import { crm, type Site } from "./db";
+import { crm, unlessWrongKey, type Site } from "./db";
 
 export type LeadStatus = "new" | "contacted" | "quoted" | "booked" | "installed" | "won" | "lost" | "spam";
 
@@ -86,6 +86,7 @@ export async function listContacts(site: Site, search = ""): Promise<{ contacts:
     `crm_contacts?site=eq.${site}&select=${CONTACT_COLS}${filter}&order=updated_at.desc&limit=300`,
   );
   if (!contacts) return null;
+  if (!term) await unlessWrongKey(contacts);
   const leads =
     (await crm<LeadRow[]>(`crm_leads?site=eq.${site}&select=*&order=created_at.desc&limit=1000`)) ?? [];
   return { contacts, leads };

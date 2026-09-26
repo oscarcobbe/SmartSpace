@@ -204,26 +204,36 @@ const NOT_AN_ENQUIRY = /^(test|booking reminder)$/i;
  * say so, rather than drawing an empty chart.
  */
 export async function fetchEnquiries(): Promise<Enquiry[] | null> {
+  const r = await readEnquiries();
+  return r.ok ? r.rows : null;
+}
+
+/** The same read, saying why when it fails. The health check needs the reason. */
+export async function readEnquiries(): Promise<{ ok: true; rows: Enquiry[] } | { ok: false; reason: string }> {
   const url = process.env.GOOGLE_SHEET_WEBHOOK_URL?.trim();
   const token = process.env.GOOGLE_SHEET_READ_TOKEN?.trim();
-  if (!url || !token) return null;
+  if (!url || !token) return { ok: false, reason: "GOOGLE_SHEET_WEBHOOK_URL or GOOGLE_SHEET_READ_TOKEN is not set on this deployment." };
   try {
     const res = await fetch(`${url}?token=${encodeURIComponent(token)}&type=All&limit=2000`, {
       cache: "no-store", redirect: "follow", signal: AbortSignal.timeout(20_000),
     });
-    if (!res.ok) return null;
+    if (!res.ok) return { ok: false, reason: `The enquiry log answered ${res.status}.` };
     const body = (await res.json()) as { rows?: Record<string, unknown>[] };
-    if (!Array.isArray(body.rows)) return null;
+    if (!Array.isArray(body.rows)) return { ok: false, reason: "The enquiry log answered without any rows in it." };
     const s = (v: unknown) => (v === null || v === undefined ? "" : String(v));
-    return body.rows
-      .filter((r) => !NOT_AN_ENQUIRY.test(s(r.type).trim()))
-      .map((r) => ({
-        at: s(r.date).slice(0, 16),
-        type: s(r.type), name: s(r.name), email: s(r.email), phone: s(r.phone),
-        gclid: s(r.gclid), landingPage: s(r.landingPage), referrer: s(r.referrer),
-        utmSource: s(r.utmSource), utmMedium: s(r.utmMedium), source: s(r.source),
-      }));
-  } catch {
-    return null;
+    return {
+      ok: true,
+      rows: body.rows
+        .filter((r) => !NOT_AN_ENQUIRY.test(s(r.type).trim()))
+        .map((r) => ({
+          at: s(r.date).slice(0, 16),
+          type: s(r.type), name: s(r.name), email: s(r.email), phone: s(r.phone),
+          gclid: s(r.gclid), landingPage: s(r.landingPage), referrer: s(r.referrer),
+          utmSource: s(r.utmSource), utmMedium: s(r.utmMedium), source: s(r.source),
+        })),
+    };
+  } catch (err) {
+    const raw = err instanceof Error ? `${err.name} ${err.message}` : String(err);
+    return { ok: false, reason: /abort|timeout/i.test(raw) ? "The enquiry log did not answer within twenty seconds." : `The enquiry log could not be reached (${raw.slice(0, 120)}).` };
   }
 }

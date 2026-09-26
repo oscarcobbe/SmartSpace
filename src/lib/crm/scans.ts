@@ -32,14 +32,20 @@ const CODE_LABEL: Record<string, string> = {
 
 export const scanLabel = (code: string) => CODE_LABEL[code] ?? code;
 
-export async function fetchScans(site: Site, days = 90): Promise<ScanSummary | null> {
+/** Null when there is nothing to show; a problem when the read failed. */
+export async function fetchScans(site: Site, days = 90): Promise<ScanSummary | null | { problem: string }> {
   if (!crmConfigured()) return null;
 
   const since = new Date(Date.now() - days * 86_400_000).toISOString();
-  const rows = await crm<ScanRow[]>(
-    `crm_scans?site=eq.${site}&scanned_at=gte.${since}` +
-      `&select=id,code,placement,device,scanned_at&order=scanned_at.desc&limit=2000`,
-  ).catch(() => null);
+  let rows: ScanRow[] | null;
+  try {
+    rows = await crm<ScanRow[]>(
+      `crm_scans?site=eq.${site}&scanned_at=gte.${since}` +
+        `&select=id,code,placement,device,scanned_at&order=scanned_at.desc&limit=2000`,
+    );
+  } catch (err) {
+    return { problem: `Scans of the printed codes could not be read (${err instanceof Error ? err.message.slice(0, 100) : "no answer"}).` };
+  }
   if (!rows) return null;
 
   const weekAgo = Date.now() - 7 * 86_400_000;

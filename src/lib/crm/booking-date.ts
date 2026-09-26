@@ -38,7 +38,7 @@ const iso = (y: number, m: number, d: number) =>
  */
 export function bookingIso(raw: string | undefined | null, now: Date = new Date()): string | null {
   const s = String(raw ?? "").trim();
-  if (!s || s === "-" || s === "–") return null;
+  if (!s || s === "-" || s === "\u2013") return null;
 
   let m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
   if (m) return `${m[1]}-${m[2]}-${m[3]}`;

@@ -50,6 +50,14 @@ export interface FinanceData {
   available: number;
   pending: number;
   lastPayout: { amount: number; arrival: string; status: string } | null;
+  /**
+   * Why the balance and payout could not be read, or null when they were.
+   *
+   * They are read separately from the months and used to fail silently to
+   * zero, so the overview said "Next payout €0.00" whenever Stripe's balance
+   * call was slow: a confident, wrong figure about money.
+   */
+  balanceProblem: string | null;
 }
 
 export type FinanceResult = { ok: true; data: FinanceData } | { ok: false; reason: string };
@@ -294,6 +302,7 @@ async function readFinance(monthsBack: number, site: Site): Promise<FinanceResul
 
     let available = 0, pending = 0;
     let lastPayout: FinanceData["lastPayout"] = null;
+    let balanceProblem: string | null = null;
     try {
       const bal = await stripe<{ available?: BalanceBucket[]; pending?: BalanceBucket[] }>("balance");
       const eur = (arr: BalanceBucket[] | undefined) =>
@@ -309,9 +318,11 @@ async function readFinance(monthsBack: number, site: Site): Promise<FinanceResul
           status: p.status,
         };
       }
-    } catch {
+    } catch (err) {
       /* Balance and payouts are extra detail. The months are the page, and
-         losing the bank-side figures must not blank the chart. */
+         losing the bank-side figures must not blank the chart, but it must
+         not read as zero either. */
+      balanceProblem = `Stripe's balance could not be read (${err instanceof Error ? err.message.slice(0, 120) : "no answer"}).`;
     }
 
     return {
@@ -327,6 +338,7 @@ async function readFinance(monthsBack: number, site: Site): Promise<FinanceResul
         available,
         pending,
         lastPayout,
+        balanceProblem,
       },
     };
   } catch (err) {

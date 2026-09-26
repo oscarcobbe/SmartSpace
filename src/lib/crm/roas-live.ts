@@ -123,7 +123,9 @@ interface Session {
  */
 async function payments(sinceUnix: number): Promise<{ list: Payment[]; trailRead: boolean }> {
   const key = process.env.STRIPE_SECRET_KEY?.trim();
-  if (!key) return { list: [], trailRead: true };
+  /* Without the key there is no money to draw, and an empty list here drew
+     every month as "nothing came back". Saying so is the honest answer. */
+  if (!key) throw new Error("STRIPE_SECRET_KEY is not set on this deployment, so what came back cannot be read.");
   const headers = { Authorization: `Bearer ${key}` };
 
   const [enquiries, sessionList] = await Promise.all([

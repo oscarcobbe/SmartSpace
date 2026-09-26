@@ -8,7 +8,7 @@
  * could not be read as a plan for the week.
  */
 import { bookingIso } from "./booking-date";
-import { fetchLeads, type Lead } from "./leads";
+import { fetchLeads, partialFeed, type Lead } from "./leads";
 import { fetchMarks, orderKey } from "./order-marks";
 import type { Site } from "./db";
 
@@ -106,7 +106,10 @@ export interface DiaryRow {
 export interface Diary {
   upcoming: DiaryRow[];
   justBooked: DiaryRow[];
+  /** The feed could not be read at all. */
   problem: string | null;
+  /** It was read, but something the diary depends on was missing. */
+  warnings: string[];
 }
 
 const label = (on: string) =>
@@ -157,7 +160,8 @@ function collapse(rows: DiaryRow[]): DiaryRow[] {
 
 export async function fetchDiary(site: Site, limit = 6): Promise<Diary> {
   const [feed, marks] = await Promise.all([fetchLeads(site), fetchMarks(site)]);
-  if (!feed.ok) return { upcoming: [], justBooked: [], problem: feed.reason };
+  if (!feed.ok) return { upcoming: [], justBooked: [], problem: feed.reason, warnings: [] };
+  const warnings = [partialFeed(feed.data), marks.problem ?? null].filter((w): w is string => Boolean(w));
 
   const today = todayDublin();
 
@@ -189,5 +193,5 @@ export async function fetchDiary(site: Site, limit = 6): Promise<Diary> {
     .sort((a, b) => (b.bookedAt ?? "").localeCompare(a.bookedAt ?? ""))
     .slice(0, limit);
 
-  return { upcoming, justBooked, problem: null };
+  return { upcoming, justBooked, problem: null, warnings };
 }

@@ -138,27 +138,88 @@ function toLead(row: SheetRow): Lead {
   };
 }
 
-export async function fetchSclLeads(): Promise<LeadsResult> {
+/**
+ * How long a read of the sheet may take.
+ *
+ * Apps Script unloads the container behind the sheet when it is idle and pays
+ * most of a minute to start it again: measured 57.4 seconds cold on
+ * 22 September, then 2.8 and 2.7. This used to give up at twenty seconds, so
+ * the first person to open SmartCare Living's side of the CRM on a cold
+ * morning was told the enquiries could not be read, by a sheet that was
+ * perfectly healthy and most of the way through waking up. Fifty-five seconds
+ * fits inside the sixty the pages declare as their maxDuration.
+ */
+const SHEET_TIMEOUT_MS = 55_000;
+
+/** What a person should read when the sheet did not answer, in plain words. */
+export const SCL_WAKING =
+  "SmartCare Living's enquiry sheet did not answer within a minute. The first read of the day wakes it up and can take that long; refresh in a minute and it is usually quick.";
+
+/**
+ * Two ways in, and the direct one is preferred.
+ *
+ *   SCL_SHEETS_URL and SCL_SHEETS_TOKEN: the Apps Script itself, the same GET
+ *   smartcareliving.ie's own dashboard makes. One hop.
+ *
+ *   SCL_DASHBOARD_PASSWORD: smartcareliving.ie/api/dashboard-data, which makes
+ *   that same GET on our behalf. Two hops, and the second one gives up at 52
+ *   seconds and answers 504 while the sheet is still waking.
+ *
+ * Both return the sheet's rows unchanged, so everything below is shared.
+ */
+function sheetRequest(): { url: string; headers: Record<string, string>; via: "sheet" | "dashboard" } | { missing: string } {
+  const sheetUrl = process.env.SCL_SHEETS_URL?.trim();
+  const sheetToken = process.env.SCL_SHEETS_TOKEN?.trim();
+  if (sheetUrl && sheetToken) {
+    return {
+      url: `${sheetUrl}${sheetUrl.includes("?") ? "&" : "?"}token=${encodeURIComponent(sheetToken)}`,
+      headers: {},
+      via: "sheet",
+    };
+  }
   const origin = (process.env.SCL_ORIGIN || "https://www.smartcareliving.ie").trim().replace(/\/$/, "");
   const password = process.env.SCL_DASHBOARD_PASSWORD?.trim() || process.env.DASHBOARD_PASSWORD?.trim();
   if (!password) {
-    return { ok: false, reason: "SCL_DASHBOARD_PASSWORD is not set on this deployment." };
+    return { missing: "SmartCare Living's enquiries cannot be read: neither SCL_SHEETS_URL and SCL_SHEETS_TOKEN nor SCL_DASHBOARD_PASSWORD is set on this deployment." };
   }
+  return { url: `${origin}/api/dashboard-data`, headers: { Authorization: `Bearer ${password}` }, via: "dashboard" };
+}
+
+export async function fetchSclLeads(): Promise<LeadsResult> {
+  const req = sheetRequest();
+  if ("missing" in req) return { ok: false, reason: req.missing };
 
   try {
-    const res = await fetch(`${origin}/api/dashboard-data`, {
-      headers: { Authorization: `Bearer ${password}` },
+    const res = await fetch(req.url, {
+      headers: req.headers,
       cache: "no-store",
-      signal: AbortSignal.timeout(20_000),
+      redirect: "follow",
+      signal: AbortSignal.timeout(SHEET_TIMEOUT_MS),
     });
-    if (!res.ok) return { ok: false, reason: `The enquiries feed answered ${res.status}.` };
+    if (res.status === 504) return { ok: false, reason: SCL_WAKING };
+    if (res.status === 401 || res.status === 403) {
+      return {
+        ok: false,
+        reason: req.via === "dashboard"
+          ? "smartcareliving.ie refused the dashboard password this deployment holds (SCL_DASHBOARD_PASSWORD), so SmartCare Living's enquiries cannot be read."
+          : "The enquiry sheet refused the token this deployment holds (SCL_SHEETS_TOKEN).",
+      };
+    }
+    if (!res.ok) return { ok: false, reason: `SmartCare Living's enquiry sheet answered ${res.status}, so the enquiries cannot be shown.` };
 
-    const body = (await res.json()) as { rows?: SheetRow[] };
-    const rows = Array.isArray(body.rows) ? body.rows : [];
+    /* Apps Script answers a script error with a 200 and an HTML page, and
+       JSON.parse on that reads as "Unexpected token <", which tells nobody
+       anything. */
+    if (!(res.headers.get("content-type") ?? "").includes("application/json")) {
+      return { ok: false, reason: "SmartCare Living's enquiry sheet answered with a web page instead of its data, which means the Apps Script behind it has an error." };
+    }
+    const body = (await res.json()) as { rows?: SheetRow[]; error?: string };
+    if (body.error) return { ok: false, reason: `SmartCare Living's enquiry sheet said: ${String(body.error).slice(0, 160)}` };
+    if (!Array.isArray(body.rows)) return { ok: false, reason: "SmartCare Living's enquiry sheet answered without any rows in it." };
 
     /* Newest first, the order Orders and the overview both assume. The sheet
        is append-only so it arrives oldest first. */
-    const leads = rows
+    const leads = body.rows
       .filter((r) => clean(r.Name) || clean(r.Email) || clean(r.Phone))
       .map(toLead)
       .sort((a, b) => sortKey(b.date) - sortKey(a.date));
@@ -170,7 +231,9 @@ export async function fetchSclLeads(): Promise<LeadsResult> {
     };
     return { ok: true, data: payload };
   } catch (err) {
-    return { ok: false, reason: err instanceof Error ? err.message : "The enquiries feed could not be reached." };
+    const raw = err instanceof Error ? `${err.name} ${err.message}` : String(err);
+    if (/abort|timeout/i.test(raw)) return { ok: false, reason: SCL_WAKING };
+    return { ok: false, reason: `SmartCare Living's enquiry sheet could not be reached (${raw.slice(0, 120)}).` };
   }
 }
 

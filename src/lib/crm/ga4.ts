@@ -248,3 +248,15 @@ export const EVENT_LABEL: Record<string, string> = {
   book_consultation: "Booked a consultation",
   purchase: "Paid",
 };
+
+/**
+ * The smallest question GA4 will answer: yesterday's visits. For the health
+ * check, so it proves the credentials and the property rather than a page.
+ */
+export async function probeGa4(site: Site): Promise<number> {
+  const rows = await runReport(GA4_PROPERTY[site], {
+    dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
+    metrics: [{ name: "sessions" }],
+  });
+  return rows[0]?.values[0] ?? 0;
+}

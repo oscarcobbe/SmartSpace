@@ -86,6 +86,40 @@ export async function crm<T = unknown>(
   return text ? (JSON.parse(text) as T) : null;
 }
 
+/*
+ * ── A WRONG KEY LOOKS EXACTLY LIKE AN EMPTY TABLE ──────────────────
+ *
+ * Every policy compares X-CRM-Key inside the database, so a request with the
+ * wrong key is not refused: PostgREST answers 200 with an empty list, because
+ * the policy filtered out every row. Measured 26 September against the live
+ * project: a wrong key reads crm_contacts as []. On a page that means "No
+ * customers yet" and "Nothing outstanding", said calmly, about a database
+ * that is full.
+ *
+ * crm_ads_snapshot_runs gains a row for each business every night, so it is
+ * never legitimately empty. When a page reads nothing, it asks that table;
+ * if that is empty too, the key was refused and the page says so instead of
+ * showing an empty list. Checked only on an empty read and remembered for
+ * five minutes, so a full page costs nothing extra.
+ */
+export const WRONG_KEY =
+  "The database answered with nothing at all, which is what it does when this deployment's SMARTCRM_KEY is wrong. The records are not gone; they cannot be read.";
+
+let keyCheck: { at: number; ok: boolean } | null = null;
+
+export async function crmKeyAccepted(): Promise<boolean> {
+  if (keyCheck && Date.now() - keyCheck.at < 5 * 60_000) return keyCheck.ok;
+  const rows = await crm<unknown[]>("crm_ads_snapshot_runs?select=id&limit=1");
+  keyCheck = { at: Date.now(), ok: Array.isArray(rows) && rows.length > 0 };
+  return keyCheck.ok;
+}
+
+/** Rows as read, unless an empty read is really a refused key, which throws. */
+export async function unlessWrongKey<T>(rows: T[] | null): Promise<T[]> {
+  if (rows && rows.length === 0 && !(await crmKeyAccepted())) throw new Error(WRONG_KEY);
+  return rows ?? [];
+}
+
 /**
  * Find a person, or make one.
  *
@@ -126,17 +160,24 @@ export async function upsertContact(site: Site, c: {
   return made?.[0]?.id ?? null;
 }
 
+/**
+ * Add a line to the history. Returns whether it was written, so a caller that
+ * tells a person "saved" can also tell them when the history missed it.
+ */
 export async function logActivity(site: Site, a: {
   lead_id?: string | null; contact_id?: string | null;
   kind: string; summary: string; detail?: Record<string, unknown>; actor?: string;
-}) {
+}): Promise<boolean> {
   try {
     await crm("crm_activity", {
       method: "POST",
       body: JSON.stringify({ site, detail: {}, ...a }),
       prefer: "return=minimal",
     });
-  } catch {
+    return true;
+  } catch (err) {
     /* The trail is worth having and never worth failing a request for. */
+    console.error("[crm] history line not written:", err instanceof Error ? err.message : err);
+    return false;
   }
 }

@@ -18,7 +18,7 @@
  * edits Stripe and never edits Calendly: it records what it was told and shows
  * it beside what they say.
  */
-import { crm, type Site } from "./db";
+import { unlessWrongKey, crm, type Site } from "./db";
 
 export type MarkState = "cancelled" | "done";
 
@@ -47,12 +47,25 @@ export function orderKey(lead: { orderId?: string; email?: string; phone?: strin
   return `k:${who}|${when}`;
 }
 
-export async function fetchMarks(site: Site): Promise<Map<string, OrderMark>> {
-  const rows = await crm<OrderMark[]>(
-    `crm_order_marks?site=eq.${site}&select=order_ref,state,note,marked_by,marked_at`,
-  ).catch(() => null);
-  const out = new Map<string, OrderMark>();
-  for (const r of rows ?? []) out.set(r.order_ref, r);
+/**
+ * The marks, and a problem when they could not be read.
+ *
+ * A failed read used to come back as an empty map, which is indistinguishable
+ * from "nothing is cancelled": every job cancelled by phone reappeared in the
+ * diary as somewhere to be, with nothing on screen to say why.
+ */
+export type Marks = Map<string, OrderMark> & { problem?: string };
+
+export async function fetchMarks(site: Site): Promise<Marks> {
+  const out: Marks = new Map<string, OrderMark>();
+  try {
+    const rows = await unlessWrongKey(await crm<OrderMark[]>(
+      `crm_order_marks?site=eq.${site}&select=order_ref,state,note,marked_by,marked_at`,
+    ));
+    for (const r of rows ?? []) out.set(r.order_ref, r);
+  } catch (err) {
+    out.problem = `Which orders were marked cancelled or done could not be read (${err instanceof Error ? err.message.slice(0, 100) : "no answer"}), so a cancelled booking may still show here.`;
+  }
   return out;
 }
 

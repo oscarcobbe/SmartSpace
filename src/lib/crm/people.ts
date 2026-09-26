@@ -77,14 +77,20 @@ export interface PeopleResult {
   /** Named rather than hidden: a page that silently drops a whole source and
       still shows a confident count is the failure this codebase keeps having. */
   problems: string[];
+  /** Whether the orders feed answered. Money and order counts depend on it. */
+  feedRead: boolean;
 }
 
 export async function listPeople(site: Site): Promise<PeopleResult> {
   const problems: string[] = [];
+  let dbReason = "";
 
   const [feedResult, dbResult] = await Promise.all([
     fetchLeads(site).catch((e) => ({ ok: false as const, reason: String(e) })),
-    listContacts(site).catch(() => null),
+    listContacts(site).catch((e) => {
+      dbReason = e instanceof Error ? e.message.slice(0, 120) : String(e);
+      return null;
+    }),
   ]);
 
   const byEmail = new Map<string, Person>();
@@ -130,7 +136,7 @@ export async function listPeople(site: Site): Promise<PeopleResult> {
       index(person);
     }
   } else {
-    problems.push(`The orders feed could not be read (${feedResult.reason}).`);
+    problems.push(`The orders feed could not be read, so orders, payments and anyone known only from them are missing. ${feedResult.reason}`);
   }
 
   if (dbResult) {
@@ -173,7 +179,7 @@ export async function listPeople(site: Site): Promise<PeopleResult> {
       index(target);
     }
   } else {
-    problems.push("The notes and statuses database did not answer, so this list is orders only.");
+    problems.push(`The notes and statuses database did not answer, so this list is orders only${dbReason ? ` (${dbReason})` : ""}.`);
   }
 
   for (const p of people) {
@@ -208,7 +214,7 @@ export async function listPeople(site: Site): Promise<PeopleResult> {
   }
 
   people.sort((a, b) => (b.lastActivity ?? "").localeCompare(a.lastActivity ?? ""));
-  return { people, problems };
+  return { people, problems, feedRead: feedResult.ok };
 }
 
 function contactName(c: Contact): string {
@@ -238,14 +244,19 @@ export function distinctLeads(p: Person): LeadRow[] {
   return p.leads.filter((l) => !l.stripe_session_id || !fromFeed.has(l.stripe_session_id));
 }
 
-/** The person behind an id from the list, whether or not they are in the database. */
-export async function getPerson(site: Site, id: string): Promise<Person | null> {
-  const { people } = await listPeople(site);
+/**
+ * The person behind an id from the list, whether or not they are in the
+ * database, and what could not be read while looking. A missing person with
+ * problems is "could not load", never "not found".
+ */
+export async function getPerson(site: Site, id: string): Promise<{ person: Person | null; problems: string[] }> {
+  const { people, problems } = await listPeople(site);
   const direct = people.find((p) => p.id === id);
-  if (direct) return direct;
+  if (direct) return { person: direct, problems };
   const key = decodeFeedId(id);
-  if (!key) return null;
-  return (
-    people.find((p) => emailKey(p.email) === key || phoneKey(p.phone) === key) ?? null
-  );
+  if (!key) return { person: null, problems };
+  return {
+    person: people.find((p) => emailKey(p.email) === key || phoneKey(p.phone) === key) ?? null,
+    problems,
+  };
 }

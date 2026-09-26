@@ -6,7 +6,7 @@
  * arriving somewhere at a time, those are different questions and the second
  * one is the one asked every morning.
  */
-import { fetchLeads, type Lead } from "./leads";
+import { fetchLeads, partialFeed, type Lead } from "./leads";
 import { bookingIso } from "./booking-date";
 import { fetchMarks, orderKey } from "./order-marks";
 import type { Site } from "./db";
@@ -34,6 +34,8 @@ export interface Week {
   later: { on: string; label: string; job: Lead }[];
   booked: number;
   problem: string | null;
+  /** Read, but incomplete: a source behind the feed, or the cancelled marks. */
+  warnings: string[];
 }
 
 /* One parser, shared with the orders join. The local one here handled ISO and
@@ -103,7 +105,7 @@ function todayDublin(): string {
 export async function fetchWeek(site: Site, daysAhead = 14): Promise<Week> {
   const [feed, marks] = await Promise.all([fetchLeads(site), fetchMarks(site)]);
   if (!feed.ok) {
-    return { days: [], later: [], overdue: [], booked: 0, problem: feed.reason };
+    return { days: [], later: [], overdue: [], booked: 0, problem: feed.reason, warnings: [] };
   }
 
   const today = todayDublin();
@@ -162,5 +164,6 @@ export async function fetchWeek(site: Site, daysAhead = 14): Promise<Week> {
     overdue: overdue.slice(0, 20),
     booked: days.reduce((n, d) => n + d.jobs.length, 0),
     problem: null,
+    warnings: [partialFeed(feed.data), marks.problem ?? null].filter((w): w is string => Boolean(w)),
   };
 }
