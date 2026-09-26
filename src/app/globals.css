@@ -340,12 +340,12 @@ p {
  * Reduced motion gets the colour and the ring and none of the movement.
  */
 @layer components {
+  /* Transform only. Colour and shadow change at once, which reads as crisp;
+     animating them as well was a paint on every hover of every row, and
+     will-change on every button put each one on its own layer for nothing. */
   .crm-root button:not(:disabled),
   .crm-root a[role="button"]:not([aria-disabled="true"]) {
-    transition: transform .14s cubic-bezier(.4, 0, .2, 1),
-                box-shadow .18s cubic-bezier(.4, 0, .2, 1),
-                background-color .18s, border-color .18s, color .18s;
-    will-change: transform;
+    transition: transform .15s cubic-bezier(.4, 0, .2, 1);
   }
 
   .crm-root button:not(:disabled):hover,
@@ -370,16 +370,26 @@ p {
   }
 
   .crm-root button:focus-visible,
-  .crm-root a:focus-visible {
+  .crm-root a:focus-visible,
+  .crm-root summary:focus-visible {
     outline: 2px solid #0f172a;
     outline-offset: 2px;
     border-radius: 8px;
+  }
+  /* Fields had a ring on text inputs and nothing at all on the selects, so a
+     keyboard user moving through "Move to" and "Found us" could not see where
+     they were. One rule for every field. */
+  .crm-root select:focus-visible,
+  .crm-root input:focus-visible,
+  .crm-root textarea:focus-visible {
+    outline: 2px solid #0f172a;
+    outline-offset: 1px;
   }
 
   /* A coloured tile glows in its own colour rather than in slate, which on a
      saturated card would read as a smudge. */
   .crm-root .kpi-tile {
-    transition: transform .16s cubic-bezier(.4, 0, .2, 1), box-shadow .2s;
+    transition: transform .16s cubic-bezier(.4, 0, .2, 1);
   }
   .crm-root .kpi-tile:hover {
     transform: translateY(-2px);
@@ -390,7 +400,7 @@ p {
      on the row all the time is six words of furniture on the one thing that has
      to read at a glance. */
   .crm-root .kpi-open .kpi-chev {
-    transition: color .16s, transform .16s;
+    transition: transform .16s, opacity .16s;
     transform: translateX(-3px);
   }
   .crm-root .kpi-open:hover .kpi-chev,
@@ -403,12 +413,36 @@ p {
     .crm-root button,
     .crm-root a[role="button"],
     .crm-root .kpi-tile {
-      transition: background-color .18s, border-color .18s, color .18s;
+      transition: none;
     }
     .crm-root button:hover,
+    .crm-root button:active,
     .crm-root a[role="button"]:hover,
     .crm-root .kpi-tile:hover { transform: none; }
     .crm-root .kpi-open .kpi-chev,
-    .crm-root .kpi-open:hover .kpi-chev { transition: color .18s; transform: none; }
+    .crm-root .kpi-open:hover .kpi-chev { transition: none; transform: none; }
   }
+}
+
+/*
+ * Arriving content settles in rather than snapping.
+ *
+ * Every panel fades up four pixels when it mounts: on navigation, and when a
+ * streamed panel replaces its skeleton. Opacity and transform only, so it
+ * costs no layout and no paint, and a transform does not count as layout
+ * shift. Two hundred milliseconds is long enough to read as smooth and short
+ * enough that nobody waits for it.
+ */
+@keyframes crmEnter { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.crm-enter { animation: crmEnter .2s cubic-bezier(.2, .7, .3, 1) both; }
+
+/* A menu opening from its button. */
+@keyframes crmPop { from { opacity: 0; transform: translateY(-2px) scale(.98); } to { opacity: 1; transform: none; } }
+.crm-pop { transform-origin: top; animation: crmPop .15s cubic-bezier(.2, .7, .3, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .crm-enter, .crm-pop { animation: none; }
+  .crm-root .animate-pulse,
+  .crm-root .animate-ping,
+  .crm-root .animate-spin { animation: none; }
 }
