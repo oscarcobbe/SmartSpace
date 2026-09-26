@@ -133,6 +133,15 @@ interface Lead {
    * Not personal data. It identifies the click, not the person.
    */
   gclid?: string;
+  /**
+   * The sheet's Source column, for contact rows: "smart-space.ie" for a form,
+   * "phone_click" for a tap on the phone number. A tap is logged as a Contact
+   * Enquiry so Nigel sees it, but it is not a person: it carries the number
+   * that was dialled (ours) and no name or email. Without this the lead check
+   * in the portal counted the tap on 23 Sep 21:03 as an enquiry missing from
+   * the CRM, and there was nobody to put there.
+   */
+  source?: string;
   orderId: string;
   /**
    * Question/answer pairs the customer provided at conversion time.
@@ -740,6 +749,7 @@ export async function GET(request: Request) {
             status: statusLabel,
             orderId: String(r.notes || "-"),
             ...(enquiryGclid ? { gclid: enquiryGclid } : {}),
+            ...(r.source ? { source: String(r.source) } : {}),
             details: contactDetails.length ? contactDetails : undefined,
           });
         }
