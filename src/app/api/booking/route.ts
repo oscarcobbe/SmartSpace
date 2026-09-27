@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import { createBookingEvent, TIME_SLOTS } from "@/lib/calendly";
 import { logLead, type AttributionRecord } from "@/lib/leads";
 import { fireServerConversion } from "@/lib/server-conversions";
+import { consentFrom, type ConsentInput } from "@/lib/ad-consent";
 import { sendToCrm } from "@/lib/crm";
 import { sendSiteAlert } from "@/lib/site-alerts";
 import { alertTo, monitorBcc } from "@/lib/business-constants";
@@ -51,6 +52,8 @@ interface BookingBody {
   timeSlot?: string;
   attribution?: AttributionRecord;
   homepage_url?: string; // honeypot, see BookingCalendar.tsx
+  /** The cookie banner's stored answer, read in the browser. */
+  consent?: ConsentInput | null;
 }
 
 export async function POST(request: Request) {
@@ -74,7 +77,7 @@ export async function POST(request: Request) {
       );
     }
     const body = raw as BookingBody;
-    const { name, email, phone, subject, message, date, timeSlot, attribution, homepage_url } = body;
+    const { name, email, phone, subject, message, date, timeSlot, attribution, homepage_url, consent } = body;
 
     // Honeypot, same pattern as /api/contact and /api/subscribe.
     // A bot filling every form field will populate the hidden input;
@@ -283,6 +286,7 @@ export async function POST(request: Request) {
       firstName: firstName || undefined,
       lastName,
       extraParams: { lead_source: "site_visit_booking", topic: subjectLabel },
+      adConsent: consentFrom(consent)?.decision ?? null,
     });
 
     // Mirror to SmartCRM (fire-and-forget; never blocks the user response).

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { recordEnquiryConsent, type ConsentInput } from "@/lib/ad-consent";
+import { consentFrom, recordEnquiryConsent, type ConsentInput } from "@/lib/ad-consent";
 import { randomUUID } from "crypto";
 import { Resend } from "resend";
 import { logLead, type AttributionRecord } from "@/lib/leads";
@@ -395,6 +395,7 @@ export async function POST(request: Request) {
       firstName: firstName || undefined,
       lastName,
       extraParams: { lead_source: "contact_form", topic: subjectLabel },
+      adConsent: consentFrom(consent)?.decision ?? null,
     });
 
     /* The enquirer's cookie answer, kept so a job they later pay by payment

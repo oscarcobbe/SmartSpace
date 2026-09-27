@@ -9,7 +9,9 @@
  *
  * This module fires conversions a second time from the server (the source of
  * truth, we only call it after the row has been confirmed paid / written to
- * the lead sheet), so Google Ads + GA4 see every real conversion.
+ * the lead sheet), so Google Ads + GA4 see every real conversion from a visitor
+ * who accepted ad cookies. Nothing is sent for anybody else; see
+ * fireServerConversion below.
  *
  * Two channels:
  *   1) GA4 Measurement Protocol, official, authenticated. Requires
@@ -63,14 +65,41 @@ export interface ServerConversionInput {
   lastName?: string;
   /** Anything else worth landing in GA4 (e.g. `lead_source: 'contact_form'`). */
   extraParams?: Record<string, string | number | boolean>;
+  /**
+   * The visitor's recorded answer to the cookie banner, as the browser sent it
+   * with the enquiry or the checkout. Required, so every caller has to say
+   * where its answer came from. Only "granted" lets anything leave.
+   */
+  adConsent: "granted" | "denied" | null;
 }
 
 /**
  * Fire conversion through both channels concurrently. Awaits both with a
  * 4s ceiling so a hung Google endpoint can't pin the parent serverless
  * function. Always resolves, never throws.
+ *
+ * Nothing is sent without a recorded yes to ad cookies.
+ *
+ * Both channels carry identifiers: the Ads pixel sends the click id and a
+ * hashed email and phone, and the GA4 event sends a hashed email as user_id
+ * and in user_data. This used to fire for every enquiry, phone tap and sale
+ * whatever the visitor had chosen, while /privacy says Google receives hashed
+ * email and phone "when you consent", and anonymised pings otherwise. A
+ * visitor who pressed "Essential only" still had their hashed email sent to
+ * Google Ads, and Enhanced Conversions exists to match exactly that to a
+ * Google account.
+ *
+ * So the rule the offline upload already follows applies here too: an answer
+ * that is not a recorded "granted" is not consent, and the server stays quiet.
+ * The browser still sends its own cookieless pings under Consent Mode, which
+ * is what the notice describes.
  */
 export async function fireServerConversion(input: ServerConversionInput): Promise<void> {
+  if (input.adConsent !== "granted") {
+    console.log(`[conv] server fire skipped for ${input.ga4EventName}: no recorded yes to ad cookies (${input.adConsent ?? "no answer"})`);
+    return;
+  }
+
   const tasks: Array<Promise<unknown>> = [];
 
   if (GA4_ID && GA4_API_SECRET) {

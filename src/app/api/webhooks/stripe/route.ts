@@ -4,6 +4,7 @@ import { Resend } from "resend";
 import { createBookingEvent } from "@/lib/calendly";
 import { logLead } from "@/lib/leads";
 import { fireServerConversion } from "@/lib/server-conversions";
+import { consentFrom } from "@/lib/ad-consent";
 import { sendToCrm } from "@/lib/crm";
 import { sendSms } from "@/lib/sms";
 import { formatEuro } from "@/lib/format";
@@ -560,6 +561,13 @@ export async function POST(req: NextRequest) {
     const gclid: string = (session.metadata?.gclid as string) ?? "";
     const gaClientId = (session.metadata?.ga_client_id as string) || undefined;
     const gaSessionId = (session.metadata?.ga_session_id as string) || undefined;
+    /* The buyer's banner answer, written on the session by /api/checkout.
+       A payment link carries none, and none is not a yes. */
+    const adConsent =
+      consentFrom({
+        decision: session.metadata?.ad_consent,
+        decidedAt: Date.parse(String(session.metadata?.ad_consent_at ?? "")),
+      })?.decision ?? null;
 
     const bookingDate = session.metadata?.booking_date;
     const bookingSlot = session.metadata?.booking_slot;
@@ -700,6 +708,7 @@ export async function POST(req: NextRequest) {
       firstName: firstName || undefined,
       lastName,
       extraParams: { product: productName, source: "stripe_webhook" },
+      adConsent,
     });
 
     // Notify Nigel, runs after Calendly so we can include the outcome in
