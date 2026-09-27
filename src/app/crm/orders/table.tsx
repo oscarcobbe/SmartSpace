@@ -186,8 +186,8 @@ export default function OrdersTable({
             </SubmitButton>
             <span className="text-xs text-slate-500">
               {mark === "cancelled"
-                ? "Hidden from the diary. The payment in Stripe is untouched."
-                : "Takes it out of the diary. Does not refund anything."}
+                ? "Hidden from the itinerary. The payment in Stripe is untouched."
+                : "Takes it off the itinerary. Does not refund anything."}
             </span>
           </ActionForm>
         </div>

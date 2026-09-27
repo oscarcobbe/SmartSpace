@@ -19,8 +19,8 @@ export default async function WeekPage() {
   if (week.problem) {
     return (
       <>
-        <PageHeader title="The diary" />
-        <Note tone="warn">The diary could not be loaded, so no bookings are shown. {week.problem}</Note>
+        <PageHeader title="Itinerary" />
+        <Note tone="warn">The itinerary could not be loaded, so no bookings are shown. {week.problem}</Note>
       </>
     );
   }
@@ -30,7 +30,7 @@ export default async function WeekPage() {
   return (
     <>
       <PageHeader
-        title="The diary"
+        title="Itinerary"
         sub="What is booked for the next fourteen days, in the order it happens."
         aside={<span className="text-xs text-slate-500">{week.booked} booked</span>}
       />

@@ -1,5 +1,5 @@
 import { PageHeader } from "./ui";
-import { PanelSkeleton } from "./overview-panels";
+import { PanelSkeleton, orderLogTitle } from "./overview-panels";
 import { SITE_LABEL } from "@/lib/crm/session";
 import { greeting, sessionSite, slowNote, todayLine } from "./loading-copy";
 
@@ -11,8 +11,8 @@ export default function Loading() {
     <div role="status" aria-busy="true" aria-label="Loading the overview">
       <PageHeader title={greeting()} sub={todayLine(SITE_LABEL[site])} />
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
-        <PanelSkeleton title="Diary" rows={4} slow={slow} />
-        <PanelSkeleton title="Latest in" rows={4} slow={slow} />
+        <PanelSkeleton title="Itinerary" rows={4} slow={slow} />
+        <PanelSkeleton title={orderLogTitle(site)} rows={4} slow={slow} />
         <PanelSkeleton title="Money" rows={2} />
         <PanelSkeleton title="Advertising" rows={2} />
       </div>

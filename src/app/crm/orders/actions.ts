@@ -29,5 +29,5 @@ export async function setOrderMark(_prev: ActionState, formData: FormData): Prom
   }
   /* No revalidatePath: it forces the orders feed cold for the page that
      re-renders, and nothing written here is cached. The form refreshes. */
-  return done(state === "cancelled" ? "Marked cancelled. It is out of the diary." : "Put back in the diary.");
+  return done(state === "cancelled" ? "Marked cancelled. It is off the itinerary." : "Put back on the itinerary.");
 }
