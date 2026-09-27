@@ -471,12 +471,25 @@ if (problems.length === before3) ok("/api/checkout writes metadata ad_consent an
  * Judged request by request, not file by file: a component that posts twice
  * (CartDrawer sends a free booking to one route and a paid one to another)
  * must send the answer in both bodies.
+ *
+ * The route is recognised however the URL is written: "/api/contact",
+ * "https://smart-space.ie/api/contact" or `${location.origin}/api/contact`.
+ * Matching only the bare path let a request that switched to an absolute URL
+ * drop out of this check, and the check still passed with one request fewer.
  */
 const ENDPOINTS = new Set(["/api/contact", "/api/checkout", "/api/checkout/free", "/api/booking", "/api/track/phone-click"]);
 const endpointOf = (m) => {
-  const raw = ts.isStringLiteral(m) || ts.isNoSubstitutionTemplateLiteral(m) ? m.text : ts.isTemplateExpression(m) ? m.head.text : null;
-  const path = raw?.split("?")[0];
-  return path && ENDPOINTS.has(path) ? path : null;
+  const parts =
+    ts.isStringLiteral(m) || ts.isNoSubstitutionTemplateLiteral(m)
+      ? [m.text]
+      : ts.isTemplateExpression(m)
+        ? [m.head.text, ...m.templateSpans.map((s) => s.literal.text)]
+        : [];
+  for (const part of parts) {
+    const path = part.replace(/^[a-z][a-z0-9+.-]*:\/\/[^/?#]*/i, "").split(/[?#]/)[0];
+    if (ENDPOINTS.has(path)) return path;
+  }
+  return null;
 };
 
 const before4 = problems.length;
