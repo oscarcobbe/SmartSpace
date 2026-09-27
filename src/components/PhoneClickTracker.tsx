@@ -18,24 +18,24 @@
  *      the tap also lands in GA4's lead-gen funnel.
  *
  *   3. navigator.sendBeacon('/api/track/phone-click', …) → server-side
- *      backstop. POSTs the stored attribution (gclid + utm) to our own
- *      API, which then fires BOTH GA4 Measurement Protocol AND the
- *      Google Ads conversion pixel from the server. Bypasses adblockers
- *      (same-origin), bypasses ad_storage=denied (explicit gclid not
- *      cookie-based), and survives the immediate `location = tel:…`
- *      navigation (sendBeacon is keep-alive).
+ *      backstop. POSTs the stored attribution (gclid + utm) and the
+ *      cookie banner's answer to our own API, which logs the tap and,
+ *      only for a visitor who accepted ad cookies, fires GA4 Measurement
+ *      Protocol and the Google Ads conversion pixel from the server.
+ *      Bypasses adblockers (same-origin) and survives the immediate
+ *      `location = tel:…` navigation (sendBeacon is keep-alive).
  *
- * The result: every tap reaches Google through at least one channel,
- * regardless of consent state, browser, or adblocker. Google Ads dedupes
- * the gtag-side fire and the server-side pixel by `transaction_id`,
- * so we don't double-count.
+ * A visitor who refused or never answered gets the browser's cookieless
+ * Consent Mode ping and nothing from the server, which is what /privacy
+ * says. Google Ads dedupes the gtag-side fire and the server-side pixel
+ * by `transaction_id`, so we don't double-count.
  *
  * Mount once in the root layout. Listens for clicks on any anchor
  * with an href starting `tel:` anywhere in the document.
  */
 
 import { useEffect } from "react";
-import { getAttribution } from "@/lib/attribution";
+import { consentRecord, getAttribution } from "@/lib/attribution";
 
 // .trim() guards against a trailing newline in the Vercel env var,
 // a copy-paste artefact that previously made Google Ads reject every
@@ -90,7 +90,9 @@ export default function PhoneClickTracker() {
         typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
           ? crypto.randomUUID()
           : `pc-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-      const body = JSON.stringify({ phone: PHONE, page, attribution, conversionId });
+      /* The banner answer travels with the tap. The server fires to Google
+         only on a recorded yes, the same rule as a form or a checkout. */
+      const body = JSON.stringify({ phone: PHONE, page, attribution, conversionId, consent: consentRecord() });
       try {
         if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
           // sendBeacon uses Content-Type: text/plain by default. Our API

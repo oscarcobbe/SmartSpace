@@ -19,6 +19,8 @@
  * THIS endpoint is the server-side backstop. PhoneClickTracker.tsx POSTs
  * here with sendBeacon() in parallel with the gtag fire. Server-side:
  *   - No cookies needed (gclid is passed explicitly from localStorage).
+ *   - Fires to Google only when the body carries a recorded yes to ad
+ *     cookies (see fireServerConversion); the tap is logged either way.
  *   - Adblockers can't intercept (same-origin POST to our own API).
  *   - The fetch survives the page navigating to the dialer because we
  *     POST via navigator.sendBeacon, keep-alive even on unload.
@@ -45,6 +47,11 @@
  *       utmCampaign?: string,
  *       utmContent?: string,
  *       utmTerm?: string,
+ *     },
+ *     conversionId?: string,  // minted by the client, shared with its gtag fire
+ *     consent?: {             // the banner answer (ss_consent), or null
+ *       decision: "granted" | "denied",
+ *       decidedAt: number,
  *     }
  *   }
  *   Returns: 204 (no body, no caching), designed to be ignored by the
@@ -58,6 +65,7 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { fireServerConversion } from "@/lib/server-conversions";
+import { consentFrom, type ConsentInput } from "@/lib/ad-consent";
 import { logLead, type AttributionRecord } from "@/lib/leads";
 import { BUSINESS_PHONE_E164 } from "@/lib/business-constants";
 
@@ -70,6 +78,8 @@ interface PhoneClickBody {
   attribution?: AttributionRecord;
   /** Minted by the client so both fires of one tap share it. */
   conversionId?: string;
+  /** The cookie banner's stored answer, read in the browser at the tap. */
+  consent?: ConsentInput | null;
 }
 
 export async function POST(request: Request) {
@@ -130,6 +140,7 @@ export async function POST(request: Request) {
         clicked_page: page,
         phone_number: phone,
       },
+      adConsent: consentFrom(body.consent)?.decision ?? null,
     });
   } else {
     console.warn(

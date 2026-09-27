@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { recordEnquiryConsent, type ConsentInput } from "@/lib/ad-consent";
+import { consentFrom, recordEnquiryConsent, type ConsentInput } from "@/lib/ad-consent";
 import { randomUUID } from "crypto";
 import { Resend } from "resend";
 import { createBookingEvent } from "@/lib/calendly";
@@ -237,6 +237,7 @@ export async function POST(request: Request) {
       firstName: firstName || undefined,
       lastName,
       extraParams: { lead_source: "free_consultation" },
+      adConsent: consentFrom(consent)?.decision ?? null,
     });
 
     // Mirror to SmartCRM (fire-and-forget; never blocks the response).
