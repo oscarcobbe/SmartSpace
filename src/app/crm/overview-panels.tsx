@@ -21,6 +21,13 @@ import { SlowNote } from "./slow-note";
 
 const dash = (v: string | undefined) => plainText(v);
 
+/** What the right-hand panel is called: Smart Space logs orders, SmartCare
+    Living logs enquiries. Shared with the loading skeletons so the title does
+    not change when the panel arrives. */
+export function orderLogTitle(site: Site): string {
+  return site === "smartcareliving" ? "Enquiry log" : "Order log";
+}
+
 export function PanelSkeleton({ title, rows = 3, slow }: { title: string; rows?: number; slow?: string }) {
   return (
     <Panel title={title}>
@@ -88,7 +95,7 @@ export async function NeedsYou({ site }: { site: Site }) {
   ].filter((n): n is string => Boolean(n));
 
   return (
-    <Panel title="Diary" aside={<PanelLink href="/crm/week">Full week</PanelLink>}>
+    <Panel title="Itinerary" aside={<PanelLink href="/crm/week">Full week</PanelLink>}>
       {notes.length > 0 && (
         <div className={`space-y-2 px-4 pt-4 ${diary.problem ? "pb-4" : ""}`}>
           {notes.map((n) => <Note key={n} tone="warn">{n}</Note>)}
@@ -128,7 +135,7 @@ export async function NeedsYou({ site }: { site: Site }) {
 /** The last few things that came in, whatever they were. */
 export async function LatestIn({ site }: { site: Site }) {
   const feed = await fetchLeads(site);
-  const title = "Latest in";
+  const title = orderLogTitle(site);
   const all = <PanelLink href="/crm/orders">{site === "smartcareliving" ? "All enquiries" : "All orders"}</PanelLink>;
   if (!feed.ok) {
     return (
@@ -152,7 +159,7 @@ export async function LatestIn({ site }: { site: Site }) {
             <li key={`${l.orderId}-${i}`} className="flex items-start gap-2.5 px-4 py-2.5 text-sm">
               <Inbox className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
               <span className="min-w-0">
-                {/* The same fallback the Diary uses, so one customer is not
+                {/* The same fallback the Itinerary uses, so one customer is not
                     "Unnamed" here and "stackthedrummer" one panel over. */}
                 <span className="block truncate text-slate-900">{displayName(l)}</span>
                 <span className="block truncate text-xs text-slate-500">{dash(l.product) || dash(l.email) || l.type}</span>

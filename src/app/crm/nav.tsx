@@ -38,7 +38,7 @@ const GROUPS: { heading: string; items: { href: string; label: string; icon: typ
   {
     heading: "This week",
     items: [
-      { href: "/crm/week", label: "The diary", icon: CalendarDays },
+      { href: "/crm/week", label: "Itinerary", icon: CalendarDays },
       { href: "/crm/orders", label: "Orders", icon: Receipt },
       { href: "/crm/contacts", label: "Customers", icon: Users },
     ],

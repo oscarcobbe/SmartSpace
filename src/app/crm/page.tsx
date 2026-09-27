@@ -4,7 +4,7 @@ import { currentSession, SITE_LABEL } from "@/lib/crm/session";
 import { THIS_SITE, crmConfigured } from "@/lib/crm/db";
 import LoginForm from "./login-form";
 import { PageHeader } from "./ui";
-import { NeedsYou, LatestIn, MoneyThisMonth, AdsThisMonth, RecentActivity, PanelSkeleton } from "./overview-panels";
+import { NeedsYou, LatestIn, MoneyThisMonth, AdsThisMonth, RecentActivity, PanelSkeleton, orderLogTitle } from "./overview-panels";
 import { greeting, slowNote, todayLine } from "./loading-copy";
 
 export const dynamic = "force-dynamic";
@@ -34,10 +34,10 @@ export default function CrmHome() {
             own, so the fastest is on screen while Google Ads is still
             answering, instead of the page waiting for the slowest. */}
         <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
-          <Suspense fallback={<PanelSkeleton title="Diary" rows={4} slow={slow} />}>
+          <Suspense fallback={<PanelSkeleton title="Itinerary" rows={4} slow={slow} />}>
             <NeedsYou site={session.site} />
           </Suspense>
-          <Suspense fallback={<PanelSkeleton title="Latest in" rows={4} slow={slow} />}>
+          <Suspense fallback={<PanelSkeleton title={orderLogTitle(session.site)} rows={4} slow={slow} />}>
             <LatestIn site={session.site} />
           </Suspense>
           <Suspense fallback={<PanelSkeleton title="Money" rows={2} />}>

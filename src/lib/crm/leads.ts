@@ -101,7 +101,7 @@ export const LEADS_TAG = "crm-leads";
 /*
  * One read per page, however many panels ask.
  *
- * The overview's Diary and Latest in both call this, and so does every page
+ * The overview's Itinerary and order log both call this, and so does every page
  * whose panels stream separately. On a cold cache each of them went out to
  * the feed on its own: two reads of Stripe, Calendly and the sheet for one
  * page, and on SmartCare Living two cold starts of an Apps Script that takes a
