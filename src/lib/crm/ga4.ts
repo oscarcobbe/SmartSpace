@@ -17,6 +17,116 @@ export const GA4_PROPERTY: Record<Site, string> = {
   smartcareliving: "535647893",
 };
 
+/**
+ * The one data stream each property's figures are read from.
+ *
+ * Smart Space's property has two web streams: 14510064208 "SmartSpace"
+ * (G-JR2WXNSLEL, the original) and 15470580335 "SmartSpace Web"
+ * (G-N8886QEJ70, the one the site configures). The Google Ads tag
+ * AW-17978501655 still lists G-JR2WXNSLEL as a destination, so every browser
+ * event reaches both streams. From 13 to 26 September 2026 each stream had
+ * page_view 524, session_start 151, generate_lead 5 and purchase 4, and a
+ * report on the property with no stream filter added the two together. At
+ * 23:42 on 27 September the CRM's 7 day view showed 709 page views where the
+ * site had 354, 8 leads where there were 4, 4 sales where there were 2, 124
+ * visits where there were 103, and an average visit of 11m 57s where it was
+ * 7m 10s. The count of people was right, 77 either way, because GA4
+ * recognises the same visitor in both streams; what is counted per event or
+ * per visit was not.
+ *
+ * Reading the stream the site configures stays right whether or not that
+ * destination is removed later. The server's Measurement Protocol events are
+ * sent with G-N8886QEJ70 too, and a Measurement Protocol event is filed under
+ * the stream whose measurement id it carries, so this filter keeps them. None
+ * has in fact arrived in either stream since 20 August 2026: until then they
+ * arrived in 14510064208, which holds the property's only Measurement
+ * Protocol secret, and 15470580335 has none. That is a separate fault, and
+ * this filter neither causes nor hides it.
+ *
+ * SmartCare Living's property has one stream, named here so that a second
+ * one added later cannot double its figures in the same way.
+ *
+ * Every report goes through runReport, which applies this, and
+ * scripts/check-ga4-one-stream.mjs fails the build when a request reaches
+ * Google without it.
+ */
+export const GA4_STREAM: Record<Site, string> = {
+  "smart-space": "15470580335",
+  smartcareliving: "14789055321",
+};
+
+/**
+ * Days that are read from an earlier stream, because the current one did not
+ * yet exist.
+ *
+ * 15470580335 was created on 20 August 2026 and recorded its first event on
+ * 25 August. Before that the site's events reached 14510064208 only, so
+ * nothing on those days was counted twice. Reading the current stream alone
+ * would have cut every window that reaches back past 25 August: the 90 day
+ * view would have shown about five weeks and called it ninety days. For the
+ * 90 days to 27 September it would have dropped 53 of 74 leads, 27 of 34
+ * sales and 335 of 1,648 page views, all from before 25 August. (From 21 July
+ * to 24 August the old stream holds almost no page views, only the server's
+ * conversion events, because the site's own hits were not reaching GA4 then;
+ * see PRs #10 and #11.)
+ * Days before `before` (YYYYMMDD, the property's own Europe/Dublin dates) are
+ * read from `stream` instead. Once no window the CRM offers reaches back that
+ * far, which is from 23 November 2026, this entry does nothing and can go.
+ */
+export const GA4_EARLIER_STREAM: Partial<Record<Site, { stream: string; before: string }>> = {
+  "smart-space": { stream: "14510064208", before: "20260825" },
+};
+
+type FilterExpression = Record<string, unknown>;
+
+const streamIs = (stream: string): FilterExpression => ({
+  filter: { fieldName: "streamId", stringFilter: { matchType: "EXACT", value: stream } },
+});
+
+/** The dimension filter that confines a report to the site's one stream. */
+export function streamFilter(site: Site): FilterExpression {
+  const current = streamIs(GA4_STREAM[site]);
+  const earlier = GA4_EARLIER_STREAM[site];
+  if (!earlier) return current;
+  return {
+    orGroup: {
+      expressions: [
+        current,
+        {
+          andGroup: {
+            expressions: [
+              streamIs(earlier.stream),
+              {
+                filter: {
+                  fieldName: "date",
+                  numericFilter: { operation: "LESS_THAN", value: { int64Value: earlier.before } },
+                },
+              },
+            ],
+          },
+        },
+      ],
+    },
+  };
+}
+
+/**
+ * The request body GA4 is actually sent: the report as written, confined to
+ * the site's stream. A report that brings its own dimensionFilter is ANDed
+ * with the stream filter, never allowed to replace it, because a spread of
+ * the report over a default would let the first report that filters by event
+ * name quietly read both streams again.
+ */
+export function reportRequest(site: Site, body: Record<string, unknown>): Record<string, unknown> {
+  const own = body.dimensionFilter as FilterExpression | undefined;
+  return {
+    ...body,
+    dimensionFilter: own
+      ? { andGroup: { expressions: [streamFilter(site), own] } }
+      : streamFilter(site),
+  };
+}
+
 export interface Row {
   key: string[];
   values: number[];
@@ -67,19 +177,25 @@ async function accessToken(): Promise<string> {
   return j.access_token;
 }
 
+/**
+ * Every GA4 report in this app is asked through here, so that the stream
+ * filter is applied in one place rather than remembered by each report. It
+ * takes the site, not a property id, so there is no way to call it for a
+ * property without also naming the stream.
+ */
 async function runReport(
-  property: string,
+  site: Site,
   body: Record<string, unknown>,
 ): Promise<Row[]> {
   const res = await fetch(
-    `https://analyticsdata.googleapis.com/v1beta/properties/${property}:runReport`,
+    `https://analyticsdata.googleapis.com/v1beta/properties/${GA4_PROPERTY[site]}:runReport`,
     {
       method: "POST",
       headers: {
         Authorization: `Bearer ${await accessToken()}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(reportRequest(site, body)),
       cache: "no-store",
       signal: AbortSignal.timeout(20_000),
     },
@@ -140,7 +256,6 @@ export function mergeLanding(rows: { key: string[]; values: number[] }[]) {
 }
 
 export async function fetchInsights(site: Site, days = 28): Promise<Ga4Result<Insights>> {
-  const property = GA4_PROPERTY[site];
   const range = [{ startDate: `${days}daysAgo`, endDate: "today" }];
 
   try {
@@ -148,48 +263,48 @@ export async function fetchInsights(site: Site, days = 28): Promise<Ga4Result<In
        one combined report with five dimensions would return a cross product
        nobody asked for. */
     const [totals, sources, landing, events, devices, counties, daily] = await Promise.all([
-      runReport(property, {
+      runReport(site, {
         dateRanges: range,
         metrics: [
           { name: "totalUsers" }, { name: "sessions" }, { name: "screenPageViews" },
           { name: "engagedSessions" }, { name: "averageSessionDuration" },
         ],
       }),
-      runReport(property, {
+      runReport(site, {
         dateRanges: range,
         dimensions: [{ name: "sessionDefaultChannelGroup" }],
         metrics: [{ name: "totalUsers" }, { name: "sessions" }, { name: "engagedSessions" }],
         orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
         limit: 10,
       }),
-      runReport(property, {
+      runReport(site, {
         dateRanges: range,
         dimensions: [{ name: "landingPage" }],
         metrics: [{ name: "sessions" }, { name: "engagedSessions" }],
         orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
         limit: 12,
       }),
-      runReport(property, {
+      runReport(site, {
         dateRanges: range,
         dimensions: [{ name: "eventName" }],
         metrics: [{ name: "eventCount" }],
         orderBys: [{ metric: { metricName: "eventCount" }, desc: true }],
         limit: 25,
       }),
-      runReport(property, {
+      runReport(site, {
         dateRanges: range,
         dimensions: [{ name: "deviceCategory" }],
         metrics: [{ name: "sessions" }, { name: "engagedSessions" }],
         orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
       }),
-      runReport(property, {
+      runReport(site, {
         dateRanges: range,
         dimensions: [{ name: "region" }],
         metrics: [{ name: "sessions" }],
         orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
         limit: 10,
       }),
-      runReport(property, {
+      runReport(site, {
         dateRanges: range,
         dimensions: [{ name: "date" }],
         /* The same four the headline tiles show, per day.
@@ -260,7 +375,7 @@ export const EVENT_LABEL: Record<string, string> = {
  * check, so it proves the credentials and the property rather than a page.
  */
 export async function probeGa4(site: Site): Promise<number> {
-  const rows = await runReport(GA4_PROPERTY[site], {
+  const rows = await runReport(site, {
     dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
     metrics: [{ name: "sessions" }],
   });
