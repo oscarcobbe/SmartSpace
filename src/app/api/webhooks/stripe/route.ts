@@ -6,6 +6,7 @@ import { logLead } from "@/lib/leads";
 import { fireServerConversion } from "@/lib/server-conversions";
 import { consentFrom } from "@/lib/ad-consent";
 import { sendToCrm } from "@/lib/crm";
+import { afterResponse, AFTER_CEILING } from "@/lib/after-response";
 import { sendSms } from "@/lib/sms";
 import { formatEuro } from "@/lib/format";
 import { sendSiteAlert } from "@/lib/site-alerts";
@@ -728,12 +729,13 @@ export async function POST(req: NextRequest) {
       calendlyStatus,
     });
 
-    // Mirror to SmartCRM (fire-and-forget; never blocks the webhook).
-    // Previously absent on the paid-order path, meant every paying
-    // customer was invisible to the CRM, while contact / booking /
-    // free-consultation all mirrored correctly. Real money customers
-    // are the most valuable record-set; biggest CRM-coverage hole.
-    void sendToCrm({
+    // Mirror to SmartCRM (never blocks the webhook). Previously absent on
+    // the paid-order path, meant every paying customer was invisible to the
+    // CRM, while contact / booking / free-consultation all mirrored
+    // correctly. Real money customers are the most valuable record-set;
+    // biggest CRM-coverage hole. Through waitUntil rather than a bare
+    // `void`, which Vercel can cut off once the webhook has answered.
+    afterResponse("crm mirror", AFTER_CEILING.crm, () => sendToCrm({
       source: "paid_order",
       source_detail: productName,
       name: customerName,
@@ -757,7 +759,7 @@ export async function POST(req: NextRequest) {
         installation_address: installationAddress || null,
         configuration: configNote || null,
       },
-    });
+    }));
 
     // SMS for high-value orders (≥ €100) OR for any order where Calendly
     // creation FAILED (Nigel needs to know immediately so he can book

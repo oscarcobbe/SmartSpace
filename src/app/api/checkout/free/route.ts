@@ -3,14 +3,20 @@ import { consentFrom, recordEnquiryConsent, type ConsentInput } from "@/lib/ad-c
 import { randomUUID } from "crypto";
 import { Resend } from "resend";
 import { createBookingEvent } from "@/lib/calendly";
-import { logLead, type AttributionRecord } from "@/lib/leads";
+import { logLead, SHEET_BACKGROUND, type AttributionRecord } from "@/lib/leads";
 import { fireServerConversion } from "@/lib/server-conversions";
 import { sendToCrm } from "@/lib/crm";
 import { alertTo, monitorBcc } from "@/lib/business-constants";
+import { afterResponse, AFTER_CEILING } from "@/lib/after-response";
 
 // POST routes are inherently dynamic but explicit is better, without
 // this, Next.js may try static optimization on a future major.
 export const dynamic = "force-dynamic";
+/* The answer waits only for Calendly and Nigel's email, but the work after it
+   can need up to nine minutes: a sheet append that ends in doubt is read back
+   only once it has certainly finished (SHEET_BACKGROUND in src/lib/leads.ts),
+   and waitUntil only keeps the function alive while maxDuration allows. */
+export const maxDuration = 600;
 
 interface CartItem {
   productId: string;
@@ -161,7 +167,7 @@ export async function POST(request: Request) {
       const notifyTo = alertTo();
       if (apiKey && from) {
         const resend = new Resend(apiKey);
-        await resend.emails.send({
+        const sent = await resend.emails.send({
           from,
           to: [notifyTo],
           bcc: monitorBcc(),
@@ -188,31 +194,31 @@ export async function POST(request: Request) {
             <p><strong>Time Slot:</strong> ${escapeHtml(bookedItem.bookingSlot || "")}</p>
           `,
         });
+        /* The booking is in Nigel's Calendly either way, so the visitor still
+           gets their confirmation; this only makes a lost email visible. */
+        if (sent.error) {
+          console.error("[free-checkout] booking email to Nigel rejected by Resend:", JSON.stringify(sent.error));
+        }
       }
     }
 
-    /* The enquirer's cookie answer, kept so a job they later pay by payment
-       link can be reported to Google with the consent they gave here. */
-    await recordEnquiryConsent({ email: customer?.email, phone: customer?.phone, consent, source: "free_consultation" });
+    /*
+     * The booking is in Nigel's Calendly and his email has gone (copied to
+     * FourWinds), which is all the visitor's answer waits for. The rest runs
+     * after the answer, through afterResponse (src/lib/after-response.ts):
+     * the consent record, the leads sheet, the server conversion and the CRM
+     * mirror. This route used to await them one after another, the sheet
+     * alone for up to 23.5 s, before the page could move to the success page
+     * where the browser conversion fires.
+     *
+     * waitUntil, not `void`: Vercel can stop a function once it has answered.
+     * The CRM mirror here was a bare `void sendToCrm(...)`, one possible
+     * reason free consultations with a consent row have no CRM lead.
+     * scripts/check-lead-routes-answer-first.mjs fails the build if any of
+     * these is awaited before the answer or started outside afterResponse.
+     */
 
-    // Await so the row reaches the sheet before the function exits.
-    // Fire-and-forget gets killed by Vercel's serverless runtime.
-    await logLead({
-      type: "Free Consultation",
-      name: customer?.name,
-      email: customer?.email,
-      phone: customer?.phone,
-      address: customer?.address,
-      product: bookedItem?.name || "Free Home Consultation",
-      amount: 0,
-      currency: "EUR",
-      bookingDate: bookedItem?.bookingLabel || bookedItem?.bookingDate,
-      bookingSlot: bookedItem?.bookingSlot,
-      attribution: finalAttribution,
-      source: "smart-space.ie",
-    });
-
-    // Server-side conversion fire for the Free Consultation. Mirrors the
+    // Server-side conversion id for the Free Consultation. Mirrors the
     // contact + booking + Stripe-paid paths: the client-side gtag fire on
     // the success page is unreliable (adblockers, consent denials, tab
     // close) so we double-fire from the server. Same pattern: shared
@@ -225,47 +231,80 @@ export async function POST(request: Request) {
         .replace(/^AW-\d+\//, "") || "fH4ZCMHv7ZocEJfU6PxC";
     const [firstName, ...rest] = (customer?.name?.trim() || "").split(/\s+/);
     const lastName = rest.join(" ") || undefined;
-    await fireServerConversion({
-      gadsLabel: freeConsultLabel,
-      ga4EventName: "generate_lead",
-      value: 50, // matches FREE_CONSULTATION_VALUE on the success page
-      currency: "EUR",
-      transactionId: conversionId,
-      gclid: finalAttribution?.gclid || undefined,
-      email: customer?.email || undefined,
-      phone: customer?.phone || undefined,
-      firstName: firstName || undefined,
-      lastName,
-      extraParams: { lead_source: "free_consultation" },
-      adConsent: consentFrom(consent)?.decision ?? null,
-    });
 
-    // Mirror to SmartCRM (fire-and-forget; never blocks the response).
-    // Previously absent on this path, meant every free-consultation
-    // booking was invisible to the CRM, even though the contact form
-    // and the paid booking endpoint both mirror correctly.
-    void sendToCrm({
-      source: "free_consultation",
-      source_detail: bookedItem?.name || "Free Home Consultation",
-      name: customer?.name || null,
-      email: customer?.email || null,
-      phone: customer?.phone || null,
-      message: null,
-      utm_source: finalAttribution?.utmSource ?? null,
-      utm_medium: finalAttribution?.utmMedium ?? null,
-      utm_campaign: finalAttribution?.utmCampaign ?? null,
-      utm_term: finalAttribution?.utmTerm ?? null,
-      utm_content: finalAttribution?.utmContent ?? null,
-      gclid: finalAttribution?.gclid ?? null,
-      referrer: finalAttribution?.referrer ?? null,
-      tags: ["free-consultation"],
-      custom: {
-        conversion_id: conversionId,
-        booking_date: bookedItem?.bookingDate || null,
-        booking_slot: bookedItem?.bookingSlot || null,
-        address: customer?.address || null,
-      },
-    });
+    /* The enquirer's cookie answer, kept so a job they later pay by payment
+       link can be reported to Google with the consent they gave here. */
+    afterResponse("consent record", AFTER_CEILING.consent, () =>
+      recordEnquiryConsent({ email: customer?.email, phone: customer?.phone, consent, source: "free_consultation" }),
+    );
+
+    afterResponse("leads sheet", AFTER_CEILING.sheet, () =>
+      logLead(
+        {
+          type: "Free Consultation",
+          name: customer?.name,
+          email: customer?.email,
+          phone: customer?.phone,
+          address: customer?.address,
+          product: bookedItem?.name || "Free Home Consultation",
+          amount: 0,
+          currency: "EUR",
+          bookingDate: bookedItem?.bookingLabel || bookedItem?.bookingDate,
+          bookingSlot: bookedItem?.bookingSlot,
+          attribution: finalAttribution,
+          source: "smart-space.ie",
+        },
+        // Nobody is waiting now: room for a cold start inside the first
+        // append, and for an append that ended in doubt to settle before the
+        // sheet is read and, only if the row is absent, sent once more.
+        SHEET_BACKGROUND,
+      ),
+    );
+
+    afterResponse("server conversion", AFTER_CEILING.conversion, () =>
+      fireServerConversion({
+        gadsLabel: freeConsultLabel,
+        ga4EventName: "generate_lead",
+        value: 50, // matches FREE_CONSULTATION_VALUE on the success page
+        currency: "EUR",
+        transactionId: conversionId,
+        gclid: finalAttribution?.gclid || undefined,
+        email: customer?.email || undefined,
+        phone: customer?.phone || undefined,
+        firstName: firstName || undefined,
+        lastName,
+        extraParams: { lead_source: "free_consultation" },
+        adConsent: consentFrom(consent)?.decision ?? null,
+      }),
+    );
+
+    // Mirror to SmartCRM. Previously absent on this path, meant every
+    // free-consultation booking was invisible to the CRM, even though the
+    // contact form and the paid booking endpoint both mirror correctly.
+    afterResponse("crm mirror", AFTER_CEILING.crm, () =>
+      sendToCrm({
+        source: "free_consultation",
+        source_detail: bookedItem?.name || "Free Home Consultation",
+        name: customer?.name || null,
+        email: customer?.email || null,
+        phone: customer?.phone || null,
+        message: null,
+        utm_source: finalAttribution?.utmSource ?? null,
+        utm_medium: finalAttribution?.utmMedium ?? null,
+        utm_campaign: finalAttribution?.utmCampaign ?? null,
+        utm_term: finalAttribution?.utmTerm ?? null,
+        utm_content: finalAttribution?.utmContent ?? null,
+        gclid: finalAttribution?.gclid ?? null,
+        referrer: finalAttribution?.referrer ?? null,
+        tags: ["free-consultation"],
+        custom: {
+          conversion_id: conversionId,
+          booking_date: bookedItem?.bookingDate || null,
+          booking_slot: bookedItem?.bookingSlot || null,
+          address: customer?.address || null,
+        },
+      }),
+    );
 
     return NextResponse.json({ success: true, conversionId });
   } catch (err: unknown) {

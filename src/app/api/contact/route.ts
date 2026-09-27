@@ -2,16 +2,22 @@ import { NextResponse } from "next/server";
 import { consentFrom, recordEnquiryConsent, type ConsentInput } from "@/lib/ad-consent";
 import { randomUUID } from "crypto";
 import { Resend } from "resend";
-import { logLead, type AttributionRecord } from "@/lib/leads";
+import { logLead, SHEET_BACKGROUND, type AttributionRecord } from "@/lib/leads";
 import { fireServerConversion } from "@/lib/server-conversions";
 import { sendToCrm } from "@/lib/crm";
 import { sendSiteAlert } from "@/lib/site-alerts";
 import { monitorBcc } from "@/lib/business-constants";
+import { afterResponse, AFTER_CEILING, type AfterResult } from "@/lib/after-response";
 
 
 // POST routes are inherently dynamic but explicit is better, without
 // this, Next.js may try static optimization on a future major.
 export const dynamic = "force-dynamic";
+/* The answer goes out in about a second, but the work after it can need up
+   to nine minutes: a sheet append that ends in doubt is read back only once
+   it has certainly finished (SHEET_BACKGROUND in src/lib/leads.ts), and
+   waitUntil only keeps the function alive while maxDuration allows. */
+export const maxDuration = 600;
 
 const SUBJECT_LABELS: Record<string, string> = {
   general: "General Enquiry",
@@ -176,27 +182,26 @@ export async function POST(request: Request) {
       );
     }
 
-    // ──────────────────────────────────────────────────────────────
-    // PARALLEL FAN-OUT, the four side effects below all run at once.
-    // Previously they were sequential awaits (auto-reply → logLead →
-    // fireServerConversion → void sendToCrm) which cumulatively took
-    // 6–13 seconds before the customer saw "Message Sent!". A 2026-05-18
-    // mobile QA flagged the form-submit latency as the most likely cause
-    // of the 26 → 3 funnel leak in GA4 (users bailing during the wait).
-    //
-    // Now: Resend lead email (above) is the only sequential step, it's
-    // the "did we capture the lead" check and Resend is fast (~500ms).
-    // Everything downstream goes through Promise.allSettled so a single
-    // failure can't block the other three, and the response goes out as
-    // soon as the slowest task finishes (typically logLead at 3–5s),
-    // total time roughly cut in half.
-    //
-    // Note: we MUST await this Promise.allSettled. Vercel kills the
-    // serverless function the instant the response is returned, so a
-    // bare `void` fire-and-forget silently drops ~30% of these calls.
-    // The `allSettled` is the right tool, it gives us "parallel but
-    // still awaited" semantics.
-    // ──────────────────────────────────────────────────────────────
+    /*
+     * The lead is with Nigel now: his email above went out, blind-copied to
+     * FourWinds, and it is the only step the answer waits for.
+     *
+     * Everything else runs after the answer, through afterResponse
+     * (src/lib/after-response.ts): the customer's auto-reply, the leads sheet,
+     * the server conversion, the consent record and the CRM mirror. This route
+     * used to await all of them, and the sheet alone could take 12 s, a pause
+     * and a 10 s retry (a retry that could write the row twice, see logLead).
+     * ContactForm and CallbackForm fire the Google Ads conversion only when
+     * this answer arrives, so a visitor who gave up during that wait was never
+     * counted; SCL lost a lead to the same pattern. The auto-reply's outcome
+     * is no longer in the answer (no page read it); it is in the log.
+     *
+     * waitUntil, not `void`: Vercel can stop a function once it has answered,
+     * and a promise nobody waits on goes with it. Each task has its own
+     * ceiling and logs its outcome as "[after] <task>: ...".
+     * scripts/check-lead-routes-answer-first.mjs fails the build if any of
+     * these is awaited before the answer or started outside afterResponse.
+     */
 
     // Conversion ID generated here so the client-side gtag fire can use
     // it as `transaction_id` for Google Ads dedupe.
@@ -208,11 +213,6 @@ export async function POST(request: Request) {
         .trim()
         .replace(/^AW-\d+\//, "") || "u8cHCNyipZocEJfU6PxC";
 
-    // Build all four downstream tasks as promises, then await them
-    // together. Errors are caught per-task so one failure doesn't kill
-    // the others (Resend rejection during auto-reply was historically
-    // the most common, wrapping makes that explicit).
-    //
     // IMPORTANT: the Resend SDK resolves with `{ data, error }` on most
     // failure modes (sandbox restrictions, invalid recipient, rate limit
     // exceeded, blocked domain). It only THROWS on network or auth
@@ -224,7 +224,7 @@ export async function POST(request: Request) {
     const subjectLowerSafe = escapeHtml(subjectLabel.toLowerCase());
     const customerEmail = email.trim();
     const customerName = name.trim();
-    const autoReplyTask: Promise<{ ok: boolean; reason?: string }> = resend.emails.send({
+    const sendAutoReply = (): Promise<AfterResult> => resend.emails.send({
       from,
       to: [email.trim()],
       replyTo: to,
@@ -344,9 +344,9 @@ export async function POST(request: Request) {
           ].join("\n"),
           dedupeKey: `contact-form:auto-reply-failed:${(result.error as { name?: string }).name ?? "unknown"}`,
         });
-        return { ok: false, reason };
+        return { ok: false, outcome: `auto-reply rejected by Resend: ${reason}` };
       }
-      return { ok: true };
+      return { ok: true, outcome: "auto-reply sent" };
     }).catch(async (err) => {
       // Network / SDK throw. Different from the resolved-error path above,
       // and rarer.
@@ -370,74 +370,80 @@ export async function POST(request: Request) {
         ].join("\n"),
         dedupeKey: `contact-form:auto-reply-threw:${err instanceof Error ? err.name : "unknown"}`,
       });
-      return { ok: false, reason };
+      return { ok: false, outcome: `auto-reply threw: ${reason}` };
     });
 
-    const logLeadTask = logLead({
-      type: "Contact Enquiry",
-      name: name.trim(),
-      email: email.trim(),
-      phone: phone?.trim(),
-      attribution: attribution ?? (gclid ? { gclid: gclid.trim() } : undefined),
-      notes: `${subjectLabel}: ${message.trim()}`,
-      source: "smart-space.ie",
-    });
+    afterResponse("auto-reply", AFTER_CEILING.email, sendAutoReply);
 
-    const fireConversionTask = fireServerConversion({
-      gadsLabel: leadLabel, // Smart Space Lead, same label as ContactForm
-      ga4EventName: "generate_lead",
-      value: 10,
-      currency: "EUR",
-      transactionId: conversionId,
-      gclid: attribution?.gclid || gclid || undefined,
-      email: email?.trim() || undefined,
-      phone: phone?.trim() || undefined,
-      firstName: firstName || undefined,
-      lastName,
-      extraParams: { lead_source: "contact_form", topic: subjectLabel },
-      adConsent: consentFrom(consent)?.decision ?? null,
-    });
+    afterResponse("leads sheet", AFTER_CEILING.sheet, () =>
+      logLead(
+        {
+          type: "Contact Enquiry",
+          name: name.trim(),
+          email: email.trim(),
+          phone: phone?.trim(),
+          attribution: attribution ?? (gclid ? { gclid: gclid.trim() } : undefined),
+          notes: `${subjectLabel}: ${message.trim()}`,
+          source: "smart-space.ie",
+        },
+        // Nobody is waiting now: room for a cold start inside the first
+        // append, and for an append that ended in doubt to settle before the
+        // sheet is read and, only if the row is absent, sent once more.
+        SHEET_BACKGROUND,
+      ),
+    );
+
+    afterResponse("server conversion", AFTER_CEILING.conversion, () =>
+      fireServerConversion({
+        gadsLabel: leadLabel, // Smart Space Lead, same label as ContactForm
+        ga4EventName: "generate_lead",
+        value: 10,
+        currency: "EUR",
+        transactionId: conversionId,
+        gclid: attribution?.gclid || gclid || undefined,
+        email: email?.trim() || undefined,
+        phone: phone?.trim() || undefined,
+        firstName: firstName || undefined,
+        lastName,
+        extraParams: { lead_source: "contact_form", topic: subjectLabel },
+        adConsent: consentFrom(consent)?.decision ?? null,
+      }),
+    );
 
     /* The enquirer's cookie answer, kept so a job they later pay by payment
        link can be reported to Google with the consent they gave here. */
-    const consentTask = recordEnquiryConsent({ email, phone, consent, source: "contact_form" });
+    afterResponse("consent record", AFTER_CEILING.consent, () =>
+      recordEnquiryConsent({ email, phone, consent, source: "contact_form" }),
+    );
 
-    const crmTask = sendToCrm({
-      source: "contact_form",
-      source_detail: subjectLabel,
-      name: name.trim(),
-      email: email.trim(),
-      phone: phone?.trim() || null,
-      message: message.trim(),
-      utm_source: attribution?.utmSource ?? null,
-      utm_medium: attribution?.utmMedium ?? null,
-      utm_campaign: attribution?.utmCampaign ?? null,
-      utm_term: attribution?.utmTerm ?? null,
-      utm_content: attribution?.utmContent ?? null,
-      gclid: attribution?.gclid ?? gclid ?? null,
-      referrer: attribution?.referrer ?? null,
-      tags: ["contact-form"],
-      custom: { conversion_id: conversionId, subject_key: subjectKey },
-    });
-
-    // Wait for all four to settle. Ceiling is the slowest task, not the
-    // sum, typically 3–5s vs the old 6–13s. allSettled means one
-    // failure doesn't block the response or the other tasks.
-    const [autoReplyResult] = await Promise.all([
-      autoReplyTask,
-      Promise.allSettled([logLeadTask, fireConversionTask, crmTask, consentTask]),
-    ]);
+    afterResponse("crm mirror", AFTER_CEILING.crm, () =>
+      sendToCrm({
+        source: "contact_form",
+        source_detail: subjectLabel,
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone?.trim() || null,
+        message: message.trim(),
+        utm_source: attribution?.utmSource ?? null,
+        utm_medium: attribution?.utmMedium ?? null,
+        utm_campaign: attribution?.utmCampaign ?? null,
+        utm_term: attribution?.utmTerm ?? null,
+        utm_content: attribution?.utmContent ?? null,
+        gclid: attribution?.gclid ?? gclid ?? null,
+        referrer: attribution?.referrer ?? null,
+        tags: ["contact-form"],
+        custom: { conversion_id: conversionId, subject_key: subjectKey },
+      }),
+    );
 
     return NextResponse.json({
       success: true,
       id: data?.id,
       conversionId,
-      // Lead email always succeeds at this point (errors above return 502),
-      // so we hardcode true. Auto-reply outcome surfaces the silent-failure
-      // mode so manual contact-form tests show clearly which side worked.
+      // The lead email always succeeded by this point (errors above return
+      // 502). The auto-reply now goes out after the answer, so its outcome
+      // is in the runtime log ("[after] auto-reply: ...") rather than here.
       leadEmailSent: true,
-      autoReplySent: autoReplyResult.ok,
-      autoReplyError: autoReplyResult.ok ? undefined : autoReplyResult.reason,
     });
   } catch (e) {
     console.error("Contact API error:", e);
