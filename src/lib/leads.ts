@@ -199,10 +199,11 @@ const phoneKey = (v: unknown) => String(v ?? "").replace(/\D/g, "").slice(-9);
  * admin dashboard reads (GOOGLE_SHEET_READ_TOKEN). A match is the same type,
  * the same Dublin minute as the payload's timestamp (doPost writes the Date
  * column from that timestamp, and every attempt for one lead sends the same
- * one), and the same email, phone and name wherever the record has them (the
- * notes, when it has none of those). The Date column does come back as the
- * Dublin minute: on 27 September 2026 the four most recent paid orders' Date
- * cells matched their CRM arrival times to the minute.
+ * one), and the same email and name wherever the record has them, and the
+ * same phone wherever both the record and the sheet still hold one (the
+ * notes, when none of those can be compared). The Date column does come back
+ * as the Dublin minute: on 27 September 2026 the four most recent paid
+ * orders' Date cells matched their CRM arrival times to the minute.
  *
  * Every row of the type is read, not only the last few: the sheet is not kept
  * in date order (it has been re-sorted by hand), so "newest first" from doGet
@@ -233,15 +234,21 @@ async function rowInSheet(
     const body = (await res.json().catch(() => null)) as { rows?: Array<Record<string, unknown>> } | null;
     if (!body || !Array.isArray(body.rows)) return { state: "unknown", why: "the read did not return rows" };
     const minute = dublinMinute(timestamp);
-    const found = body.rows.some(
-      (r) =>
-        String(r.type ?? "") === record.type &&
-        String(r.date ?? "") === minute &&
-        (!email || norm(r.email) === email) &&
-        (!phone || phoneKey(r.phone) === phone) &&
-        (!name || norm(r.name) === name) &&
-        (email || phone || name ? true : String(r.notes ?? "").trim() === notes),
-    );
+    const found = body.rows.some((r) => {
+      if (String(r.type ?? "") !== record.type || String(r.date ?? "") !== minute) return false;
+      if (email && norm(r.email) !== email) return false;
+      if (name && norm(r.name) !== name) return false;
+      /* Sheets reads a cell that starts with "+" as a formula, so a phone
+         typed as "+353 87 123 4567" can land as a formula error with no digits
+         in it. Phones are compared only when both sides still hold one;
+         otherwise a row that matches on email or name would read as absent,
+         and the retry after it would write the lead a second time. */
+      const sheetPhone = phoneKey(r.phone);
+      const phonesComparable = phone.length >= 7 && sheetPhone.length >= 7;
+      if (phonesComparable && sheetPhone !== phone) return false;
+      if (email || name || phonesComparable) return true;
+      return !!notes && String(r.notes ?? "").trim() === notes;
+    });
     return found ? { state: "present" } : { state: "absent" };
   } catch (err) {
     return { state: "unknown", why: `the read failed: ${err instanceof Error ? `${err.name}: ${err.message}` : String(err)}` };

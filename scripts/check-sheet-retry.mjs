@@ -18,7 +18,9 @@
  * This compiles the real src/lib/leads.ts and runs it against a fake sheet
  * that behaves as the real one was read to behave (Date column in Dublin
  * minutes from the payload's timestamp, phones turned into numbers), on a fake
- * clock, through the outages that matter. It fails if any scenario ends with
+ * clock, through the outages that matter. It also assumes the worst Sheets can
+ * do to a phone typed with a leading "+" and spaces: read it as a formula and
+ * keep an error with no digits in it. It fails if any scenario ends with
  * the row on the sheet twice, or absent without an alert, or if the alert
  * reaches anyone but FourWinds (Oscar's decision, 27 September 2026), or if a
  * route that runs logLead in the background declares a maxDuration too short
@@ -95,7 +97,9 @@ async function drive(promise) {
 const dublin = (iso) => new Date(iso).toLocaleString("sv-SE", { timeZone: "Europe/Dublin" }).slice(0, 16);
 
 function sheetFor(plan) {
-  const sheet = { rows: [], appends: [], reads: 0 };
+  /* Rows already on the sheet (someone else's lead) are marked, so they are
+     not counted as copies of the lead under test. */
+  const sheet = { rows: (plan.seed ?? []).map((r) => ({ ...r, seeded: true })), appends: [], reads: 0 };
   const fetch = (url, init = {}) =>
     new Promise((resolveFetch, reject) => {
       if ((init.method || "GET") === "POST") {
@@ -140,7 +144,11 @@ function sheetFor(plan) {
           .map((p) => ({
             ...p,
             date: dublin(p.timestamp),
-            phone: p.phone ? Number(String(p.phone).replace(/\D/g, "")) : "",
+            phone: !p.phone
+              ? ""
+              : /^\+.*[^\d+]/.test(String(p.phone).trim())
+                ? "#ERROR!" // "+353 87 ..." read as a formula
+                : Number(String(p.phone).replace(/\D/g, "")),
             email: p.email ?? "",
             name: p.name ?? "",
             notes: p.notes ?? "",
@@ -189,6 +197,11 @@ const scenarios = [
     { appends: [{ answerAfter: Infinity, writes: true, writeAfter: 5 * 60_000 }] }, { rows: 1, appends: 1, ok: true, alert: false }],
   ["background: the first append never lands, the second does", contact, BG,
     { appends: [HANG, { answerAfter: 2_000, writes: true }] }, { rows: 1, appends: 2, ok: true, alert: false, secondAfterSettle: true }],
+  ["background: a phone typed as +353 comes back as a formula error, and the row lands at 45 s", { ...contact, phone: "+353 87 123 4567" }, BG,
+    { appends: [{ answerAfter: Infinity, writes: true, writeAfter: 45_000 }] }, { rows: 1, appends: 1, ok: true, alert: false }],
+  ["background: someone else's enquiry in the same minute is not taken for this one", contact, BG,
+    { seed: [{ ...contact, name: "Other Person", email: "other@example.invalid", timestamp: new Date(BASE).toISOString() }],
+      appends: [HANG, { answerAfter: 2_000, writes: true }] }, { rows: 1, appends: 2, ok: true, alert: false, secondAfterSettle: true }],
   ["background: the sheet cannot be read and the row did land", contact, BG,
     { appends: [{ answerAfter: Infinity, writes: true, writeAfter: 40_000 }], read: { ok: false } }, { rows: 1, appends: 1, ok: false, alert: true }],
   ["background: the sheet cannot be read and the row never lands", contact, BG,
@@ -230,6 +243,7 @@ try {
     const took = clock.t - BASE;
     // Let every write the script was still doing finish, then count rows.
     while (clock.timers.length) { clock.timers.sort((a, b) => a.at - b.at); const n = clock.timers.shift(); clock.t = Math.max(clock.t, n.at); n.fn(); }
+    sheet.rows = sheet.rows.filter((r) => !r.seeded);
     const alerts = globalThis.__sent;
     const fail = (why) => problems.push(`${name}: ${why} (result: ${JSON.stringify(result)})`);
     if (sheet.rows.length > 1) fail(`the lead is on the sheet ${sheet.rows.length} times`);
