@@ -10,11 +10,12 @@
  *   "Free Consultation" row to the leads sheet, dated when the person booked,
  *   and the feed skipped every sheet row that was not a contact enquiry or a
  *   paid order. The same booking reaches the feed only as a Calendly
- *   appointment, dated by the appointment and gone thirty days after it. Its
- *   CRM copy is sent without being awaited, and the CRM, read on 28
- *   September, held none of the four made since it began on 18 September.
- *   From 20 to 26 September the sheet held those four, from three people, and
- *   the report read none of them.
+ *   appointment, dated by the appointment and gone thirty days after it. The
+ *   CRM, read on 28 September, held none of the four made since it began on
+ *   18 September: /api/checkout/free sent its copy with a bare `void` until
+ *   SmartSpace#16 moved it into afterResponse. From 20 to 26 September the
+ *   sheet held those four, from three people, and the report read none of
+ *   them.
  *
  *   A paid order's click id. /api/checkout writes the gclid into the Stripe
  *   session's metadata, and the Stripe webhook writes the same value into the
@@ -23,6 +24,14 @@
  *   from an ad reached the report with no click id. Read on 28 September: 17
  *   of the 68 completed sessions carry one in metadata, and 16 of those have
  *   a sheet row carrying the same id.
+ *
+ *   Which business a checkout belongs to. Smart Space and SmartCare Living
+ *   take payment through one Stripe account, and a checkout made from a
+ *   payment link has no metadata, so the feed built each one as a paid order
+ *   of product "Order" and the report counted SmartCare Living's
+ *   SmartGuardian payments as Smart Space enquiries: 18 May, 23 July, and 15
+ *   and 22 August. Each paid order now says which business it is, or that the feed
+ *   could not tell (checkoutBusiness).
  *
  * Free consultations go in their own list, not in `leads`, because the
  * dashboard already shows each one as its Calendly appointment and a second
@@ -38,11 +47,95 @@
  */
 import { foundUsFrom, foundUsInNotes } from "@/lib/found-us";
 
+const text = (v: unknown) => (v === null || v === undefined ? "" : String(v).trim());
+
 /** Sheet rows the feed asks the Apps Script for. */
 export const SHEET_LIMIT = 500;
 
+/**
+ * The one address the leads sheet is read from, for the first read and its
+ * retry alike, so the limit a read asked for is always SHEET_LIMIT and the
+ * coverage below is judged against the limit that was sent.
+ */
+export function sheetReadUrl(base: string, token: string): string {
+  return `${base}?token=${encodeURIComponent(token)}&type=All&limit=${SHEET_LIMIT}`;
+}
+
 /** Completed checkouts the feed asks Stripe for, newest first. */
 export const STRIPE_LIMIT = 100;
+
+/**
+ * The Stripe read: completed checkouts with what checkoutBusiness needs, the
+ * line items (what was sold) and the payment link a checkout was made from
+ * (where it sends the customer afterwards). Stripe allows four levels of
+ * expansion and each of these is two.
+ */
+export const STRIPE_SESSIONS_URL =
+  `https://api.stripe.com/v1/checkout/sessions?limit=${STRIPE_LIMIT}&status=complete` +
+  "&expand[]=data.custom_fields&expand[]=data.line_items&expand[]=data.payment_link";
+
+/** The two businesses that take payment through the one Stripe account. */
+export type Business = "smart-space" | "smartcare-living";
+
+/** Each business's website, the page a paid customer is sent back to. */
+const RETURN_HOSTS: Record<string, Business> = {
+  "smart-space.ie": "smart-space",
+  "smartcareliving.ie": "smartcare-living",
+};
+
+/** Every SmartCare Living product is named SmartGuardian. */
+const SMARTCARE_NAME = /smartguardian|smartcare/i;
+
+/** The parts of a Stripe checkout session checkoutBusiness reads. */
+export interface CheckoutForBusiness {
+  success_url?: string | null;
+  payment_link?: string | { after_completion?: { redirect?: { url?: string | null } | null } | null } | null;
+  line_items?: { data?: { description?: string | null }[] } | null;
+}
+
+const hostOf = (url: unknown): string => {
+  try {
+    return new URL(String(url)).hostname.toLowerCase().replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+};
+
+/**
+ * Which business a Stripe checkout belongs to, or null when the checkout does
+ * not say.
+ *
+ * Two things a checkout says, read independently:
+ *
+ *   Where it sends the customer once they have paid. A checkout made from a
+ *   payment link sends them to the link's redirect, so that is what is read
+ *   for one: its own success_url is not to be trusted, and on 28 September
+ *   2026 it was Stripe's placeholder, https://stripe.com, on 23 of the 24.
+ *   One the site made sends them to its success_url. Each business's links
+ *   go to its own site.
+ *
+ *   What was sold. Every SmartCare Living product is named SmartGuardian.
+ *   Smart Space's names (Ring, Eufy, Tapo, deposits and balances, a call-out
+ *   fee) have nothing in common, so a name alone never says Smart Space.
+ *
+ * Read on 28 September 2026, all 68 completed checkouts were named this way
+ * and the two agreed on every one: 44 made by the site and 20 payment links
+ * go back to smart-space.ie, and the 4 payment links that go back to
+ * smartcareliving.ie are the 4 named SmartGuardian (18 May, 23 July, 15 and
+ * 22 August). When the two disagree, or neither names a business, this says
+ * null rather than choosing, and the reader has to stop.
+ */
+export function checkoutBusiness(session: CheckoutForBusiness): Business | null {
+  const link = session.payment_link;
+  const returnTo = link
+    ? typeof link === "object" ? link.after_completion?.redirect?.url : undefined
+    : session.success_url;
+  const byReturn: Business | null = RETURN_HOSTS[hostOf(returnTo)] ?? null;
+  const names = (session.line_items?.data ?? []).map((item) => text(item.description)).join(" / ");
+  const byName: Business | null = SMARTCARE_NAME.test(names) ? "smartcare-living" : null;
+  if (byReturn && byName && byReturn !== byName) return null;
+  return byReturn ?? byName;
+}
 
 export interface FreeConsultation {
   /** When the person booked, as the sheet wrote it: Dublin time, "yyyy-MM-dd HH:mm". */
@@ -61,8 +154,6 @@ export interface FreeConsultation {
   /** Their answer to "How did you find us?", when they gave one. */
   foundUs?: string;
 }
-
-const text = (v: unknown) => (v === null || v === undefined ? "" : String(v).trim());
 
 /**
  * A sheet row as a free consultation, or null when it is not one.
@@ -100,6 +191,22 @@ export function checkoutClickId(
   sheetRow?: Record<string, unknown> | null,
 ): string {
   return text(metadata?.gclid) || text(sheetRow?.gclid);
+}
+
+/**
+ * What a Stripe checkout sold, as its line items describe it.
+ *
+ * The FourWinds report leaves out a customer paying again within 90 days (a
+ * deposit's balance, extra work), and it can only tell it is the same
+ * customer from what the feed gives. A checkout made from a payment link is
+ * built as product "Order" and records no phone (none of the 24 on 28
+ * September 2026), so when a balance is paid from another email address than
+ * its deposit, as one was on 24 August 2026 against a deposit of 5 August,
+ * the only thing that says it is the same job is the link's description,
+ * which Nigel writes with the job's total in it.
+ */
+export function checkoutItems(session: { line_items?: { data?: { description?: string | null }[] } | null }): string[] {
+  return (session.line_items?.data ?? []).map((item) => text(item.description)).filter(Boolean);
 }
 
 /**
@@ -157,8 +264,11 @@ export function stripeCoverage(createdSeconds: number[], limit: number, hasMore:
  * that stops at the limit drops whatever sits at the top, which is the oldest
  * rows only while nobody sorts the sheet. So the read is complete only when it
  * returned fewer rows than it asked for, and no date is given for how far
- * back it reaches.
+ * back it reaches. A read that returned no rows is not complete either.
  */
 export function sheetCoverage(rows: number, limit: number): Coverage {
-  return { rows, limit, complete: rows < limit, oldest: null };
+  /* A read of no rows is not a complete read of an empty sheet: this sheet
+     has held rows since April, and the Apps Script answers a type it does
+     not know with 200 and no rows. */
+  return { rows, limit, complete: rows > 0 && rows < limit, oldest: null };
 }
