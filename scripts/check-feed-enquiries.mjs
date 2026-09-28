@@ -85,8 +85,9 @@ const session = (id, createdIso, metadata, over = {}) => ({
 /* A checkout made from a payment link: no metadata, Stripe's placeholder
    success_url, and the link (expanded) saying where the customer goes. */
 const redirectTo = (url) => ({ id: "plink_check", after_completion: { type: "redirect", redirect: { url } } });
-const byLink = (id, createdIso, description, link) => session(id, createdIso, {}, {
+const byLink = (id, createdIso, description, link, over = {}) => session(id, createdIso, {}, {
   success_url: "https://stripe.com", payment_link: link, line_items: { object: "list", data: [{ description }], has_more: false },
+  ...over,
 });
 const sheetRow = (over) => ({
   date: "2026-09-25 11:40", type: "Contact Enquiry", name: "Test Person", email: "person@example.ie", gclid: "",
@@ -101,6 +102,14 @@ const STRIPE = [
   byLink("cs_live_link_named", "2026-09-24T07:00:00Z", "SmartGuardian Back Payment",
     { id: "plink_check", after_completion: { type: "hosted_confirmation", redirect: null } }),
   byLink("cs_live_link_unread", "2026-09-24T06:00:00Z", "Standard Call Out Fee", "plink_not_expanded"),
+  /* A link Stripe did not expand whose own success_url names a site, as 1 of
+     the 24 real links' did on 28 September 2026: a link's success_url is not
+     where it sends the customer, so it says nothing. */
+  byLink("cs_live_link_unread_url", "2026-09-24T05:00:00Z", "Standard Call Out Fee", "plink_not_expanded",
+    { success_url: SMART_SPACE_RETURN }),
+  /* SmartCare Living's links go back to www.smartcareliving.ie. One whose
+     product is not named SmartGuardian is named by its return page alone. */
+  byLink("cs_live_link_www", "2026-09-24T04:00:00Z", "Monthly Subscription", redirectTo(SMARTCARE_RETURN)),
   byLink("cs_live_link_clash", "2026-09-23T08:00:00Z", "SmartGuardian Monthly Subscription", redirectTo(SMART_SPACE_RETURN)),
   session("cs_live_none", "2026-09-23T06:12:00Z", { product_name: "Plus Floodlight Cam", gclid: "" }),
 ];
@@ -199,7 +208,8 @@ try {
   eq(Object.fromEntries(STRIPE.map((x) => x.id).concat("cs_live_gone").map((id) => [id, order(id)?.business])), {
     cs_live_meta: "smart-space", cs_live_sheet: "smart-space", cs_live_link_ss: "smart-space",
     cs_live_link_scl: "smartcare-living", cs_live_link_named: "smartcare-living",
-    cs_live_link_unread: null, cs_live_link_clash: null, cs_live_none: "smart-space", cs_live_gone: null,
+    cs_live_link_unread: null, cs_live_link_unread_url: null, cs_live_link_www: "smartcare-living",
+    cs_live_link_clash: null, cs_live_none: "smart-space", cs_live_gone: null,
   }, "each paid order says whose it is: by where the checkout sends the customer and by a SmartGuardian name, and null when neither says or the two disagree");
 
   /* ---- coverage ---- */
