@@ -77,3 +77,13 @@ export function monitorBcc(): string[] | undefined {
   const v = process.env.MONITOR_BCC_EMAIL?.trim() || MONITOR_BCC_FALLBACK;
   return v.toLowerCase() === "off" ? undefined : [v];
 }
+
+/**
+ * Where an alert about a lead the leads sheet did not confirm goes: FourWinds
+ * only, never Nigel (Oscar's decision, 27 September 2026). Nigel already has
+ * the lead itself, by email and in Calendly; keeping the sheet whole is
+ * FourWinds' job. Used by logLead (src/lib/leads.ts) and nothing else, and
+ * scripts/check-sheet-retry.mjs fails the build if that alert reaches anyone
+ * else.
+ */
+export const SHEET_ALERT_TO = "oscar@fourwindsdigital.com";

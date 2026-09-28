@@ -38,9 +38,9 @@ export interface CrmLeadPayload {
 /**
  * Send a lead to SmartCRM. Always succeeds (errors are logged, not thrown).
  * Smart Space's brand is hard-coded here, every call from this site is
- * tagged smart-space.
+ * tagged smart-space. Resolves with what happened, for the runtime log.
  */
-export async function sendToCrm(payload: CrmLeadPayload): Promise<void> {
+export async function sendToCrm(payload: CrmLeadPayload): Promise<{ ok: boolean; outcome: string }> {
   // .trim() because Vercel env-var pills hide trailing whitespace from
   // copy-paste. A trailing newline in CRM_INBOUND_URL would mangle the
   // fetch target; a trailing newline in CRM_HMAC_SECRET would silently
@@ -50,7 +50,7 @@ export async function sendToCrm(payload: CrmLeadPayload): Promise<void> {
   const secret = process.env.CRM_HMAC_SECRET?.trim();
   if (!url || !secret) {
     // Not configured, totally fine, just skip.
-    return;
+    return { ok: true, outcome: "skipped, CRM_INBOUND_URL or CRM_HMAC_SECRET is not set" };
   }
 
   try {
@@ -69,9 +69,12 @@ export async function sendToCrm(payload: CrmLeadPayload): Promise<void> {
     if (!res.ok) {
       const text = await res.text().catch(() => "");
       console.warn(`[crm] non-2xx response (${res.status}):`, text.slice(0, 200));
+      return { ok: false, outcome: `CRM answered HTTP ${res.status}` };
     }
+    return { ok: true, outcome: "mirrored to the CRM" };
   } catch (err) {
     // Never throw, Nigel still got the email + the row hit the sheet.
     console.warn("[crm] send failed (non-fatal):", err instanceof Error ? err.message : err);
+    return { ok: false, outcome: `CRM send failed: ${err instanceof Error ? `${err.name}: ${err.message}` : String(err)}` };
   }
 }

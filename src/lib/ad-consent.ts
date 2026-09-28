@@ -13,7 +13,7 @@
  * enquiry is the only moment that customer's answer exists.
  */
 import { createHash } from "node:crypto";
-import { crm } from "./crm/db";
+import { crm, crmConfigured } from "./crm/db";
 
 export interface ConsentInput { decision?: unknown; decidedAt?: unknown }
 export interface Consent { decision: "granted" | "denied"; at: string }
@@ -49,11 +49,13 @@ export const phoneHash = (phone: string | null | undefined): string | null => {
  */
 export async function recordEnquiryConsent(input: {
   email?: string | null; phone?: string | null; consent: ConsentInput | null | undefined; source: string;
-}): Promise<void> {
+}): Promise<{ ok: boolean; outcome: string }> {
   const consent = consentFrom(input.consent);
   const e = emailHash(input.email);
   const p = phoneHash(input.phone);
-  if (!consent || (!e && !p)) return;
+  if (!consent) return { ok: true, outcome: "nothing to record, no valid banner answer" };
+  if (!e && !p) return { ok: true, outcome: "nothing to record, no email or phone" };
+  if (!crmConfigured()) return { ok: true, outcome: "skipped, the CRM database is not configured" };
   try {
     await crm("crm_ad_consent", {
       method: "POST",
@@ -64,7 +66,9 @@ export async function recordEnquiryConsent(input: {
       prefer: "return=minimal",
       signal: AbortSignal.timeout(4000),
     });
+    return { ok: true, outcome: `recorded ${consent.decision}` };
   } catch (err) {
     console.error("[ad-consent] could not record:", err instanceof Error ? err.message : err);
+    return { ok: false, outcome: `could not record: ${err instanceof Error ? err.message : String(err)}` };
   }
 }
