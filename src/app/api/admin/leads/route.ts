@@ -5,7 +5,7 @@ import { formatEuro } from "@/lib/format";
 import { crmSessionFrom } from "@/lib/crm/auth";
 import {
   SHEET_LIMIT, STRIPE_LIMIT, STRIPE_SESSIONS_URL, checkoutBusiness, checkoutClickId, checkoutFoundUs,
-  freeConsultationFrom, sheetCoverage, sheetReadUrl, stripeCoverage, type Business, type Coverage,
+  checkoutItems, freeConsultationFrom, sheetCoverage, sheetReadUrl, stripeCoverage, type Business, type Coverage,
   type FreeConsultation,
 } from "@/lib/feed-enquiries";
 import { foundUsInNotes } from "@/lib/found-us";
@@ -146,6 +146,19 @@ interface Lead {
    * order here may be SmartCare Living's.
    */
   business?: Business | null;
+  /**
+   * For a paid order, what its Stripe checkout sold, as its line items
+   * describe it: checkoutItems in src/lib/feed-enquiries.ts. A payment link's
+   * product is "Order", and this is where its job is named. Empty when no
+   * checkout was read.
+   */
+  items?: string[];
+  /**
+   * For a paid order, the Stripe customer its checkout was made for, when
+   * there is one. A payment link creates one only when it must: 1 of the 68
+   * completed checkouts carried one on 28 September 2026.
+   */
+  customer?: string;
   /**
    * The sheet's Source column, for contact rows: "smart-space.ie" for a form,
    * "phone_click" for a tap on the phone number. A tap is logged as a Contact
@@ -394,6 +407,8 @@ export async function GET(request: Request) {
         ...(checkoutClickId(session.metadata) ? { gclid: checkoutClickId(session.metadata) } : {}),
         ...(checkoutFoundUs(session.metadata) ? { foundUs: checkoutFoundUs(session.metadata) } : {}),
         business: checkoutBusiness(session),
+        items: checkoutItems(session),
+        ...(typeof session.customer === "string" && session.customer ? { customer: session.customer } : {}),
         details: details.length ? details : undefined,
       });
     }
@@ -731,6 +746,7 @@ export async function GET(request: Request) {
                  the webhook writes "Installation" for every payment link,
                  SmartGuardian's included. */
               business: null,
+              items: [],
               details: manualDetails.length ? manualDetails : undefined,
             });
             continue;

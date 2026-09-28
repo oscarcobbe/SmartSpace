@@ -10,8 +10,8 @@
  * consultation and tied no paid order to an ad. It also read the leads sheet
  * with limit=500 and never said when it had hit the limit, and it built a
  * checkout made from a payment link as product "Order", which let SmartCare
- * Living's SmartGuardian payments pass as Smart Space orders. See
- * src/lib/feed-enquiries.ts.
+ * Living's SmartGuardian payments pass as Smart Space orders and hid the job
+ * a balance was paid on. See src/lib/feed-enquiries.ts.
  *
  * This runs the real route, GET in src/app/api/admin/leads/route.ts, with
  * fetch replaced: Stripe, the sheet's Apps Script and Stripe's balance answer
@@ -95,7 +95,8 @@ const sheetRow = (over) => ({
   orderId: "", source: "smart-space.ie", notes: "", status: "New", ...over,
 });
 const STRIPE = [
-  session("cs_live_meta", "2026-09-25T10:00:00Z", { product_name: "Plus Video Doorbell", gclid: "Cj0-from-metadata" }),
+  session("cs_live_meta", "2026-09-25T10:00:00Z", { product_name: "Plus Video Doorbell", gclid: "Cj0-from-metadata" },
+    { customer: "cus_check" }),
   session("cs_live_sheet", "2026-09-24T10:00:00Z", { product_name: "Eufy Video Doorbell E340" }),
   byLink("cs_live_link_ss", "2026-09-24T09:00:00Z", "Standard Call Out Fee", redirectTo(SMART_SPACE_RETURN)),
   byLink("cs_live_link_scl", "2026-09-24T08:00:00Z", "SmartGuardian Monthly Subscription", redirectTo(SMARTCARE_RETURN)),
@@ -211,6 +212,13 @@ try {
     cs_live_link_unread: null, cs_live_link_unread_url: null, cs_live_link_www: "smartcare-living",
     cs_live_link_clash: null, cs_live_none: "smart-space", cs_live_gone: null,
   }, "each paid order says whose it is: by where the checkout sends the customer and by a SmartGuardian name, and null when neither says or the two disagree");
+
+  /* ---- what each paid order sold, and for whom ---- */
+  eq(Object.fromEntries(["cs_live_meta", "cs_live_link_ss", "cs_live_gone"].map((id) => [id, order(id)?.items])), {
+    cs_live_meta: ["Plus Video Doorbell"], cs_live_link_ss: ["Standard Call Out Fee"], cs_live_gone: [],
+  }, "each paid order lists what its checkout sold, which is where a payment link's job is named, and a stand-in row lists nothing");
+  eq(Object.fromEntries(["cs_live_meta", "cs_live_sheet"].map((id) => [id, order(id)?.customer ?? null])),
+    { cs_live_meta: "cus_check", cs_live_sheet: null }, "a paid order carries its checkout's Stripe customer, when it has one");
 
   /* ---- coverage ---- */
   const sheetAsked = Number(new URL(requests.find((u) => u.startsWith("https://sheet.example.invalid/")) ?? "https://x/?limit=NaN").searchParams.get("limit"));

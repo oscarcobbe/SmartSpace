@@ -194,6 +194,22 @@ export function checkoutClickId(
 }
 
 /**
+ * What a Stripe checkout sold, as its line items describe it.
+ *
+ * The FourWinds report leaves out a customer paying again within 90 days (a
+ * deposit's balance, extra work), and it can only tell it is the same
+ * customer from what the feed gives. A checkout made from a payment link is
+ * built as product "Order" and records no phone (none of the 24 on 28
+ * September 2026), so when a balance is paid from another email address than
+ * its deposit, as one was on 24 August 2026 against a deposit of 5 August,
+ * the only thing that says it is the same job is the link's description,
+ * which Nigel writes with the job's total in it.
+ */
+export function checkoutItems(session: { line_items?: { data?: { description?: string | null }[] } | null }): string[] {
+  return (session.line_items?.data ?? []).map((item) => text(item.description)).filter(Boolean);
+}
+
+/**
  * A Stripe checkout's answer to "How did you find us?": its own metadata
  * first, which /api/checkout writes, then the Notes of the sheet row the
  * Stripe webhook wrote from that same metadata. "" when neither has one.
