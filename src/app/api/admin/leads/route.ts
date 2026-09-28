@@ -3,6 +3,10 @@ import { timingSafeEqual } from "crypto";
 import { PRODUCT_CATALOGUE } from "@/data/productCatalogue";
 import { formatEuro } from "@/lib/format";
 import { crmSessionFrom } from "@/lib/crm/auth";
+import {
+  SHEET_LIMIT, STRIPE_LIMIT, checkoutClickId, freeConsultationFrom, sheetCoverage, stripeCoverage,
+  type Coverage, type FreeConsultation,
+} from "@/lib/feed-enquiries";
 
 export const dynamic = "force-dynamic";
 
@@ -217,6 +221,13 @@ export async function GET(request: Request) {
   }
 
   const leads: Lead[] = [];
+  /* Free consultations booked on the site, dated when they were booked. Kept
+     out of `leads`, which shows each one as its Calendly appointment: see
+     src/lib/feed-enquiries.ts. */
+  const freeConsultations: FreeConsultation[] = [];
+  /* Whether the capped Stripe and sheet reads returned everything. Null
+     when that read failed, which sourceErrors then names. */
+  const coverage: { stripe: Coverage | null; sheet: Coverage | null } = { stripe: null, sheet: null };
   // Per-source error tracking, surfaced to the dashboard so admins know
   // when a section is incomplete (e.g. Stripe API down, Calendly token
   // expired, Apps Script quota exhausted). Without this, partial failures
@@ -264,7 +275,7 @@ export async function GET(request: Request) {
   };
 
   const stripeStarted = park(fetch(
-    "https://api.stripe.com/v1/checkout/sessions?limit=100&status=complete&expand[]=data.custom_fields",
+    `https://api.stripe.com/v1/checkout/sessions?limit=${STRIPE_LIMIT}&status=complete&expand[]=data.custom_fields`,
     { headers: { Authorization: `Bearer ${stripeKey}` }, cache: "no-store", signal: AbortSignal.timeout(10000) },
   ));
 
@@ -277,7 +288,7 @@ export async function GET(request: Request) {
     : null;
 
   const sheetStarted = sheetUrlEarly && readTokenEarly
-    ? park(fetch(`${sheetUrlEarly}?token=${encodeURIComponent(readTokenEarly)}&type=All&limit=500`,
+    ? park(fetch(`${sheetUrlEarly}?token=${encodeURIComponent(readTokenEarly)}&type=All&limit=${SHEET_LIMIT}`,
         { cache: "no-store", redirect: "follow", signal: AbortSignal.timeout(15000) }))
     : null;
 
@@ -289,6 +300,8 @@ export async function GET(request: Request) {
       throw new Error(`Stripe API ${stripeRes.status}: ${errBody.slice(0, 200)}`);
     }
     const stripeData = await stripeRes.json();
+    const sessions = (stripeData.data || []) as { created: number }[];
+    coverage.stripe = stripeCoverage(sessions.map((s) => s.created), STRIPE_LIMIT, stripeData.has_more);
 
     for (const session of stripeData.data || []) {
       const created = new Date(session.created * 1000);
@@ -359,6 +372,10 @@ export async function GET(request: Request) {
           return new Date(+m[1], +m[2] - 1, +m[3], 23, 59, 59).getTime() >= Date.now();
         })(),
         orderId: session.id,
+        /* The click id /api/checkout wrote into the session. The sheet row
+           the webhook wrote carries the same one and fills in below when
+           this is empty. */
+        ...(checkoutClickId(session.metadata) ? { gclid: checkoutClickId(session.metadata) } : {}),
         details: details.length ? details : undefined,
       });
     }
@@ -588,7 +605,7 @@ export async function GET(request: Request) {
       // Stripe-paid orders (orderId starts cs_*) are skipped here because
       // they're already loaded from the Stripe API above; including them
       // would double-count revenue.
-      const url = `${sheetUrl}?token=${encodeURIComponent(readToken)}&type=All&limit=500`;
+      const url = `${sheetUrl}?token=${encodeURIComponent(readToken)}&type=All&limit=${SHEET_LIMIT}`;
       // Apps Script doGet can cold-start at 8-12s. Previous 10s ceiling
       // clipped any cold-start hit and left the admin dashboard empty
       // (same class of failure as the 18 May write and the 21 May
@@ -631,11 +648,12 @@ export async function GET(request: Request) {
           throw new Error(`Apps Script returned: ${sheetData.error}`);
         }
 
-        // Build a Set of Stripe-fetched orderIds so we can skip Sheet rows
-        // that are already in the leads array via the Stripe API path.
-        const stripeOrderIds = new Set(
-          leads.filter((l) => l.type === "Paid Order" && l.orderId).map((l) => l.orderId)
+        // The Stripe-fetched orders by id, so we can skip Sheet rows that
+        // are already in the leads array via the Stripe API path.
+        const stripeOrders = new Map(
+          leads.filter((l) => l.type === "Paid Order" && l.orderId).map((l) => [l.orderId, l])
         );
+        coverage.sheet = sheetCoverage((sheetData.rows || []).length, SHEET_LIMIT);
 
         // Dedupe manual Paid Order rows by name+amount+bookingDate. Manual
         // writes can produce multiple rows with different timestamp-based
@@ -650,8 +668,16 @@ export async function GET(request: Request) {
           const orderId = String(r.orderId || "");
 
           if (rowType === "Paid Order") {
-            // Skip if Stripe API already gave us this order
-            if (orderId && /^cs_(live|test)_/.test(orderId) && stripeOrderIds.has(orderId)) continue;
+            // Skip if Stripe API already gave us this order, keeping the
+            // click id the webhook wrote on this row if Stripe's has none.
+            const order = /^cs_(live|test)_/.test(orderId) ? stripeOrders.get(orderId) : undefined;
+            if (order) {
+              if (!order.gclid) {
+                const clickId = checkoutClickId(null, r);
+                if (clickId) order.gclid = clickId;
+              }
+              continue;
+            }
             // If it's a Stripe-style ID that ISN'T in the Stripe set, the
             // Stripe fetch likely errored, let the Sheet row stand in.
 
@@ -676,8 +702,15 @@ export async function GET(request: Request) {
               bookingSlot: String(r.bookingSlot || "-"),
               status: String(r.status || "New"),
               orderId: orderId || "-",
+              ...(checkoutClickId(null, r) ? { gclid: checkoutClickId(null, r) } : {}),
               details: manualDetails.length ? manualDetails : undefined,
             });
+            continue;
+          }
+
+          const consultation = freeConsultationFrom(r);
+          if (consultation) {
+            freeConsultations.push(consultation);
             continue;
           }
 
@@ -846,6 +879,8 @@ export async function GET(request: Request) {
       count: leads.length,
       generated: new Date().toISOString(),
       stripeUpcomingPayout,
+      freeConsultations,
+      coverage,
       sourceErrors: sourceErrors.length ? sourceErrors : undefined,
     },
     { headers: { "Cache-Control": "no-store" } }
