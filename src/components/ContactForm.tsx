@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import { Send, Check } from "lucide-react";
 import { getAttribution, consentRecord } from "@/lib/attribution";
+import FoundUsField from "@/components/FoundUsField";
 
 // Google Ads conversion send_to value. Pulled from env so the user can
 // fix in Vercel without a code redeploy if the label changes (e.g. the
@@ -107,6 +108,7 @@ export default function ContactForm() {
       subject: (form.elements.namedItem("subject") as HTMLSelectElement).value,
       message: (form.elements.namedItem("message") as HTMLTextAreaElement).value,
       homepage_url: (form.elements.namedItem("homepage_url") as HTMLInputElement | null)?.value ?? "",
+      found_us: (form.elements.namedItem("found_us") as HTMLSelectElement | null)?.value ?? "",
       attribution: getAttribution() ?? undefined,
       consent: consentRecord(),
     };
@@ -256,6 +258,12 @@ export default function ContactForm() {
           placeholder="Tell us about your home security needs..."
         />
       </div>
+
+      <FoundUsField
+        id="found_us"
+        labelClassName="block text-sm font-semibold text-gray-700 mb-2"
+        selectClassName="w-full min-h-11 px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-base sm:text-sm bg-gray-50"
+      />
 
       <button
         type="submit"

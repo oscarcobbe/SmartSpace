@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ClipboardCheck, Home, MessageCircle, Lightbulb, Shield, Star, Wrench, Award, Loader2 } from "lucide-react";
 import BookingCalendar from "@/components/BookingCalendar";
+import FoundUsField from "@/components/FoundUsField";
 import { getAttribution, consentRecord } from "@/lib/attribution";
 
 const SITE = "https://smart-space.ie";
@@ -64,6 +65,8 @@ export default function FreeConsultationPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  /* "How did you find us?", optional: see src/lib/found-us.ts. */
+  const [foundUs, setFoundUs] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -99,6 +102,7 @@ export default function FreeConsultationPage() {
           },
           attribution: getAttribution() ?? undefined,
           consent: consentRecord(),
+          found_us: foundUs,
         }),
       });
       const data = await res.json();
@@ -240,6 +244,14 @@ export default function FreeConsultationPage() {
                     className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
                   />
                 </div>
+
+                <FoundUsField
+                  id="consult-found-us"
+                  value={foundUs}
+                  onChange={setFoundUs}
+                  labelClassName="block text-xs font-medium text-gray-600 mb-1"
+                  selectClassName="w-full min-h-11 border border-gray-300 rounded-xl bg-white px-4 py-2.5 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors"
+                />
               </div>
 
               {error && (

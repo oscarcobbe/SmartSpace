@@ -35,6 +35,7 @@ import { PhoneCall, Check } from "lucide-react";
 
 import { getAttribution, consentRecord } from "@/lib/attribution";
 import { fireLeadConversion } from "@/lib/lead-conversion";
+import FoundUsField from "@/components/FoundUsField";
 
 export default function CallbackForm() {
   const [submitting, setSubmitting] = useState(false);
@@ -70,6 +71,7 @@ export default function CallbackForm() {
         `Phone: ${phone || "not given"}\n` +
         `They have not booked or paid, they asked to be called back.`,
       homepage_url: value("homepage_url"),
+      found_us: value("found_us"),
       attribution: getAttribution() ?? undefined,
       consent: consentRecord(),
     };
@@ -197,6 +199,11 @@ export default function CallbackForm() {
             className="w-full min-h-11 rounded-xl border border-gray-300 px-3.5 text-base sm:text-sm text-gray-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
           />
         </div>
+        <FoundUsField
+          id="cb-found-us"
+          labelClassName="block text-xs font-medium text-gray-700 mb-1"
+          selectClassName="w-full min-h-11 rounded-xl border border-gray-300 bg-white px-3.5 text-base sm:text-sm text-gray-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+        />
       </div>
 
       <button

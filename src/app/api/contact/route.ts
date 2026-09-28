@@ -8,6 +8,7 @@ import { sendToCrm } from "@/lib/crm";
 import { sendSiteAlert } from "@/lib/site-alerts";
 import { monitorBcc } from "@/lib/business-constants";
 import { afterResponse, AFTER_CEILING, type AfterResult } from "@/lib/after-response";
+import { foundUsFrom, notesWithFoundUs } from "@/lib/found-us";
 
 
 // POST routes are inherently dynamic but explicit is better, without
@@ -77,8 +78,10 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    const { name, email, phone, subject, message, attribution, gclid, homepage_url, consent } = body as {
+    const { name, email, phone, subject, message, attribution, gclid, homepage_url, consent, found_us } = body as {
       consent?: ConsentInput | null;
+      /** "How did you find us?", optional: src/lib/found-us.ts. */
+      found_us?: unknown;
       name?: string;
       email?: string;
       phone?: string;
@@ -125,6 +128,8 @@ export async function POST(request: Request) {
     }
 
     const subjectKey = typeof subject === "string" ? subject : "";
+    /* One of the CRM's FOUND_US keys or "" (not answered, or not an answer). */
+    const foundUs = foundUsFrom(found_us);
     const subjectLabel = SUBJECT_LABELS[subjectKey] ?? (subjectKey ? subjectKey : "Website enquiry");
 
     const resend = new Resend(apiKey);
@@ -383,7 +388,7 @@ export async function POST(request: Request) {
           email: email.trim(),
           phone: phone?.trim(),
           attribution: attribution ?? (gclid ? { gclid: gclid.trim() } : undefined),
-          notes: `${subjectLabel}: ${message.trim()}`,
+          notes: notesWithFoundUs(`${subjectLabel}: ${message.trim()}`, foundUs),
           source: "smart-space.ie",
         },
         // Nobody is waiting now: room for a cold start inside the first
@@ -432,7 +437,7 @@ export async function POST(request: Request) {
         gclid: attribution?.gclid ?? gclid ?? null,
         referrer: attribution?.referrer ?? null,
         tags: ["contact-form"],
-        custom: { conversion_id: conversionId, subject_key: subjectKey },
+        custom: { conversion_id: conversionId, subject_key: subjectKey, found_us: foundUs || null },
       }),
     );
 
