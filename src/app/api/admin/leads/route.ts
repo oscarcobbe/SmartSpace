@@ -4,8 +4,9 @@ import { PRODUCT_CATALOGUE } from "@/data/productCatalogue";
 import { formatEuro } from "@/lib/format";
 import { crmSessionFrom } from "@/lib/crm/auth";
 import {
-  SHEET_LIMIT, STRIPE_LIMIT, checkoutClickId, checkoutFoundUs, freeConsultationFrom, sheetCoverage, stripeCoverage,
-  type Coverage, type FreeConsultation,
+  SHEET_LIMIT, STRIPE_LIMIT, STRIPE_SESSIONS_URL, checkoutBusiness, checkoutClickId, checkoutFoundUs,
+  freeConsultationFrom, sheetCoverage, sheetReadUrl, stripeCoverage, type Business, type Coverage,
+  type FreeConsultation,
 } from "@/lib/feed-enquiries";
 import { foundUsInNotes } from "@/lib/found-us";
 
@@ -138,6 +139,13 @@ interface Lead {
    * Not personal data. It identifies the click, not the person.
    */
   gclid?: string;
+  /**
+   * For a paid order, which business its checkout belongs to, or null when
+   * the feed could not tell: see checkoutBusiness in src/lib/feed-enquiries.ts.
+   * Smart Space and SmartCare Living share the Stripe account, so a paid
+   * order here may be SmartCare Living's.
+   */
+  business?: Business | null;
   /**
    * The sheet's Source column, for contact rows: "smart-space.ie" for a form,
    * "phone_click" for a tap on the phone number. A tap is logged as a Contact
@@ -283,7 +291,7 @@ export async function GET(request: Request) {
   };
 
   const stripeStarted = park(fetch(
-    `https://api.stripe.com/v1/checkout/sessions?limit=${STRIPE_LIMIT}&status=complete&expand[]=data.custom_fields`,
+    STRIPE_SESSIONS_URL,
     { headers: { Authorization: `Bearer ${stripeKey}` }, cache: "no-store", signal: AbortSignal.timeout(10000) },
   ));
 
@@ -296,7 +304,7 @@ export async function GET(request: Request) {
     : null;
 
   const sheetStarted = sheetUrlEarly && readTokenEarly
-    ? park(fetch(`${sheetUrlEarly}?token=${encodeURIComponent(readTokenEarly)}&type=All&limit=${SHEET_LIMIT}`,
+    ? park(fetch(sheetReadUrl(sheetUrlEarly, readTokenEarly),
         { cache: "no-store", redirect: "follow", signal: AbortSignal.timeout(15000) }))
     : null;
 
@@ -385,6 +393,7 @@ export async function GET(request: Request) {
            this is empty. */
         ...(checkoutClickId(session.metadata) ? { gclid: checkoutClickId(session.metadata) } : {}),
         ...(checkoutFoundUs(session.metadata) ? { foundUs: checkoutFoundUs(session.metadata) } : {}),
+        business: checkoutBusiness(session),
         details: details.length ? details : undefined,
       });
     }
@@ -614,7 +623,7 @@ export async function GET(request: Request) {
       // Stripe-paid orders (orderId starts cs_*) are skipped here because
       // they're already loaded from the Stripe API above; including them
       // would double-count revenue.
-      const url = `${sheetUrl}?token=${encodeURIComponent(readToken)}&type=All&limit=${SHEET_LIMIT}`;
+      const url = sheetReadUrl(sheetUrl, readToken);
       // Apps Script doGet can cold-start at 8-12s. Previous 10s ceiling
       // clipped any cold-start hit and left the admin dashboard empty
       // (same class of failure as the 18 May write and the 21 May
@@ -718,6 +727,10 @@ export async function GET(request: Request) {
               orderId: orderId || "-",
               ...(checkoutClickId(null, r) ? { gclid: checkoutClickId(null, r) } : {}),
               ...(manual.foundUs ? { foundUs: manual.foundUs } : {}),
+              /* No checkout was read for this row, so nothing says whose it is:
+                 the webhook writes "Installation" for every payment link,
+                 SmartGuardian's included. */
+              business: null,
               details: manualDetails.length ? manualDetails : undefined,
             });
             continue;

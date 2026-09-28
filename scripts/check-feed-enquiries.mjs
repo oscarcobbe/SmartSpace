@@ -8,7 +8,9 @@
  * Consultation" rows and built each paid order from Stripe without the gclid
  * that /api/checkout wrote into the session, so the report counted no free
  * consultation and tied no paid order to an ad. It also read the leads sheet
- * with limit=500 and never said when it had hit the limit. See
+ * with limit=500 and never said when it had hit the limit, and it built a
+ * checkout made from a payment link as product "Order", which let SmartCare
+ * Living's SmartGuardian payments pass as Smart Space orders. See
  * src/lib/feed-enquiries.ts.
  *
  * This runs the real route, GET in src/app/api/admin/leads/route.ts, with
@@ -69,10 +71,22 @@ function load(srcPath, outName) {
 /* ---- the sources, as they answer ---- */
 
 const at = (iso) => Math.floor(Date.parse(iso) / 1000);
-const session = (id, createdIso, metadata) => ({
+/* Where each site sends a paid customer, as Stripe held them on 28 September 2026. */
+const SMART_SPACE_RETURN = "https://smart-space.ie/smartspace-payment-success?session_id={CHECKOUT_SESSION_ID}";
+const SMARTCARE_RETURN = "https://www.smartcareliving.ie/payment-success?session_id={CHECKOUT_SESSION_ID}";
+/* A checkout the site made: metadata, and its own success_url. */
+const session = (id, createdIso, metadata, over = {}) => ({
   id, created: at(createdIso), metadata, payment_status: "paid", amount_total: 13900,
   customer_details: { name: "Test Person", email: `${id}@example.ie`, phone: "+353870000000", address: {} },
-  custom_fields: [],
+  custom_fields: [], success_url: SMART_SPACE_RETURN, payment_link: null,
+  line_items: { object: "list", data: [{ description: metadata.product_name ?? "Order" }], has_more: false },
+  ...over,
+});
+/* A checkout made from a payment link: no metadata, Stripe's placeholder
+   success_url, and the link (expanded) saying where the customer goes. */
+const redirectTo = (url) => ({ id: "plink_check", after_completion: { type: "redirect", redirect: { url } } });
+const byLink = (id, createdIso, description, link) => session(id, createdIso, {}, {
+  success_url: "https://stripe.com", payment_link: link, line_items: { object: "list", data: [{ description }], has_more: false },
 });
 const sheetRow = (over) => ({
   date: "2026-09-25 11:40", type: "Contact Enquiry", name: "Test Person", email: "person@example.ie", gclid: "",
@@ -82,12 +96,21 @@ const sheetRow = (over) => ({
 const STRIPE = [
   session("cs_live_meta", "2026-09-25T10:00:00Z", { product_name: "Plus Video Doorbell", gclid: "Cj0-from-metadata" }),
   session("cs_live_sheet", "2026-09-24T10:00:00Z", { product_name: "Eufy Video Doorbell E340" }),
+  byLink("cs_live_link_ss", "2026-09-24T09:00:00Z", "Standard Call Out Fee", redirectTo(SMART_SPACE_RETURN)),
+  byLink("cs_live_link_scl", "2026-09-24T08:00:00Z", "SmartGuardian Monthly Subscription", redirectTo(SMARTCARE_RETURN)),
+  byLink("cs_live_link_named", "2026-09-24T07:00:00Z", "SmartGuardian Back Payment",
+    { id: "plink_check", after_completion: { type: "hosted_confirmation", redirect: null } }),
+  byLink("cs_live_link_unread", "2026-09-24T06:00:00Z", "Standard Call Out Fee", "plink_not_expanded"),
+  byLink("cs_live_link_clash", "2026-09-23T08:00:00Z", "SmartGuardian Monthly Subscription", redirectTo(SMART_SPACE_RETURN)),
   session("cs_live_none", "2026-09-23T06:12:00Z", { product_name: "Plus Floodlight Cam", gclid: "" }),
 ];
 /* cs_live_meta has no sheet row, as when the webhook's write to the sheet
    failed, so its click id can only come from the checkout's metadata. */
 const SHEET = [
   sheetRow({ date: "2026-09-24 11:01", type: "Paid Order", orderId: "cs_live_sheet", gclid: "Cj0-from-webhook-row" }),
+  /* A webhook row whose checkout Stripe did not return: it stands in for the
+     order, click id and all, and nothing says whose it is. */
+  sheetRow({ date: "2026-09-20 10:00", type: "Paid Order", orderId: "cs_live_gone", gclid: "Cj0-stand-in", product: "Installation" }),
   sheetRow({ date: "2026-09-23 07:13", type: "Paid Order", orderId: "cs_live_none" }),
   sheetRow({ date: "2026-09-21 11:40", type: "Free Consultation", email: "booker@example.ie", gclid: "Cj0-booking",
     product: "Free Home Consultation", bookingDate: "Thu 24 Sep", bookingSlot: "10:00-12:00" }),
@@ -97,10 +120,14 @@ const SHEET = [
 ];
 
 let requests = [];
-function answer({ stripe = STRIPE, hasMore = false, sheet = SHEET }) {
+function answer({ stripe = STRIPE, hasMore = false, sheet = SHEET, sheetTimesOut = 0 }) {
   globalThis.fetch = async (url) => {
     const u = String(url);
     requests.push(u);
+    /* The Apps Script waking up slowly, as the route's retry is there for. */
+    if (u.startsWith("https://sheet.example.invalid/exec?") && sheetTimesOut-- > 0) {
+      throw new DOMException("The operation was aborted due to timeout", "TimeoutError");
+    }
     if (u.startsWith("https://api.stripe.com/v1/checkout/sessions?")) {
       return new Response(JSON.stringify({ object: "list", data: stripe, has_more: hasMore }), { status: 200 });
     }
@@ -142,6 +169,7 @@ try {
   delete process.env.CALENDLY_PERSONAL_TOKEN;
 
   const route = await import(pathToFileURL(join(dir, "route.mjs")).href);
+  const { SHEET_LIMIT } = await import(pathToFileURL(join(dir, "feed-enquiries.mjs")).href);
 
   /* ---- free consultations ---- */
   answer({});
@@ -157,17 +185,29 @@ try {
 
   /* ---- paid orders' click ids ---- */
   const order = (id) => body.leads.find((l) => l.type === "Paid Order" && l.orderId === id);
-  eq(body.leads.filter((l) => l.type === "Paid Order").length, 3, "each Stripe checkout is one paid order");
+  eq(body.leads.filter((l) => l.type === "Paid Order").length, STRIPE.length + 1,
+    "each Stripe checkout is one paid order, and a webhook row whose checkout Stripe did not return stands in for it");
   eq(order("cs_live_meta")?.gclid ?? "", "Cj0-from-metadata", "a paid order carries the click id in its checkout's metadata");
   eq(order("cs_live_sheet")?.gclid ?? "", "Cj0-from-webhook-row", "a paid order whose checkout has none carries the one on its sheet row");
   eq(order("cs_live_none")?.gclid ?? "", "", "a paid order with no click id anywhere carries none");
+  eq(order("cs_live_gone")?.gclid ?? "", "Cj0-stand-in", "a sheet row standing in for a checkout Stripe did not return keeps its click id");
+
+  /* ---- which business each paid order belongs to ---- */
+  const stripeAsk = requests.find((u) => u.startsWith("https://api.stripe.com/v1/checkout/")) ?? "";
+  eq(["data.line_items", "data.payment_link"].filter((e) => !new URL(stripeAsk || "https://x/").searchParams.getAll("expand[]").includes(e)), [],
+    "the Stripe read expands what each checkout's business is read from");
+  eq(Object.fromEntries(STRIPE.map((x) => x.id).concat("cs_live_gone").map((id) => [id, order(id)?.business])), {
+    cs_live_meta: "smart-space", cs_live_sheet: "smart-space", cs_live_link_ss: "smart-space",
+    cs_live_link_scl: "smartcare-living", cs_live_link_named: "smartcare-living",
+    cs_live_link_unread: null, cs_live_link_clash: null, cs_live_none: "smart-space", cs_live_gone: null,
+  }, "each paid order says whose it is: by where the checkout sends the customer and by a SmartGuardian name, and null when neither says or the two disagree");
 
   /* ---- coverage ---- */
   const sheetAsked = Number(new URL(requests.find((u) => u.startsWith("https://sheet.example.invalid/")) ?? "https://x/?limit=NaN").searchParams.get("limit"));
   const stripeAsked = Number(new URL(requests.find((u) => u.startsWith("https://api.stripe.com/v1/checkout/")) ?? "https://x/?limit=NaN").searchParams.get("limit"));
   eq(body.coverage?.sheet, { rows: SHEET.length, limit: sheetAsked, complete: true, oldest: null },
     "a sheet read shorter than its limit is complete, and gives the limit it asked for");
-  eq(body.coverage?.stripe, { rows: 3, limit: stripeAsked, complete: true, oldest: "2026-09-23T06:12:00.000Z" },
+  eq(body.coverage?.stripe, { rows: STRIPE.length, limit: stripeAsked, complete: true, oldest: "2026-09-23T06:12:00.000Z" },
     "Stripe's read is complete when Stripe says there is no more, and its oldest checkout is given");
 
   const padded = [...SHEET, ...Array.from({ length: Math.max(0, sheetAsked - SHEET.length) }, () => sheetRow({ type: "QR Scan", email: "" }))];
@@ -175,6 +215,22 @@ try {
   eq((await feed(route)).coverage?.sheet?.complete, false, "a sheet read that returned as many rows as it asked for is not complete");
   answer({ sheet: [...padded, sheetRow({})] });
   eq((await feed(route)).coverage?.sheet?.complete, false, "a sheet holding more rows than the limit is not complete");
+
+  answer({ sheet: [] });
+  eq((await feed(route)).coverage?.sheet?.complete, false,
+    "a sheet read of no rows is not complete: the Apps Script answers a type it does not know with no rows");
+
+  /* The first read timing out and the retry answering: the retry asks for
+     the same limit, and coverage is judged against it. */
+  answer({ sheetTimesOut: 1 });
+  const retried = await feed(route);
+  const sheetAsks = requests.filter((u) => u.startsWith("https://sheet.example.invalid/"));
+  eq(sheetAsks.length, 2, "a sheet read that timed out is retried once");
+  eq(sheetAsks.map((u) => Number(new URL(u).searchParams.get("limit"))), [SHEET_LIMIT, SHEET_LIMIT],
+    "the first sheet read and its retry both ask for SHEET_LIMIT rows");
+  eq(retried.coverage?.sheet, { rows: SHEET.length, limit: SHEET_LIMIT, complete: true, oldest: null },
+    "the retried read's coverage is judged against the limit it asked for");
+  eq((retried.freeConsultations ?? []).length, 2, "the retried read still lists the free consultations");
 
   answer({ hasMore: true });
   eq((await feed(route)).coverage?.stripe?.complete, false, "a Stripe read with more checkouts behind it is not complete");
