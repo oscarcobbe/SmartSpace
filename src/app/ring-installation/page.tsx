@@ -42,6 +42,7 @@ import {
 } from "lucide-react";
 import { getProductByHandle, ShopifyProduct } from "@/lib/shopify";
 import AddToCartButton from "@/components/AddToCartButton";
+import FoundUsField from "@/components/FoundUsField";
 import CallbackForm from "@/components/CallbackForm";
 import BookingCalendar from "@/components/BookingCalendar";
 import FeaturedProducts from "@/components/FeaturedProducts";
@@ -164,6 +165,8 @@ export default function RingInstallationPage() {
     dateLabel: string;
     slotLabel: string;
   } | null>(null);
+  /* "How did you find us?", optional, sent with the Book Now checkout: see src/lib/found-us.ts. */
+  const [foundUs, setFoundUs] = useState("");
 
   useEffect(() => {
     getProductByHandle("installation-only")
@@ -373,6 +376,16 @@ export default function RingInstallationPage() {
                   );
                 })}
 
+                {product && (
+                  <FoundUsField
+                    id="ring-install-found-us"
+                    value={foundUs}
+                    onChange={setFoundUs}
+                    labelClassName="block text-sm font-semibold text-[#1a1a1a] mb-1"
+                    selectClassName="w-full min-h-11 border-2 border-gray-200 rounded-xl bg-white px-4 py-2.5 text-base sm:text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-none transition-colors"
+                  />
+                )}
+
                 {/* Direct-to-Stripe checkout. Paid LP flow: 1 click,
                     skips the cart drawer (which on a single-product LP
                     is pure friction). The Stripe webhook on success
@@ -394,6 +407,7 @@ export default function RingInstallationPage() {
                     configuration={checkoutConfig}
                     directCheckout
                     directLabel="Book Installation Now"
+                    foundUs={foundUs}
                   />
                 )}
               </div>

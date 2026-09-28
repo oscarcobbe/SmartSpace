@@ -37,6 +37,8 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
  */
 const FILES = {
   "@/lib/feed-enquiries": ["src/lib/feed-enquiries.ts", "feed-enquiries.mjs"],
+  "@/lib/found-us": ["src/lib/found-us.ts", "found-us.mjs"],
+  "@/lib/crm/labels": ["src/lib/crm/labels.ts", "labels.mjs"],
   "@/lib/format": ["src/lib/format.ts", "format.mjs"],
   "@/lib/crm/auth": ["src/lib/crm/auth.ts", "auth.mjs"],
   "@/data/productCatalogue": ["src/data/productCatalogue.ts", "productCatalogue.mjs"],

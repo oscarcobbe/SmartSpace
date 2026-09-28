@@ -8,6 +8,7 @@ import { fireServerConversion } from "@/lib/server-conversions";
 import { sendToCrm } from "@/lib/crm";
 import { alertTo, monitorBcc } from "@/lib/business-constants";
 import { afterResponse, AFTER_CEILING } from "@/lib/after-response";
+import { foundUsFrom, notesWithFoundUs } from "@/lib/found-us";
 
 // POST routes are inherently dynamic but explicit is better, without
 // this, Next.js may try static optimization on a future major.
@@ -43,6 +44,8 @@ interface FreeCheckoutBody {
   /** The cookie banner's stored answer, read in the browser. */
   consent?: ConsentInput | null;
   gclid?: string; // legacy
+  /** "How did you find us?", optional: src/lib/found-us.ts. */
+  found_us?: unknown;
 }
 
 
@@ -71,6 +74,8 @@ export async function POST(request: Request) {
     }
     const { items, customer, attribution, gclid, consent } = parsed;
     const finalAttribution = attribution ?? (gclid ? { gclid } : undefined);
+    /* One of the CRM's FOUND_US keys or "" (not answered, or not an answer). */
+    const foundUs = foundUsFrom(parsed.found_us);
 
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: "No items provided" }, { status: 400 });
@@ -253,6 +258,7 @@ export async function POST(request: Request) {
           bookingSlot: bookedItem?.bookingSlot,
           attribution: finalAttribution,
           source: "smart-space.ie",
+          notes: notesWithFoundUs(undefined, foundUs),
         },
         // Nobody is waiting now: room for a cold start inside the first
         // append, and for an append that ended in doubt to settle before the
@@ -302,6 +308,7 @@ export async function POST(request: Request) {
           booking_date: bookedItem?.bookingDate || null,
           booking_slot: bookedItem?.bookingSlot || null,
           address: customer?.address || null,
+          found_us: foundUs || null,
         },
       }),
     );

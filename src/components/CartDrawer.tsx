@@ -4,12 +4,15 @@ import { useState } from "react";
 import Image from "next/image";
 import { useCart } from "@/context/CartContext";
 import { consentRecord, getAttribution, getGaIds } from "@/lib/attribution";
+import FoundUsField from "@/components/FoundUsField";
 import { X, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 
 export default function CartDrawer() {
   const { items, isOpen, totalQuantity, totalAmount, closeCart, updateQuantity, removeItem } = useCart();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  /* "How did you find us?", optional: see src/lib/found-us.ts. */
+  const [foundUs, setFoundUs] = useState("");
 
   if (!isOpen) return null;
 
@@ -37,7 +40,7 @@ export default function CartDrawer() {
         const res = await fetch("/api/checkout/free", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ items, attribution, consent: consentRecord(), gaClientId: ga.clientId, gaSessionId: ga.sessionId }),
+          body: JSON.stringify({ items, attribution, consent: consentRecord(), gaClientId: ga.clientId, gaSessionId: ga.sessionId, found_us: foundUs }),
         });
         const data = await res.json();
         if (data.success) {
@@ -52,7 +55,7 @@ export default function CartDrawer() {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items, attribution, consent: consentRecord(), gaClientId: ga.clientId, gaSessionId: ga.sessionId }),
+        body: JSON.stringify({ items, attribution, consent: consentRecord(), gaClientId: ga.clientId, gaSessionId: ga.sessionId, found_us: foundUs }),
       });
       const data = await res.json();
       if (data.url) {
@@ -177,6 +180,14 @@ export default function CartDrawer() {
               <span className="text-lg font-bold text-[#1a1a1a]">{formatPrice(totalAmount)}</span>
             </div>
             <p className="text-xs text-gray-500">Shipping and taxes calculated at checkout</p>
+            <FoundUsField
+              id="cart-found-us"
+              value={foundUs}
+              onChange={setFoundUs}
+              disabled={isCheckingOut}
+              labelClassName="block text-xs font-medium text-gray-600 mb-1"
+              selectClassName="w-full min-h-11 rounded-xl border border-gray-300 bg-white px-3.5 text-base sm:text-sm text-gray-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 disabled:opacity-60"
+            />
             {checkoutError && (
               <p className="text-xs text-red-600 bg-red-50 px-3 py-2 rounded-lg">{checkoutError}</p>
             )}
