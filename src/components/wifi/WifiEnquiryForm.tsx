@@ -25,6 +25,7 @@ export default function WifiEnquiryForm({
   title,
   blurb,
   button,
+  emailsReport = false,
 }: {
   /** The report's r parameter, when the form sits on a report. */
   report?: string;
@@ -32,6 +33,10 @@ export default function WifiEnquiryForm({
   title: string;
   blurb: string;
   button: string;
+  /** Whether the customer's copy of the report is emailed, which waits on
+      Nigel's sign-off; the thank-you must not promise an email that is not
+      sent. */
+  emailsReport?: boolean;
 }) {
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState<null | { email: string; dryRun: boolean }>(null);
@@ -91,7 +96,11 @@ export default function WifiEnquiryForm({
         <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 text-green-600 mb-3">
           <Check className="w-6 h-6" />
         </div>
-        <p className="font-bold text-gray-900">{report ? `Your report is on its way to ${done.email}.` : "Thanks, we have your details."}</p>
+        <p className="font-bold text-gray-900">{report && emailsReport
+            ? `Your report is on its way to ${done.email}.`
+            : report
+              ? "Thanks, we have your report and your details."
+              : "Thanks, we have your details."}</p>
         <p className="mt-1 text-sm text-gray-600">We will ring you to talk it through.</p>
       </div>
     );
