@@ -122,9 +122,11 @@ const SHEET = [
      order, click id and all, and nothing says whose it is. */
   sheetRow({ date: "2026-09-20 10:00", type: "Paid Order", orderId: "cs_live_gone", gclid: "Cj0-stand-in", product: "Installation" }),
   sheetRow({ date: "2026-09-23 07:13", type: "Paid Order", orderId: "cs_live_none" }),
+  /* The first booking's Status cell is empty; Nigel typed Spam into the
+     second's. */
   sheetRow({ date: "2026-09-21 11:40", type: "Free Consultation", email: "booker@example.ie", gclid: "Cj0-booking",
-    product: "Free Home Consultation", bookingDate: "Thu 24 Sep", bookingSlot: "10:00-12:00" }),
-  sheetRow({ date: "2026-09-22 12:53", type: "Free Consultation", email: "second@example.ie", source: "smart-space.ie/booking" }),
+    product: "Free Home Consultation", bookingDate: "Thu 24 Sep", bookingSlot: "10:00-12:00", status: "" }),
+  sheetRow({ date: "2026-09-22 12:53", type: "Free Consultation", email: "second@example.ie", source: "smart-space.ie/booking", status: " Spam " }),
   sheetRow({ date: "2026-09-25 11:40", type: "Contact Enquiry", notes: "Installation Enquiry: a question" }),
   sheetRow({ date: "2026-09-14 03:16", type: "QR Scan", source: "business-card:review", email: "" }),
 ];
@@ -190,6 +192,8 @@ try {
     "every Free Consultation row in the sheet is listed, dated when it was booked");
   eq((free ?? []).map((c) => c.gclid ?? ""), ["Cj0-booking", ""], "a free consultation keeps the click id the sheet row carries");
   eq((free ?? []).map((c) => c.email), ["booker@example.ie", "second@example.ie"], "a free consultation says who booked it");
+  eq((free ?? []).map((c) => ("status" in c ? c.status : "(none)")), ["(none)", "Spam"],
+    "a free consultation carries its row's Status when the cell holds one, so Spam typed there reaches the report");
   eq(body.leads.filter((l) => /booker|second/.test(l.email)).length, 0,
     "a free consultation is not also a dashboard row, which shows it as its Calendly appointment");
 

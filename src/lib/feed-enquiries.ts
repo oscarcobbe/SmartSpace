@@ -44,6 +44,10 @@
  * one of the CRM's FOUND_US keys, wherever the site recorded one: the Stripe
  * checkout's metadata for a paid order, the sheet row's Notes for the rest
  * (src/lib/found-us.ts). It is left out when there is no answer.
+ *
+ * And each free consultation's Status, as a contact enquiry's already was:
+ * the report leaves out an enquiry Nigel marked Spam there. A reader that
+ * does not know the field counts the booking as before.
  */
 import { foundUsFrom, foundUsInNotes } from "@/lib/found-us";
 
@@ -153,6 +157,12 @@ export interface FreeConsultation {
   gclid?: string;
   /** Their answer to "How did you find us?", when they gave one. */
   foundUs?: string;
+  /**
+   * The row's Status column, when the cell holds anything: the sheet writes
+   * "New", and Nigel can change it, to "Spam" among others. Left out when the
+   * cell is empty.
+   */
+  status?: string;
 }
 
 /**
@@ -166,6 +176,12 @@ export function freeConsultationFrom(row: Record<string, unknown>): FreeConsulta
   if (text(row.type) !== "Free Consultation") return null;
   const gclid = text(row.gclid);
   const { foundUs } = foundUsInNotes(row.notes);
+  /* The FourWinds portal's weekly report leaves out an enquiry Nigel marked
+     Spam, in the CRM or in this sheet's Status column (fourwinds-portal,
+     scripts/lib/sales-pitches.mjs). The feed passed the column only for
+     contact enquiries, so Spam typed on a booking's row was never read and
+     the booking was counted (the portal's review of 29 September 2026). */
+  const status = text(row.status);
   return {
     date: text(row.date) || "-",
     name: text(row.name) || "-",
@@ -177,6 +193,7 @@ export function freeConsultationFrom(row: Record<string, unknown>): FreeConsulta
     source: text(row.source) || "-",
     ...(gclid ? { gclid } : {}),
     ...(foundUs ? { foundUs } : {}),
+    ...(status ? { status } : {}),
   };
 }
 
