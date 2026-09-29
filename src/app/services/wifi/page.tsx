@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Check, Gauge, MonitorSmartphone, BellRing, UserPlus, FileText, ShieldCheck, Tv, WifiOff, DoorOpen } from "lucide-react";
-import MeshHome from "@/components/wifi/MeshHome";
+import NetworkHouse from "@/components/wifi/NetworkHouse";
 import TrafficLight from "@/components/wifi/TrafficLight";
 import { WIFI_PACKAGES, MONITOR_POINTS, SYMPTOMS, ASSESSMENT_EURO, packageBySlug, priceLabel, priceNote } from "@/data/wifiPackages";
 import type { Light } from "@/lib/wifi-check/grade";
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/services/wifi" },
   openGraph: {
     title: "Home Network Diagnosis | Smart Space",
-    description: "We install it, you live with it, then you decide. Three days of evidence before you spend anything.",
+    description: "Measured, trialled, then fixed. Your broadband and every floor measured, and a working trial system in place for three days, before you spend anything on a fix.",
     url: `${SITE}/services/wifi`,
     type: "website",
     images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Smart Space home network diagnosis" }],
@@ -156,7 +156,7 @@ export default function NetworkDiagnosisPage() {
                 Home Network Diagnosis
               </div>
               <h1 className="fade-up-delay-1 text-[2rem] sm:text-5xl lg:text-[3.25rem] font-extrabold text-ink leading-[1.04] tracking-[-0.04em] mb-5 text-balance">
-                We Install It, You Live With It, Then You Decide
+                Measured. Trialled. Then Fixed.
               </h1>
               <p className="fade-up-delay-2 text-ink-soft text-base sm:text-lg max-w-xl mx-auto lg:mx-0 mb-4">
                 We test your broadband at the router, measure every floor, and leave a working trial system on the worst
@@ -181,13 +181,13 @@ export default function NetworkDiagnosisPage() {
                 </Link>
               </div>
               <p className="mt-6 text-xs text-ink-muted">
-                Credited in full against any work · No cables through walls · Dublin and Leinster
+                Credited in full against any work · Uses your existing wiring · Dublin and Leinster
               </p>
             </div>
 
             <div className="relative">
-              <div className="rounded-[2rem] bg-white border border-gray-100 shadow-premium-lg p-4 sm:p-8">
-                <MeshHome className="w-full h-auto" />
+              <div className="rounded-[2rem] bg-white border border-gray-100 shadow-premium-lg p-3 sm:p-6">
+                <NetworkHouse />
               </div>
             </div>
           </div>

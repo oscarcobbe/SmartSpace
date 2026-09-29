@@ -101,7 +101,7 @@ export const WIFI_PACKAGES: WifiPackage[] = [
       },
       {
         q: "Will you run cables through the walls?",
-        a: "No. The fix carries your connection over the electrical wiring already in the house, powerline, to access points placed where they are needed. No cables through walls, no lifting floors.",
+        a: "No. The fix carries your connection over the electrical wiring already in the house, powerline, to access points placed where they are needed.",
       },
       {
         q: "Which areas do you cover?",
@@ -121,7 +121,6 @@ export const WIFI_PACKAGES: WifiPackage[] = [
       "Access points placed where the measurements say",
       "One network name and password throughout",
       "Configured and tested floor by floor before we leave",
-      "No cables through walls, no lifting floors",
     ],
     intro:
       "Powerline adapters carry your broadband over the electrical wiring already in your walls, to an access point on each floor that needs one. Your phones, TVs, cameras and thermostats connect to the nearest access point, on one network.",
