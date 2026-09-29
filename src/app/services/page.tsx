@@ -110,13 +110,23 @@ export default async function ServicesPage() {
         {/* Eufy entry pill, centred above the service grid. Text-only and
             sized to its label (not full-width) so it reads as a neat pill,
             in Eufy's brand blue (#005D8E) to set it apart from the Ring grid. */}
-        <div className="mb-10 flex justify-center">
+        <div className="mb-10 flex flex-wrap justify-center gap-3">
           <Link
             href="/services/eufy"
             className="inline-flex items-center justify-center bg-gradient-to-r from-[#0a6ea3] to-[#005d8e] hover:from-[#005d8e] hover:to-[#004c75] text-white font-bold text-sm sm:text-base px-7 py-3 rounded-full transition-all shadow-[0_10px_30px_-8px_rgba(0,93,142,0.5)] hover:shadow-[0_16px_45px_-8px_rgba(0,93,142,0.65)] hover:-translate-y-0.5"
           >
             Or View Our Eufy Services
           </Link>
+          {/* Network diagnosis is its own service line, not a Ring add-on, so
+              it gets a pill of its own beside Eufy rather than a card in the
+              Ring grid. Dark ink, so it reads as Smart Space's own and not as a
+              third brand colour. */}
+          {process.env.NEXT_PUBLIC_NETWORK_PAGES_LIVE === "1" && <Link
+            href="/services/wifi"
+            className="inline-flex items-center justify-center bg-[#1C1A18] hover:bg-black text-white font-bold text-sm sm:text-base px-7 py-3 rounded-full transition-all shadow-[0_10px_30px_-8px_rgba(28,26,24,0.45)] hover:-translate-y-0.5"
+          >
+            Home Network Diagnosis
+          </Link>}
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">

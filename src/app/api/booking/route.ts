@@ -9,6 +9,7 @@ import { sendToCrm } from "@/lib/crm";
 import { sendSiteAlert } from "@/lib/site-alerts";
 import { alertTo, monitorBcc } from "@/lib/business-constants";
 import { afterResponse, AFTER_CEILING } from "@/lib/after-response";
+import { sendConsultationConfirmation } from "@/lib/email/send-customer";
 
 
 // POST routes are inherently dynamic but explicit is better, without
@@ -292,6 +293,12 @@ export async function POST(request: Request) {
 
     // Mirror to SmartCRM after the answer, through waitUntil (a bare `void`
     // can be cut off once the function has answered).
+    /* The customer's own confirmation, once Nigel has signed it off in the
+       CRM. Until then they get Calendly's email only, as before. */
+    afterResponse("customer confirmation", AFTER_CEILING.email, () =>
+      sendConsultationConfirmation({ name: name.trim(), email: email.trim(), dateIso: date, slotValue: timeSlot }),
+    );
+
     afterResponse("crm mirror", AFTER_CEILING.crm, () => sendToCrm({
       source: "booking",
       source_detail: `${subjectLabel}, ${dateLabel} ${slotLabel}`,

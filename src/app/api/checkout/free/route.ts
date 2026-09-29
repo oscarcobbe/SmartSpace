@@ -9,6 +9,7 @@ import { sendToCrm } from "@/lib/crm";
 import { alertTo, monitorBcc } from "@/lib/business-constants";
 import { afterResponse, AFTER_CEILING } from "@/lib/after-response";
 import { foundUsFrom, notesWithFoundUs } from "@/lib/found-us";
+import { sendConsultationConfirmation } from "@/lib/email/send-customer";
 
 // POST routes are inherently dynamic but explicit is better, without
 // this, Next.js may try static optimization on a future major.
@@ -239,6 +240,21 @@ export async function POST(request: Request) {
 
     /* The enquirer's cookie answer, kept so a job they later pay by payment
        link can be reported to Google with the consent they gave here. */
+    /* The customer's own confirmation, once Nigel has signed it off in the
+       CRM. Until then they get Calendly's email only, as before. */
+    if (bookedItem?.bookingDate && bookedItem?.bookingSlot && customer?.email) {
+      const booked = { date: bookedItem.bookingDate, slot: bookedItem.bookingSlot };
+      afterResponse("customer confirmation", AFTER_CEILING.email, () =>
+        sendConsultationConfirmation({
+          name: customer.name || "",
+          email: customer.email.trim(),
+          dateIso: booked.date,
+          slotValue: booked.slot,
+          address: customer.address,
+        }),
+      );
+    }
+
     afterResponse("consent record", AFTER_CEILING.consent, () =>
       recordEnquiryConsent({ email: customer?.email, phone: customer?.phone, consent, source: "free_consultation" }),
     );

@@ -16,6 +16,7 @@ import { done, failed, writeFailed, type ActionState } from "../action-state";
 import { getPerson } from "@/lib/crm/people";
 import { createPaymentLink } from "@/lib/crm/payment-link";
 import { parseMoney } from "@/lib/crm/money-input";
+import { sendReviewRequest } from "@/lib/email/send-customer";
 
 /* Our own origin, for the one call that goes back through the front door. */
 function siteBase(): string {
@@ -89,8 +90,8 @@ export async function setLeadStatus(_prev: ActionState, formData: FormData): Pro
      a hand-made request cannot write a value the report does not know. */
   const found = String(formData.get("found_us") ?? "");
   try {
-    const [before] = (await crm<{ status: string; custom: Record<string, unknown> | null }[]>(
-      `crm_leads?site=eq.${site}&id=eq.${leadId}&select=status,custom&limit=1`,
+    const [before] = (await crm<{ status: string; custom: Record<string, unknown> | null; contact_id: string | null; source_detail: string | null }[]>(
+      `crm_leads?site=eq.${site}&id=eq.${leadId}&select=status,custom,contact_id,source_detail&limit=1`,
     )) ?? [];
     if (!before) return failed("This enquiry could not be found, so nothing was changed.");
     const custom = { ...(before.custom ?? {}) };
@@ -112,9 +113,39 @@ export async function setLeadStatus(_prev: ActionState, formData: FormData): Pro
       lead_id: leadId, contact_id: UUID.test(contactId) ? contactId : null,
       kind: "status", summary: said, actor: email, detail: foundChanged ? { found_us: found } : {},
     });
-    return done(logged ? `Saved. ${said}.` : NOT_IN_HISTORY(`Saved. ${said}`));
+    const review = statusChanged && status === "installed" && site === "smart-space"
+      ? await reviewOnInstalled(site, leadId, before.contact_id, before.source_detail)
+      : "";
+    return done(logged ? `Saved. ${said}.${review}` : NOT_IN_HISTORY(`Saved. ${said}${review}`));
   } catch (err) {
     return writeFailed("The change", err);
+  }
+}
+
+/*
+ * Marking an enquiry Installed is one of the two moments the review request
+ * can go, if that is the timing Nigel approved in Sign-off. sendReviewRequest
+ * checks the approval and the timing, and sends once per enquiry; anything
+ * short of a send is silent here unless it failed.
+ */
+async function reviewOnInstalled(site: Site, leadId: string, contactId: string | null, product: string | null): Promise<string> {
+  if (!contactId) return "";
+  try {
+    const [c] = (await crm<{ email: string | null; name: string | null; first_name: string | null }[]>(
+      `crm_contacts?site=eq.${site}&id=eq.${contactId}&select=email,name,first_name&limit=1`,
+    )) ?? [];
+    if (!c?.email) return "";
+    const r = await sendReviewRequest({
+      when: "marked-finished",
+      ref: `lead:${leadId}`,
+      name: c.first_name || c.name || "",
+      email: c.email,
+      product: product || "installation",
+    });
+    if (r.outcome === "sent") return ` The review email has gone to ${c.email}.`;
+    return r.ok ? "" : ` The review email did not go: ${r.outcome}.`;
+  } catch (err) {
+    return ` The review email did not go (${err instanceof Error ? err.message.slice(0, 120) : "no answer"}).`;
   }
 }
 

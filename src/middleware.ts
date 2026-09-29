@@ -24,6 +24,28 @@ export function middleware(request: Request) {
     return new NextResponse("Not found", { status: 404, headers: { "Content-Type": "text/plain" } });
   }
 
+  /* The network diagnosis pages and the Wi-Fi check stay off the public site
+     until Nigel has signed them off and NEXT_PUBLIC_NETWORK_PAGES_LIVE is set
+     to 1. Anyone signed in to the CRM can still open them, which is how he
+     reviews them on the real site. Only the cookie's presence is checked:
+     what it unlocks is marketing pages, not data. */
+  const isNetwork = ["/services/wifi", "/wifi-check", "/api/wifi-check"].some((p) => path === p || path.startsWith(`${p}/`));
+  if (
+    isNetwork &&
+    process.env.NODE_ENV === "production" &&
+    process.env.NEXT_PUBLIC_NETWORK_PAGES_LIVE !== "1" &&
+    !(request.headers.get("cookie") ?? "").includes("crm_session=")
+  ) {
+    return new NextResponse("Not found", { status: 404, headers: { "Content-Type": "text/plain" } });
+  }
+
+  /* Local tooling under /dev (the email studio) is sample customer data and
+     internal notes. It exists under next dev only; a production build answers
+     a real 404 here, before any page can stream a 200. */
+  if ((path === "/dev" || path.startsWith("/dev/")) && process.env.NODE_ENV === "production") {
+    return new NextResponse("Not found", { status: 404, headers: { "Content-Type": "text/plain" } });
+  }
+
   const res = NextResponse.next();
   const h = res.headers;
 
@@ -88,7 +110,17 @@ export function middleware(request: Request) {
     // Irish caller hits google.ie and a British one google.co.uk. Those
     // are wildcarded rather than listed, because naming them one at a
     // time is how this breaks again from a country nobody tested from.
-    "connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://td.doubleclick.net https://stats.g.doubleclick.net https://ad.doubleclick.net https://*.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://*.google.ie https://*.google.co.uk https://api.calendly.com https://*.myshopify.com",
+    // The Wi-Fi check's speed test. locate.measurementlab.net picks the
+    // nearest M-Lab server; the test itself is a WebSocket to that server,
+    // whose name changes with the visitor's location (ndt-mlab1-dub01.mlab-
+    // oti.measurement-lab.org, ndt-...autojoin.measurement-lab.org), hence
+    // the wildcard. The workers that open the socket are served from this
+    // site and get this same policy, so this line covers them too. Under
+    // next dev only, a local ndt7 server is allowed for exercising the page
+    // without M-Lab (see src/lib/wifi-check/speed-test.ts).
+    "connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://td.doubleclick.net https://stats.g.doubleclick.net https://ad.doubleclick.net https://*.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://*.google.ie https://*.google.co.uk https://api.calendly.com https://*.myshopify.com https://locate.measurementlab.net wss://*.measurement-lab.org" +
+      (process.env.NODE_ENV === "development" ? " ws://localhost:*" : ""),
+    "worker-src 'self'",
     "frame-src https://js.stripe.com https://hooks.stripe.com https://calendly.com https://*.calendly.com https://www.google.com https://maps.google.com",
     "base-uri 'self'",
     /* The modern half of the X-Frame-Options header set above. Same rule,

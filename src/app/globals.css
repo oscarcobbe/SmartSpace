@@ -446,3 +446,10 @@ p {
   .crm-root .animate-ping,
   .crm-root .animate-spin { animation: none; }
 }
+
+/* The Wi-Fi check's progress bar. Each half of the speed test runs for ten
+   seconds by the ndt7 protocol, so the bar fills over exactly that and is
+   restarted by React (a new key) when the phase changes. Width on a 6px bar,
+   ten seconds, once per phase: nothing else on the page moves meanwhile. */
+@keyframes wifiGrow { from { width: 0%; } to { width: 100%; } }
+.wifi-grow { animation: wifiGrow 10s linear forwards; }

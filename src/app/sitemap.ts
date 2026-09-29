@@ -86,5 +86,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
   ];
 
+  /* The network pages are listed once they are signed off and switched on. */
+  if (process.env.NEXT_PUBLIC_NETWORK_PAGES_LIVE === "1") {
+    staticRoutes.push(
+      { url: `${BASE}/services/wifi`, lastModified: now, changeFrequency: "weekly", priority: 0.85 },
+      { url: `${BASE}/services/wifi/home-network-assessment`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+      { url: `${BASE}/services/wifi/powerline-access-points`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+      { url: `${BASE}/services/wifi/network-monitoring`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+      { url: `${BASE}/wifi-check`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
+    );
+  }
+
   return staticRoutes;
 }

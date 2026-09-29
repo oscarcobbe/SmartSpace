@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { Activity, BarChart3, CalendarDays, CheckSquare, Euro, Home, Receipt, Send, Users } from "lucide-react";
+import { Activity, BadgeCheck, BarChart3, CalendarDays, CheckSquare, Euro, Home, Mail, Megaphone, Receipt, Send, Users, Wifi } from "lucide-react";
 import type { Site } from "@/lib/crm/db";
 
 /**
@@ -49,6 +49,24 @@ const GROUPS: { heading: string; items: { href: string; label: string; icon: typ
       { href: "/crm/finance", label: "Finance", icon: Euro },
     ],
   },
+  /* What customers are sent, and Nigel's approval of it. Smart Space only:
+     SmartCare Living's messages are its own site's. */
+  {
+    heading: "Messages",
+    items: [
+      { href: "/crm/signoff", label: "Sign-off", icon: BadgeCheck, sites: ["smart-space"] },
+      { href: "/crm/emails", label: "Emails and texts", icon: Mail, sites: ["smart-space"] },
+      { href: "/crm/mailings", label: "Mailings", icon: Megaphone, sites: ["smart-space"] },
+    ],
+  },
+  /* The new Smart Space service, reachable here while its pages are hidden
+     from the public, so it can be tested on the live site. */
+  {
+    heading: "Network service",
+    items: [
+      { href: "/crm/network", label: "Pages and Wi-Fi check", icon: Wifi, sites: ["smart-space"] },
+    ],
+  },
   {
     heading: "Marketing",
     items: [
@@ -80,7 +98,7 @@ export default function CrmNav({ site, horizontal = false }: { site: Site; horiz
     items: g.items
       .filter((i) => !i.sites || i.sites.includes(site))
       .map((i) => ({ ...i, label: LABEL_BY_SITE[i.href]?.[site] ?? i.label })),
-  }));
+  })).filter((g) => g.items.length > 0);
 
   if (horizontal) {
     return (

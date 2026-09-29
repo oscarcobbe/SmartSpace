@@ -87,3 +87,21 @@ export function monitorBcc(): string[] | undefined {
  * else.
  */
 export const SHEET_ALERT_TO = "oscar@fourwindsdigital.com";
+
+/**
+ * The Google review form for Smart Space's Business Profile. One place, used
+ * by the review business card (/r/card) and the after-install review email.
+ * The resolved search.google.com form, not the g.page short link: the short
+ * link redirects twice more, which in-app browsers can refuse (see /r/card).
+ * GBP_REVIEW_URL overrides it, and must also be the resolved form.
+ */
+export const GOOGLE_REVIEW_URL =
+  process.env.GBP_REVIEW_URL?.trim() ||
+  "https://search.google.com/local/writereview?placeid=ChIJh1_MIU27Z0gREjMm56-rD1g";
+
+/**
+ * Where a sign-off decision in the CRM is reported: FourWinds, who act on a
+ * request for changes and switch things on after an approval. Never Nigel;
+ * he made the decision. SIGNOFF_NOTIFY_TO overrides it.
+ */
+export const SIGNOFF_NOTIFY_TO = process.env.SIGNOFF_NOTIFY_TO?.trim() || "oscar@fourwindsdigital.com";
