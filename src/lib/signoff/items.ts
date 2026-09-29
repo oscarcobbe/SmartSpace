@@ -134,7 +134,7 @@ export const SIGNOFF_ITEMS: SignoffItem[] = [
     id: "network:traffic-light",
     group: "network",
     title: "The free Wi-Fi check and its green, amber and red report",
-    effect: "Lets the Wi-Fi check go on the public site, together with the pages below.",
+    effect: "Once approved with the pages below, the website links to the Wi-Fi check and its enquiry form is switched on.",
     preview: [
       { label: "The Wi-Fi check", href: "/wifi-check" },
       { label: "A red report", href: reportPath(SAMPLE_CHECKS.red) },
@@ -154,7 +154,7 @@ export const SIGNOFF_ITEMS: SignoffItem[] = [
     id: "network:pages",
     group: "network",
     title: "The home network diagnosis pages",
-    effect: "Once approved, the pages are switched on for the public.",
+    effect: "Once approved, the website links to these pages and search engines may list them.",
     preview: [
       { label: "The main page", href: "/services/wifi" },
       ...WIFI_PACKAGES.map((p) => ({ label: p.name, href: `/services/wifi/${p.slug}` })),

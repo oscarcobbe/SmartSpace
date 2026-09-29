@@ -104,8 +104,26 @@ if (!liveFn) fail.push("could not find live() in the Wi-Fi check route; this che
 else if (!/VERCEL_ENV === "production"\s*&&\s*process\.env\.NEXT_PUBLIC_NETWORK_PAGES_LIVE === "1"/.test(liveFn)) {
   fail.push("the Wi-Fi check route can send before its pages are public: live() must need both VERCEL_ENV production and NEXT_PUBLIC_NETWORK_PAGES_LIVE=1");
 }
+/* Until then the pages are an unlisted draft: open by link, not indexed, and
+   linked from nowhere on the public site. Oscar, 29 September 2026: live for
+   Nigel to review, but not reachable from the home page. */
 const middleware = readFileSync(join(ROOT, "src/middleware.ts"), "utf8");
-if (!/NEXT_PUBLIC_NETWORK_PAGES_LIVE !== "1"/.test(middleware)) fail.push("middleware no longer hides the network pages until NEXT_PUBLIC_NETWORK_PAGES_LIVE is on");
+if (!/isNetwork && process\.env\.NEXT_PUBLIC_NETWORK_PAGES_LIVE !== "1"\) h\.set\("X-Robots-Tag", "noindex/.test(middleware)) {
+  fail.push("middleware no longer tells search engines to leave the unlisted network pages alone");
+}
+const NETWORK_OWN = ["src/app/services/wifi/", "src/app/wifi-check/", "src/app/api/", "src/app/crm/", "src/app/dev/", "src/components/wifi/", "src/components/email-studio/", "src/lib/", "src/data/", "src/middleware.ts"];
+let linkers = 0;
+for (const f of files) {
+  const rel = f.slice(ROOT.length + 1);
+  if (NETWORK_OWN.some((own) => rel.startsWith(own))) continue;
+  const src = readFileSync(f, "utf8");
+  if (!/\/(services\/wifi|wifi-check)\b/.test(src)) continue;
+  linkers += 1;
+  if (!src.includes('NEXT_PUBLIC_NETWORK_PAGES_LIVE === "1"')) {
+    fail.push(`${rel} links to the unlisted network pages without waiting for NEXT_PUBLIC_NETWORK_PAGES_LIVE`);
+  }
+}
+if (linkers < 3) fail.push(`only ${linkers} public files mention the network pages; the footer, /services and the sitemap should all be found, so this check is reading the wrong thing`);
 
 /* ── Who a mailing may reach ─────────────────────────────────────── */
 const T = (id) => M.templateById(id);

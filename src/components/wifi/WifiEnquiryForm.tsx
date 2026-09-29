@@ -74,6 +74,17 @@ export default function WifiEnquiryForm({
     }
   }
 
+  /* Test mode (the pages are an unlisted draft and the route sends nothing):
+     anyone who finds the page by its link is told so, and given the number. */
+  if (done?.dryRun) {
+    return (
+      <div className="rounded-3xl border border-amber-200 bg-amber-50 px-6 py-8 text-center">
+        <p className="font-bold text-gray-900">This form is not switched on yet, so nothing was sent.</p>
+        <p className="mt-1 text-sm text-gray-700">To reach us now, ring 01 513 0424.</p>
+      </div>
+    );
+  }
+
   if (done) {
     return (
       <div className="rounded-3xl border border-green-200 bg-green-50 px-6 py-8 text-center">
@@ -82,11 +93,6 @@ export default function WifiEnquiryForm({
         </div>
         <p className="font-bold text-gray-900">{report ? `Your report is on its way to ${done.email}.` : "Thanks, we have your details."}</p>
         <p className="mt-1 text-sm text-gray-600">We will ring you to talk it through.</p>
-        {done.dryRun && (
-          <p className="mt-4 inline-block rounded-lg bg-white border border-green-200 px-3 py-1.5 text-xs font-semibold text-green-800">
-            Test mode: nothing was sent to Nigel, the enquiry sheet or the CRM. This form goes live when the pages go public.
-          </p>
-        )}
       </div>
     );
   }

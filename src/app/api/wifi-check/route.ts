@@ -11,11 +11,12 @@
  * Every send below reaches a real person or a real record: Nigel's inbox, the
  * customer's inbox, the leads sheet and the CRM. Until the production
  * deployment has NEXT_PUBLIC_NETWORK_PAGES_LIVE=1, the switch that makes the
- * pages public, this answers { dryRun: true }, logs what it would have sent,
- * and sends nothing. Before that switch only people signed in to the CRM can
- * open the pages (src/middleware.ts), so every enquiry is somebody testing,
- * and on 29 September 2026 the first test on the live site would otherwise
- * have emailed Nigel a lead for a service he had not been told about yet.
+ * pages listed, this answers { dryRun: true }, logs what it would have sent,
+ * and sends nothing. Before that switch the pages are an unlisted first draft
+ * that Nigel and FourWinds review on the live site (src/middleware.ts), so an
+ * enquiry is almost always somebody testing, and on 29 September 2026 the
+ * first test would otherwise have emailed Nigel a lead for a service he had
+ * not been told about yet. The form tells anyone who does use it to ring.
  * WIFI_CHECK_LIVE=1 turns the sends on anywhere, deliberately.
  *
  * No ad conversion fires from here yet. Which conversion action a Wi-Fi

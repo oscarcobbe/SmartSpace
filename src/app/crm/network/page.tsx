@@ -16,11 +16,12 @@ export const dynamic = "force-dynamic";
  * the CRM while they are hidden from the public, so they can be tested on the
  * live site before anyone else sees them.
  *
- * Hidden by src/middleware.ts: without NEXT_PUBLIC_NETWORK_PAGES_LIVE=1 the
- * pages answer 404 to anyone not signed in to the CRM. Their enquiry form
- * sends nothing until the same switch is on (src/app/api/wifi-check/route.ts),
- * because before then every enquiry is somebody testing, and a real send would
- * put a test lead in front of Nigel.
+ * Unlisted until NEXT_PUBLIC_NETWORK_PAGES_LIVE=1 (src/middleware.ts): open to
+ * anyone with the link, linked from nowhere on the site, and not indexed.
+ * Their enquiry form sends nothing until the same switch is on
+ * (src/app/api/wifi-check/route.ts), because before then an enquiry is almost
+ * always somebody testing, and a real send would put a test lead in front of
+ * Nigel.
  */
 
 const COLOURS = [
@@ -62,12 +63,12 @@ export default async function NetworkPages() {
         title="Home network pages"
         sub={
           isPublic
-            ? "The network diagnosis pages and the free Wi-Fi check. They are live on the public site."
-            : "The network diagnosis pages and the free Wi-Fi check. They are hidden from the public until they are approved in Sign-off and switched on. You can open them because you are signed in to the CRM."
+            ? "The network diagnosis pages and the free Wi-Fi check. They are live and linked from the website."
+            : "The network diagnosis pages and the free Wi-Fi check, a first draft. Anyone with the link can open them, but nothing on the website links to them and search engines are asked not to list them, until they are approved in Sign-off and switched on."
         }
         aside={
           <Pill className={isPublic ? SIGNOFF_BADGE.approved.className : SIGNOFF_BADGE.waiting.className}>
-            {isPublic ? "Public" : "Hidden from the public"}
+            {isPublic ? "Live" : "Unlisted"}
           </Pill>
         }
       />
@@ -75,8 +76,8 @@ export default async function NetworkPages() {
       <div className="space-y-6">
         {!isPublic && (
           <Note>
-            Test mode: the enquiry forms on these pages answer as they would for a customer, but send nothing. Nigel,
-            the enquiry sheet and the CRM get nothing from them until the pages are public.
+            Test mode: the enquiry forms on these pages send nothing. Anyone who uses one is told it is not switched on
+            yet and given the phone number. Nigel, the enquiry sheet and the CRM get nothing from them until launch.
           </Note>
         )}
         <Note>

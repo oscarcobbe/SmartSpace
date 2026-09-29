@@ -24,20 +24,9 @@ export function middleware(request: Request) {
     return new NextResponse("Not found", { status: 404, headers: { "Content-Type": "text/plain" } });
   }
 
-  /* The network diagnosis pages and the Wi-Fi check stay off the public site
-     until Nigel has signed them off and NEXT_PUBLIC_NETWORK_PAGES_LIVE is set
-     to 1. Anyone signed in to the CRM can still open them, which is how he
-     reviews them on the real site. Only the cookie's presence is checked:
-     what it unlocks is marketing pages, not data. */
+  /* The network diagnosis pages and the Wi-Fi check. See the X-Robots-Tag
+     below: open to anyone with the link, listed nowhere until launch. */
   const isNetwork = ["/services/wifi", "/wifi-check", "/api/wifi-check"].some((p) => path === p || path.startsWith(`${p}/`));
-  if (
-    isNetwork &&
-    process.env.NODE_ENV === "production" &&
-    process.env.NEXT_PUBLIC_NETWORK_PAGES_LIVE !== "1" &&
-    !(request.headers.get("cookie") ?? "").includes("crm_session=")
-  ) {
-    return new NextResponse("Not found", { status: 404, headers: { "Content-Type": "text/plain" } });
-  }
 
   /* Local tooling under /dev (the email studio) is sample customer data and
      internal notes. It exists under next dev only; a production build answers
@@ -48,6 +37,16 @@ export function middleware(request: Request) {
 
   const res = NextResponse.next();
   const h = res.headers;
+
+  /* The network pages are a first draft, open to anyone with the link since
+     29 September 2026 so Nigel can review them on the real site, and unlisted
+     until he signs them off and NEXT_PUBLIC_NETWORK_PAGES_LIVE is set to 1.
+     Nothing on the site links to them before that switch (the footer,
+     /services and the sitemap wait for it, and scripts/check-signoff.mjs
+     fails the build if any other public page links early), search engines
+     are told not to index them, and their enquiry form sends nothing
+     (src/app/api/wifi-check/route.ts). */
+  if (isNetwork && process.env.NEXT_PUBLIC_NETWORK_PAGES_LIVE !== "1") h.set("X-Robots-Tag", "noindex, nofollow");
 
   h.set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
   h.set("X-Content-Type-Options", "nosniff");
