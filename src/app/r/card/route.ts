@@ -46,15 +46,9 @@
  */
 
 import { trackQrScan } from "@/lib/qr-scan";
-
-// Direct Google review form for the GBP place ID (resolved from the old
-// g.page short link). Returns HTTP 200 with no further redirects, so the
-// scan lands in one hop. If GBP_REVIEW_URL is set in Vercel it overrides
-// this, make sure that env (if used) is the search.google.com form, NOT
-// the g.page short link, or the 3-hop chain comes back.
-const GOOGLE_REVIEW_URL =
-  process.env.GBP_REVIEW_URL?.trim() ||
-  "https://search.google.com/local/writereview?placeid=ChIJh1_MIU27Z0gREjMm56-rD1g";
+// Direct Google review form for the GBP place ID, shared with the
+// after-install review email. See its note in business-constants.ts.
+import { GOOGLE_REVIEW_URL } from "@/lib/business-constants";
 
 // Force dynamic, every scan is a unique event. No CDN/edge caching, ever.
 export const dynamic = "force-dynamic";

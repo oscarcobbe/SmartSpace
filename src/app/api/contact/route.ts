@@ -9,6 +9,7 @@ import { sendSiteAlert } from "@/lib/site-alerts";
 import { monitorBcc } from "@/lib/business-constants";
 import { afterResponse, AFTER_CEILING, type AfterResult } from "@/lib/after-response";
 import { foundUsFrom, notesWithFoundUs } from "@/lib/found-us";
+import { enquiryReceived, SPECIALISTS } from "@/lib/email/customer";
 
 
 // POST routes are inherently dynamic but explicit is better, without
@@ -226,7 +227,8 @@ export async function POST(request: Request) {
     // Nigel via sendSiteAlert when the customer-side auto-reply fails so
     // the lead doesn't bounce in silence.
     const firstNameSafe = escapeHtml(name.trim().split(" ")[0]);
-    const subjectLowerSafe = escapeHtml(subjectLabel.toLowerCase());
+    /* "your installation enquiry", not "your enquiry about installation enquiry". */
+    const receivedSafe = escapeHtml(enquiryReceived(subjectKey));
     const customerEmail = email.trim();
     const customerName = name.trim();
     const sendAutoReply = (): Promise<AfterResult> => resend.emails.send({
@@ -237,13 +239,13 @@ export async function POST(request: Request) {
       text: [
         `Hi ${name.trim().split(" ")[0]},`,
         "",
-        `Thanks for getting in touch with Smart Space. We've received your enquiry about ${subjectLabel.toLowerCase()} and will be back to you within one business day (usually a lot sooner).`,
+        `Thanks for getting in touch with Smart Space. We've received ${enquiryReceived(subjectKey)} and will be back to you within one business day (usually a lot sooner).`,
         "",
         `If it's urgent in the meantime, you can reach us directly:`,
         `  Phone: 01 513 0424`,
         `  Email: info@smart-space.ie`,
         "",
-        "We're Ring installation specialists, transparent pricing quoted up front, no contracts, brand-agnostic across Ring, Eufy, Nest, Tapo, and Aosu.",
+        SPECIALISTS,
         "",
         "Talk soon,",
         "Nigel and the Smart Space team",
@@ -274,7 +276,7 @@ export async function POST(request: Request) {
       </td></tr>
       <tr><td style="padding:36px 32px 8px;font-family:'Plus Jakarta Sans','Inter',Helvetica,Arial,sans-serif;">
         <h1 style="margin:0;font-size:24px;line-height:1.2;letter-spacing:-0.4px;color:#1C1A18;font-weight:800;">Thanks, ${firstNameSafe}. We've got your message.</h1>
-        <p style="margin:16px 0 0;font-size:16px;line-height:1.6;color:#3f3d3a;">We've received your enquiry about <strong style="color:#1C1A18;">${subjectLowerSafe}</strong> and will be back to you within <strong style="color:#1C1A18;">one business day</strong> (usually a lot sooner).</p>
+        <p style="margin:16px 0 0;font-size:16px;line-height:1.6;color:#3f3d3a;">We've received <strong style="color:#1C1A18;">${receivedSafe}</strong> and will be back to you within <strong style="color:#1C1A18;">one business day</strong> (usually a lot sooner).</p>
       </td></tr>
       <tr><td style="padding:24px 32px 8px;font-family:'Plus Jakarta Sans','Inter',Helvetica,Arial,sans-serif;">
         <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="border-left:3px solid #f48222;">
@@ -288,7 +290,7 @@ export async function POST(request: Request) {
         </table>
       </td></tr>
       <tr><td style="padding:24px 32px 8px;font-family:'Plus Jakarta Sans','Inter',Helvetica,Arial,sans-serif;">
-        <p style="margin:0;font-size:15px;line-height:1.6;color:#3f3d3a;">We're Ring installation specialists. Transparent pricing quoted up front, no contracts, brand-agnostic across Ring, Eufy, Nest, Tapo, and Aosu.</p>
+        <p style="margin:0;font-size:15px;line-height:1.6;color:#3f3d3a;">${SPECIALISTS}</p>
       </td></tr>
       <tr><td style="padding:24px 32px 32px;font-family:'Plus Jakarta Sans','Inter',Helvetica,Arial,sans-serif;">
         <p style="margin:0;font-size:15px;line-height:1.6;color:#3f3d3a;">Talk soon,<br><strong style="color:#1C1A18;">Nigel and the Smart Space team</strong><br><a href="https://smart-space.ie" style="color:#f48222;font-weight:700;text-decoration:underline;">smart-space.ie</a></p>

@@ -11,6 +11,13 @@ const serviceLinks = [
   { href: "/services/eldercare-security-bundle", label: "Eldercare Bundle" },
   { href: "/services/installation-only", label: "Installation Only" },
   { href: "/services/free-consultation", label: "Free Consultation" },
+  /* Listed once the network pages are signed off and switched on. */
+  ...(process.env.NEXT_PUBLIC_NETWORK_PAGES_LIVE === "1"
+    ? [
+        { href: "/services/wifi", label: "Home Network Diagnosis" },
+        { href: "/wifi-check", label: "Free Wi-Fi Check" },
+      ]
+    : []),
 ];
 
 const companyLinks = [

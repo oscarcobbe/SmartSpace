@@ -32,7 +32,9 @@ import EngagementTracker from "@/components/EngagementTracker";
 export default function SiteChrome({ children }: { children: React.ReactNode }) {
   const path = usePathname();
 
-  if (path?.startsWith("/crm")) return <>{children}</>;
+  /* /dev is local tooling (the email studio), not a page on the website:
+     no navbar, no cookie banner, no trackers. */
+  if (path?.startsWith("/crm") || path?.startsWith("/dev/")) return <>{children}</>;
 
   return (
     <CartProvider>

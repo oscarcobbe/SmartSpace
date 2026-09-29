@@ -19,6 +19,7 @@ const SOURCES: Record<string, string> = {
   "urgent-callback": "Urgent callback",
   urgent_callback: "Urgent callback",
   checkout_free: "Free consultation",
+  wifi_check: "Wi-Fi check",
   website: "Website",
   phone: "Rang in",
   voicemail: "Left a voicemail",
