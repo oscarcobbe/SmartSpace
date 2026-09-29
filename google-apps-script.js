@@ -882,7 +882,9 @@ function round2_(n) { return Math.round(n * 100) / 100; }
  * Note: QR Scan and Booking Reminder rows are excluded — passive/system
  * events, never carry a GCLID, not inbound leads.
  */
-var LEAD_TYPES = ["Free Consultation", "Contact Enquiry", "Paid Order", "Newsletter Signup"];
+// "WiFi Check" added 29 Sep 2026, when the home network pages went live: an
+// enquiry from the Wi-Fi check or a network service page is a lead.
+var LEAD_TYPES = ["Free Consultation", "Contact Enquiry", "Paid Order", "Newsletter Signup", "WiFi Check"];
 
 // >>> What one lead is worth on average (avg job value × close rate).
 // Set to €250 on 2026-06-17 (Oscar). Paid Order rows ignore this and use

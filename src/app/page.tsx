@@ -6,6 +6,7 @@ import WholeHomeSection from "@/components/WholeHomeSection";
 import MailingList from "@/components/MailingList";
 import ReviewsSurfacing from "@/components/ReviewsSurfacing";
 import FreeConsultationCTA from "@/components/FreeConsultationCTA";
+import NetworkBand from "@/components/NetworkBand";
 
 export default function Home() {
   return (
@@ -17,6 +18,7 @@ export default function Home() {
       <FeaturedProducts />
       <PromoBanner />
       <WholeHomeSection />
+      <NetworkBand />
       <MailingList />
     </>
   );

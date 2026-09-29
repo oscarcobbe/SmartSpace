@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, Check, Plus, ShieldCheck } from "lucide-react";
 import TrafficLight, { LightDot, LIGHT_TEXT, LIGHT_WORD } from "@/components/wifi/TrafficLight";
 import WifiEnquiryForm from "@/components/wifi/WifiEnquiryForm";
+import { approval } from "@/lib/signoff/state";
 import { decodeCheck } from "@/lib/wifi-check/codec";
 import {
   grade,
@@ -106,7 +107,7 @@ function PackageCard({ pkg, lead, why }: { pkg: WifiPackage; lead: boolean; why?
   );
 }
 
-export default function WifiReportPage({ searchParams }: { searchParams: { r?: string } }) {
+export default async function WifiReportPage({ searchParams }: { searchParams: { r?: string } }) {
   const raw = typeof searchParams.r === "string" ? searchParams.r : null;
   const check = decodeCheck(raw);
 
@@ -266,13 +267,27 @@ export default function WifiReportPage({ searchParams }: { searchParams: { r?: s
 
           {/* Send it */}
           <div className="max-w-2xl mx-auto w-full">
-            <WifiEnquiryForm
-              report={raw}
-              pkg={g.recommend}
-              title="Email me this report"
-              blurb="We send the full report to your inbox and ring you to talk it through."
-              button="Send my report"
-            />
+            {/* The customer's emailed copy waits on Nigel's sign-off
+                (src/app/api/wifi-check/route.ts). Until it is approved the
+                form offers a call about the report, and promises no email. */}
+            {(await approval("email:wifi-report")).approved ? (
+              <WifiEnquiryForm
+                report={raw}
+                pkg={g.recommend}
+                title="Email me this report"
+                blurb="We send the full report to your inbox and ring you to talk it through."
+                button="Send my report"
+                emailsReport
+              />
+            ) : (
+              <WifiEnquiryForm
+                report={raw}
+                pkg={g.recommend}
+                title="Talk this report through with us"
+                blurb="Leave your details and we ring you to go through it. The report stays at this page's address, so you can come back to it."
+                button="Request a callback"
+              />
+            )}
           </div>
 
           {/* The rules */}

@@ -63,12 +63,12 @@ export const WIFI_PACKAGES: WifiPackage[] = [
     lights: ["amber", "red"],
     popular: true,
     features: [
-      "A two-hour visit: your broadband tested at the router, then every room measured",
-      "The speed each floor actually gets, measured",
-      "A trial system installed on the worst floor",
+      "A two-hour visit: your broadband tested at the router by cable, then every room measured",
+      "The speed each floor of your house can actually carry, measured rather than estimated",
+      "A working trial system installed on the floor that struggles",
       "Three days of continuous monitoring while you live with it",
-      "A collection visit",
-      "A written report with the figures and what we'd recommend",
+      "A second visit to collect the equipment",
+      "A written report: the figures, what they mean, and what we would recommend",
     ],
     intro:
       "We measure your house before you spend a euro. We test your broadband at the router and measure every floor, then leave a trial system working on the worst floor and monitor it for three days. You get a written report with the actual figures: whether the problem is your broadband or your house, and what we'd recommend.",
@@ -242,14 +242,14 @@ export const MONITOR_POINTS: { title: string; body: string }[] = [
 export const SYMPTOMS: { title: string; body: string }[] = [
   {
     title: "Buffering",
-    body: "The TV buffers in the evening, or a video call freezes, while the broadband looks fine at the router.",
+    body: "The TV stalls in the evening, or a video call freezes, while the broadband looks fine at the router.",
   },
   {
     title: "Devices dropping off",
-    body: "A camera, doorbell or thermostat keeps going offline and coming back.",
+    body: "A camera, doorbell or thermostat keeps going offline and coming back. When that happens, the network is the first thing to check.",
   },
   {
     title: "Dead rooms",
-    body: "Fine downstairs, hopeless upstairs, or nothing in the back bedroom or the garden room.",
+    body: "Fine downstairs, hopeless upstairs, or nothing at all in the back bedroom or the garden room.",
   },
 ];
