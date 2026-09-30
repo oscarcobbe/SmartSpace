@@ -3,13 +3,30 @@ import { ArrowRight, Phone, Clock } from "lucide-react";
 import type { ReactNode } from "react";
 import type { BlogPost } from "@/app/blog/blog-posts";
 
+type Cta = {
+  title: string;
+  body: string;
+  primary: { label: string; href: string };
+  secondary?: { label: string; href: string };
+};
+
 type Props = {
   post: BlogPost;
   toc: { id: string; label: string }[];
   children: ReactNode;
+  /** The closing box. Security guides end on the free consultation; the home
+      network guides end on the free Wi-Fi check and the assessment, which is
+      what someone reading about slow Wi-Fi can use next. */
+  cta?: Cta;
 };
 
-export default function BlogLayout({ post, toc, children }: Props) {
+const CONSULTATION: Cta = {
+  title: "Want Smart Space to handle it for you?",
+  body: "Book a complimentary consultation. We'll walk your home with you, identify the right setup, and send a written quote the same day.",
+  primary: { label: "Get a Free Quote", href: "/services/free-consultation" },
+};
+
+export default function BlogLayout({ post, toc, children, cta = CONSULTATION }: Props) {
   return (
     <div className="pt-32 lg:pt-36 pb-16 lg:pb-24">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -70,21 +87,24 @@ export default function BlogLayout({ post, toc, children }: Props) {
 
         {/* Final CTA */}
         <section className="mt-16 bg-gradient-to-br from-[#1a1a1a] to-[#2a2a2a] text-white rounded-2xl p-8 sm:p-12">
-          <h2 className="text-2xl sm:text-3xl font-extrabold mb-3">
-            Want Smart Space to handle it for you?
-          </h2>
-          <p className="text-white/70 mb-6 max-w-lg">
-            Book a complimentary consultation. We&apos;ll walk your home with you,
-            identify the right setup, and send a written quote the same day.
-          </p>
+          <h2 className="text-2xl sm:text-3xl font-extrabold mb-3">{cta.title}</h2>
+          <p className="text-white/70 mb-6 max-w-lg">{cta.body}</p>
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
-              href="/services/free-consultation"
-              className="inline-flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-bold px-8 py-3.5 rounded-full transition-colors"
+              href={cta.primary.href}
+              className="inline-flex items-center justify-center gap-2 bg-brand-700 hover:bg-brand-800 text-white font-bold px-8 py-3.5 rounded-full transition-colors"
             >
-              Get a Free Quote
+              {cta.primary.label}
               <ArrowRight className="w-4 h-4" />
             </Link>
+            {cta.secondary && (
+              <Link
+                href={cta.secondary.href}
+                className="inline-flex items-center justify-center gap-2 border-2 border-white/20 hover:border-white/40 text-white font-semibold px-8 py-3.5 rounded-full transition-colors"
+              >
+                {cta.secondary.label}
+              </Link>
+            )}
             <a
               href="tel:+35315130424"
               className="inline-flex items-center justify-center gap-2 border-2 border-white/20 hover:border-white/40 text-white font-semibold px-8 py-3.5 rounded-full transition-colors"
