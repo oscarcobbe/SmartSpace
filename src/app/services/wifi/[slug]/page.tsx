@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowRight, Check, Phone } from "lucide-react";
 import TrafficLight, { LIGHT_WORD } from "@/components/wifi/TrafficLight";
 import WifiEnquiryForm from "@/components/wifi/WifiEnquiryForm";
-import { WIFI_PACKAGES, MONITOR_POINTS, packageBySlug, priceLabel, priceNote } from "@/data/wifiPackages";
+import { WIFI_PACKAGES, MONITOR_POINTS, MONITOR_UNIT, packageBySlug, priceLabel, priceNote } from "@/data/wifiPackages";
 import { BUSINESS_PHONE_DISPLAY, BUSINESS_PHONE_E164 } from "@/lib/business-constants";
 
 const SITE = "https://smart-space.ie";
@@ -146,7 +146,7 @@ export default function WifiPackagePage({ params }: { params: { slug: string } }
           {isMonitoring && (
             <div className="mt-10">
               <h2 className="text-2xl font-extrabold text-ink tracking-[-0.03em] mb-5">What the unit does</h2>
-              <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <ul className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {MONITOR_POINTS.map((m) => (
                   <li key={m.title} className="rounded-2xl border border-gray-100 bg-white shadow-premium p-5">
                     <div className="font-bold text-ink mb-1">{m.title}</div>
@@ -154,6 +154,31 @@ export default function WifiPackagePage({ params }: { params: { slug: string } }
                   </li>
                 ))}
               </ul>
+
+              <div className="mt-10 grid lg:grid-cols-2 gap-6">
+                <div className="rounded-3xl bg-[#1C1A18] text-white p-6 sm:p-8">
+                  <h2 className="text-2xl font-extrabold tracking-[-0.03em] mb-5">The unit</h2>
+                  <dl className="divide-y divide-white/10">
+                    {MONITOR_UNIT.specs.map((s) => (
+                      <div key={s.label} className="flex items-start justify-between gap-6 py-3 text-sm">
+                        <dt className="text-white/60 shrink-0">{s.label}</dt>
+                        <dd className="font-semibold text-right">{s.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+                <div className="rounded-3xl bg-cream border border-gray-100 p-6 sm:p-8">
+                  <h2 className="text-2xl font-extrabold text-ink tracking-[-0.03em] mb-5">Good to know</h2>
+                  <ul className="space-y-3.5">
+                    {MONITOR_UNIT.tips.map((t) => (
+                      <li key={t} className="flex items-start gap-3 text-sm text-ink-soft leading-relaxed">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500" aria-hidden="true" />
+                        {t}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
             </div>
           )}
         </div>
