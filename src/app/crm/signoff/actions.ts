@@ -12,6 +12,7 @@ import { Resend } from "resend";
 import { requireSession } from "@/lib/crm/session";
 import { recordDecision } from "@/lib/signoff/state";
 import { itemById } from "@/lib/signoff/items";
+import { sclItems, recordSclDecision } from "@/lib/signoff/scl";
 import { SIGNOFF_NOTIFY_TO } from "@/lib/business-constants";
 import { done, failed, writeFailed, type ActionState } from "../action-state";
 
@@ -30,7 +31,9 @@ async function tellFourWinds(subject: string, text: string) {
 export async function decide(_prev: ActionState, form: FormData): Promise<ActionState> {
   const session = requireSession();
   const itemId = String(form.get("item") ?? "");
-  const item = itemById(itemId);
+  /* SmartCare Living's items come from that site's catalogue, not this repo. */
+  const isScl = itemId.startsWith("scl:");
+  const item = isScl ? (await sclItems()).items.find((i) => i.id === itemId) : itemById(itemId);
   if (!item) return failed("That item is not on the sign-off list.");
 
   const decision = form.get("decision");
@@ -41,14 +44,15 @@ export async function decide(_prev: ActionState, form: FormData): Promise<Action
   if (decision === "changes" && !comment) return failed("Say what should change, so it can be done.");
 
   try {
-    await recordDecision({ itemId, decision, choice, comment: comment || null, by: session.email });
+    if (isScl) await recordSclDecision({ item, decision, comment: comment || null, by: session.email });
+    else await recordDecision({ itemId, decision, choice, comment: comment || null, by: session.email });
   } catch (err) {
     return writeFailed("The decision", err);
   }
 
   const picked = choice ? item.choices?.find((c) => c.id === choice)?.label : null;
   await tellFourWinds(
-    decision === "approved" ? `Signed off: ${item.title}` : `Changes asked for: ${item.title}`,
+    decision === "approved" ? `Signed off${isScl ? " (SmartCare Living)" : ""}: ${item.title}` : `Changes asked for${isScl ? " (SmartCare Living)" : ""}: ${item.title}`,
     [
       `${session.email} ${decision === "approved" ? "approved" : "asked for changes to"}: ${item.title}`,
       picked ? `Choice: ${picked}` : "",

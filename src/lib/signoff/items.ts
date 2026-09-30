@@ -32,7 +32,7 @@ import {
 } from "@/lib/wifi-check/grade";
 import { reportPath } from "@/lib/wifi-check/codec";
 
-export type SignoffGroup = "reminders" | "booking" | "after" | "network" | "mailings";
+export type SignoffGroup = "reminders" | "booking" | "after" | "network" | "mailings" | "scl-quiz";
 
 export const GROUP_TITLE: Record<SignoffGroup, string> = {
   reminders: "Day-before reminders",
@@ -40,6 +40,7 @@ export const GROUP_TITLE: Record<SignoffGroup, string> = {
   after: "After the installation",
   network: "The network service and the Wi-Fi check",
   mailings: "Emails to past customers",
+  "scl-quiz": "Emails after the quiz",
 };
 
 export interface SignoffItem {

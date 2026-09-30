@@ -40,3 +40,23 @@ export async function sclCatalogue(): Promise<{ stages: Stage[]; entries: Entry[
     return { stages: [], entries: [], problem: `Could not reach SmartCare Living's site for its emails (${String(err).slice(0, 120)}).` };
   }
 }
+
+/**
+ * One quiz email for one real person, rendered by smartcareliving.ie from the
+ * same function the catalogue shows. POST, body signed (lib/crm/scl-link).
+ */
+export async function sclRender(step: string, ctx: Record<string, unknown>): Promise<Email> {
+  const body = JSON.stringify({ render: step, ctx });
+  const signature = createHmac("sha256", process.env.CRM_HMAC_SECRET?.trim() || "").update(body).digest("hex");
+  const res = await fetch(process.env.SCL_EMAIL_CATALOGUE_URL || URL_DEFAULT, {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-crm-signature": signature },
+    body,
+    cache: "no-store",
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!res.ok) throw new Error(`smartcareliving.ie answered ${res.status} to the render`);
+  const mail = (await res.json()) as Email;
+  if (!mail?.subject || !mail?.html) throw new Error("smartcareliving.ie sent back an empty email");
+  return mail;
+}
