@@ -9,12 +9,12 @@ import type { Light, Place } from "@/lib/wifi-check/grade";
 const SITE = "https://smart-space.ie";
 
 export const metadata: Metadata = {
-  title: "Free Wi-Fi Check and Speed Test | Smart Space",
+  title: "Free Wi-Fi Speed Test, Room by Room | Smart Space Ireland",
   description:
-    "Test your broadband and Wi-Fi room by room, answer six questions about your home, and get a report graded green, amber or red with what to do next. Free, about 20 seconds per test.",
+    "A free Wi-Fi and broadband speed test for Irish homes. Test beside the router, then in the room where it struggles, answer six questions, and get a report graded green, amber or red with what to do next.",
   alternates: { canonical: "/wifi-check" },
   openGraph: {
-    title: "Free Wi-Fi Check and Speed Test | Smart Space",
+    title: "Free Wi-Fi Speed Test, Room by Room | Smart Space",
     description:
       "A speed test and six questions about your home. Your report is graded green, amber or red.",
     url: `${SITE}/wifi-check`,
@@ -88,7 +88,7 @@ export default function WifiCheckPage({ searchParams }: { searchParams: { r?: st
               Free Wi-Fi Check
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-ink mb-4 tracking-[-0.035em]">
-              How Good Is Your Wi-Fi?
+              Free Wi-Fi Speed Test, Room by Room
             </h1>
             <p className="text-ink-soft text-base sm:text-lg max-w-2xl mx-auto">
               Test beside the router, then in the room where it struggles. Answer six questions about your home and

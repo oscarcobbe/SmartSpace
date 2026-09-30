@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Clock, Home, ShieldCheck } from "lucide-react";
+import NetworkLink from "@/components/NetworkLink";
 
 export default function FreeConsultationCTA() {
   return (
@@ -40,6 +41,7 @@ export default function FreeConsultationCTA() {
                   or call 01 513 0424
                 </a>
               </div>
+              <NetworkLink tone="dark" className="mt-6 text-center lg:text-left" />
             </div>
 
             {/* Right: trust points */}

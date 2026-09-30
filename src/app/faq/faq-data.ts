@@ -32,6 +32,10 @@ export const FAQS = [
     a: "Yes. As well as installing Eufy kit you bought yourself, we now supply and fit the full Eufy range, the Video Doorbell E340 from €394, the Floodlight Cam E340 from €404, and home bundles, all with footage stored locally and no monthly subscription. Supplied and professionally installed across Dublin and Leinster.",
   },
   {
+    q: "Can you help when the Wi-Fi doesn't reach every room?",
+    a: "Yes, as its own service: home network diagnosis. We test your broadband at the router, measure every floor, and leave a working trial system in your house for three days before you buy anything, with the figures in a written report. The free Wi-Fi speed test on our site is a good first step.",
+  },
+  {
     q: "How much does a Ring install cost?",
     a: "Installation-only starts at €139. A single Ring Video Doorbell (supplied and installed) starts at €329. An External Camera (supplied and installed) starts at €299. Bundles start at €509. See our Services page for full pricing.",
   },

@@ -69,6 +69,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // Blog, informational top-of-funnel content. Each post targets a
     // distinct buyer-research query so they don't cannibalise each other.
     { url: `${BASE}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
+    { url: `${BASE}/blog/broadband-speed-test-ireland-line-or-wifi`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${BASE}/blog/how-to-test-wifi-speed-room-by-room`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${BASE}/blog/wifi-extender-mesh-or-powerline-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/blog/ring-vs-eufy-doorbell-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/blog/eufy-video-doorbell-e340-fitted-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/blog/eufy-home-bundles-driveway-garden-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },

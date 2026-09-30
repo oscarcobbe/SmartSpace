@@ -10,6 +10,36 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "broadband-speed-test-ireland-line-or-wifi",
+    title: "Broadband Speed Test in Ireland: Is It the Line or the Wi-Fi?",
+    description:
+      "An eir, Virgin Media or Vodafone speed test tells you about your broadband line. A test in the room that struggles tells you about your Wi-Fi. How to run both, read the numbers, and know who to call.",
+    datePublished: "2026-09-30",
+    dateModified: "2026-09-30",
+    readingTime: "4 min read",
+    category: "Home Network",
+  },
+  {
+    slug: "how-to-test-wifi-speed-room-by-room",
+    title: "How to Test Your Wi-Fi Speed Properly, Room by Room",
+    description:
+      "One Wi-Fi speed test beside the router tells you very little. Where to test instead, what download, upload and ping mean for your TV, calls and cameras, and when the results point to a fix.",
+    datePublished: "2026-09-30",
+    dateModified: "2026-09-30",
+    readingTime: "4 min read",
+    category: "Home Network",
+  },
+  {
+    slug: "wifi-extender-mesh-or-powerline-ireland",
+    title: "Wi-Fi Extender, Mesh or Powerline: Which One Fixes Which Problem",
+    description:
+      "Extenders, boosters, mesh systems and powerline adapters all promise Wi-Fi in every room. They fix different problems. How each one works in an Irish house, what stops it, and how to find out which yours needs.",
+    datePublished: "2026-09-30",
+    dateModified: "2026-09-30",
+    readingTime: "4 min read",
+    category: "Home Network",
+  },
+  {
     slug: "eufy-video-doorbell-e340-fitted-ireland",
     title: "The Eufy Video Doorbell E340, Fitted: An Irish Installer's Take",
     description:

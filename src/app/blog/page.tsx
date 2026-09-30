@@ -77,12 +77,13 @@ export default function BlogIndexPage() {
           // because that's where the genuine value sits. Buying Guides
           // and Comparisons follow. Order within each group preserves
           // the BLOG_POSTS array order (newest first, set in blog-posts.ts).
-          const CATEGORY_ORDER = ["Specialist Opinion", "Buying Guide", "Comparison"];
+          const CATEGORY_ORDER = ["Specialist Opinion", "Buying Guide", "Comparison", "Home Network"];
           const CATEGORY_BLURBS: Record<string, string> = {
             "Specialist Opinion":
               "From the van. The things we tell homeowners on the walkthrough, including the patterns we see that you won't read on a tech-review site.",
             "Buying Guide": "Honest, technical guides on what to buy and what fits an Irish home.",
             Comparison: "Side-by-side breakdowns of the brands and setups we install most.",
+            "Home Network": "Wi-Fi and broadband in Irish homes: how to test it, what slows it down, and what fixes it.",
           };
           const groups = CATEGORY_ORDER.map((cat) => ({
             category: cat,

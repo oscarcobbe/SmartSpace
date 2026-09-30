@@ -83,7 +83,7 @@ export const WIFI_PACKAGES: WifiPackage[] = [
       },
       {
         title: "A working trial, for three days",
-        body: "We install a trial system on the worst floor and monitor it for three days. You live with it and judge it yourself before anyone spends money.",
+        body: "We install a trial system on the worst floor and leave a monitoring unit wired to your router. It checks the trial every 30 seconds and tests your broadband every six hours, so the report shows how both held up, day and night. You live with it and judge it yourself.",
       },
       {
         title: "A negative result is reported too",
@@ -164,14 +164,15 @@ export const WIFI_PACKAGES: WifiPackage[] = [
     price: { kind: "monthly", euro: 39, note: "A supported plan with an annual visit and remote support is around €89 a month." },
     lights: ["amber", "red"],
     features: [
-      "A small monitoring unit connected to your router",
-      "An alert to us when your broadband fails",
-      "An alert when a device that matters to you goes offline",
+      "A small, silent monitoring unit wired to your router",
+      "An alert to us when your broadband goes down, and when it comes back",
+      "An alert when a device you named goes offline",
       "Broadband speed tested every six hours, with the history kept",
+      "New devices and open router ports flagged",
       "A plain-English health report every month",
     ],
     intro:
-      "A small monitoring unit stays connected to your router. When your broadband fails, or a device that matters to you drops offline, we know. Every month you get a short report in plain English: what happened, whether it mattered, and anything that needs attention.",
+      "A small, silent unit stays wired to your router. When your broadband fails, or a device that matters to you drops offline, we know. Every month you get a short report in plain English: what happened, whether it mattered, and anything that needs attention.",
     details: [
       {
         title: "Your broadband, watched",
@@ -193,7 +194,15 @@ export const WIFI_PACKAGES: WifiPackage[] = [
     faq: [
       {
         q: "What does the monitoring unit look at?",
-        a: "Whether your broadband is up and how fast it runs, which devices are connected, and whether each device you named is online.",
+        a: "Whether your broadband is up and how fast it runs, every device connected to your network, whether each device you named is online, and any port on your router opened to the internet. It does not see what you browse, stream or record.",
+      },
+      {
+        q: "Is it noisy, or does it need looking after?",
+        a: "No. It has no fan and no moving parts, and its software updates itself.",
+      },
+      {
+        q: "What happens if it gets unplugged?",
+        a: "We see the connection drop, the same as a broadband outage, and it carries on where it left off once it is plugged back in.",
       },
       {
         q: "Can you fix things remotely?",
@@ -210,33 +219,68 @@ export const WIFI_PACKAGES: WifiPackage[] = [
 export const packageBySlug = (slug: string | null | undefined) =>
   WIFI_PACKAGES.find((p) => p.slug === slug) ?? null;
 
-/** What the monitoring unit does, as the hub lists it. */
+/*
+ * What the monitoring unit does, and what it is. Taken from its maker's
+ * documentation (30 September 2026): a device heartbeat every 30 seconds and
+ * "offline" after 2 minutes without an answer, a speed test every 6 hours
+ * with the history kept, alerts on a lost connection, new devices, ports
+ * opened on the router and speeds below a set level, and the unit's own
+ * specification. The maker and model are never named on the site.
+ */
 export const MONITOR_POINTS: { title: string; body: string }[] = [
   {
-    title: "Broadband watched",
-    body: "An alert reaches us when your line fails, and the history shows how it performed overnight.",
-  },
-  {
-    title: "Devices that matter",
-    body: "An alert when a camera, thermostat or alarm you named goes offline, and how long it was off.",
+    title: "Wired to your router",
+    body: "It plugs into a spare port on your router by cable, not over Wi-Fi, so it measures the broadband itself.",
   },
   {
     title: "Speed, four times a day",
-    body: "Your broadband tested every six hours, every result kept.",
+    body: "Your broadband tested every six hours, every result kept, so a line that slows every evening shows in the history.",
   },
   {
-    title: "New devices flagged",
-    body: "A device joining your network for the first time is flagged.",
+    title: "Outages caught",
+    body: "If your broadband is down for more than a few minutes, we are alerted, and again when it comes back.",
   },
   {
-    title: "A report every month",
-    body: "Short and plain: what happened, whether it mattered, and anything that needs attention.",
+    title: "Devices that matter",
+    body: "Each device you name is checked every 30 seconds, and flagged as offline after about two minutes without an answer.",
   },
   {
-    title: "Monitored, not managed",
-    body: "We see whether a device is online, not what it does. Your accounts stay in your name.",
+    title: "Every device listed",
+    body: "Everything on your network is found automatically, with its make and type where it can be identified. A newcomer is flagged.",
+  },
+  {
+    title: "Open doors flagged",
+    body: "A port opened on your router to the internet is flagged. Some devices and apps open one without asking.",
+  },
+  {
+    title: "Slow speeds flagged",
+    body: "We set a level for your line, and we are alerted if the download or upload falls below it.",
+  },
+  {
+    title: "Router changes noticed",
+    body: "A change to your router's settings, or to your public internet address, is flagged.",
   },
 ];
+
+/** The unit itself, for the monitoring page. */
+export const MONITOR_UNIT: { specs: { label: string; value: string }[]; tips: string[] } = {
+  specs: [
+    { label: "Size", value: "108 × 72 × 40 mm, 126 g" },
+    { label: "Cooling", value: "Fanless, no moving parts, silent" },
+    { label: "Connection", value: "One gigabit network port, wired to your router" },
+    { label: "Power", value: "Its own plug, over USB-C" },
+    { label: "Setup", value: "About 15 minutes, on the visit" },
+    { label: "Updates", value: "Automatic, nothing for you to maintain" },
+    { label: "Where it lives", value: "Indoors beside the router, 0 to 40 °C" },
+  ],
+  tips: [
+    "Leave it plugged in. Unplugged, it looks to us the same as your broadband going down.",
+    "It needs one free port on your router. If they are all taken, a small network switch adds more.",
+    "Keep it indoors beside the router. It is built for 0 to 40 °C, so not a cold garage or a hot attic.",
+    "Name the devices that matter when we set it up: the camera over the back door, the thermostat, a parent's alarm.",
+    "If you change your router or your broadband provider, tell us, and we check it has reconnected.",
+  ],
+};
 
 /** The three symptoms the diagnosis is for, as the hub lists them. */
 export const SYMPTOMS: { title: string; body: string }[] = [

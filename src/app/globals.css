@@ -216,14 +216,18 @@ p {
     margin-bottom: 1rem;
     line-height: 1.75;
   }
+  /* No underline at rest (Oscar, 30 September 2026). Semibold keeps a link
+     distinguishable without relying on colour, the underline comes back on
+     hover and keyboard focus, and #b55810 reads at 4.8:1 on white where the
+     brand orange #f48222 managed 2.6:1. */
   .prose-ss a {
-    color: #f48222;
-    font-weight: 500;
-    text-decoration: underline;
+    color: #b55810;
+    font-weight: 600;
+    text-decoration: none;
     text-decoration-thickness: 1px;
-    text-underline-offset: 2px;
+    text-underline-offset: 3px;
   }
-  .prose-ss a:hover { color: #d96d15; }
+  .prose-ss a:hover, .prose-ss a:focus-visible { color: #91440c; text-decoration: underline; }
   .prose-ss ul, .prose-ss ol {
     margin: 1rem 0;
     padding-left: 1.5rem;
