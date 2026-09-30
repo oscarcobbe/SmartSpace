@@ -4,7 +4,7 @@ import { PRODUCT_CATALOGUE } from "@/data/productCatalogue";
 import { formatEuro } from "@/lib/format";
 import { crmSessionFrom } from "@/lib/crm/auth";
 import {
-  SHEET_LIMIT, STRIPE_LIMIT, STRIPE_SESSIONS_URL, checkoutBusiness, checkoutClickId, checkoutFoundUs,
+  SHEET_LIMIT, STRIPE_LIMIT, STRIPE_SESSIONS_URL, checkoutBusiness, checkoutClickId, checkoutFoundUs, checkoutFoundUsDetail,
   checkoutItems, freeConsultationFrom, sheetCoverage, sheetReadUrl, stripeCoverage, type Business, type Coverage,
   type FreeConsultation,
 } from "@/lib/feed-enquiries";
@@ -169,12 +169,13 @@ interface Lead {
    */
   source?: string;
   /**
-   * Their answer to "How did you find us?", one of the CRM's FOUND_US keys
+   * Their answer to "How did you hear about us?", one of the CRM's FOUND_US keys
    * (src/lib/found-us.ts), when they gave one: from the Stripe checkout's
    * metadata for a paid order, from the sheet row's Notes otherwise. Left
    * out when there is none, and for Calendly appointments, which never ask.
    */
   foundUs?: string;
+  foundUsDetail?: string;
   orderId: string;
   /**
    * Question/answer pairs the customer provided at conversion time.
@@ -406,6 +407,7 @@ export async function GET(request: Request) {
            this is empty. */
         ...(checkoutClickId(session.metadata) ? { gclid: checkoutClickId(session.metadata) } : {}),
         ...(checkoutFoundUs(session.metadata) ? { foundUs: checkoutFoundUs(session.metadata) } : {}),
+        ...(checkoutFoundUsDetail(session.metadata) ? { foundUsDetail: checkoutFoundUsDetail(session.metadata) } : {}),
         business: checkoutBusiness(session),
         items: checkoutItems(session),
         ...(typeof session.customer === "string" && session.customer ? { customer: session.customer } : {}),
@@ -713,6 +715,10 @@ export async function GET(request: Request) {
                 const answer = checkoutFoundUs(null, r);
                 if (answer) order.foundUs = answer;
               }
+              if (!order.foundUsDetail) {
+                const words = checkoutFoundUsDetail(null, r);
+                if (words) order.foundUsDetail = words;
+              }
               continue;
             }
             // If it's a Stripe-style ID that ISN'T in the Stripe set, the
@@ -742,6 +748,7 @@ export async function GET(request: Request) {
               orderId: orderId || "-",
               ...(checkoutClickId(null, r) ? { gclid: checkoutClickId(null, r) } : {}),
               ...(manual.foundUs ? { foundUs: manual.foundUs } : {}),
+              ...(manual.detail ? { foundUsDetail: manual.detail } : {}),
               /* No checkout was read for this row, so nothing says whose it is:
                  the webhook writes "Installation" for every payment link,
                  SmartGuardian's included. */
@@ -765,9 +772,9 @@ export async function GET(request: Request) {
           // Sheet's "notes" column is typically "<Subject>: <Message>" from
           // /api/contact (e.g. "Installation Enquiry: I have an old ..."). Split
           // it back out so the dashboard shows topic + message as separate rows.
-          // The answer to "How did you find us?" is the last item when there
+          // The answer to "How did you hear about us?" is the last item when there
           // is one (src/lib/found-us.ts); it is not part of the message.
-          const { foundUs: enquiryFoundUs, notes: rawNotes } = foundUsInNotes(r.notes);
+          const { foundUs: enquiryFoundUs, detail: enquiryFoundUsDetail, notes: rawNotes } = foundUsInNotes(r.notes);
           const contactDetails: QA[] = [];
           let parsedTopic: string | undefined;
           let parsedMessage: string | undefined;
@@ -829,6 +836,7 @@ export async function GET(request: Request) {
             orderId: String(r.notes || "-"),
             ...(enquiryGclid ? { gclid: enquiryGclid } : {}),
             ...(enquiryFoundUs ? { foundUs: enquiryFoundUs } : {}),
+            ...(enquiryFoundUsDetail ? { foundUsDetail: enquiryFoundUsDetail } : {}),
             ...(r.source ? { source: String(r.source) } : {}),
             details: contactDetails.length ? contactDetails : undefined,
           });

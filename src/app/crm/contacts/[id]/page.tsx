@@ -192,7 +192,10 @@ export default async function ContactPage({ params }: { params: { id: string } }
                     )}
 
                     <dl className="mt-2.5 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-500">
-                        <div><dt className="inline">Found us: </dt><dd className="inline text-slate-700">{FOUND_US[foundUsOf(l)]}{l.gclid ? " (the click was recorded)" : ""}</dd></div>
+                        <div><dt className="inline">Found us: </dt><dd className="inline text-slate-700">{FOUND_US[foundUsOf(l)] ?? foundUsOf(l)}{l.gclid ? " (the click was recorded)" : ""}</dd></div>
+                        {typeof l.custom?.found_us_detail === "string" && l.custom.found_us_detail && (
+                          <div><dt className="inline">In their words: </dt><dd className="inline text-slate-700">&ldquo;{l.custom.found_us_detail}&rdquo;</dd></div>
+                        )}
                         {l.utm_campaign && <div><dt className="inline">Campaign: </dt><dd className="inline text-slate-700">{l.utm_campaign}</dd></div>}
                         {l.booked_for && <div><dt className="inline">Booked for: </dt><dd className="inline text-slate-700">{day(l.booked_for)}</dd></div>}
                         {l.installed_at && <div><dt className="inline">Installed: </dt><dd className="inline text-slate-700">{day(l.installed_at)}</dd></div>}

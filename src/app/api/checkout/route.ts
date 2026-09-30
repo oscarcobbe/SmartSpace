@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { consentFrom, type ConsentInput } from "@/lib/ad-consent";
 import { getProductByHandle } from "@/lib/shopify";
 import type { AttributionRecord } from "@/lib/leads";
-import { foundUsFrom } from "@/lib/found-us";
+import { foundUsDetailFrom, foundUsFrom } from "@/lib/found-us";
 
 // POST routes are inherently dynamic but explicit is better, without
 // this, Next.js may try static optimization on a future major.
@@ -30,8 +30,10 @@ interface CheckoutBody {
   gaSessionId?: string;
   /** The cookie banner's stored answer, read in the browser at checkout. */
   consent?: { decision?: unknown; decidedAt?: unknown } | null;
-  /** "How did you find us?", optional: src/lib/found-us.ts. */
+  /** "How did you hear about us?", optional: src/lib/found-us.ts. */
   found_us?: unknown;
+  /** The visitor's own words under it, optional. */
+  found_us_detail?: unknown;
 }
 
 interface ResolvedItem {
@@ -201,10 +203,12 @@ export async function POST(request: Request) {
     // session/channel instead of (not set)/Unassigned.
     if (gaClientId) params.append("metadata[ga_client_id]", String(gaClientId));
     if (gaSessionId) params.append("metadata[ga_session_id]", String(gaSessionId));
-    /* "How did you find us?", when answered. The Stripe webhook reads it back
+    /* "How did you hear about us?", when answered. The Stripe webhook reads it back
        into the order's sheet row and CRM lead (src/lib/found-us.ts). */
     const foundUs = foundUsFrom(parsed.found_us);
     if (foundUs) params.append("metadata[found_us]", foundUs);
+    const foundUsDetail = foundUsDetailFrom(parsed.found_us_detail);
+    if (foundUsDetail) params.append("metadata[found_us_detail]", foundUsDetail);
     // Attach additional attribution as Stripe metadata so the Stripe webhook
     // can log it to the leads sheet once payment completes.
     if (attribution?.landingPage) params.append("metadata[landing_page]", attribution.landingPage);

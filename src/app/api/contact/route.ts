@@ -8,7 +8,7 @@ import { sendToCrm } from "@/lib/crm";
 import { sendSiteAlert } from "@/lib/site-alerts";
 import { monitorBcc } from "@/lib/business-constants";
 import { afterResponse, AFTER_CEILING, type AfterResult } from "@/lib/after-response";
-import { foundUsFrom, notesWithFoundUs } from "@/lib/found-us";
+import { foundUsDetailFrom, foundUsFrom, notesWithFoundUs } from "@/lib/found-us";
 import { enquiryReceived, SPECIALISTS } from "@/lib/email/customer";
 
 
@@ -79,10 +79,12 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    const { name, email, phone, subject, message, attribution, gclid, homepage_url, consent, found_us } = body as {
+    const { name, email, phone, subject, message, attribution, gclid, homepage_url, consent, found_us, found_us_detail } = body as {
       consent?: ConsentInput | null;
-      /** "How did you find us?", optional: src/lib/found-us.ts. */
+      /** "How did you hear about us?", optional: src/lib/found-us.ts. */
       found_us?: unknown;
+      /** The visitor's own words under it, optional. */
+      found_us_detail?: unknown;
       name?: string;
       email?: string;
       phone?: string;
@@ -131,6 +133,7 @@ export async function POST(request: Request) {
     const subjectKey = typeof subject === "string" ? subject : "";
     /* One of the CRM's FOUND_US keys or "" (not answered, or not an answer). */
     const foundUs = foundUsFrom(found_us);
+    const foundUsDetail = foundUsDetailFrom(found_us_detail);
     const subjectLabel = SUBJECT_LABELS[subjectKey] ?? (subjectKey ? subjectKey : "Website enquiry");
 
     const resend = new Resend(apiKey);
@@ -390,7 +393,7 @@ export async function POST(request: Request) {
           email: email.trim(),
           phone: phone?.trim(),
           attribution: attribution ?? (gclid ? { gclid: gclid.trim() } : undefined),
-          notes: notesWithFoundUs(`${subjectLabel}: ${message.trim()}`, foundUs),
+          notes: notesWithFoundUs(`${subjectLabel}: ${message.trim()}`, foundUs, foundUsDetail),
           source: "smart-space.ie",
         },
         // Nobody is waiting now: room for a cold start inside the first
@@ -439,7 +442,7 @@ export async function POST(request: Request) {
         gclid: attribution?.gclid ?? gclid ?? null,
         referrer: attribution?.referrer ?? null,
         tags: ["contact-form"],
-        custom: { conversion_id: conversionId, subject_key: subjectKey, found_us: foundUs || null },
+        custom: { conversion_id: conversionId, subject_key: subjectKey, found_us: foundUs || null, found_us_detail: foundUsDetail || null },
       }),
     );
 

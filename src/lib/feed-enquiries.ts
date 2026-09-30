@@ -40,7 +40,7 @@
  * The feed also says whether its two capped reads were complete, so a reader
  * can tell an enquiry that is missing from one that never happened.
  *
- * And it gives each enquiry's answer to "How did you find us?" as foundUs,
+ * And it gives each enquiry's answer to "How did you hear about us?" as foundUs,
  * one of the CRM's FOUND_US keys, wherever the site recorded one: the Stripe
  * checkout's metadata for a paid order, the sheet row's Notes for the rest
  * (src/lib/found-us.ts). It is left out when there is no answer.
@@ -49,7 +49,7 @@
  * the report leaves out an enquiry Nigel marked Spam there. A reader that
  * does not know the field counts the booking as before.
  */
-import { foundUsFrom, foundUsInNotes } from "@/lib/found-us";
+import { foundUsDetailFrom, foundUsFrom, foundUsInNotes } from "@/lib/found-us";
 
 const text = (v: unknown) => (v === null || v === undefined ? "" : String(v).trim());
 
@@ -155,8 +155,10 @@ export interface FreeConsultation {
   source: string;
   /** The Google click id the site held for this visitor, when it held one. */
   gclid?: string;
-  /** Their answer to "How did you find us?", when they gave one. */
+  /** Their answer to "How did you hear about us?", when they gave one. */
   foundUs?: string;
+  /** Their own words under that answer, when they wrote any. */
+  foundUsDetail?: string;
   /**
    * The row's Status column, when the cell holds anything: the sheet writes
    * "New", and Nigel can change it, to "Spam" among others. Left out when the
@@ -175,7 +177,7 @@ export interface FreeConsultation {
 export function freeConsultationFrom(row: Record<string, unknown>): FreeConsultation | null {
   if (text(row.type) !== "Free Consultation") return null;
   const gclid = text(row.gclid);
-  const { foundUs } = foundUsInNotes(row.notes);
+  const { foundUs, detail: foundUsDetail } = foundUsInNotes(row.notes);
   /* The FourWinds portal's weekly report leaves out an enquiry Nigel marked
      Spam, in the CRM or in this sheet's Status column (fourwinds-portal,
      scripts/lib/sales-pitches.mjs). The feed passed the column only for
@@ -193,6 +195,7 @@ export function freeConsultationFrom(row: Record<string, unknown>): FreeConsulta
     source: text(row.source) || "-",
     ...(gclid ? { gclid } : {}),
     ...(foundUs ? { foundUs } : {}),
+    ...(foundUsDetail ? { foundUsDetail } : {}),
     ...(status ? { status } : {}),
   };
 }
@@ -227,7 +230,7 @@ export function checkoutItems(session: { line_items?: { data?: { description?: s
 }
 
 /**
- * A Stripe checkout's answer to "How did you find us?": its own metadata
+ * A Stripe checkout's answer to "How did you hear about us?": its own metadata
  * first, which /api/checkout writes, then the Notes of the sheet row the
  * Stripe webhook wrote from that same metadata. "" when neither has one.
  */
@@ -236,6 +239,14 @@ export function checkoutFoundUs(
   sheetRow?: Record<string, unknown> | null,
 ): string {
   return foundUsFrom(metadata?.found_us) || foundUsInNotes(sheetRow?.notes).foundUs;
+}
+
+/** A Stripe checkout's words under that answer, from the same two places. */
+export function checkoutFoundUsDetail(
+  metadata: Record<string, unknown> | null | undefined,
+  sheetRow?: Record<string, unknown> | null,
+): string {
+  return foundUsDetailFrom(metadata?.found_us_detail) || foundUsInNotes(sheetRow?.notes).detail;
 }
 
 /**

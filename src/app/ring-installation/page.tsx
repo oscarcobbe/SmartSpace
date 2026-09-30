@@ -165,8 +165,9 @@ export default function RingInstallationPage() {
     dateLabel: string;
     slotLabel: string;
   } | null>(null);
-  /* "How did you find us?", optional, sent with the Book Now checkout: see src/lib/found-us.ts. */
+  /* "How did you hear about us?", optional, sent with the Book Now checkout: see src/lib/found-us.ts. */
   const [foundUs, setFoundUs] = useState("");
+  const [foundUsDetail, setFoundUsDetail] = useState("");
 
   useEffect(() => {
     getProductByHandle("installation-only")
@@ -381,6 +382,8 @@ export default function RingInstallationPage() {
                     id="ring-install-found-us"
                     value={foundUs}
                     onChange={setFoundUs}
+                    detail={foundUsDetail}
+                    onDetailChange={setFoundUsDetail}
                     labelClassName="block text-sm font-semibold text-[#1a1a1a] mb-1"
                     selectClassName="w-full min-h-11 border-2 border-gray-200 rounded-xl bg-white px-4 py-2.5 text-base sm:text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-none transition-colors"
                   />
@@ -408,6 +411,7 @@ export default function RingInstallationPage() {
                     directCheckout
                     directLabel="Book Installation Now"
                     foundUs={foundUs}
+                    foundUsDetail={foundUsDetail}
                   />
                 )}
               </div>

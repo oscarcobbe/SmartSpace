@@ -11,7 +11,7 @@ import { sendSms } from "@/lib/sms";
 import { formatEuro } from "@/lib/format";
 import { sendSiteAlert } from "@/lib/site-alerts";
 import { alertTo, monitorBcc } from "@/lib/business-constants";
-import { foundUsFrom, notesWithFoundUs } from "@/lib/found-us";
+import { foundUsDetailFrom, foundUsFrom, notesWithFoundUs } from "@/lib/found-us";
 
 // EXPLICIT runtime + dynamic flags. The webhook calls req.text() to get
 // the raw body for Stripe signature verification (which uses Node's
@@ -575,9 +575,10 @@ export async function POST(req: NextRequest) {
     const bookingSlot = session.metadata?.booking_slot;
     const bookingLabel = session.metadata?.booking_label;
     const productName = session.metadata?.product_name ?? "Installation";
-    /* "How did you find us?", written on the session by /api/checkout when
+    /* "How did you hear about us?", written on the session by /api/checkout when
        the buyer answered (src/lib/found-us.ts). A payment link carries none. */
     const foundUs = foundUsFrom(session.metadata?.found_us);
+    const foundUsDetail = foundUsDetailFrom(session.metadata?.found_us_detail);
     const customerName = session.customer_details?.name ?? email.split("@")[0];
     const phone = session.customer_details?.phone ?? "";
     // Pull the installation address from the Stripe custom field (set in
@@ -641,7 +642,7 @@ export async function POST(req: NextRequest) {
       bookingDate: bookingLabel || bookingDate || undefined,
       bookingSlot: bookingSlot || undefined,
       orderId: sessionId,
-      notes: notesWithFoundUs(configNote || undefined, foundUs),
+      notes: notesWithFoundUs(configNote || undefined, foundUs, foundUsDetail),
       attribution: {
         gclid: gclid || undefined,
         landingPage: (session.metadata?.landing_page as string) || undefined,
@@ -763,6 +764,7 @@ export async function POST(req: NextRequest) {
         installation_address: installationAddress || null,
         configuration: configNote || null,
         found_us: foundUs || null,
+        found_us_detail: foundUsDetail || null,
       },
     }));
 
