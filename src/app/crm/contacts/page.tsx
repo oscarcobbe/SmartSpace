@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Plus, Search } from "lucide-react";
 import { requireSession } from "@/lib/crm/session";
 import { listPeople, type Person } from "@/lib/crm/people";
-import { STATUS_PILL, STATUS_LABEL } from "@/lib/crm/labels";
+import { STATUS_PILL, STATUS_LABEL, LIGHT_DOT, LIGHT_LABEL, lightOf } from "@/lib/crm/labels";
 import { money } from "@/lib/crm/leads";
 import { PageHeader, Panel, Note, Empty, Stat, StatRow, Pill } from "../ui";
 import ExportButton from "../export-button";
@@ -117,7 +117,12 @@ export default async function ContactsPage({ searchParams }: { searchParams: { q
                 <li key={p.id}>
                   <Link href={`/crm/contacts/${encodeURIComponent(p.id)}`} className="flex items-start gap-3 px-4 py-3.5">
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-slate-900">{p.name}</p>
+                      <p className="flex items-center gap-2 truncate text-sm font-medium text-slate-900">
+                        {lightOf(p.leads[0]?.custom) && (
+                          <span className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${LIGHT_DOT[lightOf(p.leads[0]?.custom)!]}`} title={LIGHT_LABEL[lightOf(p.leads[0]?.custom)!]} aria-label={LIGHT_LABEL[lightOf(p.leads[0]?.custom)!]} />
+                        )}
+                        <span className="truncate">{p.name}</span>
+                      </p>
                       <p className="mt-0.5 truncate text-xs text-slate-500">{p.email ?? p.phone ?? ""}</p>
                       <p className="mt-0.5 truncate text-xs text-slate-500">
                         {[p.city, p.county].filter(Boolean).join(", ") || p.address || ""}
@@ -151,8 +156,11 @@ export default async function ContactsPage({ searchParams }: { searchParams: { q
                       <td className="px-4 py-2.5">
                         <Link
                           href={`/crm/contacts/${encodeURIComponent(p.id)}`}
-                          className="block font-medium text-slate-900 group-hover:underline group-hover:underline-offset-2"
+                          className="flex items-center gap-2 font-medium text-slate-900 group-hover:underline group-hover:underline-offset-2"
                         >
+                          {lightOf(p.leads[0]?.custom) && (
+                            <span className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${LIGHT_DOT[lightOf(p.leads[0]?.custom)!]}`} title={LIGHT_LABEL[lightOf(p.leads[0]?.custom)!]} aria-label={LIGHT_LABEL[lightOf(p.leads[0]?.custom)!]} />
+                          )}
                           {p.name}
                         </Link>
                       </td>

@@ -110,3 +110,30 @@ export const telHref = (phone: string | null | undefined) => {
   if (!digits) return null;
   return `tel:${digits.startsWith("+") ? digits : digits.replace(/^0/, "+353")}`;
 };
+
+/*
+ * Nigel's traffic light on an enquiry: how good a lead it is, set by him on
+ * the call or after it. Stored on the lead as custom.lead_light, so it needs
+ * no new column; the history keeps who set it, when, and any note.
+ */
+export type LeadLight = "green" | "amber" | "red";
+export const LIGHTS: LeadLight[] = ["green", "amber", "red"];
+export const LIGHT_LABEL: Record<LeadLight, string> = {
+  green: "Good lead",
+  amber: "Maybe",
+  red: "Not a lead",
+};
+export const LIGHT_DOT: Record<LeadLight, string> = {
+  green: "bg-emerald-500",
+  amber: "bg-amber-400",
+  red: "bg-red-500",
+};
+export const LIGHT_PILL: Record<LeadLight, string> = {
+  green: "bg-emerald-50 text-emerald-800 ring-emerald-600/20",
+  amber: "bg-amber-50 text-amber-900 ring-amber-600/25",
+  red: "bg-red-50 text-red-800 ring-red-600/20",
+};
+export function lightOf(custom: Record<string, unknown> | null | undefined): LeadLight | null {
+  const v = custom?.lead_light;
+  return v === "green" || v === "amber" || v === "red" ? v : null;
+}

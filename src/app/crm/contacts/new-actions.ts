@@ -57,6 +57,7 @@ export async function addCustomer(_prev: NewCustomerState, form: FormData): Prom
   const OUTCOMES = ["contacted", "quoted", "booked", "won", "lost"];
   const foundUs = FOUND.includes(get("found_us")) ? get("found_us") : "unknown";
   const outcome = OUTCOMES.includes(get("outcome")) ? get("outcome") : "contacted";
+  const light = ["green", "amber", "red"].includes(get("light")) ? get("light") : null;
 
   try {
     const made = await crm<{ id: string }[]>("crm_leads", {
@@ -69,7 +70,7 @@ export async function addCustomer(_prev: NewCustomerState, form: FormData): Prom
         source_detail: get("source_detail").slice(0, 200) || null,
         message: wanted || null,
         status: outcome,
-        custom: { found_us: foundUs },
+        custom: light ? { found_us: foundUs, lead_light: light, lead_light_at: new Date().toISOString(), lead_light_by: actor } : { found_us: foundUs },
       }),
     });
     await logActivity(site, {
@@ -77,7 +78,7 @@ export async function addCustomer(_prev: NewCustomerState, form: FormData): Prom
       lead_id: made?.[0]?.id ?? null,
       kind: "lead_created",
       summary: source === "phone" ? "Rang in" : source === "voicemail" ? "Left a voicemail" : "Added by hand",
-      detail: { found_us: foundUs },
+      detail: light ? { found_us: foundUs, light } : { found_us: foundUs },
       actor,
     });
   } catch (err) {

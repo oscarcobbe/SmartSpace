@@ -3,6 +3,7 @@
 import { useFormState, useFormStatus } from "react-dom";
 import { addCustomer, type NewCustomerState } from "../new-actions";
 import { Panel, Note } from "../../ui";
+import { LIGHTS, LIGHT_LABEL, LIGHT_DOT } from "@/lib/crm/labels";
 
 const initial: NewCustomerState = {};
 
@@ -117,6 +118,18 @@ export default function NewCustomerForm() {
               <option value="lost">Not going ahead</option>
             </select>
           </div>
+          <fieldset>
+            <legend className="mb-1.5 block text-sm font-medium text-slate-700">Traffic light</legend>
+            <div className="flex flex-wrap gap-2">
+              {LIGHTS.map((lt) => (
+                <label key={lt} className="inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 has-[:checked]:border-slate-900 has-[:checked]:ring-1 has-[:checked]:ring-slate-900 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500">
+                  <input type="radio" name="light" value={lt} className="sr-only" />
+                  <span className={`inline-block h-3 w-3 rounded-full ${LIGHT_DOT[lt]}`} aria-hidden="true" />
+                  {LIGHT_LABEL[lt]}
+                </label>
+              ))}
+            </div>
+          </fieldset>
           <div>
             <label htmlFor="wanted" className="mb-1.5 block text-sm font-medium text-slate-700">What they said</label>
             <textarea
