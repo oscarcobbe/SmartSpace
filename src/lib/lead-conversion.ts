@@ -28,7 +28,24 @@ const GADS_LEAD_SEND_TO =
   process.env.NEXT_PUBLIC_GADS_LEAD_SEND_TO?.trim() ||
   "AW-17978501655/u8cHCNyipZocEJfU6PxC";
 
-export type LeadSource = "contact_form" | "callback_request";
+/**
+ * "SS - SmartNet enquiry" (conversion action 7810338147, lead form category,
+ * counted for bidding, default value 50): every enquiry from the home network
+ * pages and the Wi-Fi check. It existed in the account and nothing fired it
+ * until 30 September 2026. /api/wifi-check fires the same label from the
+ * server, so it is exported from here rather than written out twice.
+ */
+export const GADS_WIFI_SEND_TO = "AW-17978501655/aFHQCOOaoYwdEJfU6PxC";
+/** The value the account gives that action. */
+export const WIFI_LEAD_VALUE = 50;
+
+export type LeadSource = "contact_form" | "callback_request" | "wifi_enquiry";
+
+const SEND_TO: Record<LeadSource, string> = {
+  contact_form: GADS_LEAD_SEND_TO,
+  callback_request: GADS_LEAD_SEND_TO,
+  wifi_enquiry: GADS_WIFI_SEND_TO,
+};
 
 export function fireLeadConversion(
   email: string,
@@ -71,7 +88,7 @@ export function fireLeadConversion(
   gtag("set", "user_data", userData);
 
   gtag("event", "conversion", {
-    send_to: GADS_LEAD_SEND_TO,
+    send_to: SEND_TO[source],
     value,
     currency: "EUR",
     transaction_id: conversionId,
@@ -88,5 +105,5 @@ export function fireLeadConversion(
     transport_type: "beacon",
   });
 
-  console.log("[gtag] lead conversion fired", { conversionId, source, sendTo: GADS_LEAD_SEND_TO });
+  console.log("[gtag] lead conversion fired", { conversionId, source, sendTo: SEND_TO[source] });
 }
