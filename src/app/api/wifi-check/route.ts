@@ -22,6 +22,7 @@
  * No ad conversion fires from here yet. Which conversion action a Wi-Fi
  * enquiry counts as is a decision for the ads account, not for this route.
  */
+import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { decodeCheck } from "@/lib/wifi-check/codec";
@@ -32,7 +33,9 @@ import { afterResponse, AFTER_CEILING } from "@/lib/after-response";
 import { wifiReport } from "@/lib/email/customer";
 import { approval } from "@/lib/signoff/state";
 import { sendToCrm } from "@/lib/crm";
-import { recordEnquiryConsent, type ConsentInput } from "@/lib/ad-consent";
+import { consentFrom, recordEnquiryConsent, type ConsentInput } from "@/lib/ad-consent";
+import { fireServerConversion } from "@/lib/server-conversions";
+import { GADS_WIFI_SEND_TO, WIFI_LEAD_VALUE } from "@/lib/lead-conversion";
 import { alertTo, monitorBcc, BUSINESS_SITE, BUSINESS_EMAIL } from "@/lib/business-constants";
 
 export const dynamic = "force-dynamic";
@@ -125,6 +128,8 @@ export async function POST(request: Request) {
   /* The sheet and the CRM already hold the contact details in their own
      columns, so their notes carry the report alone. */
   const notes = report.join("\n").slice(0, 3000);
+  /* One id for this enquiry's Ads conversion, from the server and the page. */
+  const conversionId = randomUUID();
 
   if (!live()) {
     console.log(`[wifi-check] DRY RUN, nothing sent. Would have emailed Nigel, the customer, the sheet and the CRM:\n${lines.join("\n")}`);
@@ -207,6 +212,29 @@ export async function POST(request: Request) {
     recordEnquiryConsent({ email, phone, consent, source: "wifi_check" }),
   );
 
+  /* The Ads conversion, "SS - SmartNet enquiry". The page fires the same one
+     with this id as its transaction id once it has the answer, so Google
+     counts the lead once; the server's copy reaches Google when the page's
+     does not (an ad blocker, a closed tab), and carries the visitor's cookie
+     answer, as the contact form's does. */
+  const [firstName, ...rest] = name.split(/\s+/);
+  afterResponse("server conversion", AFTER_CEILING.conversion, () =>
+    fireServerConversion({
+      gadsLabel: GADS_WIFI_SEND_TO.replace(/^AW-\d+\//, ""),
+      ga4EventName: "generate_lead",
+      value: WIFI_LEAD_VALUE,
+      currency: "EUR",
+      transactionId: conversionId,
+      gclid: attribution?.gclid || undefined,
+      email,
+      phone,
+      firstName: firstName || undefined,
+      lastName: rest.join(" ") || undefined,
+      extraParams: { lead_source: g ? "wifi_check" : "wifi_enquiry", ...(pkg ? { package: pkg.slug } : {}) },
+      adConsent: consentFrom(body.consent as ConsentInput | null | undefined)?.decision ?? null,
+    }),
+  );
+
   afterResponse("crm mirror", AFTER_CEILING.crm, () =>
     sendToCrm({
       source: "wifi_check",
@@ -225,6 +253,7 @@ export async function POST(request: Request) {
       referrer: attribution?.referrer ?? null,
       tags: ["wifi-check", ...(g ? [`wifi-${g.light}`] : [])],
       custom: {
+        conversion_id: conversionId,
         wifi: g
           ? { light: g.light, cause: g.cause, recommend: g.recommend, also: g.also, report: reportUrl }
           : { package: pkg?.slug ?? null },
@@ -232,5 +261,5 @@ export async function POST(request: Request) {
     }),
   );
 
-  return NextResponse.json({ ok: true, light: g?.light ?? null, recommend: g?.recommend ?? null });
+  return NextResponse.json({ ok: true, light: g?.light ?? null, recommend: g?.recommend ?? null, conversionId });
 }

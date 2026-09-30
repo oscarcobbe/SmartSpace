@@ -14,6 +14,7 @@
 import { useState, type FormEvent } from "react";
 import { Check, Send } from "lucide-react";
 import { getAttribution, consentRecord } from "@/lib/attribution";
+import { fireLeadConversion, WIFI_LEAD_VALUE } from "@/lib/lead-conversion";
 import type { PackageSlug } from "@/lib/wifi-check/grade";
 
 const field =
@@ -66,11 +67,14 @@ export default function WifiEnquiryForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const json = (await res.json().catch(() => ({}))) as { error?: string; dryRun?: boolean };
+      const json = (await res.json().catch(() => ({}))) as { error?: string; dryRun?: boolean; conversionId?: string };
       if (!res.ok) {
         setError(json.error ?? "That did not send. Please try again, or ring us on 01 513 0424.");
         return;
       }
+      /* Only a lead the server recorded carries an id, so a dry run or a
+         honeypot hit fires nothing (src/lib/lead-conversion.ts). */
+      fireLeadConversion(payload.email, payload.phone, json.conversionId, "wifi_enquiry", WIFI_LEAD_VALUE);
       setDone({ email: payload.email, dryRun: Boolean(json.dryRun) });
     } catch {
       setError("That did not send. Please try again, or ring us on 01 513 0424.");
