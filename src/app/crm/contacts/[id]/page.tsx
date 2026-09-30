@@ -4,10 +4,10 @@ import { ArrowLeft, Check, Mail, MapPin, Phone } from "lucide-react";
 import { requireSession } from "@/lib/crm/session";
 import { getPerson, fullAddress, distinctLeads } from "@/lib/crm/people";
 import { getContact, STATUSES, type ActivityRow, type TaskRow } from "@/lib/crm/contacts";
-import { STATUS_PILL, STATUS_LABEL, sourceLabel, kindLabel, telHref, FOUND_US, foundUsOf } from "@/lib/crm/labels";
+import { STATUS_PILL, STATUS_LABEL, sourceLabel, kindLabel, telHref, FOUND_US, foundUsOf, LIGHTS, LIGHT_LABEL, LIGHT_DOT, LIGHT_PILL, lightOf } from "@/lib/crm/labels";
 import { moneyExact, money } from "@/lib/crm/leads";
 import { PageHeader, Panel, Empty, Pill, Note } from "../../ui";
-import { saveNote, setLeadStatus, addTask, completeTask } from "../actions";
+import { saveNote, setLeadStatus, setLeadLight, addTask, completeTask } from "../actions";
 import PaymentLinkForm from "../payment-link-form";
 import { ActionForm, SubmitButton } from "../../action-form";
 import { plainText, slotText } from "@/lib/crm/display";
@@ -181,6 +181,12 @@ export default async function ContactPage({ params }: { params: { id: string } }
                         {l.value_cents != null && (
                           <span className="text-sm font-semibold tabular-nums text-slate-900">{moneyExact(l.value_cents / 100)}</span>
                         )}
+                        {lightOf(l.custom) && (
+                          <Pill className={LIGHT_PILL[lightOf(l.custom)!]}>
+                            <span className={`mr-1.5 inline-block h-2 w-2 rounded-full ${LIGHT_DOT[lightOf(l.custom)!]}`} aria-hidden="true" />
+                            {LIGHT_LABEL[lightOf(l.custom)!]}
+                          </Pill>
+                        )}
                         <Pill className={STATUS_PILL[l.status]}>{STATUS_LABEL[l.status]}</Pill>
                       </div>
                     </div>
@@ -231,6 +237,45 @@ export default async function ContactPage({ params }: { params: { id: string } }
                         className="min-h-[44px] w-full rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 sm:min-h-[36px] sm:w-auto sm:px-3"
                       >
                         Save
+                      </SubmitButton>
+                    </ActionForm>
+
+                    {/* Nigel's traffic light: how good a lead this is, and a note if needed. */}
+                    <ActionForm action={setLeadLight} className="mt-3 rounded-lg border border-slate-200 bg-slate-50/60 p-3">
+                      <input type="hidden" name="leadId" value={l.id} />
+                      <input type="hidden" name="contactId" value={person.id} />
+                      <fieldset>
+                        <legend className="mb-2 text-xs text-slate-500">Traffic light</legend>
+                        <div className="flex flex-wrap gap-2">
+                          {LIGHTS.map((lt) => (
+                            <label key={lt} className="inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 has-[:checked]:border-slate-900 has-[:checked]:ring-1 has-[:checked]:ring-slate-900 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500 sm:min-h-[36px]">
+                              <input type="radio" name="light" value={lt} defaultChecked={lightOf(l.custom) === lt} className="sr-only" />
+                              <span className={`inline-block h-3 w-3 rounded-full ${LIGHT_DOT[lt]}`} aria-hidden="true" />
+                              {LIGHT_LABEL[lt]}
+                            </label>
+                          ))}
+                          {lightOf(l.custom) && (
+                            <label className="inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-lg border border-transparent px-2 text-sm text-slate-500 has-[:checked]:text-slate-900 sm:min-h-[36px]">
+                              <input type="radio" name="light" value="none" className="sr-only" />
+                              Clear
+                            </label>
+                          )}
+                        </div>
+                      </fieldset>
+                      <label htmlFor={`light-note-${l.id}`} className="mb-1 mt-3 block text-xs text-slate-500">Note (optional)</label>
+                      <textarea
+                        id={`light-note-${l.id}`}
+                        name="light_note"
+                        rows={2}
+                        defaultValue={typeof l.custom?.lead_light_note === "string" ? l.custom.lead_light_note : ""}
+                        placeholder="What made it green, amber or red"
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-base sm:text-sm"
+                      />
+                      <SubmitButton
+                        pendingLabel="Saving"
+                        className="mt-2 min-h-[44px] w-full rounded-lg bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-800 sm:min-h-[36px] sm:w-auto"
+                      >
+                        Save light
                       </SubmitButton>
                     </ActionForm>
                   </li>
