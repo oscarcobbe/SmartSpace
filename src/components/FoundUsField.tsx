@@ -52,7 +52,7 @@ export default function FoundUsField({
       <label htmlFor={id} className={labelClassName}>
         How did you hear about us?
       </label>
-      <select id={id} name="found_us" disabled={disabled} className={selectClassName} {...controlled}>
+      <select id={id} name="found_us" disabled={disabled} className={`${selectClassName} truncate`} {...controlled}>
         <option value="">Choose one (optional)</option>
         {FOUND_US_OPTIONS.map((o) => (
           <option key={o.value} value={o.value}>

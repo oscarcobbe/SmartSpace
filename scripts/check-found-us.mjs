@@ -363,6 +363,9 @@ try {
   eq(foundUs.foundUsDetailFrom(SAID), SAID_KEPT, "the server keeps the words on one line, without a \"|\"");
   eq(foundUs.foundUsDetailFrom("tab\there\u0000 and\r\nthere "), "tab here and there", "the server takes control characters out of the words");
   eq(foundUs.foundUsDetailFrom("y".repeat(DETAIL_MAX + 50)), "y".repeat(DETAIL_MAX), `the server keeps at most ${DETAIL_MAX} characters of the words`);
+  eq(foundUs.foundUsDetailFrom("x".repeat(DETAIL_MAX - 1) + "\u{1F600}"), "x".repeat(DETAIL_MAX - 1), "the server drops half an emoji left by the cut at the limit");
+  eq(foundUs.foundUsDetailFrom("half \ud800 an emoji"), "half an emoji", "the server drops half an emoji from the words");
+  eq(foundUs.foundUsDetailFrom("an \u{1F600} emoji"), "an \u{1F600} emoji", "the server keeps a whole emoji");
   for (const v of NOT_WORDS) eq(foundUs.foundUsDetailFrom(v), "", `the server takes ${showWords(v)} as no words`);
   /* Words cannot pose as an answer in the sheet: whatever they hold, the
      Notes read back the answer that was picked and the words as kept. */
@@ -379,6 +382,10 @@ try {
   const html = renderToStaticMarkup(createElement(FoundUsField, { id: "f", labelClassName: "", selectClassName: "" }));
   ok(html.includes(`<label for="f" class="">${LABEL}</label>`), `the field is labelled "${LABEL}": ${html.slice(0, 120)}`);
   ok(/<select id="f" name="found_us"/.test(html), "the field is a select named found_us");
+  /* "Recommended by a friend or family member" is wider than a phone gives
+     the select, so a long answer, once chosen, ends in an ellipsis rather
+     than being cut mid-letter against the arrow. */
+  ok(/<select id="f" name="found_us"[^>]*class="[^"]*\btruncate\b/.test(html), "the select ends a long answer in an ellipsis: it needs truncate");
   ok(!/required|aria-required|\*/.test(html), "the field is optional: no required, no asterisk");
   const options = [...html.matchAll(/<option value="([^"]*)"[^>]*>([^<]*)<\/option>/g)].map((m) => [m[1], m[2].replace(/&#x27;|&#39;/g, "'")]);
   eq(options, [["", BLANK], ...CONTRACT], "the select starts blank and lists the eight answers");

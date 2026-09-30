@@ -77,14 +77,19 @@ export const FOUND_US_DETAIL_MAX = 200;
  * The visitor's own words, or "". One line, at most FOUND_US_DETAIL_MAX
  * characters, with control characters and "|" taken out: the sheet's Notes
  * separates its items with "|", so one in the words would split the row.
+ * Half of an emoji (a surrogate without its partner) is not text, and is
+ * taken out too, including one left by the cut at the limit.
  */
 export function foundUsDetailFrom(value: unknown): string {
   if (typeof value !== "string") return "";
   return value
     .replace(/[\u0000-\u001f\u007f|]+/g, " ")
+    .replace(/([\ud800-\udbff][\udc00-\udfff])|[\ud800-\udfff]/g, (_whole, pair?: string) => pair ?? "")
     .replace(/\s+/g, " ")
     .trim()
-    .slice(0, FOUND_US_DETAIL_MAX);
+    .slice(0, FOUND_US_DETAIL_MAX)
+    .replace(/[\ud800-\udbff]$/, "")
+    .trim();
 }
 
 /**
