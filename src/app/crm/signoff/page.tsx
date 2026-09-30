@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { requireSession } from "@/lib/crm/session";
 import { allApprovals } from "@/lib/signoff/state";
+import { sclItems, sclApprovals } from "@/lib/signoff/scl";
 import { GROUP_TITLE, SIGNOFF_ITEMS, type SignoffGroup } from "@/lib/signoff/items";
 import type { ApprovalState } from "@/lib/signoff/verdict";
 import { PageHeader, Panel, Note, Pill } from "../ui";
@@ -29,10 +30,17 @@ const when = (iso: string) =>
 const ORDER: SignoffGroup[] = ["reminders", "booking", "after", "network", "mailings"];
 
 export default async function SignoffPage() {
-  requireSession();
-  const { states, history, problem } = await allApprovals();
+  const { site } = requireSession();
+  /* Signed in as SmartCare Living: that site's emails, built from its own
+     catalogue (lib/signoff/scl). Smart Space's list otherwise. */
+  const isScl = site !== "smart-space";
+  const scl = isScl ? await sclItems() : null;
+  const ITEMS = scl ? scl.items : SIGNOFF_ITEMS;
+  const { states, history, problem: readProblem } = scl ? await sclApprovals(scl.items) : await allApprovals();
+  const problem = scl?.problem ?? readProblem;
+  const groups: SignoffGroup[] = isScl ? ["scl-quiz"] : ORDER;
 
-  const count = (s: ApprovalState) => SIGNOFF_ITEMS.filter((i) => states.get(i.id)?.state === s).length;
+  const count = (s: ApprovalState) => ITEMS.filter((i) => states.get(i.id)?.state === s).length;
   const waiting = count("waiting") + count("stale");
 
   return (
@@ -56,8 +64,8 @@ export default async function SignoffPage() {
           <Link href="/crm/emails" className="font-medium text-slate-900 underline">Emails and texts</Link>.
         </Note>
 
-        {ORDER.map((group) => {
-          const items = SIGNOFF_ITEMS.filter((i) => i.group === group);
+        {groups.map((group) => {
+          const items = ITEMS.filter((i) => i.group === group);
           return (
             <Panel key={group} title={GROUP_TITLE[group]}>
               <ul className="divide-y divide-slate-200">

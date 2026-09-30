@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requireSession } from "@/lib/crm/session";
 import Studio, { type SignoffBadge } from "@/components/email-studio/Studio";
 import { ENTRIES } from "@/lib/email/catalogue";
-import { sclCatalogue } from "@/lib/email/scl-catalogue";
+import { sclItems, sclApprovals, sclItemId } from "@/lib/signoff/scl";
 import { itemForStudioEntry } from "@/lib/signoff/items";
 import { allApprovals } from "@/lib/signoff/state";
 import { PageHeader, Note } from "../ui";
@@ -19,8 +19,16 @@ export const dynamic = "force-dynamic";
 export default async function EmailsPage({ searchParams }: { searchParams: { e?: string; v?: string } }) {
   const { site } = requireSession();
   const isScl = site !== "smart-space";
-  const scl = isScl ? await sclCatalogue() : null;
+  const scl = isScl ? await sclItems() : null;
   const showScl = Boolean(scl && scl.entries.length);
+  const sclSignoff: Record<string, SignoffBadge> = {};
+  if (scl && showScl) {
+    const { states: sclStates } = await sclApprovals(scl.items);
+    for (const e of scl.entries) {
+      const state = sclStates.get(sclItemId(e.id));
+      if (state) sclSignoff[e.id] = { ...SIGNOFF_BADGE[state.state], href: `/crm/signoff#${sclItemId(e.id)}` };
+    }
+  }
   const { states, problem } = await allApprovals();
 
   const signoff: Record<string, SignoffBadge> = {};
@@ -44,11 +52,11 @@ export default async function EmailsPage({ searchParams }: { searchParams: { e?:
       />
       <div className="mb-5 space-y-3">
         {isScl && !showScl && <Note tone="warn">{scl?.problem ?? "SmartCare Living's emails could not be loaded."} Showing Smart Space&apos;s messages instead.</Note>}
-        {showScl && <Note>SmartCare Living&apos;s emails are not in Sign-off yet: the four quiz follow-ups are designs, and nothing sends them until they are.</Note>}
+        {showScl && <Note>The quiz emails wait in Sign-off: nothing sends them until you approve them there. The first three here are the ones customers get today.</Note>}
         {problem && <Note tone="warn">{problem}</Note>}
       </div>
       {showScl && scl ? (
-        <Studio basePath="/crm/emails" entryId={searchParams.e} view={searchParams.v} entries={scl.entries} stages={scl.stages} />
+        <Studio basePath="/crm/emails" entryId={searchParams.e} view={searchParams.v} entries={scl.entries} stages={scl.stages} signoff={sclSignoff} />
       ) : (
         <Studio basePath="/crm/emails" entryId={searchParams.e} view={searchParams.v} signoff={signoff} />
       )}
