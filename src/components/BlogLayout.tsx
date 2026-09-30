@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Phone, Clock } from "lucide-react";
 import type { ReactNode } from "react";
 import type { BlogPost } from "@/app/blog/blog-posts";
+import NetworkLink from "@/components/NetworkLink";
 
 type Cta = {
   title: string;
@@ -113,6 +114,7 @@ export default function BlogLayout({ post, toc, children, cta = CONSULTATION }: 
               01 513 0424
             </a>
           </div>
+          {cta === CONSULTATION && <NetworkLink tone="dark" className="mt-6" />}
         </section>
 
         {/* Related */}

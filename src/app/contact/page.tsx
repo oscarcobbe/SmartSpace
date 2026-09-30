@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import NetworkLink from "@/components/NetworkLink";
 import { Mail, Phone, MapPin } from "lucide-react";
 import ContactForm from "@/components/ContactForm";
 
@@ -116,6 +117,7 @@ export default function ContactPage() {
                 Not sure which Ring products are right for your home? Get in touch
                 and our experts will recommend the perfect setup.
               </p>
+              <NetworkLink className="mt-3" lead="Asking about Wi-Fi?" label="Start with the free Wi-Fi speed test" />
             </div>
           </div>
 

@@ -7,6 +7,7 @@ import {
   ArrowRight, Phone, Mail, MapPin,
 } from "lucide-react";
 import { FAQS } from "./faq-data";
+import NetworkLink from "@/components/NetworkLink";
 
 const INCLUDES = [
   {
@@ -86,6 +87,7 @@ export default function FAQPage() {
               </div>
             ))}
           </div>
+          <NetworkLink className="mt-8 text-center" lead="Wi-Fi trouble rather than security?" label="See our home network diagnosis" href="/services/wifi" />
         </div>
       </section>
 

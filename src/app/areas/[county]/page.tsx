@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import NetworkLink from "@/components/NetworkLink";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MapPin, ArrowRight, Phone, Mail, Check } from "lucide-react";
@@ -174,6 +175,12 @@ export default async function CountyPage({
             <Phone className="h-4 w-4" />
             01 513 0424
           </a>
+          <NetworkLink
+            className="basis-full"
+            lead={`Wi-Fi not reaching every room in your ${c.name} home?`}
+            label="See our home network diagnosis"
+            href="/services/wifi"
+          />
         </div>
 
         {/* Local context */}
