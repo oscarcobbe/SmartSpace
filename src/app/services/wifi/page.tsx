@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Check, Gauge, Tv, WifiOff, DoorOpen } from "lucide-react";
 import NetworkHouse from "@/components/wifi/NetworkHouse";
+import GuideLinks from "@/components/wifi/GuideLinks";
 import { SYMPTOMS, ASSESSMENT_EURO, packageBySlug } from "@/data/wifiPackages";
 
 const SITE = "https://smart-space.ie";
@@ -397,6 +398,7 @@ export default function NetworkDiagnosisPage() {
               </details>
             ))}
           </div>
+          <GuideLinks className="mt-8 text-center" />
         </div>
       </section>
 

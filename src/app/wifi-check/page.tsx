@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, ArrowDown, ArrowUp, Timer, Activity } from "lucide-react";
 import WifiCheck from "./WifiCheck";
 import TrafficLight from "@/components/wifi/TrafficLight";
+import GuideLinks from "@/components/wifi/GuideLinks";
 import { decodeCheck } from "@/lib/wifi-check/codec";
 import type { Light, Place } from "@/lib/wifi-check/grade";
 
@@ -63,6 +64,52 @@ const LIGHTS: { light: Light; title: string; body: string }[] = [
     body: "Your home needs more than the Wi-Fi delivers, in speed, reach or both.",
   },
 ];
+
+/*
+ * The questions people type when they want a speed test (Keyword Planner,
+ * Ireland, 30 September 2026: "check wifi speed" 720 a month, "upload speed
+ * test" and "check upload speed" 210 each, "ping speed test" 170, "check wifi
+ * signal strength" 140), answered with the check's own published rules and
+ * the two sourced figures it uses (Netflix's 15 Mbps per 4K stream, Ring's
+ * upload scale). Plain strings, because the same text feeds the FAQ markup.
+ */
+const FAQ = [
+  {
+    q: "How do I check my Wi-Fi speed?",
+    a: "Run the test beside your router first, then again in the room where the Wi-Fi struggles, on the same device. The router result is roughly what your broadband delivers, and the gap between it and the room is your Wi-Fi.",
+  },
+  {
+    q: "What is a good Wi-Fi speed for a home?",
+    a: "Enough for everyone at once, in the rooms you use. Netflix recommends 15 Mbps for each 4K stream, so the check allows 15 Mbps for each person in the house, with 25 Mbps as the least any home needs.",
+  },
+  {
+    q: "How do I check my upload speed?",
+    a: "This test measures upload as well as download. Upload carries video calls and every clip a smart camera or doorbell sends. Ring asks for 2 Mbps of upload for each 1080p camera, and rates upload above 10 Mbps as good, 5 to 10 Mbps as okay, and below 5 Mbps as poor.",
+  },
+  {
+    q: "What does ping mean on a speed test?",
+    a: "How quickly the connection answers, in milliseconds. The check also measures it while the connection is busy, because a line that answers quickly when idle can stall when someone starts streaming. It grades under 60 ms while busy as green and over 150 ms as red.",
+  },
+  {
+    q: "How do I check my Wi-Fi signal strength?",
+    a: "Signal bars on a phone do not say how much of your broadband reaches a room. Speed does: test in the room and compare it with the result beside the router. The check treats a room that keeps at least 60 per cent of the router's speed as fine, and one that keeps under 30 per cent as a room that has lost most of it.",
+  },
+  {
+    q: "Why is my result lower than my broadband package?",
+    a: "A test over Wi-Fi measures the Wi-Fi as well as the line, and results are often lower in the evening, when more people nearby are online. To see what the line itself delivers, test on a cable plugged into the router.",
+  },
+  {
+    q: "Who runs the speed test?",
+    a: "Measurement Lab, the open platform behind Google's own speed test. It publishes each result, with the internet address it came from. Your report is kept in its own link, and we only get your name and number if you send them to us.",
+  },
+];
+
+const FAQ_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+};
+
 
 export default function WifiCheckPage({ searchParams }: { searchParams: { r?: string; place?: string } }) {
   const initial = decodeCheck(typeof searchParams.r === "string" ? searchParams.r : null);
@@ -135,11 +182,31 @@ export default function WifiCheckPage({ searchParams }: { searchParams: { r?: st
           <div className="mt-10 text-center">
             <Link
               href="/services/wifi"
-              className="inline-flex items-center gap-1.5 text-brand-600 font-semibold text-sm hover:underline"
+              className="inline-flex items-center gap-1.5 text-brand-700 font-semibold text-sm hover:underline"
             >
               See the home network assessment <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* Questions */}
+      <section className="py-14 lg:py-20 bg-gradient-to-b from-white to-cream">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }} />
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-ink tracking-[-0.03em] text-center mb-8">Speed Test Questions</h2>
+          <div className="divide-y divide-gray-100 rounded-3xl border border-gray-100 bg-white shadow-premium">
+            {FAQ.map((f) => (
+              <details key={f.q} className="group px-5 sm:px-7 py-5">
+                <summary className="cursor-pointer list-none flex items-center justify-between gap-4 font-bold text-ink">
+                  {f.q}
+                  <span className="text-brand-500 text-xl leading-none transition-transform group-open:rotate-45">+</span>
+                </summary>
+                <p className="mt-3 text-sm text-ink-soft leading-relaxed">{f.a}</p>
+              </details>
+            ))}
+          </div>
+          <GuideLinks className="mt-8 text-center" />
         </div>
       </section>
     </>
