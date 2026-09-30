@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Mail, MessageSquare } from "lucide-react";
-import { ENTRIES, STAGES, entryById, smsParts, type Status } from "@/lib/email/catalogue";
+import { ENTRIES, STAGES, smsParts, type Entry, type Stage, type Status } from "@/lib/email/catalogue";
 
 /**
  * The email studio: every message a customer gets from Smart Space, in the
@@ -30,14 +30,21 @@ export default function Studio({
   entryId,
   view: rawView,
   signoff,
+  entries,
+  stages,
 }: {
   basePath: string;
   entryId?: string;
   view?: string;
   /** Sign-off state per studio entry id, when the CRM can say. */
   signoff?: Record<string, SignoffBadge>;
+  /** Another site's messages (SmartCare Living's, fetched from its own code). Smart Space's when absent. */
+  entries?: Entry[];
+  stages?: Stage[];
 }) {
-  const entry = entryById(entryId) ?? ENTRIES[0];
+  const list = entries ?? ENTRIES;
+  const stageList = stages ?? STAGES;
+  const entry = list.find((e) => e.id === entryId) ?? list[0];
   const view: View = rawView === "phone" || rawView === "text" ? rawView : "desktop";
   const out = entry.render();
   const isSms = "sms" in out;
@@ -47,8 +54,8 @@ export default function Studio({
   return (
     <div className="grid gap-6 lg:grid-cols-[300px_1fr] items-start">
       <nav className="space-y-5 lg:sticky lg:top-4" aria-label="The customer's journey">
-        {STAGES.map((stage, i) => {
-          const items = ENTRIES.filter((e) => e.stage === stage.id);
+        {stageList.map((stage, i) => {
+          const items = list.filter((e) => e.stage === stage.id);
           if (!items.length) return null;
           return (
             <section key={stage.id}>
