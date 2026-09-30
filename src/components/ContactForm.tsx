@@ -109,6 +109,7 @@ export default function ContactForm() {
       message: (form.elements.namedItem("message") as HTMLTextAreaElement).value,
       homepage_url: (form.elements.namedItem("homepage_url") as HTMLInputElement | null)?.value ?? "",
       found_us: (form.elements.namedItem("found_us") as HTMLSelectElement | null)?.value ?? "",
+      found_us_detail: (form.elements.namedItem("found_us_detail") as HTMLInputElement | null)?.value ?? "",
       attribution: getAttribution() ?? undefined,
       consent: consentRecord(),
     };

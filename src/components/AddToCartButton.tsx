@@ -39,11 +39,13 @@ interface AddToCartButtonProps {
    */
   directLabel?: string;
   /**
-   * The answer to "How did you find us?" on the page's own FoundUsField,
+   * The answer to "How did you hear about us?" on the page's own FoundUsField,
    * sent with a direct checkout (src/lib/found-us.ts). Every directCheckout
    * use passes it; scripts/check-found-us.mjs fails the build otherwise.
    */
   foundUs?: string;
+  /** The visitor's own words under that answer, sent with it. */
+  foundUsDetail?: string;
   /** Accent colour theme. Eufy product pages pass "blue"; default is Ring orange. */
   accent?: "orange" | "blue";
 }
@@ -64,6 +66,7 @@ export default function AddToCartButton({
   directCheckout = false,
   directLabel = "Book Now",
   foundUs,
+  foundUsDetail,
   accent = "orange",
 }: AddToCartButtonProps) {
   const { addItem } = useCart();
@@ -102,6 +105,7 @@ export default function AddToCartButton({
             gaSessionId: ga.sessionId,
             consent: consentRecord(),
             found_us: foundUs ?? "",
+            found_us_detail: foundUsDetail ?? "",
           }),
         });
         const data = await res.json();

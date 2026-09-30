@@ -11,8 +11,9 @@ export default function CartDrawer() {
   const { items, isOpen, totalQuantity, totalAmount, closeCart, updateQuantity, removeItem } = useCart();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
-  /* "How did you find us?", optional: see src/lib/found-us.ts. */
+  /* "How did you hear about us?", optional: see src/lib/found-us.ts. */
   const [foundUs, setFoundUs] = useState("");
+  const [foundUsDetail, setFoundUsDetail] = useState("");
 
   if (!isOpen) return null;
 
@@ -40,7 +41,7 @@ export default function CartDrawer() {
         const res = await fetch("/api/checkout/free", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ items, attribution, consent: consentRecord(), gaClientId: ga.clientId, gaSessionId: ga.sessionId, found_us: foundUs }),
+          body: JSON.stringify({ items, attribution, consent: consentRecord(), gaClientId: ga.clientId, gaSessionId: ga.sessionId, found_us: foundUs, found_us_detail: foundUsDetail }),
         });
         const data = await res.json();
         if (data.success) {
@@ -55,7 +56,7 @@ export default function CartDrawer() {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items, attribution, consent: consentRecord(), gaClientId: ga.clientId, gaSessionId: ga.sessionId, found_us: foundUs }),
+        body: JSON.stringify({ items, attribution, consent: consentRecord(), gaClientId: ga.clientId, gaSessionId: ga.sessionId, found_us: foundUs, found_us_detail: foundUsDetail }),
       });
       const data = await res.json();
       if (data.url) {
@@ -184,6 +185,8 @@ export default function CartDrawer() {
               id="cart-found-us"
               value={foundUs}
               onChange={setFoundUs}
+              detail={foundUsDetail}
+              onDetailChange={setFoundUsDetail}
               disabled={isCheckingOut}
               labelClassName="block text-xs font-medium text-gray-600 mb-1"
               selectClassName="w-full min-h-11 rounded-xl border border-gray-300 bg-white px-3.5 text-base sm:text-sm text-gray-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 disabled:opacity-60"

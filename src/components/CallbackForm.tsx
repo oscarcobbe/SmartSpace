@@ -72,6 +72,7 @@ export default function CallbackForm() {
         `They have not booked or paid, they asked to be called back.`,
       homepage_url: value("homepage_url"),
       found_us: value("found_us"),
+      found_us_detail: value("found_us_detail"),
       attribution: getAttribution() ?? undefined,
       consent: consentRecord(),
     };

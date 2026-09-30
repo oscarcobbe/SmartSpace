@@ -8,7 +8,7 @@ import { fireServerConversion } from "@/lib/server-conversions";
 import { sendToCrm } from "@/lib/crm";
 import { alertTo, monitorBcc } from "@/lib/business-constants";
 import { afterResponse, AFTER_CEILING } from "@/lib/after-response";
-import { foundUsFrom, notesWithFoundUs } from "@/lib/found-us";
+import { foundUsDetailFrom, foundUsFrom, notesWithFoundUs } from "@/lib/found-us";
 import { sendConsultationConfirmation } from "@/lib/email/send-customer";
 
 // POST routes are inherently dynamic but explicit is better, without
@@ -45,8 +45,10 @@ interface FreeCheckoutBody {
   /** The cookie banner's stored answer, read in the browser. */
   consent?: ConsentInput | null;
   gclid?: string; // legacy
-  /** "How did you find us?", optional: src/lib/found-us.ts. */
+  /** "How did you hear about us?", optional: src/lib/found-us.ts. */
   found_us?: unknown;
+  /** The visitor's own words under it, optional. */
+  found_us_detail?: unknown;
 }
 
 
@@ -77,6 +79,7 @@ export async function POST(request: Request) {
     const finalAttribution = attribution ?? (gclid ? { gclid } : undefined);
     /* One of the CRM's FOUND_US keys or "" (not answered, or not an answer). */
     const foundUs = foundUsFrom(parsed.found_us);
+    const foundUsDetail = foundUsDetailFrom(parsed.found_us_detail);
 
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: "No items provided" }, { status: 400 });
@@ -274,7 +277,7 @@ export async function POST(request: Request) {
           bookingSlot: bookedItem?.bookingSlot,
           attribution: finalAttribution,
           source: "smart-space.ie",
-          notes: notesWithFoundUs(undefined, foundUs),
+          notes: notesWithFoundUs(undefined, foundUs, foundUsDetail),
         },
         // Nobody is waiting now: room for a cold start inside the first
         // append, and for an append that ended in doubt to settle before the
@@ -325,6 +328,7 @@ export async function POST(request: Request) {
           booking_slot: bookedItem?.bookingSlot || null,
           address: customer?.address || null,
           found_us: foundUs || null,
+          found_us_detail: foundUsDetail || null,
         },
       }),
     );

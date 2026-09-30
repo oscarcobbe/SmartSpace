@@ -34,10 +34,18 @@ export const FOUND_US: Record<string, string> = {
   unknown: "Did not say",
   google_ads: "A Google ad",
   google_search: "Google search, not an ad",
+  ai_assistant: "ChatGPT or another AI assistant",
+  social: "Facebook or Instagram",
   website: "Our website",
   recommended: "Recommended",
+  hse_memory_room: "HSE Memory Technology Room",
+  clinician: "GP, public health nurse or occupational therapist",
+  home_care: "Home care provider or carer",
+  van: "Saw our van",
+  press: "Newspaper, radio or online article",
   organisation: "An organisation",
   existing_customer: "Already a customer",
+  smart_space_customer: "Existing Smart Space customer",
   other: "Something else",
 };
 
