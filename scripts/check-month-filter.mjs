@@ -22,6 +22,9 @@ import { join, resolve, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import ts from "typescript";
 
+/* Bookings on Google Calendar have their own check (check-booking-engine.mjs); this one runs the routes on the Calendly path it was written for, whatever the build's environment says. */
+for (const k of ["BOOKING_BACKEND", "GOOGLE_BOOKING_SA_EMAIL", "GOOGLE_WIF_PROVIDER", "GOOGLE_BOOKING_SA_KEY", "GOOGLE_SOURCE_ACCESS_TOKEN", "BOOKING_CALENDAR_OWNER"]) delete process.env[k];
+
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const dir = mkdtempSync(join(tmpdir(), "month-"));
 const load = async (rel, name) => {

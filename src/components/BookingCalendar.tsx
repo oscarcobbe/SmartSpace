@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Calendar, Clock, ChevronLeft, ChevronRight, AlertCircle, Timer } from "lucide-react";
 import { useCart } from "@/context/CartContext";
-import { getEarliestBookableDate, isDateBlocked } from "@/lib/calendly";
+import { getEarliestBookableDate, isDateBlocked } from "@/lib/booking/rules";
 
 const AVAILABLE_DAYS = [1, 2, 3, 4]; // Mon-Thu, Friday blocked sitewide (2026-06-02)
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -28,24 +28,30 @@ interface BookingCalendarProps {
    * Installation-Only flow passes 2 (customer brings their own device,
    * no stock to source) and Free Consultation passes 2 (site survey
    * only, no stock and no install crew). Counting is true working days
-   * (Mon-Fri), implemented in lib/calendly.ts getEarliestBookableDate.
+   * (Mon-Fri), implemented in lib/booking/rules.ts getEarliestBookableDate.
    */
   leadDays?: number;
   /** Accent colour theme. Eufy product pages pass "blue"; default is Ring orange. */
   accent?: "orange" | "blue";
+  /**
+   * The line under the chosen time. Checkout's default says the slot is held
+   * while they pay; moving an existing booking (src/app/booking) passes its
+   * own, since there is no checkout to complete.
+   */
+  holdNote?: (minutesLeft: number) => string;
 }
 
 function getAvailableDates(leadDays: number): Date[] {
   const dates: Date[] = [];
   // Earliest bookable date respects both the requested lead time AND the
-  // EARLIEST_BOOKING_DATE constant in lib/calendly.ts (whichever is later).
+  // EARLIEST_BOOKING_DATE constant in lib/booking/rules.ts (whichever is later).
   // Window length: ~6 weeks of available days.
   const start = getEarliestBookableDate(leadDays);
   for (let i = 0; i <= 49; i++) {
     const date = new Date(start);
     date.setDate(start.getDate() + i);
     // Exclude both the weekly day-of-week block (Mon-Thu only) and any
-    // sitewide blackout range (holidays / close-downs) in lib/calendly.ts.
+    // sitewide blackout range (holidays / close-downs) in lib/booking/rules.ts.
     if (AVAILABLE_DAYS.includes(date.getDay()) && !isDateBlocked(date)) {
       dates.push(date);
     }
@@ -60,7 +66,7 @@ function formatDateISO(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-export default function BookingCalendar({ onSelectionChange, compact, heading = "Choose an Installation Date", confirmLabel = "Installation", kind = "installation", leadDays = 4, accent = "orange" }: BookingCalendarProps) {
+export default function BookingCalendar({ onSelectionChange, compact, heading = "Choose an Installation Date", confirmLabel = "Installation", kind = "installation", leadDays = 4, accent = "orange", holdNote }: BookingCalendarProps) {
   // Accent theming only. Every booking rule/constraint (working days, lead
   // time, blackout ranges, slot logic) is identical regardless of accent;
   // Eufy product pages pass accent="blue" so only the colours differ.
@@ -336,7 +342,7 @@ export default function BookingCalendar({ onSelectionChange, compact, heading = 
                 at {slots.find((s) => s.value === selectedSlot)?.label}
               </p>
               <p className={`text-[10px] ${ac.text} mt-1`}>
-                Reserved for {minutesLeft} min, complete checkout to confirm
+                {holdNote ? holdNote(minutesLeft) : `Reserved for ${minutesLeft} min, complete checkout to confirm`}
               </p>
             </div>
           </div>

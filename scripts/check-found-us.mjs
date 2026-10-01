@@ -48,6 +48,9 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { builtinModules } from "node:module";
 import ts from "typescript";
 
+/* Bookings on Google Calendar have their own check (check-booking-engine.mjs); this one runs the routes on the Calendly path it was written for, whatever the build's environment says. */
+for (const k of ["BOOKING_BACKEND", "GOOGLE_BOOKING_SA_EMAIL", "GOOGLE_WIF_PROVIDER", "GOOGLE_BOOKING_SA_KEY", "GOOGLE_SOURCE_ACCESS_TOKEN", "BOOKING_CALENDAR_OWNER"]) delete process.env[k];
+
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const fail = [];
 
@@ -214,6 +217,8 @@ const dir = mkdtempSync(join(cacheDir, "check-found-us-"));
 const STUBS = {
   resend: `export class Resend { constructor() { this.emails = { send: async (m) => { globalThis.__check.emails.push(m); return { data: { id: "check-email" }, error: null }; } }; } }`,
   "@vercel/functions": `export function waitUntil(p) { globalThis.__check.background.push(Promise.resolve(p)); }`,
+  /* Only reached on Google Calendar bookings, which this check switches off. */
+  "@vercel/functions/oidc": `export async function getVercelOidcToken() { throw new Error("check-found-us: no OIDC here"); }`,
   "next/server": `export const NextResponse = { json: (body, init = {}) => new Response(JSON.stringify(body), { ...init, headers: { "content-type": "application/json", ...(init.headers ?? {}) } }) };
 export const NextRequest = Request;`,
 };

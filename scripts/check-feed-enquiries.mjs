@@ -30,6 +30,9 @@ import { join, resolve, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import ts from "typescript";
 
+/* Bookings on Google Calendar have their own check (check-booking-engine.mjs); this one runs the routes on the Calendly path it was written for, whatever the build's environment says. */
+for (const k of ["BOOKING_BACKEND", "GOOGLE_BOOKING_SA_EMAIL", "GOOGLE_WIF_PROVIDER", "GOOGLE_BOOKING_SA_KEY", "GOOGLE_SOURCE_ACCESS_TOKEN", "BOOKING_CALENDAR_OWNER"]) delete process.env[k];
+
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 /*
@@ -44,6 +47,10 @@ const FILES = {
   "@/lib/format": ["src/lib/format.ts", "format.mjs"],
   "@/lib/crm/auth": ["src/lib/crm/auth.ts", "auth.mjs"],
   "@/data/productCatalogue": ["src/data/productCatalogue.ts", "productCatalogue.mjs"],
+  /* Google Calendar bookings: read only when the calendar is configured, which it is not here. */
+  "@/lib/booking/engine": ["src/lib/booking/engine.ts", "engine.mjs"],
+  "@/lib/booking/google-calendar": ["src/lib/booking/google-calendar.ts", "google-calendar.mjs"],
+  "./google-calendar": ["src/lib/booking/google-calendar.ts", "google-calendar.mjs"],
 };
 const BUILTIN = new Set(["crypto", "node:crypto"]);
 /* The route uses NextResponse.json and nothing else from next/server. */

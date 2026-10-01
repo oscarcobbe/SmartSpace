@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getAvailableSlots, AVAILABLE_DAYS, isDateBlocked } from "@/lib/calendly";
 
 export const dynamic = "force-dynamic";
+// Room for the booking engine to wait out Google's rate limit (src/lib/booking/google-calendar.ts, withRetry).
+export const maxDuration = 60;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

@@ -119,6 +119,10 @@ export default function PrivacyPage() {
                 US under SCCs.
               </li>
               <li>
+                <strong>Google</strong> (Google Workspace, where our booking calendar is kept), name, email, phone,
+                address, booking slot. Stored in the EU and US under Google&apos;s data processing terms.
+              </li>
+              <li>
                 <strong>Resend</strong> (transactional email), your email address and any message you sent us. Stored
                 in the EU.
               </li>

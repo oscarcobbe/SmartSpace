@@ -31,6 +31,9 @@ import { join, relative, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
+/* Bookings on Google Calendar have their own check (check-booking-engine.mjs); this one runs the routes on the Calendly path it was written for, whatever the build's environment says. */
+for (const k of ["BOOKING_BACKEND", "GOOGLE_BOOKING_SA_EMAIL", "GOOGLE_WIF_PROVIDER", "GOOGLE_BOOKING_SA_KEY", "GOOGLE_SOURCE_ACCESS_TOKEN", "BOOKING_CALENDAR_OWNER"]) delete process.env[k];
+
 const ROOT = resolve(process.env.CHECK_ROOT || join(dirname(fileURLToPath(import.meta.url)), ".."));
 /* /api/wifi-check joined when a Wi-Fi enquiry became a conversion with a
    server fire of its own. */
