@@ -10,6 +10,16 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "ring-installation-cost-ireland",
+    title: "How Much Does Ring Doorbell or Camera Installation Cost in Ireland? (2026)",
+    description:
+      "What it costs to have a Ring video doorbell or floodlight camera installed in Ireland: €139 to fit your own, €329 for a doorbell supplied and fitted with a Ring Chime, bundles from €658. What pushes the price up, example quotes, and what to ask any installer.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "7 min read",
+    category: "Buying Guide",
+  },
+  {
     slug: "why-wifi-slow-upstairs-irish-homes",
     title: "Why Your Wi-Fi Is Slow Upstairs, and How to Fix It in an Irish House",
     description:
