@@ -540,7 +540,7 @@ export default function ConversionTestPage() {
             </li>
             <li>
               <strong>Consent denied?</strong> If the four <code>Consent</code> rows above show
-              &quot;denied&quot;, only modeled conversions arrive. Click &quot;Accept all&quot; on the
+              &quot;denied&quot;, only modeled conversions arrive. Click &quot;Accept cookies&quot; on the
               cookie banner to test the granted path.
             </li>
           </ol>

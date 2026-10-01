@@ -19,7 +19,8 @@
  * privacy notice the answer was given under (src/lib/consent-version.ts).
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { CONSENT_VERSION } from "@/lib/consent-version";
 
 const STORAGE_KEY = "ss_consent";
@@ -164,6 +165,10 @@ function tally(event: "shown" | Decision) {
 
 export default function CookieBanner() {
   const [visible, setVisible] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  // The privacy policy is the page the banner links to, so it is the one
+  // page the banner must not cover: there it sits as a card at the bottom.
+  const blocking = !(usePathname() ?? "").startsWith("/privacy");
 
   useEffect(() => {
     const stored = loadStored();
@@ -187,6 +192,44 @@ export default function CookieBanner() {
     return () => window.clearTimeout(t);
   }, []);
 
+  /*
+   * Oscar, 30 September 2026: in the middle of the screen "with the back
+   * blurred out till they make a decision". So it is a real modal: the page
+   * behind does not scroll, focus moves into the card and Tab stays inside
+   * it (the two buttons and the policy link), and Escape declines, as it
+   * does on smartcareliving.ie. Focus goes to the card, not to Accept, so
+   * the keyboard is not pointed at either answer.
+   */
+  useEffect(() => {
+    if (!visible || !blocking) return;
+    const before = document.activeElement as HTMLElement | null;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    dialogRef.current?.focus({ preventScroll: true });
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") { e.preventDefault(); decide("denied"); return; }
+      if (e.key !== "Tab" || !dialogRef.current) return;
+      const items = Array.from(dialogRef.current.querySelectorAll<HTMLElement>("a[href], button"));
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      const inside = dialogRef.current.contains(document.activeElement);
+      if (e.shiftKey && (!inside || document.activeElement === first || document.activeElement === dialogRef.current)) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && (!inside || document.activeElement === last)) {
+        e.preventDefault(); first.focus();
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = overflow;
+      document.removeEventListener("keydown", onKey);
+      before?.focus?.({ preventScroll: true });
+    };
+    // decide is stable enough for this: it only writes storage and state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, blocking]);
+
   function decide(decision: Decision) {
     try {
       localStorage.setItem(
@@ -204,50 +247,74 @@ export default function CookieBanner() {
 
   if (!visible) return null;
 
-  return (
+  const card = (
     <div
+      ref={dialogRef}
       role="dialog"
+      aria-modal={blocking ? true : undefined}
       aria-label="Cookie consent"
-      className="fixed bottom-4 left-4 right-4 sm:left-6 sm:right-auto sm:bottom-6 sm:max-w-md z-[1000] bg-white border border-gray-200 rounded-2xl shadow-xl p-5 sm:p-6"
+      tabIndex={-1}
+      className={
+        (blocking
+          ? "relative w-full max-w-md "
+          : "fixed bottom-4 left-4 right-4 sm:left-6 sm:right-auto sm:bottom-6 sm:max-w-md z-[1000] ") +
+        "bg-gradient-to-b from-brand-50 to-white to-60% border border-brand-200 rounded-3xl shadow-2xl ring-[6px] ring-brand-500/5 p-6 sm:p-8 text-center outline-none motion-safe:animate-[ssConsentIn_0.45s_cubic-bezier(0.2,0.7,0.2,1)_both]"
+      }
     >
-      <h2 className="text-sm font-bold text-gray-900 mb-2">Can we see which pages helped?</h2>
-      {/*
-       * The old wording said we measure ad performance and how visitors use
-       * the site. Both are about us, and neither gives a reader any reason to
-       * agree. Refusing cannot lawfully be made harder, so an honest reason to
-       * agree is the only lever there is.
-       */}
-      <p className="text-xs sm:text-sm text-gray-600 leading-relaxed mb-4">
-        It tells us which pages actually lead to a job being booked, so we stop
-        paying to send people to the ones that do not. Contact details you type
-        are only ever shared in scrambled form. Change your mind any time. See our{" "}
-        <a href="/privacy" className="text-brand-700 hover:underline">privacy policy</a>.
+      <style>{"@keyframes ssConsentIn{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}@keyframes ssConsentFade{from{opacity:0}to{opacity:1}}"}</style>
+      <span
+        aria-hidden="true"
+        className="mx-auto mb-4 w-14 h-14 rounded-2xl flex items-center justify-center text-white bg-gradient-to-br from-brand-400 via-brand-500 to-brand-600 shadow-lg shadow-brand-500/40 ring-4 ring-brand-500/10"
+      >
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5" />
+          <path d="M8.5 8.5v.01" />
+          <path d="M16 15.5v.01" />
+          <path d="M12 12v.01" />
+          <path d="M11 17v.01" />
+          <path d="M7 14v.01" />
+        </svg>
+      </span>
+      <p className="text-base sm:text-lg font-semibold text-gray-900 leading-snug mb-6">
+        We&rsquo;re a small Irish business trying to reach the people who need us.{" "}
+        <a href="/privacy" className="text-brand-700 underline hover:text-brand-800">
+          Privacy policy
+        </a>
       </p>
       {/*
-       * Equal prominence, which is not a preference.
-       *
-       * Accept was a filled brand button and refuse was a pale outline. That
-       * difference is the dark pattern the DPC and the EDPB both name, and it
-       * is the one thing about a consent banner a regulator will look at
-       * first. Same size, same weight, same depth of colour now: only the
-       * label and the hue differ.
+       * Oscar, 30 September 2026: "were gona have to bite the button because
+       * no one is accepting them. the accept must be alot bigger than the
+       * decline", with a short reason under Accept and a line that we are a
+       * small business. Until then the two buttons were the same size,
+       * because the DPC's cookie guidance asks for equal prominence; this is
+       * his call to depart from it. Decline stays a real, labelled button at
+       * least 38px tall, just smaller and quieter.
        */}
-      <div className="flex flex-col sm:flex-row gap-2">
-        <button
-          type="button"
-          onClick={() => decide("granted")}
-          className="flex-1 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold px-4 py-2.5 rounded-full transition-colors"
-        >
-          Accept all
-        </button>
-        <button
-          type="button"
-          onClick={() => decide("denied")}
-          className="flex-1 bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold px-4 py-2.5 rounded-full transition-colors"
-        >
-          Essential only
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={() => decide("granted")}
+        className="w-full bg-brand-700 hover:bg-brand-800 text-white text-lg font-bold px-6 py-4 rounded-2xl shadow-lg shadow-brand-500/40 hover:-translate-y-px transition"
+      >
+        Accept cookies
+      </button>
+      <p className="mt-2 text-[13px] text-gray-500 leading-snug">
+        Shows us which of our ads work, so we spend less reaching you.
+      </p>
+      <button
+        type="button"
+        onClick={() => decide("denied")}
+        className="mt-5 min-h-[38px] bg-white hover:border-gray-500 text-gray-700 text-sm font-semibold px-5 py-2 rounded-xl border border-gray-300 transition-colors"
+      >
+        Decline
+      </button>
+    </div>
+  );
+
+  if (!blocking) return card;
+
+  return (
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-md motion-safe:animate-[ssConsentFade_0.3s_ease_both]">
+      {card}
     </div>
   );
 }
