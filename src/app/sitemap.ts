@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { BLOG_POSTS } from "./blog/blog-posts";
 
 const BASE = "https://smart-space.ie";
 
@@ -69,19 +70,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // Blog, informational top-of-funnel content. Each post targets a
     // distinct buyer-research query so they don't cannibalise each other.
     { url: `${BASE}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
-    { url: `${BASE}/blog/broadband-speed-test-ireland-line-or-wifi`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${BASE}/blog/how-to-test-wifi-speed-room-by-room`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${BASE}/blog/wifi-extender-mesh-or-powerline-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${BASE}/blog/ring-vs-eufy-doorbell-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${BASE}/blog/eufy-video-doorbell-e340-fitted-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${BASE}/blog/eufy-home-bundles-driveway-garden-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${BASE}/blog/smart-camera-wifi-drops-irish-homes`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${BASE}/blog/tapo-vs-eufy-vs-ring-budget-doorbell-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${BASE}/blog/whole-home-security-beyond-front-door-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${BASE}/blog/battery-vs-hardwired-smart-doorbell-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${BASE}/blog/home-security-cameras-ireland-buyers-guide`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${BASE}/blog/ring-doorbell-installation-ireland-guide`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${BASE}/blog/smart-doorbell-vs-traditional-intercom-ireland`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    /* Every guide in the blog's own list, so a new one cannot be left out. */
+    ...BLOG_POSTS.map((post) => ({
+      url: `${BASE}/blog/${post.slug}`,
+      lastModified: new Date(post.dateModified),
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    })),
 
     // Legal, required by GDPR / ePrivacy now that the cookie banner fires
     // ad_storage / ad_user_data signals. Low priority but indexable.
