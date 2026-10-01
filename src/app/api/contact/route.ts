@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { consentFrom, recordEnquiryConsent, type ConsentInput } from "@/lib/ad-consent";
+import { consentFrom, openAiConsented, recordEnquiryConsent, type ConsentInput } from "@/lib/ad-consent";
 import { randomUUID } from "crypto";
 import { Resend } from "resend";
 import { logLead, SHEET_BACKGROUND, type AttributionRecord } from "@/lib/leads";
-import { fireServerConversion } from "@/lib/server-conversions";
+import { browserContext, fireServerConversion } from "@/lib/server-conversions";
 import { sendToCrm } from "@/lib/crm";
 import { sendSiteAlert } from "@/lib/site-alerts";
 import { monitorBcc } from "@/lib/business-constants";
@@ -403,10 +403,13 @@ export async function POST(request: Request) {
       ),
     );
 
+    /* Read now: the request's cookies say whether Google's tag runs in this
+       browser, and carry the ChatGPT ads pixel's click id. */
+    const browser = browserContext(request);
     afterResponse("server conversion", AFTER_CEILING.conversion, () =>
       fireServerConversion({
         gadsLabel: leadLabel, // Smart Space Lead, same label as ContactForm
-        ga4EventName: "generate_lead",
+        ga4EventName: "server_lead",
         value: 10,
         currency: "EUR",
         transactionId: conversionId,
@@ -417,6 +420,8 @@ export async function POST(request: Request) {
         lastName,
         extraParams: { lead_source: "contact_form", topic: subjectLabel },
         adConsent: consentFrom(consent)?.decision ?? null,
+        browser,
+        openAi: { type: "lead_created", consented: openAiConsented(consentFrom(consent)) },
       }),
     );
 

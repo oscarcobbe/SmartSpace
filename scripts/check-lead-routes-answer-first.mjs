@@ -32,7 +32,9 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
 const ROOT = resolve(process.env.CHECK_ROOT || join(dirname(fileURLToPath(import.meta.url)), ".."));
-const ROUTES = ["src/app/api/contact/route.ts", "src/app/api/checkout/free/route.ts"];
+/* /api/wifi-check joined when a Wi-Fi enquiry became a conversion with a
+   server fire of its own. */
+const ROUTES = ["src/app/api/contact/route.ts", "src/app/api/checkout/free/route.ts", "src/app/api/wifi-check/route.ts"];
 const HELPER = "src/lib/after-response.ts";
 const TASKS = ["logLead", "sendToCrm", "recordEnquiryConsent", "fireServerConversion"];
 

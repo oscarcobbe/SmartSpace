@@ -3,87 +3,16 @@
 import { useState, FormEvent } from "react";
 import { Send, Check } from "lucide-react";
 import { getAttribution, consentRecord } from "@/lib/attribution";
+import { fireLeadConversion } from "@/lib/lead-conversion";
 import FoundUsField from "@/components/FoundUsField";
 
-// Google Ads conversion send_to value. Pulled from env so the user can
-// fix in Vercel without a code redeploy if the label changes (e.g. the
-// conversion is recreated in Google Ads). Falls back to the historic
-// label so prior behaviour is preserved when the env var isn't set.
-// .trim() is load-bearing, Vercel env vars can carry a trailing \n
-// from copy-paste, which makes Google Ads reject the conversion as an
-// unknown label. See src/app/layout.tsx (call-label fix) for the same
-// pattern. Discovered when phone-call conversions stopped registering.
-const GADS_LEAD_SEND_TO =
-  process.env.NEXT_PUBLIC_GADS_LEAD_SEND_TO?.trim() ||
-  "AW-17978501655/u8cHCNyipZocEJfU6PxC";
-
-// Mirrors the pattern in booking/page.tsx, direct window.gtag fire is
-// reliable; the prior <Script> + conditional render approach silently
-// dropped the call after page hydration had finished.
-//
-// `conversionId` comes from the API response (server-generated UUID).
-// Sending it as `transaction_id` lets Google Ads dedupe this client-side
-// fire against the matching server-side fire, same id → counted once.
-function fireContactConversion(email: string, phone: string, conversionId?: string) {
-  /*
-   * No server-issued id, no fire.
-   *
-   * /api/contact answers a honeypot hit with { success: true, id: "honeypot" }
-   * and no conversionId, deliberately, so a bot does not retry. It skips every
-   * side effect: no email, no sheet write, no server conversion. The form
-   * could not tell that apart from a real success, saw res.ok, and fired a
-   * client conversion with transaction_id undefined. So a submission the
-   * server threw away still booked a conversion, and nothing on the server
-   * side existed for Ads to dedupe it against.
-   *
-   * It is also the honest rule in general: this fire exists to add enhanced
-   * data to a conversion the server already recorded, and without the id it
-   * is not that, it is a second unattributable one. If a password manager
-   * ever fills the hidden field, the customer loses the lead and the account
-   * gains a phantom.
-   */
-  if (!conversionId) {
-    console.warn("[gtag] no conversion id from the server, client fire skipped");
-    return;
-  }
-  if (typeof window === "undefined") return;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const gtag = (window as any).gtag;
-  if (typeof gtag !== "function") {
-    console.warn("[gtag] window.gtag not available, conversion NOT fired");
-    return;
-  }
-  // Enhanced Conversions, Google hashes these client-side. Use
-  // `email_address` (not bare `email`) per Google's user_data schema.
-  gtag("set", "user_data", { email_address: email, phone_number: phone });
-  gtag("event", "conversion", {
-    send_to: GADS_LEAD_SEND_TO,
-    value: 10.0,
-    currency: "EUR",
-    transaction_id: conversionId,
-    user_data: { email_address: email, phone_number: phone },
-    // transport_type: 'beacon' uses navigator.sendBeacon under the hood,
-    // which the browser guarantees to deliver even if the page navigates
-    // immediately after the call. Without this the fire can be aborted
-    // mid-flight when the user closes the tab or hits Back.
-    transport_type: "beacon",
-    // event_callback fires after Google acks the conversion ping. Logged
-    // to the console so we can verify in Network/Console that the fire
-    // round-tripped successfully.
-    event_callback: () => console.log("[gtag] AW conversion ack:", conversionId),
-  });
-  gtag("event", "generate_lead", {
-    currency: "EUR",
-    value: 10,
-    lead_source: "contact_form",
-    transaction_id: conversionId,
-    transport_type: "beacon",
-  });
-  console.log("[gtag] contact form conversion + lead fired", {
-    conversionId,
-    sendTo: GADS_LEAD_SEND_TO,
-  });
-}
+/*
+ * The conversion fire that lived here is src/lib/lead-conversion.ts now, the
+ * one the callback form already used. It was the same code, and the header of
+ * that file says why one copy matters: a label that lives in two places will
+ * eventually differ in one of them. Keeping two copies would also have meant
+ * adding the phone's E.164 form and the ChatGPT ads lead to both.
+ */
 
 export default function ContactForm() {
   const [submitting, setSubmitting] = useState(false);
@@ -127,7 +56,7 @@ export default function ContactForm() {
         return;
       }
       setSubmitted(true);
-      fireContactConversion(data.email, data.phone, json.conversionId);
+      fireLeadConversion(data.email, data.phone, json.conversionId, "contact_form");
     } catch {
       setError("Failed to send message. Please try again.");
     } finally {

@@ -19,8 +19,8 @@
  * not been told about yet. The form tells anyone who does use it to ring.
  * WIFI_CHECK_LIVE=1 turns the sends on anywhere, deliberately.
  *
- * No ad conversion fires from here yet. Which conversion action a Wi-Fi
- * enquiry counts as is a decision for the ads account, not for this route.
+ * A live enquiry is the "SS - SmartNet enquiry" conversion, fired from here
+ * and from the page with one id; see the server conversion below.
  */
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
@@ -33,8 +33,8 @@ import { afterResponse, AFTER_CEILING } from "@/lib/after-response";
 import { wifiReport } from "@/lib/email/customer";
 import { approval } from "@/lib/signoff/state";
 import { sendToCrm } from "@/lib/crm";
-import { consentFrom, recordEnquiryConsent, type ConsentInput } from "@/lib/ad-consent";
-import { fireServerConversion } from "@/lib/server-conversions";
+import { consentFrom, openAiConsented, recordEnquiryConsent, type ConsentInput } from "@/lib/ad-consent";
+import { browserContext, fireServerConversion } from "@/lib/server-conversions";
 import { GADS_WIFI_SEND_TO, WIFI_LEAD_VALUE } from "@/lib/lead-conversion";
 import { alertTo, monitorBcc, BUSINESS_SITE, BUSINESS_EMAIL } from "@/lib/business-constants";
 
@@ -214,14 +214,16 @@ export async function POST(request: Request) {
 
   /* The Ads conversion, "SS - SmartNet enquiry". The page fires the same one
      with this id as its transaction id once it has the answer, so Google
-     counts the lead once; the server's copy reaches Google when the page's
-     does not (an ad blocker, a closed tab), and carries the visitor's cookie
-     answer, as the contact form's does. */
+     counts the lead once; the server's Ads copy goes only when Google's tag
+     never ran in this browser (an ad blocker: no _gcl_au on the request,
+     read here before the answer), and only with the visitor's cookie answer,
+     as the contact form's does. */
   const [firstName, ...rest] = name.split(/\s+/);
+  const browser = browserContext(request);
   afterResponse("server conversion", AFTER_CEILING.conversion, () =>
     fireServerConversion({
       gadsLabel: GADS_WIFI_SEND_TO.replace(/^AW-\d+\//, ""),
-      ga4EventName: "generate_lead",
+      ga4EventName: "server_lead",
       value: WIFI_LEAD_VALUE,
       currency: "EUR",
       transactionId: conversionId,
@@ -232,6 +234,8 @@ export async function POST(request: Request) {
       lastName: rest.join(" ") || undefined,
       extraParams: { lead_source: g ? "wifi_check" : "wifi_enquiry", ...(pkg ? { package: pkg.slug } : {}) },
       adConsent: consentFrom(body.consent as ConsentInput | null | undefined)?.decision ?? null,
+      browser,
+      openAi: { type: "lead_created", consented: openAiConsented(consentFrom(body.consent as ConsentInput | null | undefined)) },
     }),
   );
 

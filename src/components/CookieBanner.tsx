@@ -14,12 +14,14 @@
  * the user and fires `gtag('consent','update',...)` to either grant or
  * keep-denying once they choose.
  *
- * Storage: `localStorage["ss_consent"]` = "granted" | "denied". 12-month
- * TTL (re-prompt yearly per ePrivacy guidance).
+ * Storage: `localStorage["ss_consent"]` = {decision, decidedAt, v}. 12-month
+ * TTL (re-prompt yearly per ePrivacy guidance). v is the version of the
+ * privacy notice the answer was given under (src/lib/consent-version.ts).
  */
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { CONSENT_VERSION } from "@/lib/consent-version";
 
 const STORAGE_KEY = "ss_consent";
 const TTL_MS = 365 * 24 * 60 * 60 * 1000;
@@ -28,6 +30,9 @@ type Decision = "granted" | "denied";
 interface StoredConsent {
   decision: Decision;
   decidedAt: number;
+  /** Which privacy notice the answer was given under. Absent before 1 October
+      2026, which reads as 1: an Accept for Google alone, not for OpenAI. */
+  v?: number;
 }
 
 function loadStored(): StoredConsent | null {
@@ -229,7 +234,7 @@ export default function CookieBanner() {
     try {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ decision, decidedAt: Date.now() } satisfies StoredConsent)
+        JSON.stringify({ decision, decidedAt: Date.now(), v: CONSENT_VERSION } satisfies StoredConsent)
       );
     } catch {
       // Storage may be blocked, still fire the consent update so it

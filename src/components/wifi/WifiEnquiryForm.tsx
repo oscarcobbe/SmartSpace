@@ -73,8 +73,9 @@ export default function WifiEnquiryForm({
         return;
       }
       /* Only a lead the server recorded carries an id, so a dry run or a
-         honeypot hit fires nothing (src/lib/lead-conversion.ts). */
-      fireLeadConversion(payload.email, payload.phone, json.conversionId, "wifi_enquiry", WIFI_LEAD_VALUE);
+         honeypot hit fires nothing (src/lib/lead-conversion.ts). GA4's
+         lead_source says which form it was, as the server's copy does. */
+      fireLeadConversion(payload.email, payload.phone, json.conversionId, report ? "wifi_check" : "wifi_enquiry", WIFI_LEAD_VALUE);
       setDone({ email: payload.email, dryRun: Boolean(json.dryRun) });
     } catch {
       setError("That did not send. Please try again, or ring us on 01 513 0424.");

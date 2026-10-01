@@ -42,8 +42,11 @@ if (!/fireLeadConversion\([^)]*json\.conversionId[^)]*"wifi_enquiry"/.test(form)
   fail.push("src/components/wifi/WifiEnquiryForm.tsx: the form does not fire fireLeadConversion(..., json.conversionId, \"wifi_enquiry\", ...) after a success");
 }
 const helper = code(read("src/lib/lead-conversion.ts"));
-if (!new RegExp(`GADS_WIFI_SEND_TO\\s*=\\s*"AW-\\d+/${LABEL}"`).test(helper)) fail.push(`src/lib/lead-conversion.ts: GADS_WIFI_SEND_TO is not the SmartNet enquiry label ${LABEL}`);
+/* NEXT_PUBLIC_GADS_SMARTNET_SEND_TO may override it, as the lead label's
+   variable does; the fallback is the action's own label. */
+if (!new RegExp(`GADS_WIFI_SEND_TO\\s*=\\s*(process\\.env\\.NEXT_PUBLIC_GADS_SMARTNET_SEND_TO\\?\\.trim\\(\\)\\s*\\|\\|\\s*)?"AW-\\d+/${LABEL}"`).test(helper)) fail.push(`src/lib/lead-conversion.ts: GADS_WIFI_SEND_TO is not the SmartNet enquiry label ${LABEL}`);
 if (!/wifi_enquiry:\s*GADS_WIFI_SEND_TO/.test(helper)) fail.push("src/lib/lead-conversion.ts: a wifi_enquiry fire is not sent to GADS_WIFI_SEND_TO");
+if (!/wifi_check:\s*GADS_WIFI_SEND_TO/.test(helper)) fail.push("src/lib/lead-conversion.ts: a wifi_check fire (an enquiry from a report) is not sent to GADS_WIFI_SEND_TO");
 
 /* The label in one place. */
 const walk = (dir, out = []) => {

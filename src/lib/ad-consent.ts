@@ -14,9 +14,12 @@
  */
 import { createHash } from "node:crypto";
 import { crm, crmConfigured } from "./crm/db";
+import { OPENAI_CONSENT_VERSION } from "./consent-version";
 
-export interface ConsentInput { decision?: unknown; decidedAt?: unknown }
-export interface Consent { decision: "granted" | "denied"; at: string }
+export interface ConsentInput { decision?: unknown; decidedAt?: unknown; v?: unknown }
+/** v: the privacy notice the answer was given under, 1 when not recorded
+    (src/lib/consent-version.ts). */
+export interface Consent { decision: "granted" | "denied"; at: string; v: number }
 
 /**
  * The banner answer, or nothing. Anything that is not exactly one of the two
@@ -28,7 +31,16 @@ export function consentFrom(raw: ConsentInput | null | undefined): Consent | nul
   if (!raw || (raw.decision !== "granted" && raw.decision !== "denied")) return null;
   const t = Number(raw.decidedAt);
   if (!Number.isFinite(t) || t < Date.UTC(2026, 0, 1) || t > Date.now() + 5 * 60_000) return null;
-  return { decision: raw.decision, at: new Date(t).toISOString() };
+  const v = Number(raw.v);
+  return { decision: raw.decision, at: new Date(t).toISOString(), v: Number.isInteger(v) && v > 0 && v < 100 ? v : 1 };
+}
+
+/**
+ * An Accept that covers OpenAI (ChatGPT ads): given under a notice that names
+ * it. An Accept from before that was agreement to Google alone.
+ */
+export function openAiConsented(consent: Consent | null): boolean {
+  return consent?.decision === "granted" && consent.v >= OPENAI_CONSENT_VERSION;
 }
 
 /* The same hashing the offline upload applies to a payer's email, so the two

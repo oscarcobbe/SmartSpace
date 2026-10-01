@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { consentFrom, recordEnquiryConsent, type ConsentInput } from "@/lib/ad-consent";
+import { consentFrom, openAiConsented, recordEnquiryConsent, type ConsentInput } from "@/lib/ad-consent";
 import { randomUUID } from "crypto";
 import { Resend } from "resend";
 import { createBookingEvent } from "@/lib/calendly";
 import { logLead, SHEET_BACKGROUND, type AttributionRecord } from "@/lib/leads";
-import { fireServerConversion } from "@/lib/server-conversions";
+import { browserContext, fireServerConversion } from "@/lib/server-conversions";
 import { sendToCrm } from "@/lib/crm";
 import { alertTo, monitorBcc } from "@/lib/business-constants";
 import { afterResponse, AFTER_CEILING } from "@/lib/after-response";
@@ -286,10 +286,11 @@ export async function POST(request: Request) {
       ),
     );
 
+    const browser = browserContext(request);
     afterResponse("server conversion", AFTER_CEILING.conversion, () =>
       fireServerConversion({
         gadsLabel: freeConsultLabel,
-        ga4EventName: "generate_lead",
+        ga4EventName: "server_lead",
         value: 50, // matches FREE_CONSULTATION_VALUE on the success page
         currency: "EUR",
         transactionId: conversionId,
@@ -300,6 +301,8 @@ export async function POST(request: Request) {
         lastName,
         extraParams: { lead_source: "free_consultation" },
         adConsent: consentFrom(consent)?.decision ?? null,
+        browser,
+        openAi: { type: "lead_created", consented: openAiConsented(consentFrom(consent)) },
       }),
     );
 

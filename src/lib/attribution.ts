@@ -138,17 +138,23 @@ function consentGranted(): boolean {
  *
  * Null when there is no answer or it has expired, which the upload reports
  * to Google as unspecified rather than guessing either way.
+ *
+ * v is the privacy notice the answer was given under (consent-version.ts),
+ * 1 for an answer stored before the banner recorded it. The server needs it
+ * too: it sends a lead to OpenAI only for an Accept given under a notice that
+ * names OpenAI.
  */
-export function consentRecord(): { decision: "granted" | "denied"; decidedAt: number } | null {
+export function consentRecord(): { decision: "granted" | "denied"; decidedAt: number; v: number } | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(CONSENT_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as { decision?: string; decidedAt?: number };
+    const parsed = JSON.parse(raw) as { decision?: string; decidedAt?: number; v?: number };
     if (parsed?.decision !== "granted" && parsed?.decision !== "denied") return null;
     const decidedAt = Number(parsed.decidedAt);
     if (!Number.isFinite(decidedAt) || Date.now() - decidedAt > CONSENT_TTL_MS) return null;
-    return { decision: parsed.decision, decidedAt };
+    const v = Number(parsed.v);
+    return { decision: parsed.decision, decidedAt, v: Number.isInteger(v) && v > 0 ? v : 1 };
   } catch {
     return null;
   }

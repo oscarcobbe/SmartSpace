@@ -53,7 +53,7 @@ type ServerFireResult = {
 };
 
 const GADS_ACCOUNT = "AW-17978501655";
-// .trim(), see src/components/ContactForm.tsx for the rationale.
+// .trim(), see src/lib/lead-conversion.ts for the rationale.
 // Without this, the diagnostic page would say "conversion fired" even
 // when Google Ads rejected the label as malformed (trailing newline),
 // silently misleading anyone using the test page to verify the pipeline.

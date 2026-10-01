@@ -3,8 +3,8 @@ import { Resend } from "resend";
 import { randomUUID } from "crypto";
 import { createBookingEvent, TIME_SLOTS } from "@/lib/calendly";
 import { logLead, type AttributionRecord } from "@/lib/leads";
-import { fireServerConversion } from "@/lib/server-conversions";
-import { consentFrom, type ConsentInput } from "@/lib/ad-consent";
+import { browserContext, fireServerConversion } from "@/lib/server-conversions";
+import { consentFrom, openAiConsented, type ConsentInput } from "@/lib/ad-consent";
 import { sendToCrm } from "@/lib/crm";
 import { sendSiteAlert } from "@/lib/site-alerts";
 import { alertTo, monitorBcc } from "@/lib/business-constants";
@@ -278,7 +278,7 @@ export async function POST(request: Request) {
         .replace(/^AW-\d+\//, "") || "u8cHCNyipZocEJfU6PxC";
     await fireServerConversion({
       gadsLabel: leadLabel, // Smart Space Lead (booking → lead)
-      ga4EventName: "book_appointment",
+      ga4EventName: "server_lead",
       value: 10,
       currency: "EUR",
       transactionId: conversionId,
@@ -289,6 +289,8 @@ export async function POST(request: Request) {
       lastName,
       extraParams: { lead_source: "site_visit_booking", topic: subjectLabel },
       adConsent: consentFrom(consent)?.decision ?? null,
+      browser: browserContext(request),
+      openAi: { type: "lead_created", consented: openAiConsented(consentFrom(consent)) },
     });
 
     // Mirror to SmartCRM after the answer, through waitUntil (a bare `void`

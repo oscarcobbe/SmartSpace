@@ -22,7 +22,19 @@
  *   the ping is abandoned when somebody submits and closes the tab.
  *
  *   .trim() on the env var is load-bearing for the reason above.
+ *
+ * Added since, for every lead that comes through here:
+ *
+ *   The phone goes to Google as E.164 (+353...), not as typed. Enhanced
+ *   Conversions asks for E.164, and "087 123 4567" hashes to something else
+ *   than the number Google matches against. src/lib/phone.ts.
+ *
+ *   The same lead, with the same id, for ChatGPT ads (src/lib/chatgpt-pixel.ts),
+ *   which does nothing until that pixel exists and the visitor accepts.
  */
+
+import { oaiLead } from "@/lib/chatgpt-pixel";
+import { normalisePhone } from "@/lib/phone";
 
 const GADS_LEAD_SEND_TO =
   process.env.NEXT_PUBLIC_GADS_LEAD_SEND_TO?.trim() ||
@@ -34,16 +46,23 @@ const GADS_LEAD_SEND_TO =
  * pages and the Wi-Fi check. It existed in the account and nothing fired it
  * until 30 September 2026. /api/wifi-check fires the same label from the
  * server, so it is exported from here rather than written out twice.
+ * NEXT_PUBLIC_GADS_SMARTNET_SEND_TO overrides it, as NEXT_PUBLIC_GADS_LEAD_SEND_TO
+ * overrides the lead label, for an action recreated in the account.
  */
-export const GADS_WIFI_SEND_TO = "AW-17978501655/aFHQCOOaoYwdEJfU6PxC";
+export const GADS_WIFI_SEND_TO =
+  process.env.NEXT_PUBLIC_GADS_SMARTNET_SEND_TO?.trim() ||
+  "AW-17978501655/aFHQCOOaoYwdEJfU6PxC";
 /** The value the account gives that action. */
 export const WIFI_LEAD_VALUE = 50;
 
-export type LeadSource = "contact_form" | "callback_request" | "wifi_enquiry";
+/* wifi_check is an enquiry sent from a Wi-Fi check's report, wifi_enquiry one
+   from a package page: the lead_source the server's own copy carries too. */
+export type LeadSource = "contact_form" | "callback_request" | "wifi_check" | "wifi_enquiry";
 
 const SEND_TO: Record<LeadSource, string> = {
   contact_form: GADS_LEAD_SEND_TO,
   callback_request: GADS_LEAD_SEND_TO,
+  wifi_check: GADS_WIFI_SEND_TO,
   wifi_enquiry: GADS_WIFI_SEND_TO,
 };
 
@@ -77,6 +96,10 @@ export function fireLeadConversion(
     return;
   }
 
+  /* Before the gtag guard: a browser that blocks Google may still run
+     OpenAI's pixel, and the two are independent. */
+  oaiLead(email, phone, value, conversionId);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const gtag = (window as any).gtag;
   if (typeof gtag !== "function") {
@@ -84,7 +107,9 @@ export function fireLeadConversion(
     return;
   }
 
-  const userData = { email_address: email, phone_number: phone };
+  const e164 = normalisePhone(phone);
+  const userData: Record<string, string> = { email_address: email };
+  if (e164) userData.phone_number = e164;
   gtag("set", "user_data", userData);
 
   gtag("event", "conversion", {
