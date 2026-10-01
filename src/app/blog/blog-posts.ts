@@ -33,6 +33,14 @@ export const BLOG_POSTS: BlogPost[] = [
     dateModified: "2026-10-01",
     readingTime: "6 min read",
     category: "Home Network",
+    slug: "doorbell-camera-rules-ireland-gdpr",
+    title: "Is My Doorbell Camera Legal in Ireland? GDPR, Neighbours and the DPC",
+    description:
+      "A video doorbell or camera that sees only your own property is outside GDPR. Once it takes in the footpath, the road or a neighbour's garden, the rules change. What the Data Protection Commission says, and how to set up your camera to stay within them.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "8 min read",
+    category: "Buying Guide",
   },
   {
     slug: "broadband-speed-test-ireland-line-or-wifi",
