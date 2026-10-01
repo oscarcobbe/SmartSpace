@@ -99,7 +99,11 @@ export async function GET(request: Request) {
   }
 
   const { dateStr, startIso, endIso } = dublinDay(1);
-  const { visits: events, problems } = await visitsBetween(startIso, endIso);
+  const { visits: everyVisit, problems } = await visitsBetween(startIso, endIso);
+  // Smart Space's own visits only. SmartCare Living's share the calendar
+  // (Calendly's, then Nigel's Google Calendar) but this reminder is Smart
+  // Space's, in Smart Space's name; scripts/check-booking-site.mjs holds it.
+  const events = everyVisit.filter((v) => v.site === "ss");
   if (problems.length) {
     console.error("[cron/booking-reminders] read problems:", problems);
     await sendSiteAlert({
