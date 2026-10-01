@@ -59,6 +59,8 @@ export interface Booking {
   product?: string;
   orderId?: string;
   notes?: string;
+  /** How many times it has been moved. Settles which copy is current if a move ever leaves the old one behind. */
+  seq: number;
 }
 
 export interface BookInput {
@@ -78,6 +80,8 @@ export interface BookInput {
   notes?: string;
   /** Keeps a moved booking's reference, so the links already emailed still work. */
   ref?: string;
+  /** Set by reschedule: one more than the booking it replaces. */
+  seq?: number;
 }
 
 export type BookResult = { ok: true; booking: Booking } | { ok: false; reason: "taken" | "invalid" | "error"; message: string };
@@ -185,6 +189,7 @@ function fromEvent(e: CalendarEvent): Booking | null {
     product: p.product || undefined,
     orderId: p.orderId || undefined,
     notes: p.notes || undefined,
+    seq: parseInt(p.seq || "0", 10) || 0,
   };
 }
 
@@ -202,8 +207,9 @@ export async function bookingsBetween(startIso: string, endIso: string): Promise
 async function liveEventsByRef(ref: string): Promise<CalendarEvent[]> {
   if (!/^[0-9a-z]{6,40}$/.test(ref)) return [];
   const events = await findByProperty(`ref=${ref}`);
+  const seq = (e: CalendarEvent) => parseInt(e.extendedProperties?.private?.seq || "0", 10) || 0;
   const stamp = (e: CalendarEvent) => Date.parse(e.updated || e.created || "") || 0;
-  return events.filter((e) => e.status !== "cancelled" && fromEvent(e)).sort((a, b) => stamp(b) - stamp(a));
+  return events.filter((e) => e.status !== "cancelled" && fromEvent(e)).sort((a, b) => seq(b) - seq(a) || stamp(b) - stamp(a));
 }
 
 /** The live booking behind a reference, or null when it was cancelled or never existed. */
@@ -268,6 +274,7 @@ function eventFor(input: BookInput, id: string, ref: string, startMs: number): C
         product: clip(input.product, 200),
         orderId: clip(input.orderId, 120),
         notes: clip(input.notes),
+        seq: String(input.seq ?? 0),
       },
     },
   };
@@ -371,7 +378,7 @@ export async function reschedule(ref: string, date: string, start: string, now =
     return { ok: false, reason: "error", message: e instanceof Error ? e.message : String(e) };
   }
   if (!from) return { ok: false, reason: "missing", message: "No booking to move" };
-  const result = await book({ ...from, date, start, ref }, now);
+  const result = await book({ ...from, date, start, ref, seq: from.seq + 1 }, now);
   if (!result.ok) return result;
   // The new slot is held. Releasing the old one is retried; if Google still
   // will not, the move stands (the customer has their new time) and the old
