@@ -70,6 +70,36 @@ export const BLOG_POSTS: BlogPost[] = [
     category: "Home Network",
   },
   {
+    slug: "how-to-boost-wifi-signal-ireland",
+    title: "How to Boost Your Wi-Fi Signal: What Works and What's a Waste of Money",
+    description:
+      "The free moves that genuinely help, the kit that works when it is the right kit, and the hacks and gadgets that do nothing. An honest Irish guide to a stronger Wi-Fi signal, measured before you spend.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "7 min read",
+    category: "Home Network",
+  },
+  {
+    slug: "apartment-wifi-ireland",
+    title: "Apartment Wi-Fi in Ireland: Slow, Crowded and Dead Spots in Flats",
+    description:
+      "A flat's Wi-Fi problems are its own: a 2.4 GHz band shared with the whole block, one small router by the door, and walls you cannot drill if you rent. What actually helps in an Irish apartment, renting included.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "6 min read",
+    category: "Home Network",
+  },
+  {
+    slug: "rural-broadband-ireland",
+    title: "Rural Broadband in Ireland: Your Options When There's No Fibre Yet",
+    description:
+      "Fibre, fixed wireless over 4G or 5G, or satellite like Starlink: the connections a rural Irish home can actually get, how to check what is at your Eircode, and why the home network still decides what reaches each room.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "7 min read",
+    category: "Home Network",
+  },
+  {
     slug: "smart-home-tech-elderly-parent-ireland",
     title: "Smart Home Tech for an Elderly Parent in Ireland: What Actually Helps",
     description:

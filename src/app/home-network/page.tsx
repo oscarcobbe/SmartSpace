@@ -71,8 +71,9 @@ const CLUSTERS: { title: string; blurb: string; slugs: string[] }[] = [
   {
     title: "The fixes, from free to fitted",
     blurb:
-      "Mesh, powerline, extenders, cabling and new routers: what each one actually does, and which problem it solves.",
+      "Where to start, then mesh, powerline, extenders, cabling and new routers: what each one does, and which problem it solves.",
     slugs: [
+      "how-to-boost-wifi-signal-ireland",
       "wifi-extender-mesh-or-powerline-ireland",
       "mesh-wifi-explained",
       "powerline-adapters-ireland",
@@ -81,9 +82,16 @@ const CLUSTERS: { title: string; blurb: string; slugs: string[] }[] = [
     ],
   },
   {
-    title: "Rooms, offices and devices",
-    blurb: "Garden offices, home working, Wi-Fi calling, and smart cameras that keep dropping the signal.",
-    slugs: ["wifi-garden-office-ireland", "wifi-calling-ireland", "smart-camera-wifi-drops-irish-homes"],
+    title: "Homes, rooms and situations",
+    blurb:
+      "Garden offices and outbuildings, apartments, rural homes, Wi-Fi calling, and smart cameras that keep dropping the signal.",
+    slugs: [
+      "wifi-garden-office-ireland",
+      "apartment-wifi-ireland",
+      "rural-broadband-ireland",
+      "wifi-calling-ireland",
+      "smart-camera-wifi-drops-irish-homes",
+    ],
   },
   {
     title: "Keep your network secure",
