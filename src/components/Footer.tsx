@@ -122,7 +122,19 @@ export default function Footer() {
 
       <div className="border-t border-[#333]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-center">
-          <p>&copy; {new Date().getFullYear()} {COMPANY.tradingAs}. All rights reserved.</p>
+          <p>
+            &copy; {new Date().getFullYear()} {COMPANY.tradingAs}. All rights reserved.
+            {/* The site credit, Oscar 1 Oct 2026: fourwindsdigital.com built and
+                runs this site. In the row's own colour, underlined. */}
+            <span className="mx-2" aria-hidden="true">&middot;</span>
+            Website by{" "}
+            <a
+              href="https://fourwindsdigital.com"
+              className="underline underline-offset-2 hover:text-white transition-colors"
+            >
+              FourWinds Digital
+            </a>
+          </p>
           <div className="flex items-center gap-4">
             <Link href="/privacy" className="hover:text-white transition-colors">
               Privacy
