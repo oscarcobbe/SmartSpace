@@ -97,8 +97,10 @@ export default function Post() {
           pushes the button. It&apos;s been doing that job uncomplaining for thirty or forty years.
         </p>
         <p>
-          Modern smart doorbells don&apos;t want 8V. They want 16V to 24V AC, with around 10VA of
-          power available. A modern doorbell is essentially a small computer with a camera, an
+          Many smart doorbells want more than an old chime transformer gives them.{" "}
+          <a href="https://ring.com/support/articles/utvz2/Guidelines-for-Hardwiring-Your-Ring-Video-Doorbell" rel="noopener">Ring lists</a>{" "}
+          16V to 24V AC for its Pro models, 10V to 24V for the Video Doorbell Wired, and 8V to 24V for its
+          battery doorbells when they&apos;re hardwired. A modern doorbell is essentially a small computer with a camera, an
           infrared illuminator for night vision, radar sensors on the higher-end models, and a
           wireless radio that needs steady current. The old chime transformer can&apos;t supply
           that.

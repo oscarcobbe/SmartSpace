@@ -191,8 +191,9 @@ export default function Post() {
         <p>
           The fix is usually a <strong>Ring Chime Pro</strong>: a plug-in unit that both
           extends Wi-Fi to the doorbell and acts as the in-house chime. Every doorbell
-          install Smart Space does includes a Chime Pro as standard, if you&apos;re buying
-          direct from Ring or Amazon, factor in another €60.
+          install Smart Space does includes a Ring Chime; where the Wi-Fi at the door is weak,
+          we&apos;ll tell you whether a Chime Pro is worth it. If you&apos;re buying direct from
+          Ring or Amazon, factor in the cost of one.
         </p>
 
         <h2 id="diy-vs-pro">DIY vs professional installation</h2>

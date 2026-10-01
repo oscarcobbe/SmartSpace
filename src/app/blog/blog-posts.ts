@@ -10,6 +10,66 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "why-wifi-slow-upstairs-irish-homes",
+    title: "Why Your Wi-Fi Is Slow Upstairs, and How to Fix It in an Irish House",
+    description:
+      "Foil-backed insulation, block walls, metal, distance and a router left where the line comes in all take Wi-Fi on its way upstairs. What ComReg's tests found, 2.4 or 5 GHz, how to find the weak spot, and the fixes from free upwards.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "7 min read",
+    category: "Home Network",
+  },
+  {
+    slug: "wifi-garden-office-ireland",
+    title: "Wi-Fi in a Garden Office: Six Ways to Get a Good Connection",
+    description:
+      "Wi-Fi rarely reaches a garden office or garden room on its own. Why the signal drops, the six ways to get a connection down the garden, from a mesh unit to a cable in a duct, what each involves, and how to keep video calls steady.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "7 min read",
+    category: "Home Network",
+  },
+  {
+    slug: "working-from-home-wifi-ireland",
+    title: "Working From Home Wi-Fi: Why Teams and Zoom Calls Keep Dropping",
+    description:
+      "Video calls depend on upload and a steady connection more than on download speed. What Teams and Zoom actually need, why a busy house breaks calls up, and the fixes that work in an Irish home office, from a cable to the desk to a better plan.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "7 min read",
+    category: "Home Network",
+  },
+  {
+    slug: "wifi-calling-ireland",
+    title: "Wi-Fi Calling in Ireland: Which Networks Support It, and How to Turn It On",
+    description:
+      "Bad mobile signal at home? Wi-Fi Calling carries your calls over your broadband instead. Which Irish networks offer it, how to switch it on for iPhone and Android, what it needs from your Wi-Fi, emergency calls, and the other fixes ComReg suggests.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "6 min read",
+    category: "Home Network",
+  },
+  {
+    slug: "doorbell-camera-rules-ireland-gdpr",
+    title: "Is My Doorbell Camera Legal in Ireland? GDPR, Neighbours and the DPC",
+    description:
+      "A video doorbell or camera that sees only your own property is outside GDPR. Once it takes in the footpath, the road or a neighbour's garden, the rules change. What the Data Protection Commission says, and how to set up your camera to stay within them.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "8 min read",
+    category: "Buying Guide",
+  },
+  {
+    slug: "video-doorbell-no-existing-wiring-ireland",
+    title: "No Doorbell Wiring? How to Fit a Video Doorbell in an Irish Home",
+    description:
+      "No bell wire at the front door? You can still fit a Ring or Eufy video doorbell. The three ways to power it, how each one rings inside the house, what the makers say about charging, and what it costs.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "7 min read",
+    category: "Buying Guide",
+  },
+  {
     slug: "broadband-speed-test-ireland-line-or-wifi",
     title: "Broadband Speed Test in Ireland: Is It the Line or the Wi-Fi?",
     description:
