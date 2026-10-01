@@ -3,18 +3,25 @@ import Link from "next/link";
 
 export default function Hero() {
   return (
-    <section className="w-full bg-[#d4d4d4] h-[70vh] sm:h-screen relative overflow-hidden">
+    /* On phones the hero grows with its text (min-h, not h) so the headline,
+       the paragraph and the brand pills never overlap, however many lines the
+       paragraph wraps to. The photo keeps its 70vh box pinned to the bottom,
+       so the products stay the same size; any extra height shows above it,
+       under the white fade. From sm up it is the full-screen hero as before. */
+    <section className="w-full bg-[#d4d4d4] min-h-[70vh] sm:min-h-0 sm:h-screen relative overflow-hidden">
       {/* Full-bleed desktop hero image from ring.com, LCP element on home,
           so `priority` + next/image so it's served as AVIF/WebP at the
           right size for the viewport instead of a 1366×768 PNG. */}
-      <Image
-        src="https://images.ctfassets.net/2xsswpd01u70/2NWGNqdYfFotIijt96Zb9n/cd6be1445272e247f685b2d4eba888d5/H1_Hero_HP_desktop_1366x768_V5.png"
-        alt="Ring security cameras and video doorbells on display"
-        fill
-        priority
-        sizes="100vw"
-        className="object-cover object-bottom"
-      />
+      <div className="absolute inset-x-0 bottom-0 h-[70vh] sm:h-full">
+        <Image
+          src="https://images.ctfassets.net/2xsswpd01u70/2NWGNqdYfFotIijt96Zb9n/cd6be1445272e247f685b2d4eba888d5/H1_Hero_HP_desktop_1366x768_V5.png"
+          alt="Ring security cameras and video doorbells on display"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-bottom"
+        />
+      </div>
 
       {/* Gradient vignettes. Mobile uses a much stronger, taller top gradient
           so the subhead sits on a readable surface. Desktop keeps the
@@ -22,8 +29,12 @@ export default function Hero() {
       <div className="absolute inset-x-0 top-0 h-[72%] sm:h-48 bg-gradient-to-b from-white/95 via-white/85 to-transparent sm:from-white/70 sm:via-white/20 pointer-events-none z-[5]" />
       <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white/40 to-transparent pointer-events-none z-[5]" />
 
-      {/* Text, upper area */}
-      <div className="absolute z-10 top-[25%] sm:top-[16%] left-0 right-0 px-4">
+      {/* Text, upper area. On phones it is in the normal flow: the top
+          padding is where top-[25%] used to put it, but never less than
+          8.5rem, so the badge clears the fixed bar and header (120px) on short
+          phones. The bottom padding keeps it clear of the products, which
+          fill the lowest 60% of the photo's 70vh box. */}
+      <div className="relative sm:absolute z-10 pt-[max(17.5vh,8.5rem)] pb-[42vh] sm:pt-0 sm:pb-0 sm:top-[16%] left-0 right-0 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <div className="fade-up inline-flex items-center gap-2 bg-white/60 backdrop-blur-md border border-white/40 text-[#1a1a1a] text-[11px] font-semibold px-3 py-1.5 rounded-full uppercase tracking-[0.15em] mb-5 shadow-sm">
             <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" />
@@ -35,6 +46,29 @@ export default function Hero() {
           <p className="fade-up-delay-2 text-[#3a352f] text-sm sm:text-lg max-w-lg mx-auto font-medium leading-relaxed">
             Professional smart doorbell and security camera installation for Ring, Eufy, Nest, Tapo &amp; Aosu, across Dublin and all of Leinster. 5,000+ installations completed.
           </p>
+          {/* MOBILE ONLY (sm:hidden): compact brand pills, straight under the
+              paragraph so they can't collide with it. The full three-button
+              block below is desktop-only (hidden sm:block). */}
+          <div className="sm:hidden fade-up-delay-3 mt-5 flex flex-wrap items-center justify-center gap-2">
+            <Link
+              href="/services"
+              className="btn-sheen inline-flex items-center justify-center bg-gradient-to-r from-brand-500 to-brand-600 text-white font-semibold text-xs px-4 py-2 rounded-full shadow-[0_8px_30px_-6px_rgba(242,130,34,0.6)] whitespace-nowrap"
+            >
+              Ring Services
+            </Link>
+            <Link
+              href="/services/installation-only"
+              className="inline-flex items-center justify-center bg-white/90 backdrop-blur-sm text-[#1C1A18] font-semibold text-xs px-4 py-2 rounded-full border border-white/60 shadow-[0_6px_20px_-8px_rgba(0,0,0,0.25)] whitespace-nowrap"
+            >
+              Got A Device To Install?
+            </Link>
+            <Link
+              href="/services/eufy"
+              className="btn-sheen inline-flex items-center justify-center bg-gradient-to-r from-[#0a6ea3] to-[#005d8e] text-white font-semibold text-xs px-4 py-2 rounded-full shadow-[0_8px_30px_-6px_rgba(0,93,142,0.6)] whitespace-nowrap"
+            >
+              Eufy Services
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -86,32 +120,6 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* MOBILE ONLY (sm:hidden): compact brand pills, higher up on the hero
-          image. The full three-button block above is desktop-only (hidden
-          sm:block). On mobile we show short pills so they don't crowd the hero,
-          renamed to the brand hubs: Ring Services and Eufy Services. */}
-      <div className="sm:hidden fade-up-delay-3 absolute z-10 bottom-[40%] left-0 right-0 px-4">
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <Link
-            href="/services"
-            className="btn-sheen inline-flex items-center justify-center bg-gradient-to-r from-brand-500 to-brand-600 text-white font-semibold text-xs px-4 py-2 rounded-full shadow-[0_8px_30px_-6px_rgba(242,130,34,0.6)] whitespace-nowrap"
-          >
-            Ring Services
-          </Link>
-          <Link
-            href="/services/installation-only"
-            className="inline-flex items-center justify-center bg-white/90 backdrop-blur-sm text-[#1C1A18] font-semibold text-xs px-4 py-2 rounded-full border border-white/60 shadow-[0_6px_20px_-8px_rgba(0,0,0,0.25)] whitespace-nowrap"
-          >
-            Got A Device To Install?
-          </Link>
-          <Link
-            href="/services/eufy"
-            className="btn-sheen inline-flex items-center justify-center bg-gradient-to-r from-[#0a6ea3] to-[#005d8e] text-white font-semibold text-xs px-4 py-2 rounded-full shadow-[0_8px_30px_-6px_rgba(0,93,142,0.6)] whitespace-nowrap"
-          >
-            Eufy Services
-          </Link>
-        </div>
-      </div>
     </section>
   );
 }
