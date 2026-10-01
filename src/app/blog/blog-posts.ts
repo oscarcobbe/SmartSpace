@@ -25,6 +25,13 @@ export const BLOG_POSTS: BlogPost[] = [
     datePublished: "2026-10-01",
     dateModified: "2026-10-01",
     readingTime: "7 min read",
+    slug: "wifi-calling-ireland",
+    title: "Wi-Fi Calling in Ireland: Which Networks Support It, and How to Turn It On",
+    description:
+      "Bad mobile signal at home? Wi-Fi Calling carries your calls over your broadband instead. Which Irish networks offer it, how to switch it on for iPhone and Android, what it needs from your Wi-Fi, emergency calls, and the other fixes ComReg suggests.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "6 min read",
     category: "Home Network",
   },
   {
