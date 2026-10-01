@@ -14,6 +14,9 @@ import { SHEET_ALERT_TO } from "@/lib/business-constants";
 
 export interface AttributionRecord {
   gclid?: string;
+  /** A ChatGPT ad click (src/lib/attribution.ts). Not a sheet column of its
+      own: the landing page column already shows it as ?oppref=. */
+  oppref?: string;
   landingPage?: string;
   referrer?: string;
   utmSource?: string;

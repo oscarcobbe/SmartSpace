@@ -5,7 +5,7 @@ import { Resend } from "resend";
 import { createBookingEvent } from "@/lib/calendly";
 import { logLead, SHEET_BACKGROUND, type AttributionRecord } from "@/lib/leads";
 import { browserContext, fireServerConversion } from "@/lib/server-conversions";
-import { sendToCrm } from "@/lib/crm";
+import { chatGptAdOf, sendToCrm } from "@/lib/crm";
 import { alertTo, monitorBcc } from "@/lib/business-constants";
 import { afterResponse, AFTER_CEILING } from "@/lib/after-response";
 import { foundUsDetailFrom, foundUsFrom, notesWithFoundUs } from "@/lib/found-us";
@@ -286,7 +286,7 @@ export async function POST(request: Request) {
       ),
     );
 
-    const browser = browserContext(request);
+    const browser = browserContext(request, finalAttribution);
     afterResponse("server conversion", AFTER_CEILING.conversion, () =>
       fireServerConversion({
         gadsLabel: freeConsultLabel,
@@ -332,6 +332,7 @@ export async function POST(request: Request) {
           address: customer?.address || null,
           found_us: foundUs || null,
           found_us_detail: foundUsDetail || null,
+          ...chatGptAdOf(browser),
         },
       }),
     );

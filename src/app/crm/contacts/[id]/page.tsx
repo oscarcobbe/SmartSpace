@@ -202,6 +202,10 @@ export default async function ContactPage({ params }: { params: { id: string } }
                         {typeof l.custom?.found_us_detail === "string" && l.custom.found_us_detail && (
                           <div><dt className="inline">In their words: </dt><dd className="inline text-slate-700">&ldquo;{l.custom.found_us_detail}&rdquo;</dd></div>
                         )}
+                        {/* custom.oppref: they came from a ChatGPT ad (src/lib/crm.ts, chatGptAdOf). */}
+                        {typeof l.custom?.oppref === "string" && l.custom.oppref && (
+                          <div><dt className="inline">ChatGPT ad: </dt><dd className="inline text-slate-700">the click was recorded</dd></div>
+                        )}
                         {l.utm_campaign && <div><dt className="inline">Campaign: </dt><dd className="inline text-slate-700">{l.utm_campaign}</dd></div>}
                         {l.booked_for && <div><dt className="inline">Booked for: </dt><dd className="inline text-slate-700">{day(l.booked_for)}</dd></div>}
                         {l.installed_at && <div><dt className="inline">Installed: </dt><dd className="inline text-slate-700">{day(l.installed_at)}</dd></div>}

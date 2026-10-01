@@ -9,6 +9,7 @@
 //   CRM_HMAC_SECRET     same value as INBOUND_WEBHOOK_SECRET on the CRM side
 
 import { createHmac } from "crypto";
+import type { BrowserContext } from "./server-conversions";
 
 export interface CrmLeadPayload {
   source: string;
@@ -33,6 +34,18 @@ export interface CrmLeadPayload {
   referrer?: string | null;
   tags?: string[];
   custom?: Record<string, unknown>;
+}
+
+/**
+ * A ChatGPT ad on the CRM lead, as the gclid is a Google ad: the click
+ * (custom.oppref) and OpenAI's reference for the browser (custom.obref), for
+ * a later sale to be traced to the ad. In custom rather than columns of their
+ * own, so the lead insert does not depend on a migration reaching the
+ * database first. Both come from browserContext, so both exist only after
+ * Accept; null otherwise.
+ */
+export function chatGptAdOf(browser: Pick<BrowserContext, "oppref" | "obref">): { oppref: string | null; obref: string | null } {
+  return { oppref: browser.oppref || null, obref: browser.obref || null };
 }
 
 /**
