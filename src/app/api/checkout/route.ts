@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { consentFrom, type ConsentInput } from "@/lib/ad-consent";
+import { consentFrom, openAiConsented, type ConsentInput } from "@/lib/ad-consent";
 import { getProductByHandle } from "@/lib/shopify";
 import type { AttributionRecord } from "@/lib/leads";
 import { foundUsDetailFrom, foundUsFrom } from "@/lib/found-us";
@@ -206,13 +206,19 @@ export async function POST(request: Request) {
      * The browser, as this request shows it, for the webhook, which has none.
      * browser_tags_ran: Google's Ads tag runs here (_gcl_au), so the success
      * page records the sale and the webhook's own Ads pixel stays quiet (see
-     * fireServerConversion). oai_oppref / oai_obref: the ChatGPT ads pixel's
-     * cookies, for the webhook's copy of the sale to OpenAI.
+     * fireServerConversion). oai_oppref / oai_obref: the ChatGPT ad click
+     * (the pixel's cookie, or the attribution record when the pixel never
+     * loaded) and OpenAI's browser reference, for the webhook's copy of the
+     * sale to OpenAI and for the order's CRM lead. Only under an Accept that
+     * names OpenAI: the attribution record is written under any Accept, and
+     * the session should not hold a click the buyer was not told about.
      */
-    const browser = browserContext(request);
+    const browser = browserContext(request, attribution);
     params.append("metadata[browser_tags_ran]", browser.browserTagsRan ? "1" : "0");
-    if (browser.oppref) params.append("metadata[oai_oppref]", browser.oppref.slice(0, 500));
-    if (browser.obref) params.append("metadata[oai_obref]", browser.obref);
+    if (openAiConsented(consent)) {
+      if (browser.oppref) params.append("metadata[oai_oppref]", browser.oppref.slice(0, 500));
+      if (browser.obref) params.append("metadata[oai_obref]", browser.obref);
+    }
     // GA4 client + session id (from the _ga cookies, sent by the browser at
     // checkout) so the server-side purchase event attributes to the real
     // session/channel instead of (not set)/Unassigned.

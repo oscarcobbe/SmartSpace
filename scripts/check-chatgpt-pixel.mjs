@@ -22,6 +22,9 @@
  *   - The Google Ads pixel from the server stays quiet when the browser's own
  *     tag ran (_gcl_au), and a lead reaches GA4 as server_lead.
  *
+ * check-openai-capi.mjs checks that the two halves pair: one id, the same
+ * hashes, every route and form wired the same way.
+ *
  *   node scripts/check-chatgpt-pixel.mjs
  */
 import { readFileSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
@@ -47,8 +50,8 @@ const dir = mkdtempSync(join(tmpdir(), "chatgpt-pixel-"));
 const transpile = (rel) =>
   ts.transpileModule(readFileSync(join(ROOT, rel), "utf8"), {
     compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
-  }).outputText.replace(/from\s+"\.\/(attribution|consent-version|phone)"/g, 'from "./$1.mjs"');
-for (const name of ["attribution", "consent-version", "phone"]) {
+  }).outputText.replace(/from\s+"\.\/(attribution|consent-version|oai-event-id|phone)"/g, 'from "./$1.mjs"');
+for (const name of ["attribution", "consent-version", "oai-event-id", "phone"]) {
   writeFileSync(join(dir, `${name}.mjs`), transpile(`src/lib/${name}.ts`));
 }
 const pixelJs = transpile("src/lib/chatgpt-pixel.ts");

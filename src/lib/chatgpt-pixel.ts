@@ -39,6 +39,7 @@
  */
 import { consentRecord } from "./attribution";
 import { OPENAI_CONSENT_VERSION } from "./consent-version";
+import { oaiEventId } from "./oai-event-id";
 import { normalisePhone } from "./phone";
 
 export const OAI_PIXEL_ID = (process.env.NEXT_PUBLIC_OAI_PIXEL_ID || "").trim();
@@ -186,10 +187,11 @@ async function sha256Hex(s: string): Promise<string> {
  * init, hashed the way OpenAI asks: the email trimmed and lowercased, the
  * phone as digits with the country code and no + or leading zeros. amount is
  * in cents. eventId is the enquiry's conversion id, which the server's
- * Conversions API copy carries too.
+ * Conversions API copy carries too, cut the same way (oai-event-id.ts).
  */
 export function oaiLead(email: string | undefined, phone: string | undefined, euros: number, eventId: string): void {
-  if (!OAI_PIXEL_ID || typeof window === "undefined" || !eventId) return;
+  const id = oaiEventId(eventId);
+  if (!OAI_PIXEL_ID || typeof window === "undefined" || !id) return;
   const e = (email ?? "").trim().toLowerCase();
   const p = normalisePhone(phone).replace(/^\+/, "").replace(/^0+/, "");
   Promise.all([sha256Hex(e), sha256Hex(p)]).then(([he, hp]) => {
@@ -201,19 +203,23 @@ export function oaiLead(email: string | undefined, phone: string | undefined, eu
       "measure",
       "lead_created",
       { type: "customer_action", amount: Math.round(euros * 100), currency: "EUR" },
-      { event_id: eventId },
+      { event_id: id },
     );
   });
 }
 
-/** A paid Stripe checkout, as order_created, keyed on the Stripe session id. */
+/**
+ * A paid Stripe checkout, as order_created, keyed on the Stripe session id:
+ * the id the webhook's Conversions API copy sends, cut to the same length.
+ */
 export function oaiOrder(sessionId: string, amount: number, currency: string): void {
-  if (!OAI_PIXEL_ID || !sessionId) return;
+  const id = oaiEventId(sessionId);
+  if (!OAI_PIXEL_ID || !id) return;
   oai(
     "measure",
     "order_created",
     { type: "contents", amount: Math.round(amount * 100), currency: currency.toUpperCase() },
-    { event_id: sessionId },
+    { event_id: id },
   );
 }
 
@@ -224,5 +230,5 @@ export function oaiOrder(sessionId: string, amount: number, currency: string): v
  */
 export function oaiPhoneTap(eventId: string): void {
   if (!OAI_PIXEL_ID) return;
-  oai("measure", "custom", { type: "custom" }, { custom_event_name: "phone_call_click", event_id: eventId });
+  oai("measure", "custom", { type: "custom" }, { custom_event_name: "phone_call_click", event_id: oaiEventId(eventId) });
 }

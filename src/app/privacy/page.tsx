@@ -62,7 +62,8 @@ export default function PrivacyPage() {
               <li>
                 <strong>Marketing attribution:</strong> if you arrived from a Google Ad, Facebook ad, or other source,
                 we record the click ID (e.g. <code>gclid</code>) and any UTM parameters so we can credit the right
-                channel for the conversion. An ad in ChatGPT adds a similar identifier for OpenAI.
+                channel for the conversion. An ad in ChatGPT adds a similar identifier for OpenAI. We record it in the
+                same way, with the browser reference OpenAI&apos;s pixel sets (see Cookies below).
               </li>
               <li>
                 <strong>Matching an enquiry to an ad:</strong> if you have accepted cookies and then send us a form or
@@ -70,8 +71,8 @@ export default function PrivacyPage() {
                 phone number, from your browser and from our server, along with your IP address and browser type. They
                 use it to tell us whether your enquiry or order came from one of our ads. Once you have accepted,
                 Google&apos;s advertising tag may also pick up contact details you type into our forms (name, email,
-                phone or address) and send Google a hashed copy for the same purpose. If you choose Essential only, none
-                of this is sent.
+                phone or address) and send Google a hashed copy for the same purpose. If you decline cookies, none of
+                this is sent.
               </li>
               <li>
                 <strong>Website analytics:</strong> Google Analytics 4 records anonymous interactions (pages viewed,
@@ -161,7 +162,7 @@ export default function PrivacyPage() {
             <ul className="list-disc pl-6 space-y-2">
               <li>Lead enquiries (no purchase): 12 months, then archived.</li>
               <li>Customer order records: 7 years (Irish tax law).</li>
-              <li>Marketing attribution (gclid, UTM): 90 days from first capture.</li>
+              <li>Marketing attribution (gclid, ChatGPT ad identifier, UTM): 90 days from first capture.</li>
               <li>Cookie consent preference: 12 months from your most recent decision.</li>
               <li>Website analytics in Google Analytics: 14 months (the maximum allowed by Consent Mode v2).</li>
             </ul>
@@ -202,8 +203,8 @@ export default function PrivacyPage() {
               If you accept, Google Analytics and Google Ads set their cookies, and OpenAI&apos;s ChatGPT ads pixel
               sets two of its own: <code>__oppref</code> (30 days), the identifier of the ChatGPT ad you clicked, if
               you came from one, and <code>__obref</code> (1 year), a random reference for your browser so OpenAI can
-              connect a visit from one of our ads to an enquiry made later. None of these is set if you choose
-              Essential only or don&apos;t answer the banner. If you accepted before 1 October 2026, when this policy
+              connect a visit from one of our ads to an enquiry made later. None of these is set if you decline
+              or don&apos;t answer the banner. If you accepted before 1 October 2026, when this policy
               first named OpenAI, OpenAI&apos;s pixel stays off for you.
             </p>
           </section>

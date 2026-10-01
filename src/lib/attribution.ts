@@ -13,6 +13,14 @@ const TTL_MS = 90 * 24 * 60 * 60 * 1000; // 90 days
 
 export interface Attribution {
   gclid?: string;
+  /**
+   * A ChatGPT ad click (?oppref=), kept exactly as a gclid is: parked before
+   * Accept, written on it, sent with every form. OpenAI's pixel keeps its own
+   * copy in the __oppref cookie (chatgpt-pixel.ts), and the server prefers
+   * that one; this copy is what puts the click on the lead and the CRM, and
+   * what reaches the Conversions API from a browser that blocks the pixel.
+   */
+  oppref?: string;
   landingPage?: string;
   referrer?: string;
   utmSource?: string;
@@ -43,13 +51,15 @@ export function captureAttribution(): void {
 
   const params = new URLSearchParams(window.location.search);
   const gclid = params.get("gclid") ?? undefined;
+  /* Passed on as OpenAI sent it; its docs ask for the original string. */
+  const oppref = params.get("oppref")?.slice(0, 512) || undefined;
   const utmSource = params.get("utm_source") ?? undefined;
   const utmMedium = params.get("utm_medium") ?? undefined;
   const utmCampaign = params.get("utm_campaign") ?? undefined;
   const utmContent = params.get("utm_content") ?? undefined;
   const utmTerm = params.get("utm_term") ?? undefined;
 
-  const hasAdSignal = cameFromAnAd({ gclid, utmSource, utmCampaign });
+  const hasAdSignal = cameFromAnAd({ gclid, oppref, utmSource, utmCampaign });
 
   // Load existing record (if any) to preserve first-touch attribution when
   // the user is just bouncing around the site with no new ad signal.
@@ -69,6 +79,7 @@ export function captureAttribution(): void {
   const now = Date.now();
   const record: Attribution = {
     gclid,
+    oppref,
     landingPage: window.location.pathname + window.location.search,
     referrer: document.referrer || undefined,
     utmSource,
@@ -171,7 +182,7 @@ const PENDING_KEY = "ss_attribution_pending";
  * keeping a paid visit and discarding it.
  */
 function cameFromAnAd(r: Partial<Attribution> | null | undefined): boolean {
-  return Boolean(r && (r.gclid || r.utmSource || r.utmCampaign));
+  return Boolean(r && (r.gclid || r.oppref || r.utmSource || r.utmCampaign));
 }
 
 /**

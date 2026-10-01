@@ -32,7 +32,7 @@ import { logLead, SHEET_BACKGROUND, type AttributionRecord } from "@/lib/leads";
 import { afterResponse, AFTER_CEILING } from "@/lib/after-response";
 import { wifiReport } from "@/lib/email/customer";
 import { approval } from "@/lib/signoff/state";
-import { sendToCrm } from "@/lib/crm";
+import { chatGptAdOf, sendToCrm } from "@/lib/crm";
 import { consentFrom, openAiConsented, recordEnquiryConsent, type ConsentInput } from "@/lib/ad-consent";
 import { browserContext, fireServerConversion } from "@/lib/server-conversions";
 import { GADS_WIFI_SEND_TO, WIFI_LEAD_VALUE } from "@/lib/lead-conversion";
@@ -219,7 +219,10 @@ export async function POST(request: Request) {
      read here before the answer), and only with the visitor's cookie answer,
      as the contact form's does. */
   const [firstName, ...rest] = name.split(/\s+/);
-  const browser = browserContext(request);
+  const browser = browserContext(request, attribution);
+  /* An Accept under the notice that names OpenAI: the Conversions API copy
+     and the click on the CRM lead both go by it. */
+  const openAiOk = openAiConsented(consentFrom(consent));
   afterResponse("server conversion", AFTER_CEILING.conversion, () =>
     fireServerConversion({
       gadsLabel: GADS_WIFI_SEND_TO.replace(/^AW-\d+\//, ""),
@@ -235,7 +238,7 @@ export async function POST(request: Request) {
       extraParams: { lead_source: g ? "wifi_check" : "wifi_enquiry", ...(pkg ? { package: pkg.slug } : {}) },
       adConsent: consentFrom(body.consent as ConsentInput | null | undefined)?.decision ?? null,
       browser,
-      openAi: { type: "lead_created", consented: openAiConsented(consentFrom(body.consent as ConsentInput | null | undefined)) },
+      openAi: { type: "lead_created", consented: openAiOk },
     }),
   );
 
@@ -261,6 +264,7 @@ export async function POST(request: Request) {
         wifi: g
           ? { light: g.light, cause: g.cause, recommend: g.recommend, also: g.also, report: reportUrl }
           : { package: pkg?.slug ?? null },
+        ...chatGptAdOf(browser, openAiOk),
       },
     }),
   );

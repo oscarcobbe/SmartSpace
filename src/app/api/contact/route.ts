@@ -4,7 +4,7 @@ import { randomUUID } from "crypto";
 import { Resend } from "resend";
 import { logLead, SHEET_BACKGROUND, type AttributionRecord } from "@/lib/leads";
 import { browserContext, fireServerConversion } from "@/lib/server-conversions";
-import { sendToCrm } from "@/lib/crm";
+import { chatGptAdOf, sendToCrm } from "@/lib/crm";
 import { sendSiteAlert } from "@/lib/site-alerts";
 import { monitorBcc } from "@/lib/business-constants";
 import { afterResponse, AFTER_CEILING, type AfterResult } from "@/lib/after-response";
@@ -404,8 +404,12 @@ export async function POST(request: Request) {
     );
 
     /* Read now: the request's cookies say whether Google's tag runs in this
-       browser, and carry the ChatGPT ads pixel's click id. */
-    const browser = browserContext(request);
+       browser, and the ChatGPT ad click comes from the pixel's cookie or the
+       form's attribution record. */
+    const browser = browserContext(request, attribution);
+    /* An Accept under the notice that names OpenAI: the Conversions API copy
+       and the click on the CRM lead both go by it. */
+    const openAiOk = openAiConsented(consentFrom(consent));
     afterResponse("server conversion", AFTER_CEILING.conversion, () =>
       fireServerConversion({
         gadsLabel: leadLabel, // Smart Space Lead, same label as ContactForm
@@ -421,7 +425,7 @@ export async function POST(request: Request) {
         extraParams: { lead_source: "contact_form", topic: subjectLabel },
         adConsent: consentFrom(consent)?.decision ?? null,
         browser,
-        openAi: { type: "lead_created", consented: openAiConsented(consentFrom(consent)) },
+        openAi: { type: "lead_created", consented: openAiOk },
       }),
     );
 
@@ -447,7 +451,10 @@ export async function POST(request: Request) {
         gclid: attribution?.gclid ?? gclid ?? null,
         referrer: attribution?.referrer ?? null,
         tags: ["contact-form"],
-        custom: { conversion_id: conversionId, subject_key: subjectKey, found_us: foundUs || null, found_us_detail: foundUsDetail || null },
+        custom: {
+          conversion_id: conversionId, subject_key: subjectKey, found_us: foundUs || null, found_us_detail: foundUsDetail || null,
+          ...chatGptAdOf(browser, openAiOk),
+        },
       }),
     );
 

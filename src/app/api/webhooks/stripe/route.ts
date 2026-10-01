@@ -5,7 +5,7 @@ import { createBookingEvent } from "@/lib/calendly";
 import { logLead } from "@/lib/leads";
 import { fireServerConversion } from "@/lib/server-conversions";
 import { consentFrom, openAiConsented } from "@/lib/ad-consent";
-import { sendToCrm } from "@/lib/crm";
+import { chatGptAdOf, sendToCrm } from "@/lib/crm";
 import { afterResponse, AFTER_CEILING } from "@/lib/after-response";
 import { sendSms } from "@/lib/sms";
 import { formatEuro } from "@/lib/format";
@@ -701,6 +701,23 @@ export async function POST(req: NextRequest) {
       (process.env.NEXT_PUBLIC_GADS_PAYMENT_SEND_TO || "")
         .trim()
         .replace(/^AW-\d+\//, "") || "IofPCOiZuJkcEJfU6PxC";
+    /*
+     * No browser is behind a webhook, so /api/checkout recorded the buyer's
+     * browser on the session. browser_tags_ran "1": Google's tag runs there,
+     * the success page records the sale, and the Ads pixel here stays quiet.
+     * A session without the key (created before this was recorded, or not
+     * by /api/checkout) fires as before. Stripe's own address and user agent
+     * are not the buyer's, so neither is sent.
+     */
+    const browser = {
+      browserTagsRan: session.metadata?.browser_tags_ran === "1",
+      oppref: (session.metadata?.oai_oppref as string) || undefined,
+      obref: (session.metadata?.oai_obref as string) || undefined,
+      sourceUrl: "https://smart-space.ie/smartspace-payment-success",
+    };
+    /* The buyer's Accept under the notice that names OpenAI: the Conversions
+       API copy and the click on the CRM lead both go by it. */
+    const openAiOk = openAiConsented(consent);
     await fireServerConversion({
       gadsLabel: paidLabel, // SmartSpace Paid Order
       ga4EventName: "purchase",
@@ -716,21 +733,8 @@ export async function POST(req: NextRequest) {
       lastName,
       extraParams: { product: productName, source: "stripe_webhook" },
       adConsent,
-      /*
-       * No browser is behind a webhook, so /api/checkout recorded the buyer's
-       * browser on the session. browser_tags_ran "1": Google's tag runs there,
-       * the success page records the sale, and the Ads pixel here stays quiet.
-       * A session without the key (created before this was recorded, or not
-       * by /api/checkout) fires as before. Stripe's own address and user agent
-       * are not the buyer's, so neither is sent.
-       */
-      browser: {
-        browserTagsRan: session.metadata?.browser_tags_ran === "1",
-        oppref: (session.metadata?.oai_oppref as string) || undefined,
-        obref: (session.metadata?.oai_obref as string) || undefined,
-        sourceUrl: "https://smart-space.ie/smartspace-payment-success",
-      },
-      openAi: { type: "order_created", consented: openAiConsented(consent) },
+      browser,
+      openAi: { type: "order_created", consented: openAiOk },
     });
 
     // Notify Nigel, runs after Calendly so we can include the outcome in
@@ -781,6 +785,7 @@ export async function POST(req: NextRequest) {
         configuration: configNote || null,
         found_us: foundUs || null,
         found_us_detail: foundUsDetail || null,
+        ...chatGptAdOf(browser, openAiOk),
       },
     }));
 

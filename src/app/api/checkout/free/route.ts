@@ -5,7 +5,7 @@ import { Resend } from "resend";
 import { createBookingEvent } from "@/lib/calendly";
 import { logLead, SHEET_BACKGROUND, type AttributionRecord } from "@/lib/leads";
 import { browserContext, fireServerConversion } from "@/lib/server-conversions";
-import { sendToCrm } from "@/lib/crm";
+import { chatGptAdOf, sendToCrm } from "@/lib/crm";
 import { alertTo, monitorBcc } from "@/lib/business-constants";
 import { afterResponse, AFTER_CEILING } from "@/lib/after-response";
 import { foundUsDetailFrom, foundUsFrom, notesWithFoundUs } from "@/lib/found-us";
@@ -286,7 +286,10 @@ export async function POST(request: Request) {
       ),
     );
 
-    const browser = browserContext(request);
+    const browser = browserContext(request, finalAttribution);
+    /* An Accept under the notice that names OpenAI: the Conversions API copy
+       and the click on the CRM lead both go by it. */
+    const openAiOk = openAiConsented(consentFrom(consent));
     afterResponse("server conversion", AFTER_CEILING.conversion, () =>
       fireServerConversion({
         gadsLabel: freeConsultLabel,
@@ -302,7 +305,7 @@ export async function POST(request: Request) {
         extraParams: { lead_source: "free_consultation" },
         adConsent: consentFrom(consent)?.decision ?? null,
         browser,
-        openAi: { type: "lead_created", consented: openAiConsented(consentFrom(consent)) },
+        openAi: { type: "lead_created", consented: openAiOk },
       }),
     );
 
@@ -332,6 +335,7 @@ export async function POST(request: Request) {
           address: customer?.address || null,
           found_us: foundUs || null,
           found_us_detail: foundUsDetail || null,
+          ...chatGptAdOf(browser, openAiOk),
         },
       }),
     );
