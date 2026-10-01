@@ -13,7 +13,7 @@
  * ads (openai-ads.ts) so both channels count a week the same way.
  */
 import { unstable_cache } from "next/cache";
-import { ADS_ACCOUNT, isForeign, iso, num, search, type AdSite } from "./google-ads";
+import { ADS_ACCOUNT, campaignSources, iso, num, search, type AdSite } from "./google-ads";
 import { periodsOf, type Bucket, type DayRow, type Periods } from "./period-buckets";
 
 export type { Bucket, Grain, Periods } from "./period-buckets";
@@ -44,7 +44,7 @@ export async function fetchPeriods(site: AdSite, days = 400): Promise<PeriodsRes
         if (!r.ok) throw new Error(r.reason);
         return r;
       },
-      ["crm-ads-periods", site, String(days)],
+      ["crm-ads-periods", "v2", site, String(days)],
       { revalidate: 60, tags: [PERIODS_TAG, `${PERIODS_TAG}:${site}`] },
     )();
   } catch (err) {
@@ -63,27 +63,31 @@ async function readPeriods(site: AdSite, days = 400): Promise<PeriodsResult> {
   const now = new Date();
   const from = new Date(now.getTime() - days * 86_400_000);
 
-  let rows;
+  /* Both accounts, each read for the campaigns that are this business's: the
+     other business's campaigns on its own account are dropped rather than
+     quietly inflating this site's numbers, and its own campaigns on the other
+     account are counted (campaignSources). */
+  const sources = campaignSources(site);
+  let rows: { row: Awaited<ReturnType<typeof search>>[number]; keep: (id: string, name: string) => boolean }[] = [];
   try {
-    rows = await search(
-      customerId,
+    const reads = await Promise.all(sources.map((s) => search(
+      s.customerId,
       `SELECT segments.date, campaign.id, campaign.name,
               metrics.cost_micros, metrics.clicks, metrics.impressions,
               metrics.conversions, metrics.conversions_value
        FROM campaign
        WHERE segments.date BETWEEN '${iso(from)}' AND '${iso(now)}'`,
-    );
+    )));
+    rows = reads.flatMap((list, i) => list.map((row) => ({ row, keep: sources[i]!.keep })));
   } catch (err) {
     return { ok: false, reason: err instanceof Error ? err.message : "Google Ads could not be read." };
   }
 
-  /* One account carries both businesses, so the other one's campaigns are
-     dropped here rather than quietly inflating this site's numbers. */
   const byDate = new Map<string, DayRow>();
-  for (const r of rows) {
+  for (const { row: r, keep } of rows) {
     const id = String(r.campaign?.id ?? "");
     const name = String(r.campaign?.name ?? "");
-    if (isForeign(site, id, name)) continue;
+    if (!keep(id, name)) continue;
 
     const date = String((r.segments as { date?: string } | undefined)?.date ?? "");
     if (!date) continue;
@@ -142,7 +146,7 @@ export function dailyReport(day: Bucket[]): DailyReport | null {
 
   if (yesterday.conversions > 0) {
     lines.push(
-      `${yesterday.conversions.toFixed(yesterday.conversions % 1 === 0 ? 0 : 1)} enquiries` +
+      `${yesterday.conversions.toFixed(yesterday.conversions % 1 === 0 ? 0 : 1)} ${yesterday.conversions === 1 ? "enquiry" : "enquiries"}` +
         (yesterday.cpa !== null ? ` at ${money(yesterday.cpa)} each` : "") +
         (conv ? `, ${conv}.` : "."),
     );

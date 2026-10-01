@@ -57,6 +57,10 @@ export interface Payment {
   came: Came;
   /** How an ad verdict was reached: on the payment, or on the customer's enquiry. */
   via: "click" | "enquiry" | null;
+  /** The Google click behind an ad verdict, when one is known, for finding its keyword. */
+  gclid?: string | null;
+  /** When it was paid, unix seconds. */
+  created?: number;
 }
 
 /** The parts of a Stripe checkout session that say how its buyer came. */
@@ -75,7 +79,9 @@ export interface SessionTrail {
  * keeps. oai_oppref is on the session only under an Accept that named OpenAI
  * (/api/checkout).
  */
-export function cameOf(s: SessionTrail | undefined, enquiries: Visit[]): { came: Came; via: Payment["via"] } {
+export function cameOf(
+  s: SessionTrail | undefined, enquiries: Visit[], site: "smart-space" | "smartcareliving" = "smart-space",
+): { came: Came; via: Payment["via"] } {
   const m = s?.metadata ?? {};
   if (s && ((m.gclid ?? "").trim() || (s.client_reference_id ?? "").trim())) return { came: "ad", via: "click" };
   if (s && (m.oai_oppref ?? "").trim()) return { came: "chatgpt-ad", via: "click" };
@@ -89,7 +95,7 @@ export function cameOf(s: SessionTrail | undefined, enquiries: Visit[]): { came:
     });
   }
   visits.push(...enquiries);
-  const came = readTrail(visits);
+  const came = readTrail(visits, site);
   return { came, via: came === "ad" || came === "chatgpt-ad" ? "enquiry" : null };
 }
 

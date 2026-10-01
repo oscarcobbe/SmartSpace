@@ -77,6 +77,10 @@ export interface Visit {
   /** "yyyy-mm-dd hh:mm", Irish time, the way the enquiry log writes dates. */
   at: string;
   gclid?: string;
+  /** iPhone ad clicks carry these instead of a gclid. SmartCare Living's sheet
+      keeps them in its Notes rather than on the landing URL. */
+  gbraid?: string;
+  wbraid?: string;
   /** A ChatGPT ad click kept apart from the landing URL: the Stripe session's
       oai_oppref. */
   oppref?: string;
@@ -93,6 +97,12 @@ export interface Enquiry extends Visit {
   name: string;
   email: string;
   phone: string;
+  /** What the log's own Status column says, "Spam" among them. */
+  status?: string;
+  /** The checkout session for a paid order, "cs_live_...". */
+  orderId?: string;
+  /** What was bought or asked about, as the log wrote it. */
+  product?: string;
 }
 
 /** Who paid, as Stripe knows them. Any of these can find their enquiries. */
@@ -113,20 +123,27 @@ const PAID_MEDIUM = /^(cpc|ppc|paid|paidsearch|paid_search)$/i;
 const GAP_FROM = "2026-09-06";
 const GAP_TO = "2026-09-22";
 
+/* The site's own address: a referrer from here is the second page of a visit,
+   not where the visitor came from. */
+const OWN_HOST: Record<string, RegExp> = {
+  "smart-space": /(^|\.)smart-space\.ie$/,
+  smartcareliving: /(^|\.)smartcareliving\.ie$/,
+};
+
 const hostOf = (url: string | undefined) => {
   if (!url?.trim()) return "";
   try { return new URL(url).host.toLowerCase(); } catch { return ""; }
 };
 
-/** One visit, read on its own. */
-export function readVisit(v: Visit): Came {
-  if ((v.gclid ?? "").trim() || AD_URL.test(v.landingPage ?? "")) return "ad";
+/** One visit, read on its own, on the site it was made to (Smart Space unless said). */
+export function readVisit(v: Visit, site: "smart-space" | "smartcareliving" = "smart-space"): Came {
+  if ((v.gclid ?? "").trim() || (v.gbraid ?? "").trim() || (v.wbraid ?? "").trim() || AD_URL.test(v.landingPage ?? "")) return "ad";
   if ((v.oppref ?? "").trim() || CHATGPT_AD_URL.test(v.landingPage ?? "")) return "chatgpt-ad";
   if (PAID_MEDIUM.test((v.utmMedium ?? "").trim())) return "ad";
   if (/^(business-card|qr)/i.test((v.source ?? "").trim())) return "not-ad";
   if ((v.utmSource ?? "").trim()) return "not-ad";
   const ref = hostOf(v.referrer);
-  if (ref && !/(^|\.)smart-space\.ie$/.test(ref)) return "not-ad";
+  if (ref && !OWN_HOST[site]!.test(ref)) return "not-ad";
   const inTheGap = v.at >= GAP_FROM && v.at < GAP_TO;
   if ((v.landingPage ?? "").trim() && !inTheGap) return "not-ad";
   return "unknown";
@@ -139,12 +156,27 @@ export function readVisit(v: Visit): Came {
  * reached stays Google's, as before. Otherwise one readable visit that was not
  * an ad settles it.
  */
-export function readTrail(visits: Visit[]): Came {
-  const read = visits.map(readVisit);
+export function readTrail(visits: Visit[], site: "smart-space" | "smartcareliving" = "smart-space"): Came {
+  const read = visits.map((v) => readVisit(v, site));
   if (read.includes("ad")) return "ad";
   if (read.includes("chatgpt-ad")) return "chatgpt-ad";
   if (read.includes("not-ad")) return "not-ad";
   return "unknown";
+}
+
+/**
+ * The Google click a trail carries, for finding the keyword it came from: the
+ * first gclid, from the visit's own field or its landing URL. An iPhone click
+ * (gbraid, wbraid) has none, and Google does not say which keyword it was.
+ */
+export function gclidOf(visits: Visit[]): string | null {
+  for (const v of visits) {
+    const own = (v.gclid ?? "").trim();
+    if (own) return own;
+    const m = /[?&]gclid=([^&#\s]+)/i.exec(v.landingPage ?? "");
+    if (m) return decodeURIComponent(m[1]!);
+  }
+  return null;
 }
 
 const phoneKey = (p: string | null | undefined) => {
@@ -230,17 +262,7 @@ export class EnquiryIndex {
 /** Rows the log holds that are not a customer reaching out. */
 const NOT_AN_ENQUIRY = /^(test|booking reminder)$/i;
 
-/**
- * The enquiry log, read the way /admin/leads reads it. Returns null when it
- * cannot be read, so the caller can fall back to the rate for everyone and
- * say so, rather than drawing an empty chart.
- */
-export async function fetchEnquiries(): Promise<Enquiry[] | null> {
-  const r = await readEnquiries();
-  return r.ok ? r.rows : null;
-}
-
-/** The same read, saying why when it fails. The health check needs the reason. */
+/** The enquiry log, read the way /admin/leads reads it, saying why when it fails. */
 export async function readEnquiries(): Promise<{ ok: true; rows: Enquiry[] } | { ok: false; reason: string }> {
   const url = process.env.GOOGLE_SHEET_WEBHOOK_URL?.trim();
   const token = process.env.GOOGLE_SHEET_READ_TOKEN?.trim();
@@ -267,6 +289,7 @@ export async function readEnquiries(): Promise<{ ok: true; rows: Enquiry[] } | {
           type: s(r.type), name: s(r.name), email: s(r.email), phone: s(r.phone),
           gclid: s(r.gclid), landingPage: s(r.landingPage), referrer: s(r.referrer),
           utmSource: s(r.utmSource), utmMedium: s(r.utmMedium), source: s(r.source),
+          status: s(r.status), orderId: s(r.orderId), product: s(r.product),
         })),
     };
   } catch (err) {

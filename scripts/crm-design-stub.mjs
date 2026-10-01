@@ -7,6 +7,7 @@
  * real names do not need to be in that loop.
  */
 import { createServer } from "node:http";
+import { readFileSync } from "node:fs";
 
 const NAMES = [
   ["Aoife Byrne", "aoife.byrne@gmail.com", "0871234501", "Rathgar", "Dublin", "D06 X291"],
@@ -171,6 +172,19 @@ function handle(req, res, body) {
     return json(res, tasks);
   }
   if (url.startsWith("/rest/v1/crm_users")) return json(res, [{ sites: ["smart-space", "smartcareliving"] }]);
+
+  /* Ad clicks and their keywords. Real ones when CRM_STUB_AD_CLICKS names a
+     JSON file of crm_ad_clicks rows (read from Google, never from a customer),
+     otherwise none, which Marketing shows as every enquiry's keyword unknown. */
+  if (url.startsWith("/rest/v1/crm_ad_clicks")) {
+    if (req.method !== "GET") return json(res, null, 201);
+    const file = process.env.CRM_STUB_AD_CLICKS;
+    const all = file ? JSON.parse(readFileSync(file, "utf8")) : [];
+    const site = /site=eq\.([a-z-]+)/.exec(url)?.[1];
+    const ids = /gclid=in\.\(([^)]*)\)/.exec(decodeURIComponent(url))?.[1]?.split(",").map((g) => g.replace(/^"|"$/g, ""));
+    return json(res, all.filter((c) => (!site || c.site === site) && (!ids || ids.includes(c.gclid))));
+  }
+  if (url.startsWith("/rest/v1/crm_payment_link_refs")) return json(res, []);
 
   /* Sign-in link tokens, held in memory so the printed link actually redeems.
      Returning an empty array here meant every local link came back "expired",

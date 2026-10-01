@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { runSnapshot } from "@/lib/crm/snapshot";
+import { captureAdClicks } from "@/lib/crm/ad-clicks";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -41,13 +42,21 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const days = Math.min(400, Math.max(1, Number(url.searchParams.get("days") ?? 30) || 30));
 
+  /* Clicks and their keywords: three days nightly. Google keeps them for
+     ninety days, so an older stretch can be filled by hand, fifteen days at a
+     time to stay inside this function's minute: click_days=15&click_skip=30
+     reads the fifteen days before the last thirty. */
+  const clickDays = Math.min(15, Math.max(1, Number(url.searchParams.get("click_days") ?? 3) || 3));
+  const clickSkip = Math.min(89 - clickDays, Math.max(0, Number(url.searchParams.get("click_skip") ?? 0) || 0));
+
   const results = await runSnapshot(days);
+  const clicks = await captureAdClicks(clickDays, clickSkip);
   const failed = results.filter((r) => !r.ok);
 
   /* A failed pull returns 500 so Vercel's own cron log shows it red. Silent
      failure is the thing this endpoint exists to prevent. */
   return NextResponse.json(
-    { ran: new Date().toISOString(), days, results },
-    { status: failed.length ? 500 : 200 },
+    { ran: new Date().toISOString(), days, results, clicks },
+    { status: failed.length || !clicks.ok ? 500 : 200 },
   );
 }

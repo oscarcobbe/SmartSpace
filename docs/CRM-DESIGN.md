@@ -24,6 +24,15 @@ four.
 The brand orange appears only on marks that represent money. An accent spent on
 chrome stops being able to point at anything.
 
+Marketing's return chart draws spend in `#dd6b0b`, a step deeper than the brand
+orange because `#f48222` falls under 3:1 on white, money back in `#0f9f6e` and
+the estimate in `slate-300`. The pair was run through the dataviz palette
+validator for contrast and colour-blind separation before it shipped.
+
+The headline tiles are white with a 3px top edge in their own hue (October
+2026). They were solid blocks of six colours, which made them the loudest thing
+on the page and put a good 4.2x return in red.
+
 ## Type
 
 Plus Jakarta Sans, already self-hosted by the site. Scale: 11 uppercase label,

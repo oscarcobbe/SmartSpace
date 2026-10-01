@@ -250,8 +250,11 @@ try {
       "src/lib/crm/ads-periods.ts no longer buckets through period-buckets.ts periodsOf");
     const marketing = readFileSync(join(ROOT, "src/app/crm/marketing/page.tsx"), "utf8");
     const overview = readFileSync(join(ROOT, "src/app/crm/overview-panels.tsx"), "utf8");
-    check(/<ChatGptAdsSection site=/.test(marketing) && /chatGptThisMonthLine\(site\)/.test(overview),
-      "Marketing and the Overview both show ChatGPT ads", "the ChatGPT ads panel or the Overview line is not wired in");
+    /* On Marketing, ChatGPT is a row of the channel table and part of the
+       headline chart's spend, read from the same fetchOpenAiPeriods. */
+    check(/fetchOpenAiPeriods\(site\)/.test(marketing) && /label: "ChatGPT ads"/.test(marketing)
+        && /chatgptSpend: chatByMonth/.test(marketing) && /chatGptThisMonthLine\(site\)/.test(overview),
+      "Marketing and the Overview both show ChatGPT ads", "the ChatGPT row, the chart's ChatGPT spend or the Overview line is not wired in");
   }
 } finally {
   rmSync(dir, { recursive: true, force: true });
