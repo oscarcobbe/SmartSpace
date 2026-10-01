@@ -31,7 +31,9 @@ export async function GET(request: Request) {
   const { dateStr, startIso, endIso } = dublinDay(-1);
   const outcomes: string[] = [];
   const { visits, problems } = await visitsBetween(startIso, endIso);
-  for (const v of visits.filter((x) => !x.consultation)) {
+  // Smart Space's own installations: the request is in Smart Space's name, so
+  // a SmartCare Living installation in the same calendar is never asked.
+  for (const v of visits.filter((x) => !x.consultation && x.site === "ss")) {
     if (!v.email) {
       outcomes.push(`${v.key}: no customer email`);
       continue;
