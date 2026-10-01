@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { randomUUID } from "crypto";
 import { createBookingEvent, TIME_SLOTS } from "@/lib/calendly";
+import { bookingBackend } from "@/lib/booking/backend";
 import { logLead, type AttributionRecord } from "@/lib/leads";
 import { browserContext, fireServerConversion } from "@/lib/server-conversions";
 import { consentFrom, openAiConsented, type ConsentInput } from "@/lib/ad-consent";
@@ -151,6 +152,7 @@ export async function POST(request: Request) {
     });
 
     if (!calendly) {
+      const google = bookingBackend() === "google";
       console.error(
         `[booking] Calendly booking failed for ${email} on ${date} ${timeSlot}`
       );
@@ -160,7 +162,7 @@ export async function POST(request: Request) {
       await sendSiteAlert({
         category: "booking",
         severity: "critical",
-        summary: "Booking submission FAILED, Calendly rejected the slot",
+        summary: `Booking submission FAILED, ${google ? "the calendar" : "Calendly"} rejected the slot`,
         details: [
           "A real customer just tried to book a site visit and got a 500.",
           "They saw 'We couldn't lock in that time slot' and probably bounced.",
@@ -172,10 +174,18 @@ export async function POST(request: Request) {
           `Time slot: ${timeSlot}`,
           "",
           "Most likely causes:",
-          "  1. CALENDLY_PERSONAL_TOKEN revoked or expired.",
-          "  2. The event type URI in CALENDLY_CONSULTATION_EVENT_TYPE_URI was deleted.",
-          "  3. The slot was already booked between the page load and the submit (race).",
-          "  4. Calendly API outage, check https://status.calendly.com",
+          ...(google
+            ? [
+                "  1. The slot was already booked between the page load and the submit (race).",
+                "  2. The site lost its permission to Nigel's Google Calendar (the Vercel log says what Google refused).",
+                "  3. A Google Calendar outage, check https://www.google.com/appsstatus",
+              ]
+            : [
+                "  1. CALENDLY_PERSONAL_TOKEN revoked or expired.",
+                "  2. The event type URI in CALENDLY_CONSULTATION_EVENT_TYPE_URI was deleted.",
+                "  3. The slot was already booked between the page load and the submit (race).",
+                "  4. Calendly API outage, check https://status.calendly.com",
+              ]),
           "",
           "Call the customer back manually: tap the phone number above.",
         ].join("\n"),

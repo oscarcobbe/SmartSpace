@@ -4,15 +4,16 @@
  * Runs every morning. Sends only when Nigel has approved the email in Sign-off
  * and chosen "the morning after the installation"; if he chose to send it when
  * he marks an enquiry Installed, this run does nothing and the CRM sends it
- * instead. Yesterday's installations come from Calendly (cancelled ones are no
- * longer active, so they are not asked), and crm_message_log makes sure a
- * customer is asked once.
+ * instead. Yesterday's installations come from src/lib/booking/upcoming.ts
+ * (Calendly's and Google Calendar's; cancelled ones are not read, so they are
+ * not asked), and crm_message_log makes sure a customer is asked once.
  */
 import { NextResponse } from "next/server";
 import { cronAuthorised } from "@/lib/cron/auth";
 import { approval } from "@/lib/signoff/state";
 import { sendReviewRequest } from "@/lib/email/send-customer";
-import { activeEventsBetween, calendlyUserUri, dublinDay, firstInvitee, isConsultation, productFrom } from "@/lib/calendly-events";
+import { dublinDay } from "@/lib/calendly-events";
+import { visitsBetween } from "@/lib/booking/upcoming";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -27,27 +28,20 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, held: true, message: "Approved to send when an enquiry is marked Installed, not from this job." });
   }
 
-  const token = process.env.CALENDLY_PERSONAL_TOKEN;
-  if (!token) return NextResponse.json({ error: "Calendly is not configured" }, { status: 500 });
-
   const { dateStr, startIso, endIso } = dublinDay(-1);
   const outcomes: string[] = [];
-  try {
-    const user = await calendlyUserUri(token);
-    const events = (await activeEventsBetween(token, user, startIso, endIso)).filter((e) => !isConsultation(e));
-    for (const e of events) {
-      const inv = await firstInvitee(token, e.uri).catch(() => undefined);
-      if (!inv?.email) {
-        outcomes.push(`${e.uri}: no invitee email`);
-        continue;
-      }
-      const product = productFrom(inv.questions_and_answers) || "installation";
-      const r = await sendReviewRequest({ when: "next-morning", ref: e.uri, name: inv.name || "", email: inv.email, product });
-      outcomes.push(`${e.uri}: ${r.outcome}`);
+  const { visits, problems } = await visitsBetween(startIso, endIso);
+  for (const v of visits.filter((x) => !x.consultation)) {
+    if (!v.email) {
+      outcomes.push(`${v.key}: no customer email`);
+      continue;
     }
-  } catch (err) {
-    console.error("[cron/review-requests] failed:", err);
-    return NextResponse.json({ ok: false, date: dateStr, error: err instanceof Error ? err.message : String(err), outcomes }, { status: 502 });
+    const r = await sendReviewRequest({ when: "next-morning", ref: v.key, name: v.name, email: v.email, product: v.product || "installation" });
+    outcomes.push(`${v.key}: ${r.outcome}`);
+  }
+  if (problems.length) {
+    console.error("[cron/review-requests] read problems:", problems);
+    return NextResponse.json({ ok: false, date: dateStr, error: problems.join("; "), outcomes }, { status: 502 });
   }
   console.log("[cron/review-requests]", dateStr, outcomes.join("; "));
   return NextResponse.json({ ok: true, date: dateStr, outcomes });

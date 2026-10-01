@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { bookingsBetween } from "@/lib/booking/engine";
+import { googleCalendarConfigured } from "@/lib/booking/google-calendar";
 import { timingSafeEqual } from "crypto";
 import { PRODUCT_CATALOGUE } from "@/data/productCatalogue";
 import { formatEuro } from "@/lib/format";
@@ -425,7 +427,9 @@ export async function GET(request: Request) {
   // 2. Fetch upcoming Calendly events
   const calendlyToken = process.env.CALENDLY_PERSONAL_TOKEN;
   if (!calendlyToken) {
-    sourceErrors.push({
+    // Expected once bookings are on Google Calendar and the last Calendly
+    // booking has passed: the token is then removed on purpose.
+    if (!googleCalendarConfigured()) sourceErrors.push({
       source: "Calendly (Installations + Consultations)",
       message: "CALENDLY_PERSONAL_TOKEN env var not set, bookings won't load until token is added in Vercel.",
     });
@@ -616,6 +620,49 @@ export async function GET(request: Request) {
       sourceErrors.push({
         source: "Calendly (Installations + Consultations)",
         message: err instanceof Error ? err.message : "Unknown error fetching Calendly events",
+      });
+    }
+  }
+
+  // 2b. Bookings on Nigel's Google Calendar, where both sites book once they
+  //     are off Calendly (src/lib/booking). Same window and same row shape as
+  //     the Calendly rows above, so the Upcoming tab treats them alike.
+  if (googleCalendarConfigured()) {
+    try {
+      const from = new Date(Date.now() - 30 * 86_400_000).toISOString();
+      const to = new Date(Date.now() + 90 * 86_400_000).toISOString();
+      const hm = (iso: string) => new Date(iso).toLocaleString("en-GB", { timeZone: "Europe/Dublin", hour: "2-digit", minute: "2-digit", hour12: false });
+      for (const b of await bookingsBetween(from, to)) {
+        const start = new Date(b.start);
+        const startStr = start.toLocaleString("en-GB", { timeZone: "Europe/Dublin", weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", hour12: false });
+        const isPast = start.getTime() < Date.now();
+        const details: QA[] = [];
+        if (b.product) details.push({ question: "Product", answer: b.product });
+        if (b.eircode) details.push({ question: "Eircode", answer: b.eircode });
+        if (b.notes) details.push({ question: "Note", answer: b.notes });
+        if (b.site === "scl") details.push({ question: "Booked on", answer: "smartcareliving.ie" });
+        leads.push({
+          date: startStr,
+          type: b.kind === "consultation" ? "Consultation" : "Installation",
+          name: b.name || "-",
+          email: b.email || "-",
+          phone: b.phone || "-",
+          address: b.address || "-",
+          product: b.title,
+          amount: b.kind === "consultation" ? "Complimentary" : "-",
+          bookingDate: startStr,
+          bookingSlot: `${hm(b.start)} – ${hm(b.end)}`,
+          status: isPast ? "Completed" : "Upcoming",
+          upcoming: !isPast,
+          orderId: b.orderId || "-",
+          details: details.length ? details : undefined,
+        });
+      }
+    } catch (err) {
+      console.error("[admin] Google Calendar bookings fetch error:", err);
+      sourceErrors.push({
+        source: "Google Calendar (Installations + Consultations)",
+        message: err instanceof Error ? err.message : "Unknown error reading Google Calendar bookings",
       });
     }
   }

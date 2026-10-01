@@ -7,18 +7,8 @@ import { BUSINESS_EMAIL } from "@/lib/business-constants";
 import { cronAuthorised } from "@/lib/cron/auth";
 import { approval } from "@/lib/signoff/state";
 import { reminderConsultation, reminderInstall, reminderSms } from "@/lib/email/customer";
-import {
-  activeEventsBetween,
-  addressFrom,
-  calendlyUserUri,
-  dublinDay,
-  firstInvitee,
-  formatSlot,
-  isConsultation,
-  phoneFrom,
-  productFrom,
-  type CalendlyInvitee,
-} from "@/lib/calendly-events";
+import { dublinDay, formatSlot } from "@/lib/calendly-events";
+import { visitsBetween } from "@/lib/booking/upcoming";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -44,7 +34,11 @@ export const runtime = "nodejs";
  * ── ONCE PER BOOKING ────────────────────────────────────────────
  *
  * Idempotency is unchanged: a "Booking Reminder" row in the leads sheet with
- * the Calendly event as its order id, read back at the start of each run.
+ * the booking as its order id (the Calendly event, or gcal:<ref>:<start> for
+ * one on Google Calendar), read back at the start of each run.
+ *
+ * Tomorrow's visits come from src/lib/booking/upcoming.ts: Calendly's, and
+ * Google Calendar's once bookings have moved there.
  */
 
 async function fetchSentEventUris(): Promise<Set<string>> {
@@ -92,33 +86,29 @@ export async function GET(request: Request) {
     });
   }
 
-  const calendlyToken = process.env.CALENDLY_PERSONAL_TOKEN;
   const resendKey = process.env.RESEND_API_KEY;
   const resendFrom = process.env.RESEND_FROM_EMAIL;
-  if (!calendlyToken || !resendKey || !resendFrom) {
+  if (!resendKey || !resendFrom) {
     await sendSiteAlert({
       category: "booking-reminders",
       severity: "error",
-      summary: "Booking reminders cannot run: Calendly or Resend is not configured",
-      details: "Set CALENDLY_PERSONAL_TOKEN, RESEND_API_KEY and RESEND_FROM_EMAIL in Vercel. Until then no reminder goes out.",
+      summary: "Booking reminders cannot run: Resend is not configured",
+      details: "Set RESEND_API_KEY and RESEND_FROM_EMAIL in Vercel. Until then no reminder goes out.",
     });
     return NextResponse.json({ error: "Not configured" }, { status: 500 });
   }
 
   const { dateStr, startIso, endIso } = dublinDay(1);
-  let events;
-  try {
-    const user = await calendlyUserUri(calendlyToken);
-    events = await activeEventsBetween(calendlyToken, user, startIso, endIso);
-  } catch (err) {
-    console.error("[cron/booking-reminders] Calendly read failed:", err);
+  const { visits: events, problems } = await visitsBetween(startIso, endIso);
+  if (problems.length) {
+    console.error("[cron/booking-reminders] read problems:", problems);
     await sendSiteAlert({
       category: "booking-reminders",
       severity: "error",
-      summary: "Booking reminders could not read tomorrow's bookings from Calendly",
-      details: `${err instanceof Error ? err.message : String(err)}\n\nTomorrow's customers won't get a reminder unless one is sent by hand. A revoked CALENDLY_PERSONAL_TOKEN is the usual cause.`,
+      summary: "Booking reminders could not read all of tomorrow's bookings",
+      details: `${problems.join("\n")}\n\nCustomers on the unread calendar won't get a reminder unless one is sent by hand. A revoked CALENDLY_PERSONAL_TOKEN, or a Google Calendar connection that has lost its permission, is the usual cause.`,
     });
-    return NextResponse.json({ error: "Calendly read failed" }, { status: 502 });
+    if (!events.length) return NextResponse.json({ error: "Booking read failed", problems }, { status: 502 });
   }
   if (!events.length) return NextResponse.json({ ok: true, date: dateStr, sent: 0, total: 0 });
 
@@ -135,11 +125,11 @@ export async function GET(request: Request) {
   const failures: string[] = [];
 
   for (const event of events) {
-    if (alreadySent.has(event.uri)) {
+    if (alreadySent.has(event.key)) {
       tally.skipped += 1;
       continue;
     }
-    const visit = isConsultation(event);
+    const visit = event.consultation;
     const emailGate = visit ? emailVisit : emailInstall;
     const smsGate = visit ? smsVisit : smsInstall;
     if (!emailGate.approved && !smsGate.approved) {
@@ -147,33 +137,25 @@ export async function GET(request: Request) {
       continue;
     }
 
-    let invitee: CalendlyInvitee | undefined;
-    try {
-      invitee = await firstInvitee(calendlyToken, event.uri);
-    } catch (err) {
+    if (!event.email) {
       tally.failed += 1;
-      failures.push(`${event.uri}: invitee fetch ${err instanceof Error ? err.message : String(err)}`);
-      continue;
-    }
-    if (!invitee?.email) {
-      tally.failed += 1;
-      failures.push(`${event.uri}: no invitee email`);
+      failures.push(`${event.key}: no customer email`);
       continue;
     }
 
-    const name = (invitee.name || "").trim();
-    const slot = formatSlot(event.start_time, event.end_time);
-    const product = productFrom(invitee.questions_and_answers) || (event.name || "").trim() || "installation";
+    const name = event.name;
+    const slot = formatSlot(event.start, event.end);
+    const product = event.product || event.title || "installation";
     const notes: string[] = [];
 
     if (emailGate.approved) {
       const mail = visit ? reminderConsultation({ name, slot }) : reminderInstall({ name, slot, product });
       const res = await resend.emails
-        .send({ from: resendFrom, to: [invitee.email], replyTo: BUSINESS_EMAIL, subject: mail.subject, html: mail.html, text: mail.text })
+        .send({ from: resendFrom, to: [event.email], replyTo: BUSINESS_EMAIL, subject: mail.subject, html: mail.html, text: mail.text })
         .catch((err: unknown) => ({ error: err instanceof Error ? err.message : String(err), data: null }));
       if (res.error) {
         tally.failed += 1;
-        failures.push(`${event.uri}: email ${JSON.stringify(res.error).slice(0, 160)}`);
+        failures.push(`${event.key}: email ${JSON.stringify(res.error).slice(0, 160)}`);
         continue;
       }
       tally.emails += 1;
@@ -181,7 +163,7 @@ export async function GET(request: Request) {
     }
 
     if (smsGate.approved) {
-      const phone = invitee.text_reminder_number || phoneFrom(invitee.questions_and_answers) || "";
+      const phone = event.phone || "";
       if (!twilioReady) notes.push("Text skipped: Twilio not configured.");
       else if (!phone) notes.push("Text skipped: no phone number on the booking.");
       else {
@@ -202,13 +184,13 @@ export async function GET(request: Request) {
     await logLead({
       type: "Booking Reminder",
       name: name || undefined,
-      email: invitee.email,
-      phone: invitee.text_reminder_number || phoneFrom(invitee.questions_and_answers) || undefined,
-      address: addressFrom(invitee.questions_and_answers),
+      email: event.email,
+      phone: event.phone || undefined,
+      address: event.address,
       product,
       bookingDate: dateStr,
       bookingSlot: slot,
-      orderId: event.uri,
+      orderId: event.key,
       source: "cron/booking-reminders",
       notes: `${visit ? "Site visit" : "Installation"} reminder. ${notes.join(" ")}`,
     });

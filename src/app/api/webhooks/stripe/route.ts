@@ -73,10 +73,10 @@ async function sendOrderNotification(params: {
 
   const calendlyLine =
     params.calendlyStatus === "created"
-      ? "✅ Calendly event created automatically."
+      ? "✅ Booked into your calendar automatically."
       : params.calendlyStatus === "failed"
-      ? "⚠️ Calendly event creation FAILED, please book manually in Calendly."
-      : "ℹ️ No booking date/slot in cart, Calendly was not attempted.";
+      ? "⚠️ The automatic booking FAILED: please put it in your calendar by hand and confirm the time with the customer."
+      : "ℹ️ No booking date/slot in cart, so nothing was booked.";
 
   const dateLabel = params.bookingLabel || params.bookingDate || "-";
   const slotLabel = params.bookingSlot || "-";
@@ -823,7 +823,7 @@ export async function POST(req: NextRequest) {
       }
 
       if (calendlyStatus === "failed") {
-        lines.push("⚠️ CALENDLY FAILED, book manually");
+        lines.push("⚠️ BOOKING FAILED, put it in the calendar by hand");
         lines.push("");
       }
 

@@ -3,6 +3,7 @@ import { Resend } from "resend";
 import { timingSafeEqual } from "crypto";
 import { getAvailableSlots, AVAILABLE_DAYS } from "@/lib/calendly";
 import { alertTo, monitorBcc } from "@/lib/business-constants";
+import { bookingBackend } from "@/lib/booking/backend";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,11 @@ function safeBearerEqual(actual: string, expected: string): boolean {
  * cron checks the next 7 weekdays and emails Nigel if every single one
  * comes back empty (the unambiguous signal of token failure or Calendly
  * outage).
+ *
+ * Since October 2026 the same check covers Nigel's Google Calendar when it
+ * is the booking backend (src/lib/booking/backend.ts): a lost Google
+ * permission fails the same way, every day empty. The path keeps its name so
+ * the cron in vercel.json still finds it.
  *
  * Triggered by Vercel cron (registered in /vercel.json) once daily.
  * Auth is the same `CRON_SECRET` Bearer header used by the other cron
@@ -99,8 +105,24 @@ export async function GET(request: Request) {
   if (resendKey && resendFrom) {
     try {
       const resend = new Resend(resendKey);
-      const reason =
-        errored === checkDates.length
+      const google = bookingBackend() === "google";
+      const steps = google
+        ? [
+            "1. Check the Vercel logs for \"[booking] Google Calendar free/busy failed\": the error says what Google refused.",
+            "2. unauthorized_client means the smart-space.ie Workspace admin's domain-wide delegation for the booking service account was removed or lost a scope (admin.google.com > Security > API controls).",
+            "3. If Nigel's calendar is genuinely full for a week, this is a false alarm.",
+            "4. To fall back to Calendly while it's fixed, set BOOKING_BACKEND to calendly in Vercel and redeploy.",
+          ]
+        : [
+            "1. Open https://calendly.com/event_types and confirm the consultation + installation event types still exist and are active.",
+            "2. Open Calendly account settings → Integrations → API and reissue the personal access token if needed.",
+            "3. Update CALENDLY_PERSONAL_TOKEN in Vercel env vars and redeploy.",
+          ];
+      const reason = google
+        ? errored === checkDates.length || empty === checkDates.length
+          ? `None of the next ${checkDates.length} weekdays shows a free slot on Nigel's Google Calendar. Most likely cause: the site has lost its permission to read the calendar, so every day reads as unavailable.`
+          : "The booking calendar check failed."
+        : errored === checkDates.length
           ? "Every Calendly availability check ERRORED. Most likely cause: the CALENDLY_PERSONAL_TOKEN env var has been revoked, the Calendly account password was changed, or 2FA was reset."
           : `All ${empty} of the next ${checkDates.length} weekdays show ZERO available slots. Most likely causes: every slot is genuinely booked (unusual), or all Calendly event types have been disabled / the working hours block the Available Days, or the CALENDLY_*_EVENT_TYPE_URI env vars point to deleted event types.`;
       await resend.emails.send({
@@ -109,7 +131,7 @@ export async function GET(request: Request) {
         bcc: monitorBcc(),
         subject: "[Smart Space] ⚠️ Booking calendar may be broken",
         text: [
-          "The daily Calendly health check failed.",
+          `The daily ${google ? "booking calendar" : "Calendly"} health check failed.`,
           "",
           reason,
           "",
@@ -117,24 +139,17 @@ export async function GET(request: Request) {
           ...results.map((r) => `  ${r.date}: ${r.slots === -1 ? "ERROR" : r.slots + " slots"}`),
           "",
           "What to do:",
-          "1. Open https://calendly.com/event_types and confirm the consultation + installation event types still exist and are active.",
-          "2. Open Calendly account settings → Integrations → API and reissue the personal access token if needed.",
-          "3. Update CALENDLY_PERSONAL_TOKEN in Vercel env vars and redeploy.",
-          "4. Manually check the live booking page at https://smart-space.ie/booking, if slots are visible there, the cron alarm is a false positive (logs at https://vercel.com/oscar-5316s-projects/smart-space).",
+          ...steps,
+          "Then check the live booking page at https://smart-space.ie/services/free-consultation: if slots are visible there, the alarm is a false positive (logs at https://vercel.com/oscar-5316s-projects/smart-space).",
         ].join("\n"),
         html: `
           <h2 style="color:#b91c1c">⚠️ Booking calendar may be broken</h2>
-          <p>The daily Calendly health check failed.</p>
-          <p><strong>Reason:</strong> ${reason.replace(/</g, "&lt;").replace(/&/g, "&amp;")}</p>
+          <p>The daily ${google ? "booking calendar" : "Calendly"} health check failed.</p>
+          <p><strong>Reason:</strong> ${reason.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</p>
           <h3>Next 7 weekdays</h3>
           <ul>${results.map((r) => `<li>${r.date}: ${r.slots === -1 ? "<strong>ERROR</strong>" : r.slots + " slots"}</li>`).join("")}</ul>
           <h3>What to do</h3>
-          <ol>
-            <li>Confirm Calendly event types still exist + are active.</li>
-            <li>Reissue the personal access token in Calendly if needed.</li>
-            <li>Update <code>CALENDLY_PERSONAL_TOKEN</code> in Vercel env vars and redeploy.</li>
-            <li>Sanity-check the live booking page at <a href="https://smart-space.ie/booking">smart-space.ie/booking</a>.</li>
-          </ol>
+          <ol>${steps.map((x) => `<li>${x.replace(/^\d+\.\s*/, "").replace(/&/g, "&amp;").replace(/</g, "&lt;")}</li>`).join("")}</ol>
         `,
       });
     } catch (err) {

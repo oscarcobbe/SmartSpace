@@ -82,7 +82,7 @@ export default function TermsPage() {
             <h2 className="text-xl font-bold text-gray-900 mt-8 mb-3">4. Cancellation and rescheduling</h2>
             <p>
               You can reschedule or cancel any booking up to 24 hours before the appointment at no charge, use the
-              link in your Calendly confirmation email or call us. Cancellations within 24 hours may incur a €60
+              link in your booking confirmation email or call us. Cancellations within 24 hours may incur a €60
               call-out charge if travel has already commenced.
             </p>
           </section>

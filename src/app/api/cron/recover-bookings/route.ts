@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { timingSafeEqual } from "crypto";
 import { alertTo, monitorBcc } from "@/lib/business-constants";
+import { visitsBetween } from "@/lib/booking/upcoming";
+import { googleCalendarConfigured } from "@/lib/booking/google-calendar";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +26,7 @@ function escapeHtml(s: string): string {
 
 /**
  * Daily safety net, diagnoses paid Stripe orders that are missing a
- * matching Calendly event and emails Nigel when there's something to act
+ * matching booking (Calendly or Google Calendar) and emails Nigel when there's something to act
  * on. Read-only by design: the cron does NOT auto-book, so a stale Stripe
  * webhook can't accidentally create double-bookings without human review.
  *
@@ -61,52 +63,19 @@ async function fetchPaidStripeOrders(stripeKey: string) {
   return data.data ?? [];
 }
 
-async function fetchCalendlyInviteeEmails(calendlyToken: string): Promise<Set<string>> {
-  // Past 90 → future 180 covers everything in the recover-bookings window.
+/**
+ * Every customer email with a live booking from 90 days back to 180 ahead,
+ * which covers the recover-bookings window: Calendly's, and Google
+ * Calendar's once bookings have moved there (src/lib/booking/upcoming.ts).
+ * Throws when either could not be read, since a source read as empty would
+ * report every one of its paid orders as missing.
+ */
+async function fetchBookedEmails(): Promise<Set<string>> {
   const past = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
   const future = new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString();
-
-  const meRes = await fetch("https://api.calendly.com/users/me", {
-    headers: { Authorization: `Bearer ${calendlyToken}` },
-    cache: "no-store",
-    signal: AbortSignal.timeout(10000),
-  });
-  if (!meRes.ok) throw new Error(`Calendly /users/me ${meRes.status}: ${await meRes.text()}`);
-  const me = await meRes.json();
-  const userUri: string = me.resource.uri;
-
-  const r = await fetch(
-    `https://api.calendly.com/scheduled_events?user=${encodeURIComponent(userUri)}&min_start_time=${past}&max_start_time=${future}&status=active&sort=start_time:asc&count=100`,
-    {
-      headers: { Authorization: `Bearer ${calendlyToken}` },
-      cache: "no-store",
-      signal: AbortSignal.timeout(10000),
-    }
-  );
-  if (!r.ok) throw new Error(`Calendly events ${r.status}: ${await r.text()}`);
-  const data = await r.json();
-
-  const emails = new Set<string>();
-  for (const ev of data.collection ?? []) {
-    try {
-      const ir = await fetch(`${ev.uri}/invitees`, {
-        headers: { Authorization: `Bearer ${calendlyToken}` },
-        cache: "no-store",
-        signal: AbortSignal.timeout(8000),
-      });
-      const id = await ir.json();
-      const inv = (id.collection ?? [])[0];
-      if (inv?.email) emails.add(String(inv.email).toLowerCase());
-    } catch (err) {
-      // Best-effort, one missing invitee shouldn't fail the whole audit,
-      // but log it so a recurring failure surfaces in Vercel logs.
-      console.warn(
-        `[cron/recover-bookings] invitee fetch failed for ${ev.uri}:`,
-        err instanceof Error ? err.message : err
-      );
-    }
-  }
-  return emails;
+  const { visits, problems } = await visitsBetween(past, future);
+  if (problems.length) throw new Error(problems.join("; "));
+  return new Set(visits.map((v) => (v.email || "").toLowerCase()).filter(Boolean));
 }
 
 export async function GET(request: Request) {
@@ -119,9 +88,8 @@ export async function GET(request: Request) {
   }
 
   const stripeKey = process.env.STRIPE_SECRET_KEY;
-  const calendlyToken = process.env.CALENDLY_PERSONAL_TOKEN;
-  if (!stripeKey || !calendlyToken) {
-    return NextResponse.json({ error: "Stripe or Calendly not configured" }, { status: 500 });
+  if (!stripeKey || (!process.env.CALENDLY_PERSONAL_TOKEN && !googleCalendarConfigured())) {
+    return NextResponse.json({ error: "Stripe, or both Calendly and Google Calendar, not configured" }, { status: 500 });
   }
 
   let stripeOrders: Array<Record<string, unknown>>;
@@ -129,7 +97,7 @@ export async function GET(request: Request) {
   try {
     [stripeOrders, calendlyEmails] = await Promise.all([
       fetchPaidStripeOrders(stripeKey),
-      fetchCalendlyInviteeEmails(calendlyToken),
+      fetchBookedEmails(),
     ]);
   } catch (err) {
     console.error("[cron/recover-bookings] fetch failed:", err);
@@ -224,7 +192,7 @@ export async function GET(request: Request) {
         from: resendFrom,
         to: [to],
         bcc: monitorBcc(),
-        subject: `[Smart Space] ${missed.length} paid order${missed.length === 1 ? "" : "s"} missing Calendly booking`,
+        subject: `[Smart Space] ${missed.length} paid order${missed.length === 1 ? "" : "s"} missing a calendar booking`,
         text: missed
           .map(
             (m) =>

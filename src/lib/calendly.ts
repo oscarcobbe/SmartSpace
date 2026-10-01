@@ -1,92 +1,27 @@
-// Calendly API integration
-// Requires env vars: CALENDLY_PERSONAL_TOKEN, CALENDLY_CONSULTATION_EVENT_TYPE_URI, CALENDLY_INSTALLATION_EVENT_TYPE_URI
+// Booking: free slots and creating a booking, for every route on this site.
+// Calendly, or Nigel's Google Calendar once BOOKING_BACKEND=google (see
+// src/lib/booking/backend.ts). Both answer through the same two functions
+// below, so the routes do not know which one they are talking to.
+// Calendly needs: CALENDLY_PERSONAL_TOKEN, CALENDLY_CONSULTATION_EVENT_TYPE_URI, CALENDLY_INSTALLATION_EVENT_TYPE_URI
+import { bookingBackend } from "@/lib/booking/backend";
+import { book, freeStarts } from "@/lib/booking/engine";
+import { bookingConfirmedEmails } from "@/lib/booking/notify";
 
 const CALENDLY_TOKEN = process.env.CALENDLY_PERSONAL_TOKEN;
 const CONSULTATION_EVENT_TYPE_URI = process.env.CALENDLY_CONSULTATION_EVENT_TYPE_URI;
 // Fall back to old env var name so existing Vercel deployments keep working
 const INSTALLATION_EVENT_TYPE_URI = process.env.CALENDLY_INSTALLATION_EVENT_TYPE_URI || process.env.CALENDLY_EVENT_TYPE_URI;
 
-// Time slots available for booking (Dublin time)
-export const TIME_SLOTS = [
-  { label: "10:00 – 12:00", value: "10:00-12:00", startHour: 10, startMin: 0, endHour: 12, endMin: 0 },
-  { label: "12:30 – 14:30", value: "12:30-14:30", startHour: 12, startMin: 30, endHour: 14, endMin: 30 },
-  { label: "15:00 – 17:00", value: "15:00-17:00", startHour: 15, startMin: 0, endHour: 17, endMin: 0 },
-];
-
-// Available booking days: Monday (1) through Thursday (4). Friday was
-// removed sitewide on 2026-06-02, internal-use day for stock prep,
-// admin, and route batching; not offered to customers.
-export const AVAILABLE_DAYS = [1, 2, 3, 4];
-
-/**
- * Sitewide calendar blackout ranges (inclusive, YYYY-MM-DD, Dublin dates).
- * No bookings of ANY kind (consultation or installation) are offered on
- * these dates, regardless of what Calendly reports as available. Used by
- * the booking calendar UI, the availability API, and booking creation, so
- * a blocked date can't be reached from the UI or by a crafted request.
- *
- * To lift a block, delete its entry. To add a holiday/close-down, add a
- * range. Ranges are inclusive of both start and end.
- */
-export interface BlockedDateRange {
-  start: string; // YYYY-MM-DD, inclusive
-  end: string; // YYYY-MM-DD, inclusive
-  reason: string;
-}
-export const BLOCKED_DATE_RANGES: BlockedDateRange[] = [
-  // Added 2026-06-17: full close-down, no bookings 9–20 July 2026 inclusive.
-  { start: "2026-07-09", end: "2026-07-20", reason: "Closed 9-20 July 2026" },
-];
-
-/**
- * Is this date inside any sitewide blackout range? Accepts a YYYY-MM-DD
- * string (as the API passes) or a Date (as the client calendar passes,
- * compared by its local Y/M/D so it matches the displayed day). ISO date
- * strings compare correctly with >=/<= because the format is lexicographic.
- */
-export function isDateBlocked(date: string | Date): boolean {
-  let iso: string;
-  if (typeof date === "string") {
-    iso = date.slice(0, 10);
-  } else {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
-    iso = `${y}-${m}-${d}`;
-  }
-  return BLOCKED_DATE_RANGES.some((r) => iso >= r.start && iso <= r.end);
-}
-
-/**
- * Earliest bookable date = today + N working days, counted Mon-Fri.
- *
- * Note: this function counts Mon-Fri because that's the standard
- * "working day" semantic. The customer-facing calendar then further
- * filters to AVAILABLE_DAYS (Mon-Thu only since Friday was blocked
- * sitewide on 2026-06-02). So if this function returns a Friday, the
- * calendar will skip to the following Monday, the floor date never
- * lands on a Friday slot.
- *
- * Default 4 matches the BookingCalendar default, appropriate for any
- * flow that involves stock (product purchase + install). Installation-
- * only and free consultation flows pass 2 explicitly because no stock
- * is sourced for those visits.
- *
- * Previously this function added calendar days, which under-counted any
- * lead time that straddled a weekend. Switched to working-day counting
- * on 2026-06-02 so the gate matches the copy claim ("X working days").
- */
-export function getEarliestBookableDate(leadDays = 4): Date {
-  const date = new Date();
-  date.setHours(0, 0, 0, 0);
-  let counted = 0;
-  while (counted < leadDays) {
-    date.setDate(date.getDate() + 1);
-    const dow = date.getDay();
-    if (dow !== 0 && dow !== 6) counted++;
-  }
-  return date;
-}
+import {
+  TIME_SLOTS,
+  AVAILABLE_DAYS,
+  BLOCKED_DATE_RANGES,
+  isDateBlocked,
+  getEarliestBookableDate,
+  type BlockedDateRange,
+} from "@/lib/booking/rules";
+export { TIME_SLOTS, AVAILABLE_DAYS, BLOCKED_DATE_RANGES, isDateBlocked, getEarliestBookableDate };
+export type { BlockedDateRange };
 
 type EventKind = "consultation" | "installation";
 
@@ -104,6 +39,17 @@ export async function getAvailableSlots(dateStr: string, kind: EventKind = "inst
   // even calling Calendly. Covers both the availability API and the reserve
   // re-check, since both go through here.
   if (isDateBlocked(dateStr)) return [];
+
+  if (bookingBackend() === "google") {
+    try {
+      const free = await freeStarts(dateStr);
+      return TIME_SLOTS.filter((s) => free.includes(`${String(s.startHour).padStart(2, "0")}:${String(s.startMin).padStart(2, "0")}`));
+    } catch (err) {
+      // As with a Calendly outage: no slots rather than slots that may be taken.
+      console.error("[booking] Google Calendar free/busy failed:", err);
+      return [];
+    }
+  }
 
   const eventTypeUri = getEventTypeUri(kind);
 
@@ -193,6 +139,35 @@ export async function createBookingEvent(params: {
   if (isDateBlocked(params.date)) {
     console.error(`[calendly] Refusing booking on blocked date ${params.date}`);
     return null;
+  }
+
+  if (bookingBackend() === "google") {
+    const slot = TIME_SLOTS.find((s) => s.value === params.timeSlot);
+    if (!slot) {
+      console.error(`[booking] Invalid time slot: ${params.timeSlot}`);
+      return null;
+    }
+    const result = await book({
+      site: "ss",
+      kind,
+      date: params.date,
+      start: `${String(slot.startHour).padStart(2, "0")}:${String(slot.startMin).padStart(2, "0")}`,
+      name: params.customerName,
+      email: params.email,
+      phone: params.phone,
+      address: params.address,
+      product: params.productTitle,
+      orderId: params.orderId,
+    });
+    if (!result.ok) {
+      console.error(`[booking] Google Calendar booking refused (${result.reason}): ${result.message}`);
+      return null;
+    }
+    // Calendly emailed the customer as it booked; this does the same, and
+    // waits, because the route's function can be frozen once it answers.
+    const emailed = await bookingConfirmedEmails(result.booking).catch((e) => `failed: ${e instanceof Error ? e.message : e}`);
+    console.log(`[booking] booked ${result.booking.id} ref=${result.booking.ref}; confirmation ${emailed}`);
+    return { eventId: result.booking.id };
   }
 
   const eventTypeUri = getEventTypeUri(kind);

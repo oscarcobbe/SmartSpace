@@ -20,6 +20,7 @@ import {
   type Email,
 } from "./customer";
 import { networkDiagnosisA, networkDiagnosisB, smartGuardianAnnouncement } from "./marketing";
+import { bookingCancelled, bookingConfirmed, bookingMoved } from "./booking";
 
 export type Status = "live" | "paused" | "draft";
 
@@ -33,6 +34,7 @@ export const STAGES: Stage[] = [
   { id: "enquiry", title: "Enquiry", blurb: "Someone gets in touch or runs the Wi-Fi check." },
   { id: "consultation", title: "Consultation booked", blurb: "A free site visit goes in the calendar." },
   { id: "purchase", title: "Purchase", blurb: "An order is paid online and the install is booked." },
+  { id: "booking-change", title: "Booking changed", blurb: "The customer moves or cancels a visit from their confirmation email." },
   { id: "day-before", title: "Day before", blurb: "The evening before a visit or an install." },
   { id: "after", title: "After the install", blurb: "The job is done." },
   { id: "broadcast", title: "To existing customers", blurb: "Announcements to the customer base." },
@@ -65,6 +67,19 @@ const SAMPLE = {
   slot: "10:00 – 12:00",
   address: "14 Sample Road, Rathmines, Dublin 6",
 };
+
+/* What Calendly's invite showed, as the booking emails that replace it show it. */
+const SAMPLE_BOOKING = {
+  name: SAMPLE.name,
+  title: "Smart Space Installation",
+  dateLabel: SAMPLE.dateLabel,
+  time: "10:00 to 12:00",
+  address: SAMPLE.address,
+  rescheduleUrl: "https://smart-space.ie/booking/sample?do=reschedule",
+  cancelUrl: "https://smart-space.ie/booking/sample?do=cancel",
+};
+const AFTER_CALENDLY =
+  "Not sent today: Calendly sends its own. This replaces it when bookings move off Calendly, which waits for this approval in Sign-off.";
 
 const SENDER = "Smart Space, from the website's usual address";
 const NIGEL = "Nigel";
@@ -137,6 +152,49 @@ export const ENTRIES: Entry[] = [
     alongside: "Stripe's payment receipt and Calendly's invite for the install slot: three emails at checkout.",
     changes: "Same words. Shared frame; the footer drops \"Ring installation specialists\" (and the Eufy variant), \"5,000+ installs across Leinster\" and the SME award line.",
     render: () => orderConfirmed({ name: SAMPLE.name, product: SAMPLE.product, amount: SAMPLE.amount, dateLabel: SAMPLE.dateLabel, slot: SAMPLE.slot }),
+  },
+  {
+    id: "booking-confirmed",
+    stage: "purchase",
+    name: "Booking confirmed, with the calendar file",
+    channel: "email",
+    status: "draft",
+    statusNote: AFTER_CALENDLY,
+    trigger: "Any visit is booked on the website: a free consultation, or an installation at checkout.",
+    timing: "Straight away.",
+    from: SENDER,
+    replyTo: NIGEL,
+    source: "src/lib/booking/notify.ts, from every booking route once bookings are off Calendly",
+    alongside: "Consultation booked or Order confirmed, as Calendly's invite was before.",
+    render: () => bookingConfirmed(SAMPLE_BOOKING),
+  },
+  {
+    id: "booking-moved",
+    stage: "booking-change",
+    name: "Booking moved",
+    channel: "email",
+    status: "draft",
+    statusNote: AFTER_CALENDLY,
+    trigger: "The customer picks a new time from the Reschedule link.",
+    timing: "Straight away. Nigel is emailed too.",
+    from: SENDER,
+    replyTo: NIGEL,
+    source: "src/app/api/booking/manage/route.ts",
+    render: () => bookingMoved({ ...SAMPLE_BOOKING, fromLabel: "Tuesday 7 October 2026, 15:00" }),
+  },
+  {
+    id: "booking-cancelled",
+    stage: "booking-change",
+    name: "Booking cancelled",
+    channel: "email",
+    status: "draft",
+    statusNote: AFTER_CALENDLY,
+    trigger: "The customer cancels from the Cancel link.",
+    timing: "Straight away. Nigel is emailed too.",
+    from: SENDER,
+    replyTo: NIGEL,
+    source: "src/app/api/booking/manage/route.ts",
+    render: () => bookingCancelled({ name: SAMPLE.name, title: SAMPLE_BOOKING.title, dateLabel: SAMPLE.dateLabel, time: SAMPLE_BOOKING.time, address: SAMPLE.address, bookAgainUrl: "https://smart-space.ie/services" }),
   },
   {
     id: "reminder-consultation",

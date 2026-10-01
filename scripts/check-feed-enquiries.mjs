@@ -44,6 +44,10 @@ const FILES = {
   "@/lib/format": ["src/lib/format.ts", "format.mjs"],
   "@/lib/crm/auth": ["src/lib/crm/auth.ts", "auth.mjs"],
   "@/data/productCatalogue": ["src/data/productCatalogue.ts", "productCatalogue.mjs"],
+  /* Google Calendar bookings: read only when the calendar is configured, which it is not here. */
+  "@/lib/booking/engine": ["src/lib/booking/engine.ts", "engine.mjs"],
+  "@/lib/booking/google-calendar": ["src/lib/booking/google-calendar.ts", "google-calendar.mjs"],
+  "./google-calendar": ["src/lib/booking/google-calendar.ts", "google-calendar.mjs"],
 };
 const BUILTIN = new Set(["crypto", "node:crypto"]);
 /* The route uses NextResponse.json and nothing else from next/server. */
