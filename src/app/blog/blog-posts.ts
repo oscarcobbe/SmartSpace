@@ -40,6 +40,13 @@ export const BLOG_POSTS: BlogPost[] = [
     datePublished: "2026-10-01",
     dateModified: "2026-10-01",
     readingTime: "8 min read",
+    slug: "video-doorbell-no-existing-wiring-ireland",
+    title: "No Doorbell Wiring? How to Fit a Video Doorbell in an Irish Home",
+    description:
+      "No bell wire at the front door? You can still fit a Ring or Eufy video doorbell. The three ways to power it, how each one rings inside the house, what the makers say about charging, and what it costs.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "7 min read",
     category: "Buying Guide",
   },
   {
