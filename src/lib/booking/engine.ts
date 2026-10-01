@@ -358,12 +358,90 @@ export async function book(input: BookInput, now = Date.now()): Promise<BookResu
   }
 }
 
+// ─── One change at a time per booking ───────────────────────────────
+
+/*
+ * A move is two writes (book the new slot, release the old), so two moves of
+ * the same booking at once, from two tabs say, could each book a slot and
+ * leave two. Moves and cancels of one booking therefore hold a lock: an
+ * event whose id is derived from the booking's reference, so a second
+ * holder's insert is refused by Google (409), exactly as the slot lock works.
+ * It sits on 1 January 2000, marked free, and is deleted the moment the
+ * change is done, so it never shows in Nigel's week. A lock older than
+ * LOCK_STALE_MS, left by a function that died holding it, is taken over.
+ */
+const LOCK_STALE_MS = 60_000;
+
+const lockId = (ref: string) => `ssk${ref}`;
+
+async function acquire(ref: string): Promise<string | null> {
+  const holder = randomBytes(6).toString("hex");
+  const lock: CalendarEvent = {
+    id: lockId(ref),
+    summary: "Booking change in progress",
+    transparency: "transparent",
+    start: { date: "2000-01-01" },
+    end: { date: "2000-01-02" },
+    extendedProperties: { private: { sslock: "1", holder } },
+  };
+  const mine = (e: CalendarEvent | null) => !!e && e.status !== "cancelled" && e.extendedProperties?.private?.holder === holder;
+  try {
+    await insertEvent(lock);
+    return holder;
+  } catch (e) {
+    const now = await getEvent(lock.id).catch(() => null);
+    if (mine(now)) return holder; // written, answer lost
+    if (!(e instanceof CalendarError && e.status === 409) || !now?.etag) throw e;
+    const stale = now.status === "cancelled" || Date.now() - (Date.parse(now.updated || now.created || "") || 0) > LOCK_STALE_MS;
+    if (!stale) return null;
+    try {
+      await replaceEvent({ ...lock, status: "confirmed" }, now.etag);
+      return holder;
+    } catch (e2) {
+      if (mine(await getEvent(lock.id).catch(() => null))) return holder;
+      if (e2 instanceof CalendarError && e2.status === 412) return null;
+      throw e2;
+    }
+  }
+}
+
+async function release(ref: string, holder: string): Promise<void> {
+  try {
+    const now = await getEvent(lockId(ref));
+    if (now && now.status !== "cancelled" && now.extendedProperties?.private?.holder === holder) await deleteEvent(now.id);
+  } catch (e) {
+    // Left in place it is taken over after LOCK_STALE_MS; nothing else waits on it.
+    console.error(`[booking] could not release the lock on ${ref}:`, e);
+  }
+}
+
+/** Runs `fn` holding the booking's lock, waiting up to ~6 s for another change to finish. */
+async function exclusively<T>(ref: string, fn: () => Promise<T>): Promise<T | "busy"> {
+  for (let i = 0; i < 12; i++) {
+    const holder = await acquire(ref);
+    if (holder) {
+      try {
+        return await fn();
+      } finally {
+        await release(ref, holder);
+      }
+    }
+    await new Promise((r) => setTimeout(r, 250 + Math.floor(Math.random() * 250)));
+  }
+  return "busy";
+}
+
 /** Cancels the live booking behind `ref`, and any copy a failed move left behind. Returns what was cancelled, or null when there was nothing to cancel. */
 export async function cancel(ref: string): Promise<Booking | null> {
-  const live = await liveEventsByRef(ref);
-  if (!live.length) return null;
-  for (const e of live) await deleteEvent(e.id);
-  return fromEvent(live[0]);
+  if (!/^[0-9a-z]{6,40}$/.test(ref)) return null;
+  const r = await exclusively(ref, async () => {
+    const live = await liveEventsByRef(ref);
+    if (!live.length) return null;
+    for (const e of live) await deleteEvent(e.id);
+    return fromEvent(live[0]);
+  });
+  if (r === "busy") throw new CalendarError(503, "Another change to this booking is still in progress");
+  return r;
 }
 
 /**
@@ -371,24 +449,28 @@ export async function cancel(ref: string): Promise<Booking | null> {
  * then cancels the old one, so there is never a moment with neither.
  */
 export async function reschedule(ref: string, date: string, start: string, now = Date.now()): Promise<{ ok: true; from: Booking; booking: Booking; leftover?: string } | { ok: false; reason: "missing" | "taken" | "invalid" | "error"; message: string }> {
-  let from: Booking | null;
+  if (!/^[0-9a-z]{6,40}$/.test(ref)) return { ok: false, reason: "missing", message: "No booking to move" };
   try {
-    from = await bookingByRef(ref);
+    const r = await exclusively(ref, async () => {
+      const from = await bookingByRef(ref);
+      if (!from) return { ok: false as const, reason: "missing" as const, message: "No booking to move" };
+      const result = await book({ ...from, date, start, ref, seq: from.seq + 1 }, now);
+      if (!result.ok) return result;
+      // The new slot is held. Releasing the old one is retried; if Google
+      // still will not, the move stands (the customer has their new time)
+      // and the old event is reported so a person can delete it.
+      // bookingByRef already prefers the newer event, and cancel() removes both.
+      try {
+        await deleteEvent(from.id);
+      } catch (e) {
+        console.error(`[booking] moved ${ref} but could not release ${from.id}:`, e);
+        return { ok: true as const, from, booking: result.booking, leftover: from.id };
+      }
+      return { ok: true as const, from, booking: result.booking };
+    });
+    if (r === "busy") return { ok: false, reason: "error", message: "Another change to this booking is still in progress" };
+    return r;
   } catch (e) {
     return { ok: false, reason: "error", message: e instanceof Error ? e.message : String(e) };
   }
-  if (!from) return { ok: false, reason: "missing", message: "No booking to move" };
-  const result = await book({ ...from, date, start, ref, seq: from.seq + 1 }, now);
-  if (!result.ok) return result;
-  // The new slot is held. Releasing the old one is retried; if Google still
-  // will not, the move stands (the customer has their new time) and the old
-  // event is reported so a person can delete it. bookingByRef already prefers
-  // the newer event, and cancel() removes both.
-  try {
-    await deleteEvent(from.id);
-  } catch (e) {
-    console.error(`[booking] moved ${ref} but could not release ${from.id}:`, e);
-    return { ok: true, from, booking: result.booking, leftover: from.id };
-  }
-  return { ok: true, from, booking: result.booking };
 }

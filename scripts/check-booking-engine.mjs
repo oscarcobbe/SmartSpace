@@ -169,7 +169,8 @@ const NOW = Date.parse("2026-10-01T09:00:00Z"); // a Thursday
 const person = { name: "Mary Byrne", email: "mary@example.ie", phone: "087 123 4567", address: "1 Main St, Naas" };
 const book = (date, start, extra = {}) => E.book({ site: "ss", kind: "installation", date, start, ...person, ...extra }, NOW);
 const reset = () => { cal.clear(); unreadable = false; freeBusyHook = null; faults = []; };
-const live = () => [...cal.values()].filter((e) => e.status !== "cancelled");
+const live = () => [...cal.values()].filter((e) => e.status !== "cancelled" && e.extendedProperties?.private?.ssbooking === "1");
+const locks = () => [...cal.values()].filter((e) => e.status !== "cancelled" && e.extendedProperties?.private?.sslock === "1");
 
 // Times
 check("10:00 Dublin in summer is 09:00 UTC", new Date(E.dublinToEpoch("2026-10-05", "10:00")).toISOString() === "2026-10-05T09:00:00.000Z");
@@ -346,6 +347,38 @@ for (let i = 0; i < 30; i++) { if (i % 3 === 0) fault(isInsert, "503-after"); if
 const flakyRuns = await Promise.all(days.flatMap((d) => ["10:00", "12:30", "15:00"].map((t) => Promise.all([book(d, t, { email: "a@example.ie" }), book(d, t, { email: "b@example.ie" })]))));
 const perSlot = flakyRuns.map((pair) => pair.filter((r) => r.ok).length);
 check("pairs racing for 15 slots while Google drops answers: never two in a slot", perSlot.every((n) => n <= 1) && live().length === perSlot.reduce((a, n) => a + n, 0) && new Set(live().map((e) => e.start.dateTime)).size === live().length, JSON.stringify(perSlot));
+
+
+// ─── One change at a time per booking ───────────────────────────────
+reset();
+const tw = await book("2026-11-03", "10:00");
+const both = await Promise.all([E.reschedule(tw.booking.ref, "2026-11-03", "12:30", NOW), E.reschedule(tw.booking.ref, "2026-11-04", "15:00", NOW)]);
+check("the same booking moved from two tabs at once: one booking afterwards, where the last move put it",
+  both.every((r) => r.ok) && live().length === 1 && live()[0].extendedProperties.private.ref === tw.booking.ref, JSON.stringify(both.map((r) => r.ok ? r.booking.start : r)));
+check("and no lock is left behind", locks().length === 0);
+reset();
+const five = await book("2026-11-05", "10:00");
+const moves = await Promise.all(["10:00", "12:30", "15:00"].flatMap((t) => ["2026-11-09", "2026-11-10"].map((d) => E.reschedule(five.booking.ref, d, t, NOW))));
+check("six moves of one booking at once: still exactly one booking", live().length === 1 && moves.filter((r) => r.ok).length >= 1 && locks().length === 0, JSON.stringify(moves.map((r) => r.ok || r.reason)));
+check("and its link shows where it actually is", (await E.bookingByRef(five.booking.ref))?.id === live()[0].id);
+reset();
+const cm = await book("2026-11-11", "10:00");
+const [mvC, cnC] = await Promise.all([E.reschedule(cm.booking.ref, "2026-11-12", "10:00", NOW), E.cancel(cm.booking.ref)]);
+check("a move and a cancel of one booking at once: either cancelled outright, or moved then nothing left to cancel; never two",
+  live().length <= 1 && (live().length === 0 ? true : !cnC) && locks().length === 0, JSON.stringify({ mvC, cnC: !!cnC, live: live().length }));
+reset();
+const st = await book("2026-11-16", "10:00");
+cal.set(`ssk${st.booking.ref}`, { id: `ssk${st.booking.ref}`, status: "confirmed", etag: '"old"', created: "2026-10-01T08:00:00Z", updated: "2026-10-01T08:00:00Z",
+  start: { date: "2000-01-01" }, end: { date: "2000-01-02" }, extendedProperties: { private: { sslock: "1", holder: "dead" } } });
+const afterCrash = await E.reschedule(st.booking.ref, "2026-11-16", "15:00", NOW);
+check("a lock left by a crashed change is taken over", afterCrash.ok && live().length === 1 && locks().length === 0, JSON.stringify(afterCrash));
+reset();
+const held = await book("2026-11-17", "10:00");
+cal.set(`ssk${held.booking.ref}`, { id: `ssk${held.booking.ref}`, status: "confirmed", etag: '"fresh"', created: new Date().toISOString(), updated: new Date().toISOString(),
+  start: { date: "2000-01-01" }, end: { date: "2000-01-02" }, extendedProperties: { private: { sslock: "1", holder: "alive" } } });
+const waited = await E.reschedule(held.booking.ref, "2026-11-17", "15:00", NOW);
+check("while another change genuinely holds it, a move waits, then says busy rather than racing", !waited.ok && /in progress/.test(waited.message) && live().length === 1 && live()[0].start.dateTime === "2026-11-17T10:00:00.000Z", JSON.stringify(waited));
+check("the lock never blocks a slot", (await E.freeStarts("2026-11-17", NOW)).length === 2);
 
 console.log(failed ? `\n${failed} failed` : "\nall passed");
 process.exit(failed ? 1 : 0);

@@ -243,6 +243,8 @@ export interface CalendarEvent {
   summary?: string;
   description?: string;
   location?: string;
+  /** "transparent" is Google's "Show as: Free": it blocks nothing. */
+  transparency?: "opaque" | "transparent";
   start?: { dateTime?: string; date?: string; timeZone?: string };
   end?: { dateTime?: string; date?: string; timeZone?: string };
   created?: string;
