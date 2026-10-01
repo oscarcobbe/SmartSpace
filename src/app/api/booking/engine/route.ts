@@ -62,7 +62,7 @@ async function health(): Promise<NextResponse> {
   const date = day.toISOString().slice(0, 10);
   // Whether Nigel has approved the emails that replace Calendly's: the switch waits for these.
   const gates = await Promise.all([approval("email:booking-confirmed"), approval("email:booking-moved"), approval("email:booking-cancelled")]);
-  const approved = Object.fromEntries(gates.map((g) => [g.item.replace("email:", ""), g.approved]));
+  const approved = Object.fromEntries(gates.map((g) => [g.item.slice("email:".length), g.approved]));
   const base = { backend: bookingBackend(), googleConfigured: googleCalendarConfigured(), linkSecret: !!process.env.BOOKING_LINK_SECRET, approved };
   if (!base.googleConfigured) return NextResponse.json({ ok: false, ...base, error: "Google Calendar is not configured here" }, { status: 503 });
   try {
