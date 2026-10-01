@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-const lastUpdated = "23 September 2026";
+const lastUpdated = "1 October 2026";
 
 export default function PrivacyPage() {
   return (
@@ -62,7 +62,16 @@ export default function PrivacyPage() {
               <li>
                 <strong>Marketing attribution:</strong> if you arrived from a Google Ad, Facebook ad, or other source,
                 we record the click ID (e.g. <code>gclid</code>) and any UTM parameters so we can credit the right
-                channel for the conversion.
+                channel for the conversion. An ad in ChatGPT adds a similar identifier for OpenAI.
+              </li>
+              <li>
+                <strong>Matching an enquiry to an ad:</strong> if you have accepted cookies and then send us a form or
+                pay for an order, we give Google and OpenAI a hashed (one-way scrambled) copy of your email address and
+                phone number, from your browser and from our server, along with your IP address and browser type. They
+                use it to tell us whether your enquiry or order came from one of our ads. Once you have accepted,
+                Google&apos;s advertising tag may also pick up contact details you type into our forms (name, email,
+                phone or address) and send Google a hashed copy for the same purpose. If you choose Essential only, none
+                of this is sent.
               </li>
               <li>
                 <strong>Website analytics:</strong> Google Analytics 4 records anonymous interactions (pages viewed,
@@ -129,6 +138,11 @@ export default function PrivacyPage() {
                 hashed email and phone for advertising attribution. Stored in the EU and US under SCCs.
               </li>
               <li>
+                <strong>OpenAI</strong> (ChatGPT ads), only when you consent: the identifier of a ChatGPT ad you
+                clicked, a random reference for your browser and, with an enquiry or order, your hashed email and phone,
+                IP address and browser type, so it can tell us which of our ads in ChatGPT led to it. Stored in the US.
+              </li>
+              <li>
                 <strong>Google Sheets / Apps Script</strong> (internal lead tracking), every field above. Stored in
                 the EU.
               </li>
@@ -183,6 +197,14 @@ export default function PrivacyPage() {
               The cookie banner you see on your first visit lets you accept or reject advertising and analytics
               cookies. Essential cookies (e.g. shopping-cart state) are always on because the site can&apos;t function
               without them.
+            </p>
+            <p>
+              If you accept, Google Analytics and Google Ads set their cookies, and OpenAI&apos;s ChatGPT ads pixel
+              sets two of its own: <code>__oppref</code> (30 days), the identifier of the ChatGPT ad you clicked, if
+              you came from one, and <code>__obref</code> (1 year), a random reference for your browser so OpenAI can
+              connect a visit from one of our ads to an enquiry made later. None of these is set if you choose
+              Essential only or don&apos;t answer the banner. If you accepted before 1 October 2026, when this policy
+              first named OpenAI, OpenAI&apos;s pixel stays off for you.
             </p>
           </section>
 

@@ -3,6 +3,7 @@ import { consentFrom, type ConsentInput } from "@/lib/ad-consent";
 import { getProductByHandle } from "@/lib/shopify";
 import type { AttributionRecord } from "@/lib/leads";
 import { foundUsDetailFrom, foundUsFrom } from "@/lib/found-us";
+import { browserContext } from "@/lib/server-conversions";
 
 // POST routes are inherently dynamic but explicit is better, without
 // this, Next.js may try static optimization on a future major.
@@ -197,7 +198,21 @@ export async function POST(request: Request) {
     if (consent) {
       params.append("metadata[ad_consent]", consent.decision);
       params.append("metadata[ad_consent_at]", consent.at);
+      /* Which notice it was given under: OpenAI is told about the sale only
+         for an Accept that named it (src/lib/consent-version.ts). */
+      params.append("metadata[ad_consent_v]", String(consent.v));
     }
+    /*
+     * The browser, as this request shows it, for the webhook, which has none.
+     * browser_tags_ran: Google's Ads tag runs here (_gcl_au), so the success
+     * page records the sale and the webhook's own Ads pixel stays quiet (see
+     * fireServerConversion). oai_oppref / oai_obref: the ChatGPT ads pixel's
+     * cookies, for the webhook's copy of the sale to OpenAI.
+     */
+    const browser = browserContext(request);
+    params.append("metadata[browser_tags_ran]", browser.browserTagsRan ? "1" : "0");
+    if (browser.oppref) params.append("metadata[oai_oppref]", browser.oppref.slice(0, 500));
+    if (browser.obref) params.append("metadata[oai_obref]", browser.obref);
     // GA4 client + session id (from the _ga cookies, sent by the browser at
     // checkout) so the server-side purchase event attributes to the real
     // session/channel instead of (not set)/Unassigned.

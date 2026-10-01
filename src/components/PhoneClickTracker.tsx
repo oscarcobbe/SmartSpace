@@ -1,48 +1,50 @@
 "use client";
 
 /**
- * Sitewide tel: link click tracker, DUAL CHANNEL (client + server).
+ * Sitewide tel: link click tracker.
  *
  * Why this exists: paid users frequently click-to-call instead of
- * submitting forms. Without this, every phone-call conversion that
- * starts with an ad click + a tel: tap on the site is invisible to
- * Google Ads.
+ * submitting forms, and a tap is the only trace most of them leave.
  *
- * As of 2026-05-18, this component fires THREE pings on every tel: tap:
+ * ── A TAP IS NOT A CALL ──────────────────────────────────────────
  *
- *   1. gtag('event', 'conversion', …) → client-side Google Ads pixel.
- *      Works perfectly when the user has accepted cookies (ad_storage
- *      granted) and has no blocker. Misses ~20-40% of taps otherwise.
+ * Until now every tap was sent as the "SS - Call (01 513 0424)" conversion,
+ * worth EUR 30, from the browser and again from the server, and to GA4 as a
+ * generate_lead. That action is the one Google's forwarding number feeds with
+ * calls that actually connected, so a tap that never became a call was counted
+ * beside the calls that did, at the same value, and the bidding learnt from
+ * both as if they were equal. GA4's lead count took every tap as a lead.
  *
- *   2. gtag('event', 'generate_lead', …) → client-side GA4 event so
- *      the tap also lands in GA4's lead-gen funnel.
+ * Now a tap goes to its own secondary action, "SS - Phone tap" (EUR 10), which
+ * is reported but not bid on, from the browser only; GA4 gets a plain
+ * phone_call_click with no value; and ChatGPT ads gets a custom event, not a
+ * lead. The call action is untouched: layout.tsx still configures Google's
+ * forwarding number with NEXT_PUBLIC_GADS_CALL_LABEL, and real calls are
+ * counted there.
  *
- *   3. navigator.sendBeacon('/api/track/phone-click', …) → server-side
- *      backstop. POSTs the stored attribution (gclid + utm) and the
- *      cookie banner's answer to our own API, which logs the tap and,
- *      only for a visitor who accepted ad cookies, fires GA4 Measurement
- *      Protocol and the Google Ads conversion pixel from the server.
- *      Bypasses adblockers (same-origin) and survives the immediate
- *      `location = tel:…` navigation (sendBeacon is keep-alive).
+ * The tap still reaches /api/track/phone-click by sendBeacon, which logs it
+ * to the leads sheet so Nigel sees taps in /admin/leads. That route no longer
+ * sends anything to Google.
  *
- * A visitor who refused or never answered gets the browser's cookieless
- * Consent Mode ping and nothing from the server, which is what /privacy
- * says. Google Ads dedupes the gtag-side fire and the server-side pixel
- * by `transaction_id`, so we don't double-count.
+ * A visitor who refused or never answered the banner gets the browser's
+ * cookieless Consent Mode ping, which is what /privacy says.
  *
  * Mount once in the root layout. Listens for clicks on any anchor
  * with an href starting `tel:` anywhere in the document.
  */
 
 import { useEffect } from "react";
-import { consentRecord, getAttribution } from "@/lib/attribution";
+import { getAttribution } from "@/lib/attribution";
+import { oaiPhoneTap } from "@/lib/chatgpt-pixel";
 
 // .trim() guards against a trailing newline in the Vercel env var,
 // a copy-paste artefact that previously made Google Ads reject every
 // phone-click conversion as an unknown label. See matching trim in
 // src/app/layout.tsx for the full story.
-const GADS_CALL_LABEL = process.env.NEXT_PUBLIC_GADS_CALL_LABEL?.trim();
-const GADS_ACCOUNT = "AW-17978501655";
+const GADS_PHONE_TAP_SEND_TO =
+  process.env.NEXT_PUBLIC_GADS_PHONE_TAP_SEND_TO?.trim() ||
+  "AW-17978501655/nA6TCOaaoYwdEJfU6PxC";
+const PHONE_TAP_VALUE = 10;
 const PHONE = "+35315130424";
 
 export default function PhoneClickTracker() {
@@ -60,39 +62,26 @@ export default function PhoneClickTracker() {
       const page = window.location.pathname + window.location.search;
       const attribution = getAttribution() ?? undefined;
 
-      // ── CHANNEL 3: server-side fire via /api/track/phone-click ──
+      // ── The sheet log, via /api/track/phone-click ──
       // Fire this FIRST and synchronously. sendBeacon is fire-and-forget
       // but the browser guarantees the request reaches the server even
       // if the page is unloading (`tel:` link follow does count as an
       // unload on iOS). If sendBeacon isn't available (e.g. very old
       // browsers), fall back to fetch with keepalive, same guarantee.
       /*
-       * One id for both fires, minted here.
-       *
-       * The server generated its own UUID and the client fire carried none,
-       * so Google Ads saw two conversions on the same action and could only
-       * fall back to cookie dedupe, which does not work for a visitor who
-       * blocks cookies or taps from a fresh session. The route's own comment
-       * says so: "The client-side PhoneClickTracker.tsx does NOT currently
-       * pass a transaction_id, TODO add one if we see double-counting in
-       * Ads." Five of the last seven recorded conversions were phone calls,
-       * so this is the number most likely to have been distorted.
-       *
-       * Minted on the client rather than returned by the server, because a
-       * tel: tap unloads the page on iOS and the client fire cannot wait for
-       * a response that may never arrive.
+       * One id per tap, minted here, for the tap conversion and the ChatGPT
+       * ads event. Nothing on the server fires for a tap any more, so there is
+       * nothing to share it with there; it still has to be unique, because a
+       * conversion without one lets Google fold two taps into one.
        *
        * crypto.randomUUID is available in every browser that supports
-       * sendBeacon; the fallback keeps a tap from being lost on an old one,
-       * where the previous no-id behaviour is what happens anyway.
+       * sendBeacon; the fallback keeps a tap from being lost on an old one.
        */
       const conversionId =
         typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
           ? crypto.randomUUID()
           : `pc-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-      /* The banner answer travels with the tap. The server fires to Google
-         only on a recorded yes, the same rule as a form or a checkout. */
-      const body = JSON.stringify({ phone: PHONE, page, attribution, conversionId, consent: consentRecord() });
+      const body = JSON.stringify({ phone: PHONE, page, attribution });
       try {
         if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
           // sendBeacon uses Content-Type: text/plain by default. Our API
@@ -117,50 +106,36 @@ export default function PhoneClickTracker() {
             console.warn("[phone-tracker] fetch fallback failed:", err);
           });
         }
-        console.log("[phone-tracker] server-side fire dispatched for", href);
+        console.log("[phone-tracker] sheet log dispatched for", href);
       } catch (err) {
         // Never let a tracking failure intercept the call itself.
-        console.warn("[phone-tracker] server fire failed:", err);
+        console.warn("[phone-tracker] sheet log failed:", err);
       }
 
-      // ── CHANNELS 1 + 2: client-side gtag fires (Google Ads + GA4) ──
-      // These ride alongside the server fire. If the user accepted
-      // cookies and isn't running a blocker, gtag wins on speed and
-      // includes the Google-managed _gcl_aw cookie which makes the
-      // Enhanced Conversions match richer than the server-side gclid
-      // alone. Google Ads dedupes against the server fire by
-      // transaction_id (the server fire generates one; client fire
-      // currently doesn't, Google falls back to its own cookie-based
-      // dedupe, which is good enough).
+      // ChatGPT ads: a custom event, not a lead. Nothing until that pixel
+      // exists and the visitor has accepted.
+      oaiPhoneTap(conversionId);
+
+      // ── Google Ads (the tap action) and GA4 ──
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const w = window as any;
       if (typeof w.gtag !== "function") {
-        console.warn("[phone-tracker] gtag not loaded, client fire skipped (server fire still went)");
+        console.warn("[phone-tracker] gtag not loaded, tap not sent to Google");
         return;
       }
 
-      if (GADS_CALL_LABEL) {
-        w.gtag("event", "conversion", {
-          send_to: `${GADS_ACCOUNT}/${GADS_CALL_LABEL}`,
-          value: 30,
-          currency: "EUR",
-          transaction_id: conversionId,
-          transport_type: "beacon",
-          event_callback: () => console.log("[gtag] phone-call conversion ack"),
-        });
-      }
-
-      // GA4 recommended event so the call shows up in GA4's lead-gen
-      // funnel even if the Google Ads side isn't configured yet.
-      w.gtag("event", "generate_lead", {
+      w.gtag("event", "conversion", {
+        send_to: GADS_PHONE_TAP_SEND_TO,
+        value: PHONE_TAP_VALUE,
         currency: "EUR",
-        value: 30,
         transaction_id: conversionId,
-        lead_source: "phone_click",
-        phone_number: PHONE,
         transport_type: "beacon",
+        event_callback: () => console.log("[gtag] phone-tap conversion ack"),
       });
-      console.log("[gtag] phone click tracked client-side:", href);
+
+      // A plain event, no value: GA4's lead count is for enquiries.
+      w.gtag("event", "phone_call_click", { transport_type: "beacon" });
+      console.log("[gtag] phone tap tracked client-side:", href);
     }
 
     document.addEventListener("click", onClick, { capture: true });
