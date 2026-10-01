@@ -11,6 +11,8 @@
  * The password is sent server to server and never reaches the browser, which
  * is why this is only ever called from a server component.
  */
+import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import type { Lead, LeadsPayload, LeadsResult, QA } from "./leads";
 import type { Enquiry } from "./how-they-came";
 
@@ -315,3 +317,31 @@ export function sclEnquiries(rows: SheetRow[]): Enquiry[] {
   }
   return out;
 }
+
+/**
+ * The rows as enquiries, read once for everything on Marketing that needs
+ * them: the enquiry counts and the trail behind each payment.
+ *
+ * The sheet takes most of a minute to wake (SHEET_TIMEOUT_MS), and production
+ * reaches it through smartcareliving.ie's dashboard route, a second hop. Read
+ * separately by each panel, a cold morning put two of those waits side by
+ * side inside one page's sixty seconds. React's cache shares one read within
+ * a render, and the sixty-second cache shares it between renders. Tagged as
+ * the leads are, so Refresh clears it.
+ */
+export const sclEnquiriesShared = cache(async (): Promise<{ ok: true; rows: Enquiry[] } | { ok: false; reason: string }> => {
+  try {
+    const rows = await unstable_cache(
+      async () => {
+        const r = await readSclRows();
+        if (!r.ok) throw new Error(r.reason);
+        return sclEnquiries(r.rows);
+      },
+      ["crm-scl-enquiries", "v1"],
+      { revalidate: 60, tags: ["crm-leads", "crm-leads:smartcareliving"] },
+    )();
+    return { ok: true, rows };
+  } catch (err) {
+    return { ok: false, reason: err instanceof Error ? err.message : String(err) };
+  }
+});

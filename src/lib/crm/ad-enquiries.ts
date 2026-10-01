@@ -7,12 +7,13 @@
  * Smart Space 4 web enquiries from ads and 4 calls, SmartCare Living 5 and
  * none, the same figures on both.
  */
+import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import type { Site } from "./db";
 import { countEnquiries, type CountedEnquiry } from "./enquiry-count";
 import { campaignSources, iso, num, search } from "./google-ads";
 import { readEnquiries } from "./how-they-came";
-import { readSclRows, sclEnquiries } from "./leads-scl";
+import { sclEnquiriesShared } from "./leads-scl";
 
 export interface AdEnquiries {
   /** Every enquiry counted, from an ad or not, oldest first. */
@@ -70,9 +71,7 @@ async function read(site: Site): Promise<AdEnquiries> {
   const to = iso(now);
 
   const [rows, callsByDay] = await Promise.all([
-    site === "smartcareliving"
-      ? readSclRows().then((r) => (r.ok ? { ok: true as const, rows: sclEnquiries(r.rows) } : r))
-      : readEnquiries(),
+    site === "smartcareliving" ? sclEnquiriesShared() : readEnquiries(),
     callsFromAds(site, from, to),
   ]);
   if (!rows.ok) throw new Error(rows.reason);
@@ -82,7 +81,10 @@ async function read(site: Site): Promise<AdEnquiries> {
 
 export const AD_ENQUIRIES_TAG = "crm-ad-enquiries";
 
-export async function fetchAdEnquiries(site: Site): Promise<AdEnquiriesResult> {
+/* One read per render as well as per minute: Marketing's panels and its
+   keyword table ask at the same moment, and the minute's cache only holds an
+   answer once the first read has finished. */
+export const fetchAdEnquiries = cache(async (site: Site): Promise<AdEnquiriesResult> => {
   try {
     const data = await unstable_cache(
       async () => read(site),
@@ -94,7 +96,7 @@ export async function fetchAdEnquiries(site: Site): Promise<AdEnquiriesResult> {
     const raw = err instanceof Error ? err.message : String(err);
     return { ok: false, reason: /abort|timeout/i.test(raw) ? "The enquiry record or Google took too long to answer. It is usually back on the next load." : raw };
   }
-}
+});
 
 /** Enquiries from each channel in a bucket, keyed as the caller keys its buckets. */
 export interface EnquiryBucket {

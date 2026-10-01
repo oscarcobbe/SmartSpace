@@ -63,7 +63,7 @@ import { unstable_cache } from "next/cache";
 import { fetchPeriods } from "./ads-periods";
 import type { Site } from "./db";
 import { EnquiryIndex, dublinStamp, gclidOf, readEnquiries, type Enquiry, type Payer } from "./how-they-came";
-import { readSclRows, sclEnquiries } from "./leads-scl";
+import { sclEnquiriesShared } from "./leads-scl";
 import { businessOf, nameEach, type Naming, type NamingInvoice } from "./payment-names";
 import { cameOf, roasMonths, type Payment, type RoasMonth } from "./roas-months";
 import { paymentLinkRefs } from "./snapshot";
@@ -149,8 +149,8 @@ async function all<T extends { id: string }>(key: string, path: string): Promise
 /** The business's own record of who got in touch, and how they arrived. Null when unreadable. */
 async function trailOf(site: Site): Promise<Enquiry[] | null> {
   if (site === "smartcareliving") {
-    const r = await readSclRows();
-    return r.ok ? sclEnquiries(r.rows) : null;
+    const r = await sclEnquiriesShared();
+    return r.ok ? r.rows : null;
   }
   const r = await readEnquiries();
   return r.ok ? r.rows : null;
