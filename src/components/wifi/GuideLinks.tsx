@@ -5,6 +5,8 @@ export const NETWORK_GUIDES = [
   { href: "/blog/broadband-speed-test-ireland-line-or-wifi", label: "Is it the line or the Wi-Fi?" },
   { href: "/blog/how-to-test-wifi-speed-room-by-room", label: "Testing room by room" },
   { href: "/blog/wifi-extender-mesh-or-powerline-ireland", label: "Extender, mesh or powerline" },
+  { href: "/blog/mesh-wifi-explained", label: "Mesh explained" },
+  { href: "/blog/powerline-adapters-ireland", label: "Powerline in Irish houses" },
 ];
 
 /* No underline until hover or focus, the way Oscar asked for links to the

@@ -16,7 +16,7 @@ export const BLOG_POSTS: BlogPost[] = [
       "An eir, Virgin Media or Vodafone speed test tells you about your broadband line. A test in the room that struggles tells you about your Wi-Fi. How to run both, read the numbers, and know who to call.",
     datePublished: "2026-09-30",
     dateModified: "2026-09-30",
-    readingTime: "4 min read",
+    readingTime: "5 min read",
     category: "Home Network",
   },
   {
@@ -24,6 +24,26 @@ export const BLOG_POSTS: BlogPost[] = [
     title: "How to Test Your Wi-Fi Speed Properly, Room by Room",
     description:
       "One Wi-Fi speed test beside the router tells you very little. Where to test instead, what download, upload and ping mean for your TV, calls and cameras, and when the results point to a fix.",
+    datePublished: "2026-09-30",
+    dateModified: "2026-09-30",
+    readingTime: "4 min read",
+    category: "Home Network",
+  },
+  {
+    slug: "mesh-wifi-explained",
+    title: "Mesh Wi-Fi Explained: What It Fixes, and What It Can't",
+    description:
+      "A mesh system puts one Wi-Fi network in every room, if its units can talk to each other. What mesh is, why the link between the units decides everything, where the second unit should go, and when mesh is the wrong fix.",
+    datePublished: "2026-09-30",
+    dateModified: "2026-09-30",
+    readingTime: "4 min read",
+    category: "Home Network",
+  },
+  {
+    slug: "powerline-adapters-ireland",
+    title: "Do Powerline Adapters Work? What Decides It in an Irish House",
+    description:
+      "Powerline adapters carry your broadband over the electrical wiring. Why they fly in one house and crawl in the next: the number on the box, extension leads, appliances, the route through your fuse board, and how to test it.",
     datePublished: "2026-09-30",
     dateModified: "2026-09-30",
     readingTime: "4 min read",

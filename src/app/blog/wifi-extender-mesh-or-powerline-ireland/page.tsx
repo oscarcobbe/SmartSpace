@@ -106,7 +106,7 @@ export default function Post() {
           Most mesh units talk to each other over Wi-Fi, though, so the link between them faces the same walls and floors
           as the router did. A unit upstairs still needs a decent signal from the one below it. Where the units can be
           joined by a network cable, or by powerline, the link between them stops depending on the walls, and mesh works
-          far better.
+          far better. Our <Link href="/blog/mesh-wifi-explained">guide to mesh Wi-Fi</Link> goes further.
         </p>
 
         <h2 id="powerline">Powerline adapters</h2>
@@ -118,7 +118,8 @@ export default function Post() {
         <p>
           How fast powerline runs depends on the wiring: its age, how the circuits are laid out, and what else is plugged
           in along the way. The same adapters can do very well in one house and poorly in the next. That is the one real
-          catch with powerline, and the reason to measure it in your own house before paying for it.
+          catch with powerline, and the reason to measure it in your own house before paying for it. Our{" "}
+          <Link href="/blog/powerline-adapters-ireland">guide to powerline in Irish houses</Link> covers what decides it.
         </p>
 
         <h2 id="access-points">Access points on a powerline link</h2>
