@@ -68,6 +68,19 @@
  * rather than the first, so a bare landing page from then proves nothing and
  * reads as unknown. A record with an outside referrer is still good: an
  * internal second page would have smart-space.ie as its referrer.
+ *
+ * ── AND THE RETURN VISITS AFTER IT ───────────────────────────────
+ *
+ * The fix stopped records being lost; it did not bring back the ones already
+ * lost. Somebody who clicked an ad inside the gap and came back afterwards by
+ * typing the address left a record saying "landed here, no referrer", which
+ * this read as a direct first visit, not an ad. On 25 September 2026 Google
+ * recorded a contact form and a consultation from an ad, the site's record of
+ * the same two said exactly that, and the customer's payment on the 30th was
+ * counted as not from an ad. So a bare landing stays unknown after the gap
+ * too, until the site began reading Google's own click cookie (_gcl_aw,
+ * src/lib/attribution.ts) on 1 October 2026: from then on a return visit
+ * that had an ad click carries it, and a bare landing is direct again.
  */
 
 /** "ad" is a Google ad; see WHY A CHATGPT AD IS ITS OWN ANSWER above. */
@@ -121,7 +134,9 @@ const PAID_MEDIUM = /^(cpc|ppc|paid|paidsearch|paid_search)$/i;
    of 21 September (Irish afternoon); the whole of that day is treated as
    inside the gap rather than guessing the minute it went live. */
 const GAP_FROM = "2026-09-06";
-const GAP_TO = "2026-09-22";
+/* The gap itself ended on 2026-09-22; a bare landing stays unreadable until
+   the first full day the site sent Google's click cookie with a return visit. */
+const RETURNS_READ_FROM = "2026-10-02";
 
 /* The site's own address: a referrer from here is the second page of a visit,
    not where the visitor came from. */
@@ -144,8 +159,10 @@ export function readVisit(v: Visit, site: "smart-space" | "smartcareliving" = "s
   if ((v.utmSource ?? "").trim()) return "not-ad";
   const ref = hostOf(v.referrer);
   if (ref && !OWN_HOST[site]!.test(ref)) return "not-ad";
-  const inTheGap = v.at >= GAP_FROM && v.at < GAP_TO;
-  if ((v.landingPage ?? "").trim() && !inTheGap) return "not-ad";
+  /* Inside the gap, or after it before return visits carried Google's click:
+     see THE GAP and AND THE RETURN VISITS AFTER IT. */
+  const unreadable = v.at >= GAP_FROM && v.at < RETURNS_READ_FROM;
+  if ((v.landingPage ?? "").trim() && !unreadable) return "not-ad";
   return "unknown";
 }
 

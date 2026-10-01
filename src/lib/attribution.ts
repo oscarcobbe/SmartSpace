@@ -28,6 +28,12 @@ export interface Attribution {
   utmCampaign?: string;
   utmContent?: string;
   utmTerm?: string;
+  /**
+   * Where the gclid came from, when it was not this record's own landing
+   * URL: "google-cookie" is Google's own record of the last ad click on this
+   * browser (getAttribution, googleClickCookie).
+   */
+  gclidFrom?: "google-cookie";
   /** Unix ms when first captured */
   capturedAt: number;
   /** Unix ms when this record expires */
@@ -298,8 +304,55 @@ export function flushPendingAttribution(): void {
   }
 }
 
-/** Retrieve the stored attribution record, or null if missing/expired. */
+/**
+ * Google's own record of the last ad click on this browser.
+ *
+ * Google's tag keeps the click in a first-party cookie, _gcl_aw =
+ * "GCL.<seconds>.<gclid>", for ninety days, and only once ad storage is
+ * granted. Seen on smart-space.ie on 1 October 2026: an ad landing set it,
+ * and it was still there on the next page.
+ *
+ * It matters for a visitor who comes back. Our own record keeps the first
+ * visit and is replaced only by a new ad click, so a lost record and a direct
+ * return look like a visitor who never saw an ad. That is what happened on 25
+ * September 2026: Google recorded a contact form and a consultation from an
+ * ad, and the record the site sent with them said "landed on /services/eufy,
+ * no referrer", because the first visit fell in the fortnight the consent
+ * gate threw records away. The customer paid four days later and the CRM
+ * counted it as not from an ad.
+ *
+ * Older than ninety days, unreadable, or absent: undefined.
+ */
+export function googleClickCookie(now = Date.now()): string | undefined {
+  if (typeof document === "undefined") return undefined;
+  const m = /(?:^|;\s*)_gcl_aw=GCL\.(\d+)\.([A-Za-z0-9_-]{8,200})/.exec(document.cookie || "");
+  if (!m) return undefined;
+  const at = Number(m[1]) * 1000;
+  if (!Number.isFinite(at) || now - at > TTL_MS) return undefined;
+  return m[2];
+}
+
+/**
+ * The record a form or checkout sends, with Google's click filled in when the
+ * record has none of its own.
+ *
+ * Only under consent, which is the only time Google writes the cookie anyway,
+ * and only for a record carrying no ad click of either kind: a ChatGPT click
+ * on the record is left as it is rather than handed to Google by an older
+ * cookie.
+ */
 export function getAttribution(): Attribution | null {
+  const record = readAttribution();
+  if (!consentGranted()) return record;
+  if (record?.gclid || record?.oppref) return record;
+  const gclid = googleClickCookie();
+  if (!gclid) return record;
+  const now = Date.now();
+  return { ...(record ?? { capturedAt: now, expiresAt: now + TTL_MS }), gclid, gclidFrom: "google-cookie" };
+}
+
+/** Retrieve the stored attribution record, or null if missing/expired. */
+function readAttribution(): Attribution | null {
   if (typeof window === "undefined") return null;
   try {
     /*

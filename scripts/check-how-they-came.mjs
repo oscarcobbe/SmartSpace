@@ -9,6 +9,8 @@
  *   a gbraid landing with no gclid is still an ad click (iPhone traffic);
  *   a bare landing page during the consent gap proves nothing;
  *   the same bare landing page before the gap is a direct first visit;
+ *   after the gap, until return visits carried Google's click cookie, it is
+ *   unknown, because it may be a return visit whose ad click the gap lost;
  *   an outside referrer is good evidence even inside the gap;
  *   two different people with one name are never joined;
  *   a ChatGPT ad (?oppref=) is ChatGPT's, never Google's, and an ordinary
@@ -54,8 +56,12 @@ expect(readVisit(V("2026-09-11 14:39", { landingPage: "/services/camera" })),
   "unknown", "a bare landing page inside the consent gap may be the second page of an ad visit");
 expect(readVisit(V("2026-09-21 23:59", { landingPage: "/" })),
   "unknown", "the day the fix went out is still inside the gap");
-expect(readVisit(V("2026-09-22 09:00", { landingPage: "/" })),
-  "not-ad", "after the fix a direct first visit is readable again");
+expect(readVisit(V("2026-09-25 11:40", { landingPage: "/services/eufy" })),
+  "unknown", "after the fix, a bare landing may be a return visit whose ad click the gap lost (25 September 2026: Google credited it to an ad)");
+expect(readVisit(V("2026-10-01 23:59", { landingPage: "/" })),
+  "unknown", "until the site read Google's click cookie, a bare landing still proves nothing");
+expect(readVisit(V("2026-10-02 09:00", { landingPage: "/" })),
+  "not-ad", "once return visits carry Google's click, a bare landing is a direct visit again");
 expect(readVisit(V("2026-07-03 10:00", { landingPage: "" })),
   "unknown", "no landing page at all is unknown, never not-an-ad");
 expect(readVisit(V("2026-07-03 10:00", { landingPage: "/services", referrer: "https://smart-space.ie/services" })),
