@@ -18,6 +18,10 @@ export const BLOG_POSTS: BlogPost[] = [
     title: "Wi-Fi in a Garden Office: Six Ways to Get a Good Connection",
     description:
       "Wi-Fi rarely reaches a garden office or garden room on its own. Why the signal drops, the six ways to get a connection down the garden, from a mesh unit to a cable in a duct, what each involves, and how to keep video calls steady.",
+    slug: "working-from-home-wifi-ireland",
+    title: "Working From Home Wi-Fi: Why Teams and Zoom Calls Keep Dropping",
+    description:
+      "Video calls depend on upload and a steady connection more than on download speed. What Teams and Zoom actually need, why a busy house breaks calls up, and the fixes that work in an Irish home office, from a cable to the desk to a better plan.",
     datePublished: "2026-10-01",
     dateModified: "2026-10-01",
     readingTime: "7 min read",
