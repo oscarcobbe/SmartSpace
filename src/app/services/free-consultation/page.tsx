@@ -71,7 +71,7 @@ export default function FreeConsultationPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const formValid = name.trim() && email.trim() && phone.trim() && address.trim() && bookingSelection;
+  const formValid = name.trim() && email.trim() && phone.trim() && address.trim() && foundUs && bookingSelection;
 
   const handleSubmit = async () => {
     if (!formValid || !bookingSelection) return;

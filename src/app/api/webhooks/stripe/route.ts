@@ -11,7 +11,7 @@ import { sendSms } from "@/lib/sms";
 import { formatEuro } from "@/lib/format";
 import { sendSiteAlert } from "@/lib/site-alerts";
 import { alertTo, monitorBcc } from "@/lib/business-constants";
-import { foundUsDetailFrom, foundUsFrom, notesWithFoundUs } from "@/lib/found-us";
+import { foundUsDetailFrom, foundUsFrom, foundUsLine, notesWithFoundUs } from "@/lib/found-us";
 
 // EXPLICIT runtime + dynamic flags. The webhook calls req.text() to get
 // the raw body for Stripe signature verification (which uses Node's
@@ -64,6 +64,8 @@ async function sendOrderNotification(params: {
   installationAddress?: string;
   sessionId: string;
   calendlyStatus: "created" | "failed" | "skipped";
+  foundUs?: string;
+  foundUsDetail?: string;
 }) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM_EMAIL;
@@ -110,6 +112,7 @@ async function sendOrderNotification(params: {
         `Email: ${params.email}`,
         `Phone: ${params.phone || "(none)"}`,
         `Address: ${params.installationAddress || "(none)"}`,
+        `Found us: ${foundUsLine(params.foundUs, params.foundUsDetail)}`,
         "",
         `Product: ${params.productName}`,
         `Amount: ${formattedAmount}`,
@@ -127,6 +130,7 @@ async function sendOrderNotification(params: {
         <p><strong>Email:</strong> ${escapeHtml(params.email)}</p>
         <p><strong>Phone:</strong> ${escapeHtml(params.phone || "(none)")}</p>
         <p><strong>Address:</strong> ${escapeHtml(params.installationAddress || "(none)")}</p>
+        <p><strong>Found us:</strong> ${escapeHtml(foundUsLine(params.foundUs, params.foundUsDetail))}</p>
         <hr />
         <p><strong>Product:</strong> ${escapeHtml(params.productName)}</p>
         <p><strong>Amount:</strong> ${escapeHtml(formattedAmount)}</p>
@@ -754,6 +758,8 @@ export async function POST(req: NextRequest) {
       installationAddress,
       sessionId,
       calendlyStatus,
+      foundUs,
+      foundUsDetail,
     });
 
     // Mirror to SmartCRM (never blocks the webhook). Previously absent on

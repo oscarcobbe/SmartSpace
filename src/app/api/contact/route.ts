@@ -8,7 +8,7 @@ import { chatGptAdOf, sendToCrm } from "@/lib/crm";
 import { sendSiteAlert } from "@/lib/site-alerts";
 import { monitorBcc } from "@/lib/business-constants";
 import { afterResponse, AFTER_CEILING, type AfterResult } from "@/lib/after-response";
-import { foundUsDetailFrom, foundUsFrom, notesWithFoundUs } from "@/lib/found-us";
+import { foundUsDetailFrom, foundUsFrom, foundUsLine, notesWithFoundUs } from "@/lib/found-us";
 import { enquiryReceived, SPECIALISTS } from "@/lib/email/customer";
 
 
@@ -157,6 +157,7 @@ export async function POST(request: Request) {
         <p><strong>Email:</strong> ${escapeHtml(email.trim())}</p>
         <p><strong>Phone:</strong> ${escapeHtml(phone?.trim() || "(none)")}</p>
         <p><strong>Topic:</strong> ${escapeHtml(subjectLabel)}</p>
+        <p><strong>Found us:</strong> ${escapeHtml(foundUsLine(foundUs, foundUsDetail))}</p>
         <hr />
         <pre style="font-family:system-ui,sans-serif;white-space:pre-wrap;">${escapeHtml(message.trim())}</pre>
       `,

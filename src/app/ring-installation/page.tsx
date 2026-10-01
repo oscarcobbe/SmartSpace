@@ -402,7 +402,7 @@ export default function RingInstallationPage() {
                     image={productImage}
                     size="lg"
                     className="w-full"
-                    disabled={!bookingSelection}
+                    disabled={!bookingSelection || !foundUs}
                     disabledText="Select an Installation Date"
                     bookingDate={bookingSelection?.date}
                     bookingSlot={bookingSelection?.timeSlot}

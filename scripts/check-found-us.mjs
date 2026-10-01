@@ -2,8 +2,9 @@
 /**
  * "How did you hear about us?" reaches every place the weekly report reads it.
  *
- * Oscar chose one optional select on the site's lead forms and checkouts on
- * 27 September 2026, so that where an enquiry came from can be counted
+ * Oscar chose one select on the site's lead forms and checkouts on 27
+ * September 2026, optional then and required since 1 October (the servers
+ * still take a lead without it), so that where an enquiry came from can be counted
  * without a cookie (src/lib/found-us.ts). On 30 September it became eight
  * answers with no "Google ad" among them, and an optional box underneath for
  * the visitor's own words. The FourWinds weekly report reads the answer from
@@ -14,7 +15,9 @@
  *
  * This fails the build when:
  *   the select stops offering exactly the eight answers, in order, worded as
- *     agreed, or stops being optional, or is too small to use on a phone; or
+ *     agreed, or stops being required (or a form's own submit, the cart's
+ *     and the booking pages', stops refusing to go without it), or is too
+ *     small to use on a phone; or
  *     the box under it goes missing, becomes required, loses its limit, or
  *     its hint names one of the answers;
  *   an answer stops being one of the CRM's FOUND_US keys, or a retired one
@@ -74,7 +77,7 @@ const KEYS = CONTRACT.map(([k]) => k);
    server still takes them and the feed still reads them. */
 const RETIRED = ["google_ads", "organisation"];
 const LABEL = "How did you hear about us?";
-const BLANK = "Choose one (optional)";
+const BLANK = "Choose one";
 const DETAIL_LABEL = "Tell us more (optional)";
 const DETAIL_MAX = 200;
 const ENDPOINTS = new Set(["/api/contact", "/api/checkout", "/api/checkout/free"]);
@@ -154,7 +157,8 @@ for (const rel of sources) {
         const words = cls && ts.isStringLiteral(cls) ? cls.text.split(/\s+/) : [];
         ok(words.includes("text-base"), `${where(sf, n)}: the select needs text-base (16px), or iOS Safari zooms the page when it is focused`);
         ok(words.includes("min-h-11"), `${where(sf, n)}: the select needs min-h-11, the 44px touch floor`);
-        ok(!attrOf(n, "required"), `${where(sf, n)}: the field is optional and must never be required`);
+        /* Required inside FoundUsField itself; no form passes it a way out. */
+        ok(!attrOf(n, "required"), `${where(sf, n)}: required is set inside FoundUsField; a form must not pass its own`);
         /* A form that keeps the answer in state sends the words from state
            too, so the box has to write to it. */
         if (attrOf(n, "value")) {
@@ -356,6 +360,25 @@ try {
   /* ── Part 4: the list and the field ───────────────────────────────────── */
   const foundUs = await load("src/lib/found-us.ts");
   const { FOUND_US } = await load("src/lib/crm/labels.ts");
+
+  /* Nigel's lead emails say the answer in words (from 1 Oct 2026: two leads
+     had answered and nobody could see it), and the forms that submit by
+     their own button refuse to go without an answer. */
+  eq(foundUs.foundUsLine("google_search", ""), "Google search", "the email line names the answer");
+  eq(foundUs.foundUsLine("other", "My neighbour"), 'Other: "My neighbour"', "the email line adds the visitor's words");
+  eq(foundUs.foundUsLine("", ""), "Not answered", "the email line says when there is no answer");
+  for (const [rel, what] of [["src/app/api/contact/route.ts", "the contact email"], ["src/app/api/checkout/free/route.ts", "the free consultation email"],
+    ["src/app/api/webhooks/stripe/route.ts", "the paid order email"]]) {
+    const src = readFileSync(join(ROOT, rel), "utf8");
+    ok(/Found us:[^\n]*foundUsLine\(/.test(src), `${what} to Nigel has no "Found us" line (${rel})`);
+  }
+  const gates = [
+    ["src/components/CartDrawer.tsx", /if \(!foundUs\) \{\s*setCheckoutError\(/, "the cart refuses checkout without an answer"],
+    ["src/app/services/free-consultation/page.tsx", /const formValid = [^;]*\bfoundUs\b/, "the free consultation waits for an answer"],
+    ["src/app/services/installation-only/page.tsx", /disabled=\{!bookingSelection \|\| !foundUs\}/, "installation-only waits for an answer"],
+    ["src/app/ring-installation/page.tsx", /disabled=\{!bookingSelection \|\| !foundUs\}/, "ring installation waits for an answer"],
+  ];
+  for (const [rel, re, what] of gates) ok(re.test(readFileSync(join(ROOT, rel), "utf8")), `${what}: not so in ${rel}`);
   eq(foundUs.FOUND_US_OPTIONS.map((o) => [o.value, o.label]), CONTRACT, "the select offers exactly the eight agreed answers, in order, worded as agreed");
   for (const k of [...KEYS, ...RETIRED]) ok(k in FOUND_US, `"${k}" is not a key of the CRM's FOUND_US (src/lib/crm/labels.ts)`);
   eq([...foundUs.ACCEPTED_KEYS].sort(), Object.keys(FOUND_US).filter((k) => k !== "unknown" && k !== "website").sort(),
@@ -391,13 +414,15 @@ try {
      the select, so a long answer, once chosen, ends in an ellipsis rather
      than being cut mid-letter against the arrow. */
   ok(/<select id="f" name="found_us"[^>]*class="[^"]*\btruncate\b/.test(html), "the select ends a long answer in an ellipsis: it needs truncate");
-  ok(!/required|aria-required|\*/.test(html), "the field is optional: no required, no asterisk");
+  ok(/<select id="f" name="found_us"[^>]*\brequired=""/.test(html) && /<select [^>]*aria-required="true"/.test(html), "the select is required");
+  ok(!new RegExp(`<label for="f"[^>]*>[^<]*\\*`).test(html), "no asterisk: this site marks no required field with one");
   const options = [...html.matchAll(/<option value="([^"]*)"[^>]*>([^<]*)<\/option>/g)].map((m) => [m[1], m[2].replace(/&#x27;|&#39;/g, "'")]);
   eq(options, [["", BLANK], ...CONTRACT], "the select starts blank and lists the eight answers");
   ok(new RegExp(`<label for="f_detail"[^>]*>${esc(DETAIL_LABEL)}</label>`).test(html), `the box is labelled "${DETAIL_LABEL}" and its label points to it`);
   const box = /<input [^>]*>/.exec(html)?.[0] ?? "";
   ok(/\bid="f_detail"/.test(box) && /\bname="found_us_detail"/.test(box) && /\btype="text"/.test(box), `the box is a text input named found_us_detail: ${box || "(none)"}`);
   ok(new RegExp(`\\bmaxlength="${DETAIL_MAX}"`, "i").test(box), `the box stops at ${DETAIL_MAX} characters, as the server does: ${box || "(none)"}`);
+  ok(!/\brequired/.test(box), `the box for their own words stays optional: ${box || "(none)"}`);
   /* The hint shows the box is for anything, and names no answer, so it
      does not lead anyone towards one. */
   const hint = /\bplaceholder="([^"]*)"/.exec(box)?.[1] ?? "";

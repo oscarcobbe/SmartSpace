@@ -1,11 +1,13 @@
 "use client";
 
 /**
- * "How did you hear about us?" One optional select, the same on every form
- * that has it, and under it an optional box for the visitor's own words,
- * always visible: no asterisk, never required. The box's hint names none of
- * the answers, so it leads nobody towards one. See src/lib/found-us.ts for
- * what the answers are and where they go.
+ * "How did you hear about us?" One required select, the same on every form
+ * that has it (required since 1 Oct 2026, Oscar's call; optional before),
+ * and under it an optional box for the visitor's own words, always visible.
+ * No asterisk: this site marks no required field with one. The servers still
+ * take a lead without an answer, so a cached page never loses one. The box's
+ * hint names none of the answers, so it leads nobody towards one. See
+ * src/lib/found-us.ts for what the answers are and where they go.
  *
  * Each form passes its own classes so the field looks like its neighbours.
  * On a phone the select needs text-base (16px, or iOS Safari zooms the page
@@ -52,8 +54,8 @@ export default function FoundUsField({
       <label htmlFor={id} className={labelClassName}>
         How did you hear about us?
       </label>
-      <select id={id} name="found_us" disabled={disabled} className={`${selectClassName} truncate`} {...controlled}>
-        <option value="">Choose one (optional)</option>
+      <select id={id} name="found_us" required aria-required="true" disabled={disabled} className={`${selectClassName} truncate`} {...controlled}>
+        <option value="">Choose one</option>
         {FOUND_US_OPTIONS.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}
