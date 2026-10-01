@@ -5,12 +5,12 @@ const SITE = "https://smart-space.ie";
 export const metadata: Metadata = {
   title: "Ring Floodlight Camera Installation | Dublin & Leinster | Smart Space",
   description:
-    "Ring Floodlight Cam installation in Dublin and Leinster. Professional mounting, wiring, and app setup for driveways, gardens, and rear entrances. From €299.",
+    "Ring Floodlight Cam installation in Dublin and Leinster. Professional mounting, wiring, and app setup for driveways, gardens, and rear entrances. From €379.",
   alternates: { canonical: "/services/camera" },
   openGraph: {
     title: "Ring Floodlight Camera Installation | Dublin & Leinster",
     description:
-      "Professional Ring Floodlight Cam installation for driveways and gardens. From €299.",
+      "Professional Ring Floodlight Cam installation for driveways and gardens. From €379.",
     url: `${SITE}/services/camera`,
     type: "website",
     images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Ring Floodlight Camera Installation by Smart Space" }],
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Ring Floodlight Camera Installation | Dublin & Leinster",
     description:
-      "Professional Ring Floodlight Cam installation for driveways and gardens. From €299.",
+      "Professional Ring Floodlight Cam installation for driveways and gardens. From €379.",
     images: ["/og-default.png"],
   },
 };

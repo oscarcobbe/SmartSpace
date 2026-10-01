@@ -21,8 +21,8 @@ const SERVICE_SCHEMA = {
   ],
   offers: {
     "@type": "AggregateOffer",
-    lowPrice: "299",
-    highPrice: "599",
+    lowPrice: "329",
+    highPrice: "579",
     priceCurrency: "EUR",
     offerCount: 4,
     availability: "https://schema.org/InStock",

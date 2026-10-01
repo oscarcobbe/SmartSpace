@@ -11,6 +11,9 @@ export const NETWORK_GUIDES = [
   { href: "/blog/working-from-home-wifi-ireland", label: "Working from home" },
   { href: "/blog/wifi-garden-office-ireland", label: "Garden office" },
   { href: "/blog/wifi-calling-ireland", label: "Wi-Fi Calling" },
+  { href: "/blog/running-ethernet-cable-existing-house-ireland", label: "Running Ethernet" },
+  { href: "/blog/wifi-6-wifi-7-new-router-ireland", label: "Wi-Fi 6 and 7" },
+  { href: "/blog/secure-home-wifi-ireland", label: "Securing your Wi-Fi" },
 ];
 
 /* No underline until hover or focus, the way Oscar asked for links to the

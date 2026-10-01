@@ -10,6 +10,76 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "secure-home-wifi-ireland",
+    title: "How to Secure Your Home Wi-Fi and Smart Devices in Ireland: A 10-Step Checklist",
+    description:
+      "New router passwords, WPA3 or WPA2, WPS off, updates, a guest network, two-step login for Ring and Eufy, family access, and how to spot a call pretending to be your broadband provider. From Ireland's NCSC, the Gardaí and the makers' own guidance.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "7 min read",
+    category: "Home Network",
+  },
+  {
+    slug: "wifi-6-wifi-7-new-router-ireland",
+    title: "Wi-Fi 6, 6E and 7 Explained: Do You Need a New Router in Ireland?",
+    description:
+      "Wi-Fi 6 copes better with a busy house, Wi-Fi 6E adds the 6 GHz band and Wi-Fi 7 adds wider channels in it. What ComReg allows in Ireland, what your phone and laptop need, which routers eir, Vodafone and Sky supply, and when a new router will not help.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "7 min read",
+    category: "Home Network",
+  },
+  {
+    slug: "smart-home-tech-elderly-parent-ireland",
+    title: "Smart Home Tech for an Elderly Parent in Ireland: What Actually Helps",
+    description:
+      "A video doorbell, a smart speaker, easy video calls, lights that come on at night and Wi-Fi that reaches every room. What each one helps with and needs, how to keep it simple and respect your parent's privacy, and who sets it up.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "6 min read",
+    category: "Buying Guide",
+  },
+  {
+    slug: "running-ethernet-cable-existing-house-ireland",
+    title: "How to Run Ethernet Cable in an Existing Irish House Without Ripping Walls Apart",
+    description:
+      "A cable still beats Wi-Fi for a desk, a TV or a mesh unit. The routes that avoid chasing walls, from the attic to the hot press, Cat5e, Cat6 or Cat6a, the 100 metre limit, keeping clear of mains, outdoor cable, and wall sockets or patch leads.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "7 min read",
+    category: "Home Network",
+  },
+  {
+    slug: "where-to-mount-doorbell-security-camera",
+    title: "Where to Mount a Video Doorbell and Security Camera: Height and Angle",
+    description:
+      "Ring and eufy both put a video doorbell 1.2 metres off the ground, and outdoor cameras 2 to 3 metres up, tilted down. Placement for the front door, driveway, back garden and side passage, wedge and corner kits, false alerts from the road, sun, rain and the Wi-Fi at the spot.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "7 min read",
+    category: "Buying Guide",
+  },
+  {
+    slug: "ring-subscription-ireland",
+    title: "Do I Need a Ring Subscription in Ireland? Plans, Prices and What's Free (2026)",
+    description:
+      "No. A Ring doorbell or camera gives you alerts, live view and two-way talk with no plan, but records nothing. What Ring Solo, Multi and Pro cost in euro, what each adds, how long video is kept, how to share it, and who needs one.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "7 min read",
+    category: "Buying Guide",
+  },
+  {
+    slug: "ring-installation-cost-ireland",
+    title: "How Much Does Ring Doorbell or Camera Installation Cost in Ireland? (2026)",
+    description:
+      "What it costs to have a Ring video doorbell or floodlight camera installed in Ireland: €139 to fit your own, €329 for a doorbell supplied and fitted with a Ring Chime, bundles from €658. What pushes the price up, example quotes, and what to ask any installer.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "7 min read",
+    category: "Buying Guide",
+  },
+  {
     slug: "why-wifi-slow-upstairs-irish-homes",
     title: "Why Your Wi-Fi Is Slow Upstairs, and How to Fix It in an Irish House",
     description:
