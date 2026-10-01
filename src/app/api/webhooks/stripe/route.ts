@@ -715,6 +715,9 @@ export async function POST(req: NextRequest) {
       obref: (session.metadata?.oai_obref as string) || undefined,
       sourceUrl: "https://smart-space.ie/smartspace-payment-success",
     };
+    /* The buyer's Accept under the notice that names OpenAI: the Conversions
+       API copy and the click on the CRM lead both go by it. */
+    const openAiOk = openAiConsented(consent);
     await fireServerConversion({
       gadsLabel: paidLabel, // SmartSpace Paid Order
       ga4EventName: "purchase",
@@ -731,7 +734,7 @@ export async function POST(req: NextRequest) {
       extraParams: { product: productName, source: "stripe_webhook" },
       adConsent,
       browser,
-      openAi: { type: "order_created", consented: openAiConsented(consent) },
+      openAi: { type: "order_created", consented: openAiOk },
     });
 
     // Notify Nigel, runs after Calendly so we can include the outcome in
@@ -782,7 +785,7 @@ export async function POST(req: NextRequest) {
         configuration: configNote || null,
         found_us: foundUs || null,
         found_us_detail: foundUsDetail || null,
-        ...chatGptAdOf(browser),
+        ...chatGptAdOf(browser, openAiOk),
       },
     }));
 

@@ -220,6 +220,9 @@ export async function POST(request: Request) {
      as the contact form's does. */
   const [firstName, ...rest] = name.split(/\s+/);
   const browser = browserContext(request, attribution);
+  /* An Accept under the notice that names OpenAI: the Conversions API copy
+     and the click on the CRM lead both go by it. */
+  const openAiOk = openAiConsented(consentFrom(consent));
   afterResponse("server conversion", AFTER_CEILING.conversion, () =>
     fireServerConversion({
       gadsLabel: GADS_WIFI_SEND_TO.replace(/^AW-\d+\//, ""),
@@ -235,7 +238,7 @@ export async function POST(request: Request) {
       extraParams: { lead_source: g ? "wifi_check" : "wifi_enquiry", ...(pkg ? { package: pkg.slug } : {}) },
       adConsent: consentFrom(body.consent as ConsentInput | null | undefined)?.decision ?? null,
       browser,
-      openAi: { type: "lead_created", consented: openAiConsented(consentFrom(body.consent as ConsentInput | null | undefined)) },
+      openAi: { type: "lead_created", consented: openAiOk },
     }),
   );
 
@@ -261,7 +264,7 @@ export async function POST(request: Request) {
         wifi: g
           ? { light: g.light, cause: g.cause, recommend: g.recommend, also: g.also, report: reportUrl }
           : { package: pkg?.slug ?? null },
-        ...chatGptAdOf(browser),
+        ...chatGptAdOf(browser, openAiOk),
       },
     }),
   );

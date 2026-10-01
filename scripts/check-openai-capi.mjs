@@ -26,7 +26,9 @@
  *     without OPENAI_ADS_API_KEY, or without NEXT_PUBLIC_OAI_PIXEL_ID.
  *   - A phone-only lead and an email-only lead both reach OpenAI.
  *   - The ChatGPT ad click reaches the server copy and the CRM lead from the
- *     pixel's cookie or, when the pixel never loaded, the form's attribution.
+ *     pixel's cookie or, when the pixel never loaded, the form's attribution,
+ *     and the CRM lead and the Stripe session keep it only under an Accept
+ *     that names OpenAI, though the attribution record holds it under any.
  *   - OpenAI failing, hanging or refusing never holds up or fails the lead.
  *
  *   node scripts/check-openai-capi.mjs
@@ -85,6 +87,7 @@ async function load(js, env = {}) {
 }
 const crmMod = await load(transpile("src/lib/crm.ts"));
 const consentMod = await load(transpile("src/lib/ad-consent.ts"));
+const { OPENAI_CONSENT_VERSION } = await import(pathToFileURL(join(dir, "consent-version.mjs")).href);
 
 /* ── The browser half, as far as it pairs with the server ─────────── */
 
@@ -194,15 +197,19 @@ try {
       const src = read(f);
       if (!/transactionId:\s*conversionId/.test(src)) wrong.push(`${f}: the server copy is not keyed on conversionId`);
       if (!/NextResponse\.json\(\{[^}]*\bconversionId\b/.test(src)) wrong.push(`${f}: the answer does not give the page its conversionId`);
-      if (!/openAi:\s*\{\s*type:\s*"lead_created",\s*consented:\s*openAiConsented\(consentFrom\(/.test(src)) wrong.push(`${f}: the OpenAI copy does not ask openAiConsented`);
+      /* One decision for both uses of the click: the OpenAI copy and the CRM. */
+      if (!/const openAiOk = openAiConsented\(consentFrom\(consent\)\);/.test(src)) wrong.push(`${f}: no openAiOk from openAiConsented(consentFrom(consent))`);
+      if (!/openAi:\s*\{\s*type:\s*"lead_created",\s*consented:\s*openAiOk\s*\}/.test(src)) wrong.push(`${f}: the OpenAI copy does not go by openAiOk`);
       if (!/browserContext\(request,\s*\w+\)/.test(src)) wrong.push(`${f}: browserContext is not given the form's attribution`);
-      if (!/\.\.\.chatGptAdOf\(browser\)/.test(src)) wrong.push(`${f}: the CRM lead does not get the ChatGPT ad click`);
+      if ((src.match(/chatGptAdOf\(/g) ?? []).length !== 1 || !/\.\.\.chatGptAdOf\(browser,\s*openAiOk\)/.test(src)) wrong.push(`${f}: the CRM lead does not get the click under openAiOk, and only then`);
     }
     const hook = read("src/app/api/webhooks/stripe/route.ts");
-    if (!/transactionId:\s*sessionId/.test(hook) || !/openAi:\s*\{\s*type:\s*"order_created",\s*consented:\s*openAiConsented\(consent\)/.test(hook)) wrong.push("the Stripe webhook's OpenAI copy is not keyed on the session id under openAiConsented");
-    if (!/\.\.\.chatGptAdOf\(browser\)/.test(hook)) wrong.push("the paid order's CRM lead does not get the ChatGPT ad click");
+    if (!/transactionId:\s*sessionId/.test(hook) || !/const openAiOk = openAiConsented\(consent\);/.test(hook) || !/openAi:\s*\{\s*type:\s*"order_created",\s*consented:\s*openAiOk\s*\}/.test(hook)) wrong.push("the Stripe webhook's OpenAI copy is not keyed on the session id under openAiConsented");
+    if ((hook.match(/chatGptAdOf\(/g) ?? []).length !== 1 || !/\.\.\.chatGptAdOf\(browser,\s*openAiOk\)/.test(hook)) wrong.push("the paid order's CRM lead does not get the click under openAiOk, and only then");
     const checkout = read("src/app/api/checkout/route.ts");
-    if (!/browserContext\(request,\s*attribution\)/.test(checkout) || !/metadata\[oai_oppref\]/.test(checkout)) wrong.push("/api/checkout does not record the ad click from the cookie or the attribution for the webhook");
+    if (!/browserContext\(request,\s*attribution\)/.test(checkout) ||
+        !/if \(openAiConsented\(consent\)\) \{\s*if \(browser\.oppref\) params\.append\("metadata\[oai_oppref\]"[^\n]*\n\s*if \(browser\.obref\) params\.append\("metadata\[oai_obref\]"/.test(checkout) ||
+        (checkout.match(/metadata\[oai_o(pp|b)ref\]/g) ?? []).length !== 2) wrong.push("/api/checkout does not record the ad click for the webhook, or records it without an Accept that names OpenAI");
     for (const f of ["src/components/ContactForm.tsx", "src/components/CallbackForm.tsx", "src/components/wifi/WifiEnquiryForm.tsx"]) {
       const src = read(f);
       if (!/fireLeadConversion\([^)]*json\.conversionId/.test(src)) wrong.push(`${f}: the page's events do not use the route's conversionId`);
@@ -266,10 +273,33 @@ try {
     const r = await fire({ ...lead, browser: { ...lead.browser, ...formOnly } });
     check(r.event?.oppref === "FROM_FORM" && !r.event.user.obref,
       "a browser that never loaded the pixel still sends its ChatGPT ad click with the lead", `event without the cookie: ${JSON.stringify(r.event)}`);
-    const crm = crmMod.chatGptAdOf(both);
-    const none = crmMod.chatGptAdOf(neither);
+    const crm = crmMod.chatGptAdOf(both, true);
+    const none = crmMod.chatGptAdOf(neither, true);
     check(crm.oppref === "FROM_COOKIE" && crm.obref === "ref-1" && none.oppref === null && none.obref === null,
       "the CRM lead gets custom.oppref and custom.obref, null without an ad click", `chatGptAdOf: ${JSON.stringify(crm)}, ${JSON.stringify(none)}`);
+
+    /* The attribution record is written under any Accept, so a visitor who
+       accepted before /privacy named OpenAI and then clicked a ChatGPT ad
+       posts the click with the form. The CRM must keep it only when the
+       visitor's Accept names OpenAI, the rule the OpenAI copy keeps. */
+    const at = Date.now() - 60_000;
+    const crmFor = (v) => {
+      const accepted = consentMod.consentFrom({ decision: "granted", decidedAt: at, ...(v === undefined ? {} : { v }) });
+      return crmMod.chatGptAdOf(serverMod.browserContext(request({}), { oppref: "OLD_ACCEPT_CLICK" }), consentMod.openAiConsented(accepted));
+    };
+    const below = [OPENAI_CONSENT_VERSION - 1, undefined].map(crmFor);
+    const atOrAbove = [OPENAI_CONSENT_VERSION, OPENAI_CONSENT_VERSION + 1].map(crmFor);
+    check(below.every((c) => c.oppref === null && c.obref === null),
+      `an Accept under notice version ${OPENAI_CONSENT_VERSION - 1} or none, with an oppref in the record: nothing for the CRM's custom`,
+      `an Accept that does not name OpenAI still put the click on the CRM lead: ${JSON.stringify(below)}`);
+    check(atOrAbove.every((c) => c.oppref === "OLD_ACCEPT_CLICK"),
+      `an Accept under version ${OPENAI_CONSENT_VERSION} or later: the click reaches custom.oppref`,
+      `an Accept that names OpenAI lost the click: ${JSON.stringify(atOrAbove)}`);
+    const declined = crmMod.chatGptAdOf(both, consentMod.openAiConsented(consentMod.consentFrom({ decision: "denied", decidedAt: at, v: OPENAI_CONSENT_VERSION })));
+    const unsure = crmMod.chatGptAdOf(both, undefined);
+    check(declined.oppref === null && declined.obref === null && unsure.oppref === null && unsure.obref === null,
+      "a Decline, or no decision passed at all, writes nothing either, cookie or no cookie",
+      `Decline: ${JSON.stringify(declined)}; no decision: ${JSON.stringify(unsure)}`);
     const attribution = read("src/lib/attribution.ts");
     check(/params\.get\("oppref"\)/.test(attribution) && /cameFromAnAd\(\{\s*gclid,\s*oppref/.test(attribution),
       "attribution.ts keeps ?oppref= as an ad click (check-consent-attribution runs it)", "attribution.ts no longer captures ?oppref= as an ad click");

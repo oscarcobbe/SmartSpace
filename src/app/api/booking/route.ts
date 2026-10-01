@@ -277,6 +277,9 @@ export async function POST(request: Request) {
         .trim()
         .replace(/^AW-\d+\//, "") || "u8cHCNyipZocEJfU6PxC";
     const browser = browserContext(request, attribution);
+    /* An Accept under the notice that names OpenAI: the Conversions API copy
+       and the click on the CRM lead both go by it. */
+    const openAiOk = openAiConsented(consentFrom(consent));
     await fireServerConversion({
       gadsLabel: leadLabel, // Smart Space Lead (booking → lead)
       ga4EventName: "server_lead",
@@ -291,7 +294,7 @@ export async function POST(request: Request) {
       extraParams: { lead_source: "site_visit_booking", topic: subjectLabel },
       adConsent: consentFrom(consent)?.decision ?? null,
       browser,
-      openAi: { type: "lead_created", consented: openAiConsented(consentFrom(consent)) },
+      openAi: { type: "lead_created", consented: openAiOk },
     });
 
     // Mirror to SmartCRM after the answer, through waitUntil (a bare `void`
@@ -322,7 +325,7 @@ export async function POST(request: Request) {
         booking_date: date,
         booking_slot: timeSlot,
         booking_kind: "consultation",
-        ...chatGptAdOf(browser),
+        ...chatGptAdOf(browser, openAiOk),
       },
     }));
 

@@ -407,6 +407,9 @@ export async function POST(request: Request) {
        browser, and the ChatGPT ad click comes from the pixel's cookie or the
        form's attribution record. */
     const browser = browserContext(request, attribution);
+    /* An Accept under the notice that names OpenAI: the Conversions API copy
+       and the click on the CRM lead both go by it. */
+    const openAiOk = openAiConsented(consentFrom(consent));
     afterResponse("server conversion", AFTER_CEILING.conversion, () =>
       fireServerConversion({
         gadsLabel: leadLabel, // Smart Space Lead, same label as ContactForm
@@ -422,7 +425,7 @@ export async function POST(request: Request) {
         extraParams: { lead_source: "contact_form", topic: subjectLabel },
         adConsent: consentFrom(consent)?.decision ?? null,
         browser,
-        openAi: { type: "lead_created", consented: openAiConsented(consentFrom(consent)) },
+        openAi: { type: "lead_created", consented: openAiOk },
       }),
     );
 
@@ -450,7 +453,7 @@ export async function POST(request: Request) {
         tags: ["contact-form"],
         custom: {
           conversion_id: conversionId, subject_key: subjectKey, found_us: foundUs || null, found_us_detail: foundUsDetail || null,
-          ...chatGptAdOf(browser),
+          ...chatGptAdOf(browser, openAiOk),
         },
       }),
     );

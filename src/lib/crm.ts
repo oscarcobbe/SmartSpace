@@ -41,10 +41,22 @@ export interface CrmLeadPayload {
  * (custom.oppref) and OpenAI's reference for the browser (custom.obref), for
  * a later sale to be traced to the ad. In custom rather than columns of their
  * own, so the lead insert does not depend on a migration reaching the
- * database first. Both come from browserContext, so both exist only after
- * Accept; null otherwise.
+ * database first.
+ *
+ * openAiOk is the route's openAiConsented() answer, the one its Conversions
+ * API copy goes by, and without it both are null. browserContext falls back
+ * to the form's attribution record, which attribution.ts writes under any
+ * Accept, so a visitor who accepted before /privacy named OpenAI and then
+ * clicked a ChatGPT ad has a click in it. Nothing told that visitor the
+ * click would be kept, and /privacy says it is kept like the rest of what
+ * goes to OpenAI: only under an Accept that names it. SmartCare Living's
+ * opprefForLead keeps the same rule.
  */
-export function chatGptAdOf(browser: Pick<BrowserContext, "oppref" | "obref">): { oppref: string | null; obref: string | null } {
+export function chatGptAdOf(
+  browser: Pick<BrowserContext, "oppref" | "obref">,
+  openAiOk: boolean,
+): { oppref: string | null; obref: string | null } {
+  if (openAiOk !== true) return { oppref: null, obref: null };
   return { oppref: browser.oppref || null, obref: browser.obref || null };
 }
 
