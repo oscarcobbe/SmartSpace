@@ -6,7 +6,7 @@ import { bookingBackend } from "@/lib/booking/backend";
 import { logLead, type AttributionRecord } from "@/lib/leads";
 import { browserContext, fireServerConversion } from "@/lib/server-conversions";
 import { consentFrom, openAiConsented, type ConsentInput } from "@/lib/ad-consent";
-import { sendToCrm } from "@/lib/crm";
+import { chatGptAdOf, sendToCrm } from "@/lib/crm";
 import { sendSiteAlert } from "@/lib/site-alerts";
 import { alertTo, monitorBcc } from "@/lib/business-constants";
 import { afterResponse, AFTER_CEILING } from "@/lib/after-response";
@@ -288,6 +288,10 @@ export async function POST(request: Request) {
       (process.env.NEXT_PUBLIC_GADS_LEAD_SEND_TO || "")
         .trim()
         .replace(/^AW-\d+\//, "") || "u8cHCNyipZocEJfU6PxC";
+    const browser = browserContext(request, attribution);
+    /* An Accept under the notice that names OpenAI: the Conversions API copy
+       and the click on the CRM lead both go by it. */
+    const openAiOk = openAiConsented(consentFrom(consent));
     await fireServerConversion({
       gadsLabel: leadLabel, // Smart Space Lead (booking → lead)
       ga4EventName: "server_lead",
@@ -301,8 +305,8 @@ export async function POST(request: Request) {
       lastName,
       extraParams: { lead_source: "site_visit_booking", topic: subjectLabel },
       adConsent: consentFrom(consent)?.decision ?? null,
-      browser: browserContext(request),
-      openAi: { type: "lead_created", consented: openAiConsented(consentFrom(consent)) },
+      browser,
+      openAi: { type: "lead_created", consented: openAiOk },
     });
 
     // Mirror to SmartCRM after the answer, through waitUntil (a bare `void`
@@ -333,6 +337,7 @@ export async function POST(request: Request) {
         booking_date: date,
         booking_slot: timeSlot,
         booking_kind: "consultation",
+        ...chatGptAdOf(browser, openAiOk),
       },
     }));
 

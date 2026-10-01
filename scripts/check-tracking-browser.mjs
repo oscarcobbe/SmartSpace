@@ -26,7 +26,8 @@
  *   - a phone tap: the SS - Phone tap label, not the call label, no
  *     generate_lead, a plain phone_call_click.
  *   - the contact form, now on the shared lead helper: the lead label, the
- *     id the route answered, E.164 phone, generate_lead contact_form.
+ *     id the route answered, E.164 phone, generate_lead contact_form, and
+ *     the landing page's ChatGPT ad click in the attribution it posts.
  *   - the Wi-Fi form, on a package page and on a check's report: SS -
  *     SmartNet enquiry once, with the id /api/wifi-check answered, E.164
  *     phone, generate_lead with lead_source wifi_enquiry or wifi_check.
@@ -201,8 +202,10 @@ try {
     check(views === 2 && sdkLoads() === 0, "a client-side route change queues another page_viewed, still nothing loaded",
       `after a route change: ${views} page_viewed, ${sdkLoads()} SDK request(s)`);
 
-    /* Accept, on the second page. */
-    await ev(`[...document.querySelectorAll('button')].find(function(b){ return b.textContent.trim() === 'Accept all'; }).click()`);
+    /* Accept, on the second page. The button is found by its first word: it
+       said "Accept all" until 1 October 2026 (#34) and "Accept cookies" since,
+       and the exact match stopped this check at its first click. */
+    await ev(`[...document.querySelectorAll('button')].find(function(b){ return b.textContent.trim().indexOf('Accept') === 0; }).click()`);
     await waitFor("!!window.__oaiStub && window.__oaiStub.configStatus !== null", 10_000);
     const stub = await ev("window.__oaiStub");
     check(sdkLoads() === 1 && stub?.found?.filter((a) => a[1] === "page_viewed").length === 2 && stub.found[0]?.[0] === "init",
@@ -225,7 +228,7 @@ try {
     check(after.filter((a) => a[0] === "measure" && a[1] === "page_viewed").length === 1,
       "after the SDK loaded, a route change sends page_viewed to it", `after load: ${JSON.stringify(after)}`);
   } else {
-    await ev(`[...document.querySelectorAll('button')].find(function(b){ return b.textContent.trim() === 'Accept all'; }).click()`);
+    await ev(`[...document.querySelectorAll('button')].find(function(b){ return b.textContent.trim().indexOf('Accept') === 0; }).click()`);
     await wait(1500);
     await ev(`(function(){ var a=[...document.querySelectorAll('a[href="/reviews"]')][0]; a.click(); return true; })()`);
     await waitFor("location.pathname === '/reviews'");
@@ -290,6 +293,10 @@ try {
         lead.length === 1 && lead[0][2].lead_source === "contact_form" && lead[0][2].transaction_id === "contact-conv-1",
       "the contact form fires its lead label once with the route's id, E.164 phone, and generate_lead contact_form",
       `contact form: ${JSON.stringify({ conv, lead })}`);
+    const posted = JSON.parse(answered.filter((r) => r.url.endsWith("/api/contact")).at(-1)?.body || "{}");
+    check(posted.attribution?.oppref === "TEST_CLICK_1",
+      "the enquiry carries the ChatGPT ad click from the landing page, two pages and an Accept later, in its attribution",
+      `contact form attribution: ${JSON.stringify(posted.attribution)}`);
     if (pixelOn) {
       const ai = (await ev("window.__oaiStub.after")).slice(afterBefore);
       const created = ai.find((a) => a[1] === "lead_created");

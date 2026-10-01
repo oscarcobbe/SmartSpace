@@ -30,6 +30,7 @@
  */
 
 import { createHash, randomUUID } from "crypto";
+import { oaiEventId } from "./oai-event-id";
 import { normalisePhone } from "./phone";
 
 const GA4_ID = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID; // e.g. G-JR2WXNSLEL
@@ -82,7 +83,8 @@ export interface BrowserContext {
    */
   browserTagsRan: boolean;
   /** The ChatGPT ad click (__oppref, 30 days) and OpenAI's browser reference
-      (__obref, a year): the pixel's own cookies, set only after Accept. */
+      (__obref, a year): the pixel's own cookies, set only after Accept. The
+      click falls back to the one in the form's attribution record. */
   oppref?: string;
   obref?: string;
   /** The page the enquiry was sent from, for OpenAI's source_url. */
@@ -91,13 +93,23 @@ export interface BrowserContext {
   userAgent?: string;
 }
 
-export function browserContext(request: Request): BrowserContext {
+/**
+ * attribution is the record the form sent (src/lib/attribution.ts), which
+ * keeps a ChatGPT ad click (?oppref=) the way it keeps a gclid. The pixel's
+ * __oppref cookie wins when both are there. The record covers a browser that
+ * blocks bzrcdn.openai.com: the SDK never loads there, so no cookie is
+ * written, and the Conversions API does not find the click by itself
+ * (OpenAI's docs: "Capture the value yourself"). The record, like the cookie,
+ * exists only after Accept.
+ */
+export function browserContext(request: Request, attribution?: { oppref?: unknown } | null): BrowserContext {
   const h = request.headers;
   const cookies = parseCookies(h.get("cookie"));
   const ip = (h.get("x-real-ip") || (h.get("x-forwarded-for") ?? "").split(",")[0] || "").trim();
+  const click = cookies.__oppref || (typeof attribution?.oppref === "string" ? attribution.oppref : "");
   return {
     browserTagsRan: Boolean(cookies._gcl_au),
-    oppref: cookies.__oppref ? cookies.__oppref.slice(0, 512) : undefined,
+    oppref: click ? click.slice(0, 512) : undefined,
     obref: cookies.__obref ? cookies.__obref.slice(0, 128) : undefined,
     sourceUrl: (h.get("referer") || "").slice(0, 1000) || undefined,
     ip: ip.slice(0, 64) || undefined,
@@ -329,7 +341,9 @@ async function fireOpenAi(input: ServerConversionInput): Promise<void> {
     console.log(`[conv] OpenAI skipped for ${input.transactionId ?? "-"}: no Accept under the notice that names OpenAI`);
     return;
   }
-  if (!input.transactionId) return;
+  /* The pixel's event_id, cut the same way, so OpenAI keeps one of the two. */
+  const id = oaiEventId(input.transactionId);
+  if (!id) return;
   try {
     const b = input.browser ?? { browserTagsRan: false };
     const email = (input.email ?? "").trim().toLowerCase();
@@ -343,7 +357,7 @@ async function fireOpenAi(input: ServerConversionInput): Promise<void> {
     if (b.userAgent) user.user_agent = b.userAgent;
 
     const event: Record<string, unknown> = {
-      id: input.transactionId.slice(0, 64),
+      id,
       type: oa.type,
       timestamp_ms: Date.now(),
       source_url: /^https?:\/\//.test(b.sourceUrl ?? "") ? b.sourceUrl : "https://smart-space.ie/",
@@ -367,7 +381,7 @@ async function fireOpenAi(input: ServerConversionInput): Promise<void> {
     if (!res.ok) {
       console.error(`[conv] OpenAI Conversions API responded ${res.status}: ${(await res.text().catch(() => "")).slice(0, 300)}`);
     } else {
-      console.log(`[conv] OpenAI ${oa.type} sent for ${input.transactionId} oppref=${b.oppref ? "yes" : "no"} obref=${b.obref ? "yes" : "no"}`);
+      console.log(`[conv] OpenAI ${oa.type} sent for ${id} oppref=${b.oppref ? "yes" : "no"} obref=${b.obref ? "yes" : "no"}`);
     }
   } catch (err) {
     console.error("[conv] OpenAI Conversions API error:", err instanceof Error ? err.message : err);

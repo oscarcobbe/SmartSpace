@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/guard-strings.mjs && node scripts/check-crm-dates.mjs && node scripts/check-booking-dates.mjs && node scripts/check-booking-engine.mjs && node scripts/check-crm-language.mjs && node scripts/check-consent-attribution.mjs && node scripts/check-server-conversion-consent.mjs && node scripts/check-chatgpt-pixel.mjs && node scripts/check-payment-link-ref.mjs && node scripts/check-month-filter.mjs && node scripts/check-chart-axes.mjs && node scripts/check-chart-units.mjs && node scripts/build-linkedin-posts.mjs --check && node scripts/check-crm-links.mjs && node scripts/check-conversion-accounts.mjs && node scripts/check-landing-merge.mjs && node scripts/check-ga4-one-stream.mjs && node scripts/check-feed-enquiries.mjs && node scripts/check-found-us.mjs && node scripts/check-wifi-conversion.mjs && node scripts/check-money-input.mjs && node scripts/check-how-they-came.mjs && node scripts/check-lead-routes-answer-first.mjs && node scripts/check-sheet-retry.mjs && node scripts/check-monitor-copy.mjs && node scripts/check-wifi-grade.mjs && node scripts/check-ndt7.mjs && node scripts/check-signoff.mjs && node scripts/check-build-is-clean.mjs",
+    "build": "node scripts/guard-strings.mjs && node scripts/check-crm-dates.mjs && node scripts/check-booking-dates.mjs && node scripts/check-booking-engine.mjs && node scripts/check-crm-language.mjs && node scripts/check-consent-attribution.mjs && node scripts/check-server-conversion-consent.mjs && node scripts/check-chatgpt-pixel.mjs && node scripts/check-openai-capi.mjs && node scripts/check-payment-link-ref.mjs && node scripts/check-month-filter.mjs && node scripts/check-chart-axes.mjs && node scripts/check-chart-units.mjs && node scripts/build-linkedin-posts.mjs --check && node scripts/check-crm-links.mjs && node scripts/check-conversion-accounts.mjs && node scripts/check-landing-merge.mjs && node scripts/check-ga4-one-stream.mjs && node scripts/check-feed-enquiries.mjs && node scripts/check-found-us.mjs && node scripts/check-wifi-conversion.mjs && node scripts/check-money-input.mjs && node scripts/check-how-they-came.mjs && node scripts/check-openai-ads-spend.mjs && node scripts/check-lead-routes-answer-first.mjs && node scripts/check-sheet-retry.mjs && node scripts/check-monitor-copy.mjs && node scripts/check-wifi-grade.mjs && node scripts/check-ndt7.mjs && node scripts/check-signoff.mjs && node scripts/check-build-is-clean.mjs",
     "start": "next start",
     "lint": "next lint",
     "check:strings": "node scripts/guard-strings.mjs",
@@ -24,6 +24,8 @@
     "check:consent": "node scripts/check-consent-attribution.mjs",
     "check:server-consent": "node scripts/check-server-conversion-consent.mjs",
     "check:chatgpt-pixel": "node scripts/check-chatgpt-pixel.mjs",
+    "check:openai-capi": "node scripts/check-openai-capi.mjs",
+    "check:openai-ads-spend": "node scripts/check-openai-ads-spend.mjs",
     "check:tracking-browser": "node scripts/check-tracking-browser.mjs",
     "check:payment-link": "node scripts/check-payment-link-ref.mjs",
     "check:month": "node scripts/check-month-filter.mjs",

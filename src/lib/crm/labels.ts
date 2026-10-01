@@ -62,6 +62,28 @@ export function foundUsOf(l: { gclid?: string | null; custom?: Record<string, un
   return "unknown";
 }
 
+/**
+ * The same, in words, for the customer's page, with the click that shows it.
+ *
+ * A ChatGPT ad has no FOUND_US key of its own, deliberately: the FourWinds
+ * weekly report counts ChatGPT ad enquiries from the click id (custom.oppref)
+ * and never from found_us, so a key Nigel could also pick by hand would let
+ * the CRM and the report disagree. So it is read here, from the click, and
+ * only where nobody chose an answer and no Google click says otherwise: the
+ * same order how-they-came.ts keeps, Google's click first.
+ */
+export function foundUsLabel(l: { gclid?: string | null; custom?: Record<string, unknown> | null }): string {
+  const key = foundUsOf(l);
+  if (key !== "unknown") return `${FOUND_US[key] ?? key}${l.gclid ? " (the click was recorded)" : ""}`;
+  if (chatGptAdClick(l)) return "A ChatGPT ad (the click was recorded)";
+  return FOUND_US.unknown;
+}
+
+/** Whether the lead carries a ChatGPT ad click (custom.oppref, kept only under an Accept that names OpenAI). */
+export function chatGptAdClick(l: { custom?: Record<string, unknown> | null }): boolean {
+  return typeof l.custom?.oppref === "string" && l.custom.oppref.trim() !== "";
+}
+
 export const sourceLabel = (key: string | null | undefined) =>
   key ? SOURCES[key] ?? tidy(key) : "Enquiry";
 

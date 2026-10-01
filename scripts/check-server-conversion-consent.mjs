@@ -54,10 +54,10 @@ const transpile = (rel) =>
     compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
   }).outputText;
 const dir = mkdtempSync(join(tmpdir(), "server-consent-"));
-/* Its one import, the phone normaliser, goes alongside it. */
-writeFileSync(join(dir, "phone.mjs"), transpile("src/lib/phone.ts"));
+/* Its two imports, the phone normaliser and OpenAI's event id, go alongside it. */
+for (const name of ["oai-event-id", "phone"]) writeFileSync(join(dir, `${name}.mjs`), transpile(`src/lib/${name}.ts`));
 const file = join(dir, `server-conversions.${Date.now()}.mjs`);
-writeFileSync(file, transpile("src/lib/server-conversions.ts").replace(/from\s+"\.\/phone"/, 'from "./phone.mjs"'));
+writeFileSync(file, transpile("src/lib/server-conversions.ts").replace(/from\s+"\.\/(oai-event-id|phone)"/g, 'from "./$1.mjs"'));
 
 const sent = [];
 globalThis.fetch = async (url) => {

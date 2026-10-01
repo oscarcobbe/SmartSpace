@@ -213,6 +213,32 @@ try {
       : fail(`read before any drain, expected TEST_EARLY_ACCEPT, got ${JSON.stringify(got?.gclid)}`);
   }
 
+  // 2f. A ChatGPT ad click, which carries ?oppref= and maybe nothing else
+  //     Google-shaped. It is an ad click like a gclid: kept through two pages
+  //     read before accepting, so the lead and the CRM can say where it came
+  //     from, and so the server can send it to OpenAI when the pixel's own
+  //     cookie is missing.
+  {
+    const { local } = browser();
+    window.location.search = "?oppref=OPP_JOURNEY";
+    attribution.captureAttribution();          // the ChatGPT ad landing
+
+    delete globalThis.window.__ssOnConsent;
+    window.location.search = "";
+    window.location.pathname = "/reviews";
+    attribution.captureAttribution();          // page two, still undecided
+
+    delete globalThis.window.__ssOnConsent;
+    window.location.pathname = "/contact";
+    local.setItem("ss_consent", consentValue("granted"));
+    attribution.captureAttribution();          // page three, accepts here
+
+    const got = attribution.getAttribution();
+    got?.oppref === "OPP_JOURNEY" && !got.gclid
+      ? pass("a ChatGPT ad click (?oppref=) survives two pages read before accepting, as a gclid does")
+      : fail(`ChatGPT ad click, expected oppref OPP_JOURNEY, stored ${JSON.stringify(got)}`);
+  }
+
   // 3. A returning visitor who already has an organic record, then clicks an
   //    ad and accepts a page later. First touch holds against another organic
   //    visit and must not hold against an ad click, which is the rule
@@ -250,6 +276,19 @@ try {
       : fail("consent refused and the click id was stored anyway");
   }
 
+  // 4b. The same gate for a ChatGPT ad click.
+  {
+    const { local } = browser();
+    local.setItem("ss_consent", consentValue("denied"));
+    window.location.search = "?oppref=OPP_REFUSED";
+    attribution.captureAttribution();
+    window.location.search = "";
+    attribution.captureAttribution();
+    local.getItem("ss_attribution") === null && attribution.getAttribution() === null
+      ? pass("consent refused, a ChatGPT ad click is not stored and no form would carry it")
+      : fail("consent refused and the ChatGPT ad click was stored anyway");
+  }
+
   // 5. An undecided visitor is not treated as consent.
   {
     const { local } = browser();
@@ -280,5 +319,5 @@ try {
 if (process.exitCode) {
   console.error("\nThe consent gate and attribution capture disagree.");
 } else {
-  console.log("\nConsent and attribution capture agree on all ten cases.");
+  console.log("\nConsent and attribution capture agree on all twelve cases.");
 }
