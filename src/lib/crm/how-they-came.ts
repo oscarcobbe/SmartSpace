@@ -16,6 +16,8 @@
  * the customer's own visits say how they came:
  *
  *   landed on a URL carrying gclid, gbraid, wbraid or gad_source  -> an ad
+ *   a ChatGPT ad click: ?oppref= on the landing URL, or the click
+ *   kept on the Stripe session                                      -> a ChatGPT ad
  *   arrived from another site (organic Google, Bing, ChatGPT, the
  *   Gmail app), a UTM tag that is not paid, or a business card      -> not an ad
  *   a recorded landing page and no referrer, outside the gap below  -> not an ad
@@ -26,6 +28,26 @@
  * readable arrival, and what September left to the estimate was three website
  * sales made during the gap below. Earlier months keep more unknowns, mostly
  * invoices to customers who never used the website's forms.
+ *
+ * ── WHY A CHATGPT AD IS ITS OWN ANSWER ───────────────────────────
+ *
+ * "An ad" here means a Google ad, and everything that reads it sets it against
+ * Google's spend: the solid bars, the share the grey is drawn at, Google's
+ * return. A ChatGPT sale counted there would make Google's ads look better
+ * than they are. So a ChatGPT ad click is "chatgpt-ad", which Google's figures
+ * treat exactly as they treated it before it had a name: a customer known to
+ * have come some other way. ChatGPT's own figures read it (roas-months.ts),
+ * and a CRM lead's own custom.oppref is read the same way on the customer's
+ * page (foundUsLabel in labels.ts).
+ *
+ * The click id is the only evidence. OpenAI adds ?oppref= to every ad click;
+ * ChatGPT's ordinary unpaid citations arrive from chatgpt.com, tagged
+ * utm_source=chatgpt.com, with no oppref, and stay organic. A utm_source is
+ * never read as a ChatGPT ad, because the ads' own links carry
+ * utm_source=chatgpt and one typo would move a customer between the two. The
+ * click is read before a paid utm_medium, so a ChatGPT ad tagged cpc is not
+ * taken for a Google one. Where a trail has both, Google's click wins, as it
+ * did before ChatGPT ads were read at all.
  *
  * ── WHY A DIRECT VISIT COUNTS AS "NOT AN AD" ─────────────────────
  *
@@ -48,12 +70,16 @@
  * internal second page would have smart-space.ie as its referrer.
  */
 
-export type Came = "ad" | "not-ad" | "unknown";
+/** "ad" is a Google ad; see WHY A CHATGPT AD IS ITS OWN ANSWER above. */
+export type Came = "ad" | "chatgpt-ad" | "not-ad" | "unknown";
 
 export interface Visit {
   /** "yyyy-mm-dd hh:mm", Irish time, the way the enquiry log writes dates. */
   at: string;
   gclid?: string;
+  /** A ChatGPT ad click kept apart from the landing URL: the Stripe session's
+      oai_oppref. */
+  oppref?: string;
   landingPage?: string;
   referrer?: string;
   utmSource?: string;
@@ -77,6 +103,8 @@ export interface Payer {
 }
 
 const AD_URL = /[?&](gclid|gbraid|wbraid|gad_source)=/i;
+/* A ChatGPT ad click, with a value: "?oppref=" alone is not a click. */
+const CHATGPT_AD_URL = /[?&]oppref=[^&#\s]/i;
 const PAID_MEDIUM = /^(cpc|ppc|paid|paidsearch|paid_search)$/i;
 
 /* The consent gate's broken fortnight. The last fix was pushed on the morning
@@ -93,6 +121,7 @@ const hostOf = (url: string | undefined) => {
 /** One visit, read on its own. */
 export function readVisit(v: Visit): Came {
   if ((v.gclid ?? "").trim() || AD_URL.test(v.landingPage ?? "")) return "ad";
+  if ((v.oppref ?? "").trim() || CHATGPT_AD_URL.test(v.landingPage ?? "")) return "chatgpt-ad";
   if (PAID_MEDIUM.test((v.utmMedium ?? "").trim())) return "ad";
   if (/^(business-card|qr)/i.test((v.source ?? "").trim())) return "not-ad";
   if ((v.utmSource ?? "").trim()) return "not-ad";
@@ -106,11 +135,14 @@ export function readVisit(v: Visit): Came {
 /**
  * A customer's visits, read together. One ad click anywhere on the trail is
  * enough: the ads reached this person before they paid, which is the question
- * the chart asks. Otherwise one readable visit that was not an ad settles it.
+ * the chart asks. Google's click first, then ChatGPT's, so a customer both
+ * reached stays Google's, as before. Otherwise one readable visit that was not
+ * an ad settles it.
  */
 export function readTrail(visits: Visit[]): Came {
   const read = visits.map(readVisit);
   if (read.includes("ad")) return "ad";
+  if (read.includes("chatgpt-ad")) return "chatgpt-ad";
   if (read.includes("not-ad")) return "not-ad";
   return "unknown";
 }

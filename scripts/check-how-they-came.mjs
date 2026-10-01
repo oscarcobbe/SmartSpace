@@ -10,7 +10,10 @@
  *   a bare landing page during the consent gap proves nothing;
  *   the same bare landing page before the gap is a direct first visit;
  *   an outside referrer is good evidence even inside the gap;
- *   two different people with one name are never joined.
+ *   two different people with one name are never joined;
+ *   a ChatGPT ad (?oppref=) is ChatGPT's, never Google's, and an ordinary
+ *   ChatGPT referral (utm_source=chatgpt.com, no oppref) stays organic;
+ *   a ChatGPT sale changes none of Google's figures on the return chart.
  */
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -92,6 +95,88 @@ expect(idx.find({ emails: ["late@example.ie"], phones: [], names: [] }, "2026-07
 
 expect(dublinStamp(Date.UTC(2026, 8, 22, 11, 2) / 1000), "2026-09-22 12:02", "Irish summer time is UTC+1");
 expect(dublinStamp(Date.UTC(2026, 11, 1, 11, 2) / 1000), "2026-12-01 11:02", "Irish winter time is UTC");
+
+/* ── ChatGPT ads: their own channel, never Google's ─────────────── */
+
+expect(readVisit(V("2026-10-02 10:00", { landingPage: "/ring-installation?oppref=op_abc123&utm_source=chatgpt", utmSource: "chatgpt" })),
+  "chatgpt-ad", "a landing URL with ?oppref= is a ChatGPT ad, whatever utm_source says");
+expect(readVisit(V("2026-10-02 10:00", { landingPage: "/x?oppref=op_abc&utm_source=chatgpt&utm_medium=cpc", utmSource: "chatgpt", utmMedium: "cpc" })),
+  "chatgpt-ad", "a ChatGPT ad tagged cpc is ChatGPT's, not taken for a Google ad by its medium");
+expect(readVisit(V("2026-10-02 10:00", { landingPage: "/", oppref: "op_from_stripe" })),
+  "chatgpt-ad", "a click kept on the Stripe session (oai_oppref) is a ChatGPT ad");
+expect(readVisit(V("2026-10-02 10:00", { landingPage: "/?utm_source=chatgpt.com", utmSource: "chatgpt.com", referrer: "https://chatgpt.com/" })),
+  "not-ad", "a ChatGPT citation, utm_source=chatgpt.com with no oppref, is organic");
+expect(readVisit(V("2026-10-02 10:00", { landingPage: "/?oppref=", referrer: "https://chatgpt.com/" })),
+  "not-ad", "an empty ?oppref= is not a click");
+expect(readVisit(V("2026-10-02 10:00", { landingPage: "/services?gclid=Cj0&oppref=op_both" })),
+  "ad", "a visit carrying both click ids stays Google's, as it was before ChatGPT ads were read");
+expect(readTrail([V("2026-10-01 09:00", { landingPage: "/?oppref=op_1" }), V("2026-10-03 10:00", { landingPage: "/", referrer: "https://www.google.com/" })]),
+  "chatgpt-ad", "a ChatGPT ad on the trail makes the customer ChatGPT's");
+expect(readTrail([V("2026-10-01 09:00", { landingPage: "/?oppref=op_1" }), V("2026-10-03 10:00", { landingPage: "/?gbraid=0AAA" })]),
+  "ad", "a customer both ads reached stays Google's");
+
+/* The return chart's arithmetic, roas-months.ts, on payments made up here. */
+{
+  const { mkdtempSync, writeFileSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { pathToFileURL } = await import("node:url");
+  const dir = mkdtempSync(join(tmpdir(), "roas-months-"));
+  const esm = (rel) => ts.transpileModule(readFileSync(new URL(`../${rel}`, import.meta.url), "utf8"), {
+    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+  }).outputText.replace(/from\s+"\.\/how-they-came"/g, 'from "./how-they-came.mjs"');
+  try {
+    writeFileSync(join(dir, "how-they-came.mjs"), esm("src/lib/crm/how-they-came.ts"));
+    writeFileSync(join(dir, "roas-months.mjs"), esm("src/lib/crm/roas-months.ts"));
+    writeFileSync(join(dir, "labels.mjs"), esm("src/lib/crm/labels.ts"));
+    const { cameOf, roasMonths } = await import(pathToFileURL(join(dir, "roas-months.mjs")).href);
+    const { foundUsLabel } = await import(pathToFileURL(join(dir, "labels.mjs")).href);
+    const t = Date.UTC(2026, 9, 2, 10) / 1000;
+
+    expect(JSON.stringify(cameOf({ created: t, metadata: { oai_oppref: "op_1" } }, [])),
+      JSON.stringify({ came: "chatgpt-ad", via: "click" }), "a checkout with oai_oppref is a ChatGPT ad, on the payment");
+    expect(JSON.stringify(cameOf({ created: t, metadata: { gclid: "Cj0", oai_oppref: "op_1" } }, [])),
+      JSON.stringify({ came: "ad", via: "click" }), "a checkout with both click ids is Google's");
+    expect(JSON.stringify(cameOf({ created: t, metadata: { landing_page: "/ring-installation?oppref=op_2" } }, [])),
+      JSON.stringify({ came: "chatgpt-ad", via: "enquiry" }), "a checkout whose recorded landing page has ?oppref= is a ChatGPT ad");
+    expect(JSON.stringify(cameOf({ created: t, payment_link: "plink_1", metadata: {} }, [V("2026-09-30 10:00", { landingPage: "/?oppref=op_3" })])),
+      JSON.stringify({ came: "chatgpt-ad", via: "enquiry" }), "a payment link traced through a ChatGPT ad enquiry is ChatGPT's");
+    expect(cameOf({ created: t, metadata: { utm_source: "chatgpt.com", landing_page: "/?utm_source=chatgpt.com", referrer: "https://chatgpt.com/" } }, []).came,
+      "not-ad", "a checkout from a ChatGPT citation stays organic");
+
+    /* Google's figures with a ChatGPT sale in October, against the same sale
+       read the way it was before ChatGPT ads had a name (not an ad). They must
+       be the same to the cent; only where the money is shown moves. */
+    const P = (month, amount, person, came, via = null) => ({ month, amount, person, came, via });
+    const base = [
+      P("2026-08", 400, "a", "ad", "click"), P("2026-08", 300, "b", "not-ad"), P("2026-09", 250, "c", "unknown"),
+      P("2026-09", 500, "d", "ad", "enquiry"), P("2026-10", 600, "e", "unknown"), P("2026-10", 200, "f", "not-ad"),
+    ];
+    const spend = new Map([["2026-08", 150], ["2026-09", 180], ["2026-10", 90]]);
+    const label = (k) => k;
+    const google = (ms) => JSON.stringify(ms.map((m) => [m.key, m.spend, m.back, m.backViaEnquiry, m.estimated, m.share, m.unseen, m.taken, m.sales, m.tiedSales]));
+    const withChatGpt = roasMonths([...base, P("2026-10", 900, "g", "chatgpt-ad", "click")], spend, "2026-10", label);
+    const asBefore = roasMonths([...base, P("2026-10", 900, "g", "not-ad")], spend, "2026-10", label);
+    const asGoogle = roasMonths([...base, P("2026-10", 900, "g", "ad", "click")], spend, "2026-10", label);
+    expect(google(withChatGpt), google(asBefore), "a ChatGPT sale leaves Google's spend, back, estimate, share and sales exactly as they were");
+    expect(google(withChatGpt) === google(asGoogle), false, "the comparison can tell: the same sale counted as Google's does move Google's figures");
+    const oct = withChatGpt.find((m) => m.key === "2026-10");
+    const octBefore = asBefore.find((m) => m.key === "2026-10");
+    expect(JSON.stringify([oct.chatgptBack, oct.chatgptSales, oct.notFromAds, oct.back]), JSON.stringify([900, 1, 200, 0]),
+      "the ChatGPT sale is ChatGPT's back, not Google's, and not counted as found some other way");
+    expect(octBefore.chatgptBack, 0, "read as not an ad, nothing is ChatGPT's");
+    const roas = (ms) => ms.reduce((t, m) => t + m.back + m.estimated, 0) / ms.reduce((t, m) => t + m.spend, 0);
+    expect(roas(withChatGpt), roas(asBefore), "Google's return per euro is the same with the ChatGPT sale in it");
+
+    /* The customer's page. */
+    expect(foundUsLabel({ custom: { oppref: "op_lead" } }), "A ChatGPT ad (the click was recorded)", "a CRM lead with custom.oppref and no answer found us through a ChatGPT ad");
+    expect(foundUsLabel({ gclid: "Cj0", custom: { oppref: "op_lead" } }), "A Google ad (the click was recorded)", "a lead with both clicks reads as Google's, as the trail does");
+    expect(foundUsLabel({ custom: { found_us: "ai_assistant", oppref: "op_lead" } }), "ChatGPT or another AI assistant", "what somebody chose still wins");
+    expect(foundUsLabel({ custom: { utm_source: "chatgpt.com" } }), "Did not say", "nothing without the click");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
 
 if (failed) {
   console.error(`\ncheck-how-they-came: ${failed} rule${failed === 1 ? "" : "s"} broken`);

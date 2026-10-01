@@ -35,6 +35,14 @@
  * from customers won months ago, so no ad can claim one as a sale in the month
  * it is charged.
  *
+ * ── GOOGLE'S, AND CHATGPT'S ──────────────────────────────────────
+ *
+ * Every figure on the chart is Google's: Google's spend, and money from
+ * customers a Google ad reached. Money from customers a ChatGPT ad reached is
+ * read too and kept apart, as chatgptBack, for the ChatGPT ads panel to set
+ * against ChatGPT's own spend (openai-ads.ts). The arithmetic is in
+ * roas-months.ts.
+ *
  * ── ONE SOURCE FOR THE MONEY ─────────────────────────────────────
  *
  * Charges, every one that succeeded and was not refunded, the same list
@@ -44,43 +52,19 @@
 import { unstable_cache } from "next/cache";
 import { fetchPeriods } from "./ads-periods";
 import type { Site } from "./db";
-import {
-  EnquiryIndex, dublinStamp, fetchEnquiries, readTrail,
-  type Came, type Payer, type Visit,
-} from "./how-they-came";
+import { EnquiryIndex, dublinStamp, fetchEnquiries, type Payer } from "./how-they-came";
+import { cameOf, roasMonths, type Payment, type RoasMonth } from "./roas-months";
 
-export interface RoasMonth {
-  /** yyyy-mm */
-  key: string;
-  /** "May 2026" */
-  label: string;
-  spend: number;
-  /** Money from customers an ad is known to have reached. Drawn solid. */
-  back: number;
-  /** The part of `back` traced through the customer's enquiry rather than the payment. */
-  backViaEnquiry: number;
-  /** Estimated from ads, of the money whose customer cannot be traced. Drawn grey. */
-  estimated: number;
-  /** Every euro Stripe took that month, subscription renewals excluded. */
-  taken: number;
-  /** Money from customers whose visits show they came some other way. */
-  notFromAds: number;
-  /** Money whose customer cannot be traced either way. The grey is a share of this. */
-  unseen: number;
-  /** Of the customers who could be traced, the share that came through an ad,
-      over this month and the two before it. What the grey is worked out at. */
-  share: number;
-  sales: number;
-  tiedSales: number;
-  /** The month is still running, so its figures are not yet a month's. */
-  partial: boolean;
-}
+export type { RoasMonth } from "./roas-months";
 
 export interface RoasLive {
   months: RoasMonth[];
+  /** Google's spend, and Google's back and estimate, over the months shown. */
   spend: number;
   back: number;
   estimated: number;
+  /** Money from customers a ChatGPT ad reached, over the same months. Not part of back. */
+  chatgptBack: number;
   from: string;
   to: string;
   /** False when the enquiry log could not be read, so every payment without
@@ -96,16 +80,6 @@ const MONTHS = 12;
 const label = (key: string) =>
   new Intl.DateTimeFormat("en-IE", { month: "short", year: "numeric", timeZone: "Europe/Dublin" })
     .format(new Date(`${key}-01T12:00:00Z`));
-
-interface Payment {
-  month: string;
-  amount: number;
-  /** Who, for counting customers rather than payments when working out the share. */
-  person: string;
-  came: Came;
-  /** How an "ad" verdict was reached: on the payment, or on the customer's enquiry. */
-  via: "click" | "enquiry" | null;
-}
 
 interface Session {
   id: string; created: number; payment_intent?: string | null; client_reference_id?: string | null;
@@ -192,26 +166,11 @@ async function payments(sinceUnix: number): Promise<{ list: Payment[]; trailRead
       const month = new Date(c.created * 1000).toISOString().slice(0, 7);
       const amount = c.amount / 100;
 
-      const clicked = Boolean(s && ((s.metadata?.gclid ?? "").trim() || (s.client_reference_id ?? "").trim()));
-      if (clicked) {
-        list.push({ month, amount, person, came: "ad", via: "click" });
-        continue;
-      }
-
-      /* The website checkout records its own visit; a payment link does not. */
-      const visits: Visit[] = [];
-      if (s && !s.payment_link) {
-        const m = s.metadata ?? {};
-        visits.push({
-          at: dublinStamp(s.created), gclid: m.gclid, landingPage: m.landing_page, referrer: m.referrer,
-          utmSource: m.utm_source, utmMedium: m.utm_medium,
-        });
-      }
-      /* Enquiries up to a day after the payment, because the log writes the
-         order row for a payment a moment after Stripe records it. */
-      if (index) visits.push(...index.find(payer, dublinStamp(c.created + 86_400)));
-      const came = readTrail(visits);
-      list.push({ month, amount, person, came, via: came === "ad" ? "enquiry" : null });
+      /* The payment's own click first, then the customer's enquiries up to a
+         day after it, because the log writes the order row for a payment a
+         moment after Stripe records it (roas-months.ts, cameOf). */
+      const enquiries = index ? index.find(payer, dublinStamp(c.created + 86_400)) : [];
+      list.push({ month, amount, person, ...cameOf(s, enquiries) });
     }
     if (!body.has_more || data.length === 0) break;
     after = data[data.length - 1]!.id;
@@ -234,67 +193,19 @@ async function read(site: Site): Promise<RoasLive> {
     ? await payments(Math.floor(since.getTime() / 1000))
     : { list: [] as Payment[], trailRead: true };
 
-  const byMonth = new Map<string, Payment[]>();
-  for (const p of list) byMonth.set(p.month, [...(byMonth.get(p.month) ?? []), p]);
-
   const spendByMonth = new Map<string, number>();
   for (const m of periods.data.month) {
     if (m.key >= since.toISOString().slice(0, 7)) spendByMonth.set(m.key, m.cost);
   }
 
-  const keySet = new Set<string>();
-  spendByMonth.forEach((_, k) => keySet.add(k));
-  byMonth.forEach((_, k) => keySet.add(k));
-  const keys = Array.from(keySet).sort();
-  const sum = (ps: Payment[]) => ps.reduce((t, p) => t + p.amount, 0);
-  const kept = keys.filter((k) => (spendByMonth.get(k) ?? 0) > 0 || sum(byMonth.get(k) ?? []) > 0).slice(-MONTHS);
-
-  /*
-   * The rate the grey is drawn at: of the customers whose way in is known,
-   * the share who came through an ad, over this month and the two before it.
-   *
-   * Customers, not euros. The question for each untraced payment is how likely
-   * it is that this one customer came from an ad, and one large job should not
-   * swing that for everybody. Three months rather than one, because a job paid
-   * by link in September was usually quoted in August from an enquiry in July.
-   */
-  const shareAt = (i: number) => {
-    const known = new Map<string, boolean>();
-    for (let j = Math.max(0, i - 2); j <= i; j++) {
-      for (const p of byMonth.get(kept[j]!) ?? []) {
-        if (p.came === "unknown") continue;
-        known.set(p.person, (known.get(p.person) ?? false) || p.came === "ad");
-      }
-    }
-    if (known.size === 0) return 0;
-    let ads = 0;
-    known.forEach((v) => { if (v) ads++; });
-    return ads / known.size;
-  };
-
-  const months: RoasMonth[] = kept.map((k, i) => {
-    const ps = byMonth.get(k) ?? [];
-    const ad = ps.filter((p) => p.came === "ad");
-    const unseen = sum(ps.filter((p) => p.came === "unknown"));
-    const share = shareAt(i);
-    return {
-      key: k, label: label(k), spend: spendByMonth.get(k) ?? 0,
-      back: sum(ad),
-      backViaEnquiry: sum(ad.filter((p) => p.via === "enquiry")),
-      estimated: Math.round(unseen * share),
-      taken: sum(ps),
-      notFromAds: sum(ps.filter((p) => p.came === "not-ad")),
-      unseen, share,
-      sales: ps.length, tiedSales: ad.length,
-      partial: k === thisMonth,
-    };
-  });
+  const months = roasMonths(list, spendByMonth, thisMonth, label, MONTHS);
 
   return {
     months,
     spend: months.reduce((s, m) => s + m.spend, 0),
     back: months.reduce((s, m) => s + m.back, 0),
     estimated: months.reduce((s, m) => s + m.estimated, 0),
+    chatgptBack: months.reduce((s, m) => s + m.chatgptBack, 0),
     from: months[0]?.label ?? "",
     to: months[months.length - 1]?.label ?? "",
     trailRead,
@@ -305,7 +216,9 @@ export async function fetchRoasLive(site: Site): Promise<RoasLiveResult> {
   try {
     const data = await unstable_cache(
       async () => read(site),
-      ["crm-roas-live", site],
+      /* v2: months carry chatgptBack. A copy cached before it would draw the
+         ChatGPT panel's money as missing for a minute after the deploy. */
+      ["crm-roas-live", "v2", site],
       { revalidate: 60, tags: [ROAS_LIVE_TAG, `${ROAS_LIVE_TAG}:${site}`] },
     )();
     return { ok: true, data };

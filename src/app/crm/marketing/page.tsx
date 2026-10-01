@@ -19,6 +19,7 @@ import { Sparkline } from "../sparkline";
 import { TrendChart, type TrendPoint } from "../trend-chart";
 import type { AdsData } from "@/lib/crm/google-ads";
 import { Kpi, KpiRow, compareTail } from "../kpi";
+import { ChatGptAdsSection } from "../chatgpt-ads";
 import { CreditCard, MousePointerClick, Activity, Inbox, Euro, TrendingUp } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -385,8 +386,10 @@ export default async function MarketingPage() {
           decides where the money goes, so nothing sits above it. */}
       <div className="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 px-4 py-3">
-          <h2 className="text-base font-semibold text-slate-900">What the advertising cost, and what came back</h2>
-          <p className="mt-0.5 text-xs text-slate-500">Live from Google Ads, Stripe and the enquiry log, by month.</p>
+          <h2 className="text-base font-semibold text-slate-900">What Google Ads cost, and what came back</h2>
+          <p className="mt-0.5 text-xs text-slate-500">
+            Live from Google Ads, Stripe and the enquiry log, by month. ChatGPT ads are further down, on their own.
+          </p>
         </div>
         {roas.ok ? (
           <RoasChart months={roas.data.months} spend={roas.data.spend} back={roas.data.back}
@@ -404,6 +407,14 @@ export default async function MarketingPage() {
       <Suspense fallback={<LiveSkeleton />}>
         <LiveSections site={session.site} />
       </Suspense>
+
+      {/* Its own boundary: OpenAI being slow or unconnected costs this panel
+          and nothing above it. */}
+      <div className="mt-6">
+        <Suspense fallback={<Skeleton className="h-48 rounded-xl" />}>
+          <ChatGptAdsSection site={session.site} />
+        </Suspense>
+      </div>
     </>
   );
 }

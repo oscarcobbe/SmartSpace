@@ -13,6 +13,7 @@ import { displayName } from "@/lib/crm/diary";
 import { plainText, shortDay, slotText } from "@/lib/crm/display";
 import { fetchFinance } from "@/lib/crm/stripe-finance";
 import { fetchAds, adsSplit } from "@/lib/crm/google-ads";
+import { chatGptThisMonthLine } from "./chatgpt-ads";
 import { crm, crmConfigured, unlessWrongKey, type Site } from "@/lib/crm/db";
 import { fetchDiary } from "@/lib/crm/diary";
 import { DiaryToggle, type Row } from "./diary-toggle";
@@ -239,11 +240,14 @@ export async function MoneyThisMonth({ site }: { site: Site }) {
 }
 
 export async function AdsThisMonth({ site }: { site: Site }) {
-  const result = await fetchAds(site, 2);
+  /* ChatGPT's line never throws: not connected and a failed read are both a
+     sentence, so it cannot take Google's figures down with it. */
+  const [result, chatgpt] = await Promise.all([fetchAds(site, 2), chatGptThisMonthLine(site)]);
   if (!result.ok) {
     return (
       <Panel title="Advertising" aside={<PanelLink href="/crm/marketing">Marketing</PanelLink>}>
         <div className="px-4 py-4"><Note tone="warn">Google Ads could not be read, so this month&rsquo;s spend is not shown. {result.reason}</Note></div>
+        <p className="border-t border-slate-100 px-4 py-2 text-xs text-slate-500">{chatgpt}</p>
       </Panel>
     );
   }
@@ -275,7 +279,7 @@ export async function AdsThisMonth({ site }: { site: Site }) {
     <Panel title="Advertising" aside={<PanelLink href="/crm/marketing">Marketing</PanelLink>}>
       <div className="grid grid-cols-2 divide-x divide-slate-200">
         <Stat
-          label={`Spent in ${now.label}`}
+          label={`Google Ads, ${now.label}`}
           value={money(now.cost)}
           note={`${now.clicks} clicks so far this month`}
           source={{ href: "/crm/marketing", label: "See what came back" }}
@@ -293,6 +297,7 @@ export async function AdsThisMonth({ site }: { site: Site }) {
         <Link href="/crm/marketing" className="font-medium text-slate-700 underline-offset-2 hover:underline">Marketing</Link>,
         where you can choose whether to count every euro Stripe took or only what Google could tie to a click.
       </p>
+      <p className="border-t border-slate-100 px-4 py-2 text-xs text-slate-500">{chatgpt}</p>
     </Panel>
   );
 }
