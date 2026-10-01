@@ -219,8 +219,8 @@ export default function CookieBanner() {
        */}
       <p className="text-xs sm:text-sm text-gray-600 leading-relaxed mb-4">
         It tells us which pages actually lead to a job being booked, so we stop
-        paying to send people to the ones that do not. No names and no personal
-        details. Change your mind any time. See our{" "}
+        paying to send people to the ones that do not. Contact details you type
+        are only ever shared in scrambled form. Change your mind any time. See our{" "}
         <a href="/privacy" className="text-brand-700 hover:underline">privacy policy</a>.
       </p>
       {/*
