@@ -14,7 +14,10 @@
  *     slot's id behind;
  *   - a calendar Google could not read counting as free;
  *   - the clock change at the end of October moving every slot an hour;
- *   - a moved booking breaking the links already emailed to the customer.
+ *   - a moved booking breaking the links already emailed to the customer;
+ *   - Google failing: outages, timeouts, rate limits, an expired token, and
+ *     the worst one, a booking written but its answer lost on the way back;
+ *   - a crowd: many customers at the same slot at the same instant.
  *
  *   node scripts/check-booking-engine.mjs
  */
@@ -42,6 +45,7 @@ process.env.GOOGLE_BOOKING_SA_KEY = Buffer.from(JSON.stringify({
 })).toString("base64");
 process.env.BOOKING_CALENDAR_OWNER = "nigel@smart-space.ie";
 process.env.BOOKING_LINK_SECRET = "test-secret-for-links-0123456789";
+process.env.BOOKING_RETRY_BASE_MS = "5"; // the real backoff is 0.3 s, then 0.9 s
 
 const cal = new Map(); // id -> event
 let etagN = 0;
@@ -50,10 +54,40 @@ let freeBusyHook = null; // runs before freeBusy answers, to stage a race
 const json = (status, body) => new Response(body === undefined ? null : JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 const stamp = (e) => ({ ...e, etag: `"${++etagN}"`, updated: new Date().toISOString() });
 
+/*
+ * Faults, queued per request: the first fault whose test matches is used up.
+ *   "503" "429" "ratelimit" "401"  answer that, change nothing
+ *   "timeout"                      never answer
+ *   "503-after" "timeout-after"    do the work, then lose the answer
+ */
+let faults = [];
+const calls = { token: 0, freeBusy: 0, insert: 0, get: 0, put: 0, delete: 0, list: 0 };
+const fault = (test, kind) => faults.push({ test, kind });
+const isInsert = (m, p) => m === "POST" && p.endsWith("/events");
+const isFreeBusy = (m, p) => p.endsWith("/freeBusy");
+const isDelete = (m) => m === "DELETE";
+const isPut = (m) => m === "PUT";
+const isToken = (m, p, host) => host === "oauth2.googleapis.com";
+const timeoutError = () => Object.assign(new Error("The operation was aborted due to timeout"), { name: "TimeoutError" });
+
 globalThis.fetch = async (input, init = {}) => {
   const url = new URL(typeof input === "string" ? input : input.url);
   const method = (init.method || "GET").toUpperCase();
+  const path = url.pathname.replace("/calendar/v3", "");
+  const i = faults.findIndex((f) => f.test(method, path, url.host));
+  const f = i >= 0 ? faults.splice(i, 1)[0].kind : null;
+  if (f === "503" || f === "429" || f === "401") return json(Number(f), { error: { message: `fault ${f}` } });
+  if (f === "ratelimit") return json(403, { error: { errors: [{ reason: "rateLimitExceeded" }], message: "Rate Limit Exceeded" } });
+  if (f === "timeout") throw timeoutError();
+  const res = await google(url, method, init);
+  if (f === "503-after") return json(503, { error: { message: "fault 503 after the write" } });
+  if (f === "timeout-after") throw timeoutError();
+  return res;
+};
+
+async function google(url, method, init) {
   if (url.host === "oauth2.googleapis.com") {
+    calls.token++;
     const assertion = new URLSearchParams(init.body.toString()).get("assertion");
     const claims = JSON.parse(Buffer.from(assertion.split(".")[1], "base64url").toString());
     if (claims.sub !== "nigel@smart-space.ie") return json(401, { error: "unauthorized_client" });
@@ -62,6 +96,7 @@ globalThis.fetch = async (input, init = {}) => {
   const body = init.body ? JSON.parse(init.body) : null;
   const path = url.pathname.replace("/calendar/v3", "");
   if (path === "/freeBusy") {
+    calls.freeBusy++;
     if (freeBusyHook) await freeBusyHook();
     if (unreadable) return json(200, { calendars: { primary: { errors: [{ reason: "notFound" }] } } });
     const tMin = Date.parse(body.timeMin), tMax = Date.parse(body.timeMax);
@@ -75,6 +110,7 @@ globalThis.fetch = async (input, init = {}) => {
   if (!m) return json(404, { error: "no route" });
   const id = m[1] && decodeURIComponent(m[1]);
   if (method === "POST") {
+    calls.insert++;
     if (cal.has(body.id)) return json(409, { error: { message: "The requested identifier already exists." } });
     const e = stamp({ status: "confirmed", created: new Date().toISOString(), ...body });
     cal.set(body.id, e);
@@ -91,6 +127,7 @@ globalThis.fetch = async (input, init = {}) => {
     return json(200, e);
   }
   if (method === "DELETE") {
+    calls.delete++;
     const cur = cal.get(id);
     if (!cur || cur.status === "cancelled") return json(410, {});
     cal.set(id, stamp({ ...cur, status: "cancelled" }));
@@ -111,7 +148,7 @@ globalThis.fetch = async (input, init = {}) => {
     return json(200, { items });
   }
   return json(405, {});
-};
+}
 
 let E;
 try {
@@ -131,7 +168,8 @@ const check = (name, ok, detail = "") => {
 const NOW = Date.parse("2026-10-01T09:00:00Z"); // a Thursday
 const person = { name: "Mary Byrne", email: "mary@example.ie", phone: "087 123 4567", address: "1 Main St, Naas" };
 const book = (date, start, extra = {}) => E.book({ site: "ss", kind: "installation", date, start, ...person, ...extra }, NOW);
-const reset = () => { cal.clear(); unreadable = false; freeBusyHook = null; };
+const reset = () => { cal.clear(); unreadable = false; freeBusyHook = null; faults = []; };
+const live = () => [...cal.values()].filter((e) => e.status !== "cancelled");
 
 // Times
 check("10:00 Dublin in summer is 09:00 UTC", new Date(E.dublinToEpoch("2026-10-05", "10:00")).toISOString() === "2026-10-05T09:00:00.000Z");
@@ -221,6 +259,93 @@ check("SmartCare Living bookings link to smartcareliving.ie", E.manageUrl({ ref,
 check("a time that is not a slot is refused", !(await book("2026-10-05", "11:00")).ok);
 check("a booking without an email is refused", !(await E.book({ site: "ss", kind: "installation", date: "2026-10-15", start: "10:00", name: "X", email: "" }, NOW)).ok);
 check("a slot under four hours away is refused", !(await E.book({ site: "ss", kind: "installation", date: "2026-10-01", start: "12:30", ...person }, NOW)).ok);
+
+
+// ─── When Google misbehaves ─────────────────────────────────────────
+reset();
+fault(isFreeBusy, "503"); fault(isFreeBusy, "timeout");
+check("free/busy survives a 503 and a timeout (third try)", JSON.stringify(await E.freeStarts("2026-10-05", NOW)) === '["10:00","12:30","15:00"]');
+reset();
+fault(isFreeBusy, "503"); fault(isFreeBusy, "503"); fault(isFreeBusy, "503");
+threw = false;
+try { await E.freeStarts("2026-10-05", NOW); } catch { threw = true; }
+check("three failures in a row: free/busy throws, never answers 'all free'", threw);
+reset();
+fault(isFreeBusy, "ratelimit");
+check("Google's rate-limit 403 is waited out", (await E.freeStarts("2026-10-05", NOW)).length === 3);
+
+reset();
+fault(isInsert, "503-after");
+const lost1 = await book("2026-10-19", "10:00");
+check("a booking written but answered 503: reported booked, once", lost1.ok && live().length === 1, JSON.stringify(lost1));
+reset();
+fault(isInsert, "timeout-after");
+const lost2 = await book("2026-10-19", "12:30");
+check("a booking written but its answer timed out: reported booked, once", lost2.ok && live().length === 1 && lost2.booking.id === "ssb2026101912300", JSON.stringify(lost2));
+reset();
+fault(isInsert, "timeout-after"); fault(isInsert, "timeout-after");
+const lost3 = await book("2026-10-19", "15:00");
+check("the same twice over: still one booking, reported booked", lost3.ok && live().length === 1, JSON.stringify(lost3));
+reset();
+fault(isInsert, "503"); fault(isInsert, "503"); fault(isInsert, "503");
+fault((m, p) => m === "GET" && /\/events\/ssb/.test(p), "503"); fault((m, p) => m === "GET" && /\/events\/ssb/.test(p), "503"); fault((m, p) => m === "GET" && /\/events\/ssb/.test(p), "503");
+const down = await book("2026-10-20", "10:00");
+check("Google down for the whole attempt: refused as an error, nothing written", !down.ok && down.reason === "error" && live().length === 0, JSON.stringify(down));
+check("and the slot is still offered once Google is back", (await E.freeStarts("2026-10-20", NOW)).includes("10:00"));
+
+reset();
+const rv = await book("2026-10-21", "10:00");
+await E.cancel(rv.booking.ref);
+fault(isPut, "timeout-after");
+const rv2 = await book("2026-10-21", "10:00", { name: "Sean Kelly", email: "sean@example.ie" });
+check("taking back a cancelled slot whose answer was lost: booked, once", rv2.ok && live().length === 1 && live()[0].extendedProperties.private.email === "sean@example.ie", JSON.stringify(rv2));
+
+reset();
+fault((m, p, h) => isToken(m, p, h), "503");
+const tk = await E.freeStarts("2026-10-05", NOW);
+check("the token endpoint failing once is retried", tk.length === 3);
+reset();
+fault(isFreeBusy, "401");
+const t401 = calls.token;
+check("a token Google stops honouring is replaced and the call repeated", (await E.freeStarts("2026-10-05", NOW)).length === 3 && calls.token === t401 + 1);
+
+reset();
+const mv1 = await book("2026-10-22", "10:00");
+fault(isDelete, "503"); fault(isDelete, "503"); fault(isDelete, "503");
+const mv2 = await E.reschedule(mv1.booking.ref, "2026-10-22", "15:00", NOW);
+check("a move whose old slot will not delete: the move stands, the leftover is named", mv2.ok && mv2.leftover === mv1.booking.id && live().length === 2, JSON.stringify(mv2));
+check("the link then shows the new time, not the old", (await E.bookingByRef(mv1.booking.ref))?.start === "2026-10-22T14:00:00.000Z");
+await E.cancel(mv1.booking.ref);
+check("and cancelling it removes both", live().length === 0);
+reset();
+const mv3 = await book("2026-10-22", "10:00");
+fault(isDelete, "timeout-after");
+const mv4 = await E.reschedule(mv3.booking.ref, "2026-10-22", "12:30", NOW);
+check("a move whose delete answer was lost: one booking, at the new time", mv4.ok && !mv4.leftover && live().length === 1 && live()[0].start.dateTime === "2026-10-22T11:30:00.000Z", JSON.stringify(mv4));
+
+// ─── A crowd ────────────────────────────────────────────────────────
+reset();
+const crowd = await Promise.all(Array.from({ length: 25 }, (_, i) => book("2026-10-26", "12:30", { name: `Person ${i}`, email: `p${i}@example.ie` })));
+check("25 customers at one slot at the same instant: exactly one booked", crowd.filter((r) => r.ok).length === 1 && crowd.filter((r) => !r.ok).every((r) => r.reason === "taken") && live().length === 1, JSON.stringify(crowd.filter((r) => !r.ok || true).map((r) => r.ok || r.reason)));
+reset();
+const days = ["2026-10-26", "2026-10-27", "2026-10-28", "2026-10-29", "2026-10-30"];
+const spread = await Promise.all(days.flatMap((d) => ["10:00", "12:30", "15:00"].map((t) => book(d, t, { email: `${d}-${t}@example.ie`.replace(":", "") }))));
+check("15 different slots booked at once: all 15 booked, none crossed", spread.every((r) => r.ok) && live().length === 15 && new Set(live().map((e) => e.id)).size === 15);
+check("and the week then shows nothing free", (await Promise.all(days.map((d) => E.freeStarts(d, NOW)))).every((f) => f.length === 0));
+reset();
+const churn = [];
+for (let i = 0; i < 20; i++) {
+  const b = await book("2026-11-02", "10:00", { email: `churn${i}@example.ie` });
+  churn.push(b.ok && b.booking.id === "ssb2026110210000");
+  await E.cancel(b.booking.ref);
+}
+check("booked and cancelled 20 times over: the slot's id reused each time, nothing left", churn.every(Boolean) && live().length === 0);
+reset();
+const flaky = [];
+for (let i = 0; i < 30; i++) { if (i % 3 === 0) fault(isInsert, "503-after"); if (i % 4 === 0) fault(isFreeBusy, "503"); if (i % 5 === 0) fault(isInsert, "timeout-after"); }
+const flakyRuns = await Promise.all(days.flatMap((d) => ["10:00", "12:30", "15:00"].map((t) => Promise.all([book(d, t, { email: "a@example.ie" }), book(d, t, { email: "b@example.ie" })]))));
+const perSlot = flakyRuns.map((pair) => pair.filter((r) => r.ok).length);
+check("pairs racing for 15 slots while Google drops answers: never two in a slot", perSlot.every((n) => n <= 1) && live().length === perSlot.reduce((a, n) => a + n, 0) && new Set(live().map((e) => e.start.dateTime)).size === live().length, JSON.stringify(perSlot));
 
 console.log(failed ? `\n${failed} failed` : "\nall passed");
 process.exit(failed ? 1 : 0);

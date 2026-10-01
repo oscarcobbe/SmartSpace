@@ -29,6 +29,46 @@
  */
 import { createSign } from "crypto";
 
+/** A Google API error that keeps the status, so callers can tell a 409 from a 500. */
+export class CalendarError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+  }
+}
+
+/*
+ * Google's own guidance for its APIs: retry 429, 5xx and its rate-limit 403s
+ * with backoff, and a request that timed out or never connected. A 409 or a
+ * 412 is an answer, never retried. Booking stays safe to retry because the
+ * event id is the slot's (engine.ts): a repeated insert gets 409, and the
+ * engine then finds its own booking already there.
+ */
+function transient(e: unknown): boolean {
+  if (e instanceof CalendarError) {
+    if ([408, 429, 500, 502, 503, 504].includes(e.status)) return true;
+    return e.status === 403 && /rateLimitExceeded|userRateLimitExceeded|quotaExceeded/i.test(e.message);
+  }
+  const name = (e as { name?: string })?.name;
+  return name === "AbortError" || name === "TimeoutError" || e instanceof TypeError;
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** Up to `attempts` tries, backing off 0.3 s then 0.9 s (with jitter), never past `budgetMs` in all. */
+export async function withRetry<T>(fn: () => Promise<T>, attempts = 3, budgetMs = 15_000): Promise<T> {
+  const started = Date.now();
+  for (let i = 1; ; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      const base = Number(process.env.BOOKING_RETRY_BASE_MS) || 300;
+      const wait = base * 3 ** (i - 1) + Math.floor(Math.random() * (base * 0.66));
+      if (i >= attempts || !transient(e) || Date.now() - started + wait > budgetMs) throw e;
+      await sleep(wait);
+    }
+  }
+}
+
 const SCOPES = [
   "https://www.googleapis.com/auth/calendar.events",
   "https://www.googleapis.com/auth/calendar.freebusy",
@@ -82,7 +122,7 @@ async function postJson<T>(url: string, body: unknown, bearer?: string): Promise
     cache: "no-store",
     signal: AbortSignal.timeout(6000),
   });
-  if (!res.ok) throw new Error(`${new URL(url).host}${new URL(url).pathname} ${res.status}: ${(await res.text().catch(() => "")).slice(0, 300)}`);
+  if (!res.ok) throw new CalendarError(res.status, `${new URL(url).host}${new URL(url).pathname} ${res.status}: ${(await res.text().catch(() => "")).slice(0, 300)}`);
   return (await res.json()) as T;
 }
 
@@ -126,6 +166,9 @@ async function delegationAssertion(owner: string, now: number, tokenUri: string)
   return signed.signedJwt;
 }
 
+// Calls that arrive together while there is no token share one fetch.
+let inflight: Promise<string> | null = null;
+
 async function accessToken(): Promise<string> {
   const key = readKey();
   const owner = calendarOwner();
@@ -134,7 +177,20 @@ async function accessToken(): Promise<string> {
   }
   const now = Math.floor(Date.now() / 1000);
   if (cached && cached.owner === owner && cached.exp - 60 > now) return cached.token;
+  if (!inflight) {
+    inflight = withRetry(() => fetchToken(owner, key)).finally(() => {
+      inflight = null;
+    });
+  }
+  return inflight;
+}
 
+function forgetToken() {
+  cached = null;
+}
+
+async function fetchToken(owner: string, key: ServiceAccountKey | null): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
   const tokenUri = key?.token_uri || "https://oauth2.googleapis.com/token";
   const assertion = await delegationAssertion(owner, now, tokenUri);
 
@@ -148,33 +204,36 @@ async function accessToken(): Promise<string> {
   if (!res.ok) {
     // unauthorized_client here means the Workspace admin has not yet allowed
     // this service account's client ID, or not for both scopes.
-    throw new Error(`Google token ${res.status}: ${(await res.text().catch(() => "")).slice(0, 300)}`);
+    throw new CalendarError(res.status, `Google token ${res.status}: ${(await res.text().catch(() => "")).slice(0, 300)}`);
   }
   const data = (await res.json()) as { access_token: string; expires_in: number };
   cached = { token: data.access_token, owner, exp: now + (data.expires_in || 3600) };
   return data.access_token;
 }
 
-/** A Google Calendar API error that keeps the status, so callers can tell a 409 from a 500. */
-export class CalendarError extends Error {
-  constructor(public status: number, message: string) {
-    super(message);
-  }
-}
 
-async function call<T>(method: string, path: string, opts: { body?: unknown; headers?: Record<string, string>; timeoutMs?: number } = {}): Promise<T> {
+async function callOnce<T>(method: string, path: string, opts: { body?: unknown; headers?: Record<string, string>; timeoutMs?: number }, refreshed = false): Promise<T> {
   const token = await accessToken();
   const res = await fetch(`${API}${path}`, {
     method,
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", ...(opts.headers || {}) },
     body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
     cache: "no-store",
-    signal: AbortSignal.timeout(opts.timeoutMs ?? 8000),
+    signal: AbortSignal.timeout(opts.timeoutMs ?? 6000),
   });
+  if (res.status === 401 && !refreshed) {
+    // A token Google has stopped honouring before its hour was up.
+    forgetToken();
+    return callOnce<T>(method, path, opts, true);
+  }
   if (!res.ok) {
     throw new CalendarError(res.status, `Google Calendar ${method} ${path.split("?")[0]} ${res.status}: ${(await res.text().catch(() => "")).slice(0, 300)}`);
   }
   return (res.status === 204 ? undefined : await res.json()) as T;
+}
+
+function call<T>(method: string, path: string, opts: { body?: unknown; headers?: Record<string, string>; timeoutMs?: number } = {}): Promise<T> {
+  return withRetry(() => callOnce<T>(method, path, opts));
 }
 
 export interface CalendarEvent {

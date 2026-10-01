@@ -104,7 +104,7 @@ export async function POST(request: Request) {
         if (!b || b.site !== "scl") return fail(404, "No such booking");
         const r = await reschedule(ref, str("date") || "", str("start") || "");
         if (!r.ok) return fail(r.reason === "taken" ? 409 : r.reason === "missing" ? 404 : r.reason === "invalid" ? 400 : 503, r.message, { reason: r.reason });
-        return NextResponse.json({ ok: true, from: out(r.from), booking: out(r.booking) });
+        return NextResponse.json({ ok: true, from: out(r.from), booking: out(r.booking), leftover: r.leftover ?? null });
       }
       default:
         return fail(400, "Unknown action");

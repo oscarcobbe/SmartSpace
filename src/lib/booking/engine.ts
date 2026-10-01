@@ -198,12 +198,18 @@ export async function bookingsBetween(startIso: string, endIso: string): Promise
     .sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
 }
 
+/** Every live event under a reference, most recently written first. Normally one; two only after a move whose clean-up failed. */
+async function liveEventsByRef(ref: string): Promise<CalendarEvent[]> {
+  if (!/^[0-9a-z]{6,40}$/.test(ref)) return [];
+  const events = await findByProperty(`ref=${ref}`);
+  const stamp = (e: CalendarEvent) => Date.parse(e.updated || e.created || "") || 0;
+  return events.filter((e) => e.status !== "cancelled" && fromEvent(e)).sort((a, b) => stamp(b) - stamp(a));
+}
+
 /** The live booking behind a reference, or null when it was cancelled or never existed. */
 export async function bookingByRef(ref: string): Promise<Booking | null> {
-  if (!/^[0-9a-z]{6,40}$/.test(ref)) return null;
-  const events = await findByProperty(`ref=${ref}`);
-  const live = events.filter((e) => e.status !== "cancelled").map(fromEvent).filter((b): b is Booking => !!b);
-  return live.sort((a, b) => Date.parse(b.start) - Date.parse(a.start))[0] ?? null;
+  const [latest] = await liveEventsByRef(ref);
+  return latest ? fromEvent(latest) : null;
 }
 
 // ─── Free slots ─────────────────────────────────────────────────────
@@ -288,24 +294,46 @@ export async function book(input: BookInput, now = Date.now()): Promise<BookResu
     const ref = input.ref || randomBytes(9).toString("hex");
     const taken: BookResult = { ok: false, reason: "taken", message: "That slot was booked a moment ago" };
     let saved: CalendarEvent | null = null;
+    // Ours: the event under this id carries this booking's reference. After a
+    // timeout or a retried request, Google may have written it even though
+    // the answer never arrived, so every unclear outcome is settled by looking.
+    const ours = (e: CalendarEvent | null): boolean =>
+      !!e && e.status !== "cancelled" && e.extendedProperties?.private?.ref === ref;
     for (let gen = 0; gen < GENERATIONS && !saved; gen++) {
       const event = eventFor(input, slotEventId(input.date, input.start, gen), ref, startMs);
       try {
         saved = await insertEvent(event);
         break;
       } catch (e) {
-        if (!(e instanceof CalendarError && e.status === 409)) throw e;
+        if (!(e instanceof CalendarError && e.status === 409)) {
+          const landed = await getEvent(event.id).catch(() => null);
+          if (landed && ours(landed)) {
+            saved = landed;
+            break;
+          }
+          throw e;
+        }
       }
-      // The id is in use. A live booking still in this slot means the slot is
-      // gone. A cancelled one is taken back, only if nobody else does so first.
-      // One Nigel moved elsewhere leaves the id stranded: try the next.
+      // The id is in use. Our own earlier attempt means we are done. A live
+      // booking still in this slot means the slot is gone. A cancelled one is
+      // taken back, only if nobody else does so first. One Nigel moved
+      // elsewhere leaves the id stranded: try the next.
       const existing = await getEvent(event.id);
       if (!existing) return taken;
+      if (ours(existing)) {
+        saved = existing;
+        break;
+      }
       if (existing.status === "cancelled") {
         if (!existing.etag) return taken;
         try {
           saved = await replaceEvent({ ...event, status: "confirmed" }, existing.etag);
         } catch (e) {
+          const now2 = await getEvent(event.id).catch(() => null);
+          if (now2 && ours(now2)) {
+            saved = now2;
+            break;
+          }
           if (e instanceof CalendarError && e.status === 412) return taken;
           throw e;
         }
@@ -323,23 +351,37 @@ export async function book(input: BookInput, now = Date.now()): Promise<BookResu
   }
 }
 
-/** Cancels the live booking behind `ref`. Returns what was cancelled, or null when there was nothing to cancel. */
+/** Cancels the live booking behind `ref`, and any copy a failed move left behind. Returns what was cancelled, or null when there was nothing to cancel. */
 export async function cancel(ref: string): Promise<Booking | null> {
-  const b = await bookingByRef(ref);
-  if (!b) return null;
-  await deleteEvent(b.id);
-  return b;
+  const live = await liveEventsByRef(ref);
+  if (!live.length) return null;
+  for (const e of live) await deleteEvent(e.id);
+  return fromEvent(live[0]);
 }
 
 /**
  * Moves a booking to a new slot: books the new one under the same reference,
  * then cancels the old one, so there is never a moment with neither.
  */
-export async function reschedule(ref: string, date: string, start: string, now = Date.now()): Promise<{ ok: true; from: Booking; booking: Booking } | { ok: false; reason: "missing" | "taken" | "invalid" | "error"; message: string }> {
-  const from = await bookingByRef(ref);
+export async function reschedule(ref: string, date: string, start: string, now = Date.now()): Promise<{ ok: true; from: Booking; booking: Booking; leftover?: string } | { ok: false; reason: "missing" | "taken" | "invalid" | "error"; message: string }> {
+  let from: Booking | null;
+  try {
+    from = await bookingByRef(ref);
+  } catch (e) {
+    return { ok: false, reason: "error", message: e instanceof Error ? e.message : String(e) };
+  }
   if (!from) return { ok: false, reason: "missing", message: "No booking to move" };
   const result = await book({ ...from, date, start, ref }, now);
   if (!result.ok) return result;
-  await deleteEvent(from.id);
+  // The new slot is held. Releasing the old one is retried; if Google still
+  // will not, the move stands (the customer has their new time) and the old
+  // event is reported so a person can delete it. bookingByRef already prefers
+  // the newer event, and cancel() removes both.
+  try {
+    await deleteEvent(from.id);
+  } catch (e) {
+    console.error(`[booking] moved ${ref} but could not release ${from.id}:`, e);
+    return { ok: true, from, booking: result.booking, leftover: from.id };
+  }
   return { ok: true, from, booking: result.booking };
 }

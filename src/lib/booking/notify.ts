@@ -109,12 +109,17 @@ export async function bookingConfirmedEmails(b: Booking): Promise<string> {
   return outcome;
 }
 
-export async function bookingMovedEmails(from: Booking, b: Booking): Promise<string> {
+export async function bookingMovedEmails(from: Booking, b: Booking, leftover?: string): Promise<string> {
   if (b.site !== "ss") return "skipped: SmartCare Living sends its own";
   const fromLabel = `${dateLabel(from.start)}, ${timeLabel(from.start, from.end).split(" ")[0]}`;
   const [outcome] = await Promise.all([
     approval("email:booking-moved").then((ok) => toCustomer(ok, b, bookingMoved({ ...facts(b), fromLabel }), ics(b, { sequence: Math.floor(Date.now() / 1000) }))),
-    toNigel(`Booking moved: ${b.name}, now ${when(b)}`, [`${b.title}`, `Was: ${when(from)}`, `Now: ${when(b)}`, "", ...who(b), "", "The customer moved it from their confirmation email. Your Google Calendar is updated."]),
+    toNigel(`Booking moved: ${b.name}, now ${when(b)}`, [
+      `${b.title}`, `Was: ${when(from)}`, `Now: ${when(b)}`, "", ...who(b), "",
+      leftover
+        ? `⚠ The new time is in your Google Calendar, but Google would not remove the old one (${when(from)}). Please delete that one by hand.`
+        : "The customer moved it from their confirmation email. Your Google Calendar is updated.",
+    ]),
   ]);
   return outcome;
 }

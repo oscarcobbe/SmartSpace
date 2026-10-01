@@ -35,7 +35,13 @@ export async function POST(request: Request) {
   if (!current || current.site !== "ss") return bad(404, "This booking has already been cancelled.");
 
   if (body.action === "cancel") {
-    const gone = await cancel(ref);
+    let gone;
+    try {
+      gone = await cancel(ref);
+    } catch (e) {
+      console.error("[booking/manage] cancel failed:", e);
+      return bad(503, "We couldn't reach the calendar. Please try again in a minute, or ring us.");
+    }
     if (!gone) return bad(404, "This booking has already been cancelled.");
     const emailed = await bookingCancelledEmails(gone).catch((e) => `failed: ${e instanceof Error ? e.message : e}`);
     console.log(`[booking/manage] cancelled ${gone.id} ref=${ref}; email ${emailed}`);
@@ -56,7 +62,7 @@ export async function POST(request: Request) {
       if (moved.reason === "invalid") return bad(400, "That time can't be booked. Please choose another.");
       return bad(503, "We couldn't reach the calendar. Please try again in a minute, or ring us.");
     }
-    const emailed = await bookingMovedEmails(moved.from, moved.booking).catch((e) => `failed: ${e instanceof Error ? e.message : e}`);
+    const emailed = await bookingMovedEmails(moved.from, moved.booking, moved.leftover).catch((e) => `failed: ${e instanceof Error ? e.message : e}`);
     console.log(`[booking/manage] moved ref=${ref} ${moved.from.id} -> ${moved.booking.id}; email ${emailed}`);
     return NextResponse.json({ ok: true, start: moved.booking.start, end: moved.booking.end });
   }
