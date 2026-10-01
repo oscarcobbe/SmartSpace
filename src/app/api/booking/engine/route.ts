@@ -22,6 +22,7 @@ import { NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { bookingBackend } from "@/lib/booking/backend";
 import { googleCalendarConfigured } from "@/lib/booking/google-calendar";
+import { approval } from "@/lib/signoff/state";
 import { book, bookingByRef, cancel, freeStarts, manageUrl, reschedule, tokenMatches, type Booking } from "@/lib/booking/engine";
 
 export const dynamic = "force-dynamic";
@@ -51,14 +52,18 @@ function gate(request: Request): NextResponse | null {
  * Read-only (free/busy for the next weekday), and answered whichever system
  * is taking bookings, so the Google connection can be proved on the live
  * site before the switch and watched after it. Says nothing about the
- * calendar beyond ok and how long it took.
+ * calendar beyond ok and how long it took, and whether Nigel has approved
+ * the three booking emails in Sign-off.
  */
 async function health(): Promise<NextResponse> {
   const started = Date.now();
   const day = new Date(started + 86_400_000);
   while ([0, 6].includes(day.getUTCDay())) day.setUTCDate(day.getUTCDate() + 1);
   const date = day.toISOString().slice(0, 10);
-  const base = { backend: bookingBackend(), googleConfigured: googleCalendarConfigured(), linkSecret: !!process.env.BOOKING_LINK_SECRET };
+  // Whether Nigel has approved the emails that replace Calendly's: the switch waits for these.
+  const gates = await Promise.all([approval("email:booking-confirmed"), approval("email:booking-moved"), approval("email:booking-cancelled")]);
+  const approved = Object.fromEntries(gates.map((g) => [g.item.replace("email:", ""), g.approved]));
+  const base = { backend: bookingBackend(), googleConfigured: googleCalendarConfigured(), linkSecret: !!process.env.BOOKING_LINK_SECRET, approved };
   if (!base.googleConfigured) return NextResponse.json({ ok: false, ...base, error: "Google Calendar is not configured here" }, { status: 503 });
   try {
     await freeStarts(date);
