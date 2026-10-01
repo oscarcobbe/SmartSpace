@@ -211,7 +211,7 @@ export default function Post() {
         <p>
           If you&apos;ve already done a DIY install and you&apos;re getting drops, you don&apos;t
           necessarily need a new camera. You probably need a survey of the path between the router
-          and the front door, and one of the three fixes above. The{" "}
+          and the front door, and one of the three fixes above. Our guide to{" "}<Link href="/blog/why-does-my-wifi-keep-dropping-ireland">why Wi-Fi keeps dropping</Link> covers the other causes, from interference to the broadband line itself. The{" "}
           <Link href="/services/free-consultation" className="text-brand-500 hover:underline">
             complimentary consultation
           </Link>{" "}

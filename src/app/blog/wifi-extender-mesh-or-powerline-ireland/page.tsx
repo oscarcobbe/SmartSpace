@@ -152,6 +152,11 @@ export default function Post() {
             Our guide to <Link href="/blog/broadband-speed-test-ireland-line-or-wifi">telling the line from the Wi-Fi</Link>{" "}
             shows how to check.
           </li>
+          <li>
+            <strong>Fast, but slow once the whole house is on it:</strong> that is capacity, not coverage, and more
+            access points do not add any. See{" "}
+            <Link href="/blog/too-many-devices-slow-wifi-ireland">a home with too many devices on the Wi-Fi</Link>.
+          </li>
         </ul>
         <p>
           Before buying anything, test beside the router and again in the room that struggles. Our{" "}

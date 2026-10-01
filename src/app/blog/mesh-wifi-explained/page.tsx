@@ -154,6 +154,11 @@ export default function Post() {
           </li>
         </ul>
         <p>
+          Mesh fixes coverage, not capacity. If a room is slow because too much is on the network at once rather than
+          because the signal is weak, see our guide to{" "}
+          <Link href="/blog/too-many-devices-slow-wifi-ireland">a home with too many devices on the Wi-Fi</Link>.
+        </p>
+        <p>
           For how mesh compares with extenders and powerline side by side, see{" "}
           <Link href="/blog/wifi-extender-mesh-or-powerline-ireland">Wi-Fi extender, mesh or powerline</Link>.
         </p>

@@ -386,7 +386,9 @@ export default function Post() {
           It can suit smart devices too. TP-Link suggests a separate guest network for older WPA2-only devices, and some
           of its routers, including Deco <Link href="/blog/mesh-wifi-explained">mesh systems</Link>, offer an IoT
           network: a dedicated network, with its own name and password, for smart home devices. Not every router has
-          one.
+          one. Keeping a houseful of smart devices on their own network also keeps them from slowing the ones you use, as
+          our guide to{" "}
+          <Link href="/blog/too-many-devices-slow-wifi-ireland">a home with too many devices on the Wi-Fi</Link> explains.
         </p>
         <p>
           The NCSC&apos;s caution: some routers switch guest access on by default, with no password needed. If yours

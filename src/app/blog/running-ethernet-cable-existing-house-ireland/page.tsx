@@ -182,7 +182,9 @@ export default function Post() {
         </p>
         <ul>
           <li>
-            <strong>Desks and TVs</strong> on a cable stop competing with phones and tablets for the Wi-Fi.
+            <strong>Desks and TVs</strong> on a cable stop competing with phones and tablets for the Wi-Fi, which is one of
+            the best fixes for{" "}
+            <Link href="/blog/too-many-devices-slow-wifi-ireland">a home with too many devices on the Wi-Fi</Link>.
           </li>
           <li>
             <strong>Mesh units</strong> linked by cable: TP-Link says that is faster and more stable than a wireless link,

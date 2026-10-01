@@ -251,7 +251,7 @@ export default function Post() {
         <p>
           That catches people out. The rooms with no mobile signal are often the rooms the Wi-Fi struggles to reach too:
           upstairs, the back bedroom, the extension. Walk out of Wi-Fi range mid-call, with no mobile signal to fall back
-          on, and the call drops. Apple adds that not every Wi-Fi network works with Wi-Fi Calling.
+          on, and the call drops. Our guide to{" "}<Link href="/blog/why-does-my-wifi-keep-dropping-ireland">why Wi-Fi keeps dropping</Link> covers the other reasons a connection cuts out. Apple adds that not every Wi-Fi network works with Wi-Fi Calling.
         </p>
         <p>
           Vodafone makes the same link when it sells whole-home Wi-Fi: Wi-Fi in every corner of the home means Wi-Fi

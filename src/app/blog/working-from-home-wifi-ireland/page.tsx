@@ -221,7 +221,9 @@ export default function Post() {
         </ul>
         <p>
           That is 6.5 Mbps of upload before the backup starts. Once the upload is full, everything queues, the delay
-          climbs, and the call notices first. Virgin Media&apos;s advice is to leave large downloads until late at night.
+          climbs, and the call notices first. Virgin Media&apos;s advice is to leave large downloads until late at night, and our
+          guide to{" "}<Link href="/blog/too-many-devices-slow-wifi-ireland">a home with too many devices on the Wi-Fi</Link>{" "}
+          covers what a full network does to everything sharing it.
         </p>
 
         <h2 id="fixes">How do I fix the Wi-Fi at my desk?</h2>
@@ -283,7 +285,7 @@ export default function Post() {
           When the line delivers what the contract says and it is still not enough. Add up the upload your house uses at
           once; if it comes close to your contract&apos;s upload, a plan with more upload will help and better Wi-Fi will
           not. ComReg&apos;s Broadband Checker shows what is available at your address, and at the end of a contract you
-          are entitled to Best Tariff Advice from your provider.
+          are entitled to Best Tariff Advice from your provider. Our guide to{" "}<Link href="/blog/what-broadband-speed-do-i-need-ireland">what broadband speed you actually need</Link> helps you size it.
         </p>
 
         <h2 id="before-a-call">What should I check before an important call?</h2>
