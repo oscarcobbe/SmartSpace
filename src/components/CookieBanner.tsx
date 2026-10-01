@@ -203,14 +203,30 @@ export default function CookieBanner() {
     <div
       role="dialog"
       aria-label="Cookie consent"
-      className="fixed bottom-4 left-4 right-4 sm:left-6 sm:right-auto sm:bottom-6 sm:max-w-md z-[1000] bg-white border border-gray-200 rounded-2xl shadow-xl p-5 sm:p-6"
+      className="fixed bottom-4 left-4 right-4 sm:left-6 sm:right-auto sm:bottom-6 sm:max-w-xl z-[1000] bg-gradient-to-b from-brand-50 to-white to-60% border border-brand-200 rounded-3xl shadow-2xl ring-[6px] ring-brand-500/5 p-5 sm:p-7 motion-safe:animate-[ssConsentIn_0.5s_cubic-bezier(0.2,0.7,0.2,1)_both]"
     >
-      <p className="text-sm text-gray-700 leading-relaxed mb-4">
-        We&rsquo;re a small Irish business trying to reach the people who need us.{" "}
-        <a href="/privacy" className="text-brand-700 font-semibold underline hover:text-brand-800">
-          Privacy policy
-        </a>
-      </p>
+      <style>{"@keyframes ssConsentIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}"}</style>
+      <div className="flex items-center gap-3.5 mb-5">
+        <span
+          aria-hidden="true"
+          className="flex-none w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center text-white bg-gradient-to-br from-brand-400 via-brand-500 to-brand-600 shadow-lg shadow-brand-500/40 ring-4 ring-brand-500/10"
+        >
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5" />
+            <path d="M8.5 8.5v.01" />
+            <path d="M16 15.5v.01" />
+            <path d="M12 12v.01" />
+            <path d="M11 17v.01" />
+            <path d="M7 14v.01" />
+          </svg>
+        </span>
+        <p className="text-[15px] sm:text-base font-semibold text-gray-900 leading-snug">
+          We&rsquo;re a small Irish business trying to reach the people who need us.{" "}
+          <a href="/privacy" className="text-brand-700 underline hover:text-brand-800">
+            Privacy policy
+          </a>
+        </p>
+      </div>
       {/*
        * Oscar, 30 September 2026: "were gona have to bite the button because
        * no one is accepting them. the accept must be alot bigger than the
@@ -225,11 +241,11 @@ export default function CookieBanner() {
           <button
             type="button"
             onClick={() => decide("granted")}
-            className="w-full bg-brand-700 hover:bg-brand-800 text-white text-base font-bold px-5 py-3.5 rounded-xl shadow-lg shadow-brand-500/30 transition-colors"
+            className="w-full bg-brand-700 hover:bg-brand-800 text-white text-lg font-bold px-6 py-4 rounded-2xl shadow-lg shadow-brand-500/40 hover:-translate-y-px transition"
           >
             Accept cookies
           </button>
-          <span className="text-xs text-gray-500 leading-snug">
+          <span className="text-[13px] text-gray-500 leading-snug">
             Shows us which of our ads work, so we spend less reaching you.
           </span>
         </div>
@@ -237,11 +253,11 @@ export default function CookieBanner() {
           <button
             type="button"
             onClick={() => decide("denied")}
-            className="self-start min-h-[32px] bg-white hover:border-gray-500 text-gray-700 text-xs font-semibold px-3.5 py-1.5 rounded-lg border border-gray-300 transition-colors"
+            className="self-start min-h-[38px] bg-white hover:border-gray-500 text-gray-700 text-sm font-semibold px-4 py-2 rounded-xl border border-gray-300 transition-colors"
           >
             Decline
           </button>
-          <span className="text-xs text-gray-500 leading-snug">Only what the site needs to work.</span>
+          <span className="text-[13px] text-gray-500 leading-snug">Only what the site needs to work.</span>
         </div>
       </div>
     </div>
