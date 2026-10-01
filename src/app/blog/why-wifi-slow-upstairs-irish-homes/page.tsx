@@ -256,7 +256,7 @@ export default function Post() {
           <Link href="/blog/broadband-speed-test-ireland-line-or-wifi">telling the line from the Wi-Fi</Link> shows how to
           check with your provider&apos;s own test. Fast at the router and slow upstairs means the Wi-Fi is being lost on
           the way, and our <Link href="/blog/how-to-test-wifi-speed-room-by-room">room-by-room guide</Link> shows where to
-          test and what the numbers mean. The <Link href="/wifi-check">free Wi-Fi check</Link> runs both tests for you.
+          test and what the numbers mean. The <Link href="/wifi-check">free Wi-Fi check</Link> runs both tests for you. If the signal gets so weak that devices keep dropping off altogether, see{" "}<Link href="/blog/why-does-my-wifi-keep-dropping-ireland">why Wi-Fi keeps dropping</Link>.
         </p>
 
         <h2 id="fixes">What fixes slow Wi-Fi upstairs, from free upwards?</h2>

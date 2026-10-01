@@ -118,7 +118,7 @@ export default function Post() {
         <ul>
           <li>
             <strong>Download, for the TV:</strong> Netflix recommends 15 Mbps for each 4K stream. Look at the figure in the
-            room the TV is in, not the one beside the router.
+            room the TV is in, not the one beside the router. Our guide to{" "}<Link href="/blog/what-broadband-speed-do-i-need-ireland">what broadband speed you need</Link> adds up a whole household.
           </li>
           <li>
             <strong>Upload, for cameras and calls:</strong> Ring asks for 2 Mbps of upload for each 1080p camera, and rates
@@ -149,7 +149,7 @@ export default function Post() {
         </p>
         <p>
           <strong>Fine in the daytime, slow in the evening, even at the router.</strong> Congestion on the line or on your
-          provider&apos;s network at busy times. Another case for your provider, with the evening figures.
+          provider&apos;s network at busy times. Another case for your provider, with the evening figures, and our guide to{" "}<Link href="/blog/wifi-slow-in-the-evening-ireland">why Wi-Fi slows in the evening</Link> separates the line from the neighbours&apos; channels.
         </p>
         <p>
           <strong>Download fine, upload poor.</strong> Cameras, doorbells and video calls suffer first. Check the upload on

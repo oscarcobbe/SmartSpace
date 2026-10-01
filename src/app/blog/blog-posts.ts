@@ -30,6 +30,76 @@ export const BLOG_POSTS: BlogPost[] = [
     category: "Home Network",
   },
   {
+    slug: "why-does-my-wifi-keep-dropping-ireland",
+    title: "Why Does My Wi-Fi Keep Dropping? Causes and Fixes for Irish Homes",
+    description:
+      "Wi-Fi that cuts out for a few seconds, or drops a device off entirely, usually comes down to a weak signal, interference on a crowded band, a tired router, or the broadband line itself. The one test that tells the Wi-Fi from the line, and the fixes from free upwards.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "7 min read",
+    category: "Home Network",
+  },
+  {
+    slug: "what-broadband-speed-do-i-need-ireland",
+    title: "What Broadband Speed Do You Actually Need in Ireland?",
+    description:
+      "Less than the gigabit plans suggest. What streaming, video calls, gaming and cameras each use, how to add up a household, why upload matters more than people think, and why the Wi-Fi in your house, not the plan, usually decides what reaches the room.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "7 min read",
+    category: "Home Network",
+  },
+  {
+    slug: "wifi-slow-in-the-evening-ireland",
+    title: "Why Is My Wi-Fi Slow in the Evening? What Changes After Tea",
+    description:
+      "Broadband that flies all day and crawls at eight has two usual causes: the line slowing at peak times, and the neighbours' Wi-Fi crowding the same channels. How to tell which with one cabled test, and what fixes each.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "6 min read",
+    category: "Home Network",
+  },
+  {
+    slug: "too-many-devices-slow-wifi-ireland",
+    title: "Is Your Wi-Fi Overloaded? How Many Devices a Home Network Can Handle",
+    description:
+      "A modern Irish home can have thirty or more things on the Wi-Fi. Why that slows everything down, how the band they sit on and the router you have decide it, and the fixes that add capacity, not just coverage.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "6 min read",
+    category: "Home Network",
+  },
+  {
+    slug: "how-to-boost-wifi-signal-ireland",
+    title: "How to Boost Your Wi-Fi Signal: What Works and What's a Waste of Money",
+    description:
+      "The free moves that genuinely help, the kit that works when it is the right kit, and the hacks and gadgets that do nothing. An honest Irish guide to a stronger Wi-Fi signal, measured before you spend.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "7 min read",
+    category: "Home Network",
+  },
+  {
+    slug: "apartment-wifi-ireland",
+    title: "Apartment Wi-Fi in Ireland: Slow, Crowded and Dead Spots in Flats",
+    description:
+      "A flat's Wi-Fi problems are its own: a 2.4 GHz band shared with the whole block, one small router by the door, and walls you cannot drill if you rent. What actually helps in an Irish apartment, renting included.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "6 min read",
+    category: "Home Network",
+  },
+  {
+    slug: "rural-broadband-ireland",
+    title: "Rural Broadband in Ireland: Your Options When There's No Fibre Yet",
+    description:
+      "Fibre, fixed wireless over 4G or 5G, or satellite like Starlink: the connections a rural Irish home can actually get, how to check what is at your Eircode, and why the home network still decides what reaches each room.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "7 min read",
+    category: "Home Network",
+  },
+  {
     slug: "smart-home-tech-elderly-parent-ireland",
     title: "Smart Home Tech for an Elderly Parent in Ireland: What Actually Helps",
     description:

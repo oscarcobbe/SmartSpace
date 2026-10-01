@@ -317,7 +317,7 @@ export default function Post() {
           </li>
           <li>
             <strong>Fast by cable, slow over Wi-Fi beside the router on a recent device:</strong> the router may be the
-            limit, especially an older one on a 1Gb line or with many devices. A newer router, or your provider&apos;s
+            limit, especially an older one on a 1Gb line or with many devices; our guide to{" "}<Link href="/blog/too-many-devices-slow-wifi-ireland">a home with too many devices on the Wi-Fi</Link> covers that case. A newer router, or your provider&apos;s
             upgrade, can help.
           </li>
           <li>

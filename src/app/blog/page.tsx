@@ -109,6 +109,15 @@ export default function BlogIndexPage() {
                     {group.blurb && (
                       <p className="text-sm sm:text-base text-gray-500 max-w-2xl mx-auto leading-relaxed">{group.blurb}</p>
                     )}
+                    {group.category === "Home Network" && (
+                      <Link
+                        href="/home-network"
+                        className="inline-flex items-center gap-1.5 mt-3 text-sm font-semibold text-brand-500 hover:text-brand-600 transition-colors"
+                      >
+                        Explore the Home Network hub
+                        <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    )}
                   </header>
                   <div className="grid gap-6 lg:gap-8 max-w-3xl mx-auto">
                     {group.posts.map((post) => (

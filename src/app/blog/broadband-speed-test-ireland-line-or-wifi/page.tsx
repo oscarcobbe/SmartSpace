@@ -155,7 +155,7 @@ export default function Post() {
           To see which connections your address can get at all, ComReg&apos;s Broadband Checker at{" "}
           <a href="https://www.comreg.ie/broadbandchecker" rel="noopener">comreg.ie/broadbandchecker</a> lists them by
           address or Eircode. ComReg describes full fibre as typically delivering up to 2 Gbps and cable broadband up to 1
-          Gbps; part-fibre speeds depend on how far you are from the street cabinet.
+          Gbps; part-fibre speeds depend on how far you are from the street cabinet. For how much of that you actually need, see{" "}<Link href="/blog/what-broadband-speed-do-i-need-ireland">what broadband speed you need in Ireland</Link>.
         </p>
 
         <h2 id="test-the-line">Test the line: by cable, at the router</h2>
@@ -167,7 +167,7 @@ export default function Post() {
         <ul>
           <li>Close anything downloading in the background: updates, cloud photo backups, a TV streaming in another room.</li>
           <li>Turn off a VPN if you use one, since it sends everything through another server first.</li>
-          <li>Run it two or three times, and once in the evening, when more people in your area are online.</li>
+          <li>Run it two or three times, and once in the evening, when more people in your area are online. If the evening is always the worst, see{" "}<Link href="/blog/wifi-slow-in-the-evening-ireland">why Wi-Fi slows in the evening</Link>.</li>
         </ul>
         <p>
           Compare the result with the minimum and normally available speeds in your contract. If the result is well
