@@ -23,6 +23,8 @@ import { bookingBackend } from "@/lib/booking/backend";
 import { book, bookingByRef, cancel, freeStarts, manageUrl, reschedule, tokenMatches, type Booking } from "@/lib/booking/engine";
 
 export const dynamic = "force-dynamic";
+// Room for the booking engine to wait out Google's rate limit (src/lib/booking/google-calendar.ts, withRetry).
+export const maxDuration = 60;
 export const runtime = "nodejs";
 
 function authorised(request: Request): boolean {

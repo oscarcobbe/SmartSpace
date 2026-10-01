@@ -380,5 +380,23 @@ const waited = await E.reschedule(held.booking.ref, "2026-11-17", "15:00", NOW);
 check("while another change genuinely holds it, a move waits, then says busy rather than racing", !waited.ok && /in progress/.test(waited.message) && live().length === 1 && live()[0].start.dateTime === "2026-11-17T10:00:00.000Z", JSON.stringify(waited));
 check("the lock never blocks a slot", (await E.freeStarts("2026-11-17", NOW)).length === 2);
 
+
+// ─── Google's write limit, and Stripe saying it twice ───────────────
+reset();
+for (let i = 0; i < 5; i++) fault(isInsert, "ratelimit");
+const rl = await book("2026-11-18", "10:00");
+check("five rate-limit refusals in a row are waited out, and it books", rl.ok && live().length === 1, JSON.stringify(rl));
+reset();
+for (let i = 0; i < 7; i++) fault(isInsert, "ratelimit");
+for (let i = 0; i < 7; i++) fault((m, p) => m === "GET" && /\/events\/ssb/.test(p), "ratelimit");
+const rl2 = await book("2026-11-18", "12:30");
+check("a limit that never lifts ends in a clean refusal, nothing written", !rl2.ok && rl2.reason === "error" && live().length === 0, JSON.stringify(rl2));
+reset();
+const s1 = await book("2026-11-19", "10:00", { orderId: "cs_live_dup" });
+const s2 = await book("2026-11-19", "10:00", { orderId: "cs_live_dup" });
+check("the same paid order arriving twice is one booking, reported booked both times", s1.ok && s2.ok && s1.booking.id === s2.booking.id && live().length === 1, JSON.stringify([s1.ok, s2]));
+const s3 = await book("2026-11-19", "10:00", { orderId: "cs_live_other" });
+check("a different order for that slot is still refused", !s3.ok && s3.reason === "taken");
+
 console.log(failed ? `\n${failed} failed` : "\nall passed");
 process.exit(failed ? 1 : 0);

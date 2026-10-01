@@ -22,6 +22,8 @@ import { foundUsDetailFrom, foundUsFrom, notesWithFoundUs } from "@/lib/found-us
 // to nodejs prevents the mystery outage.
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// Room for the booking engine to wait out Google's rate limit (src/lib/booking/google-calendar.ts, withRetry).
+export const maxDuration = 60;
 
 // In-memory idempotency cache, event IDs processed in the last hour.
 // For multi-instance deployments, swap for Redis/Upstash.

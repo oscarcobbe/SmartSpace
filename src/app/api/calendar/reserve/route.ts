@@ -5,6 +5,8 @@ import { getAvailableSlots } from "@/lib/calendly";
 // POST routes are inherently dynamic but explicit is better, without
 // this, Next.js may try static optimization on a future major.
 export const dynamic = "force-dynamic";
+// Room for the booking engine to wait out Google's rate limit (src/lib/booking/google-calendar.ts, withRetry).
+export const maxDuration = 60;
 
 /**
  * NOTE: This endpoint does NOT actually hold a slot. It re-checks

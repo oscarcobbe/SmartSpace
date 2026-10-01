@@ -295,6 +295,17 @@ export async function book(input: BookInput, now = Date.now()): Promise<BookResu
   if (startMs - now < MIN_NOTICE_MS) return { ok: false, reason: "invalid", message: "That slot is too soon to book" };
 
   try {
+    // One paid order, one visit: a Stripe webhook delivered twice finds the
+    // booking the first delivery made and reports it, rather than being
+    // refused by its own slot. Not for a move, which carries the order on
+    // purpose to a new slot under the same reference.
+    if (input.orderId && !input.ref) {
+      const prior = (await findByProperty(`orderId=${input.orderId}`))
+        .filter((e) => e.status !== "cancelled")
+        .map(fromEvent)
+        .find((b) => b && Date.parse(b.start) === startMs);
+      if (prior) return { ok: true, booking: prior };
+    }
     const free = await freeStarts(input.date, now);
     if (!free.includes(input.start)) return { ok: false, reason: "taken", message: "That slot is no longer free" };
 
@@ -304,8 +315,11 @@ export async function book(input: BookInput, now = Date.now()): Promise<BookResu
     // Ours: the event under this id carries this booking's reference. After a
     // timeout or a retried request, Google may have written it even though
     // the answer never arrived, so every unclear outcome is settled by looking.
+    // The same paid order arriving twice (Stripe resends a webhook it thinks
+    // went unanswered) is ours too: one order, one visit.
     const ours = (e: CalendarEvent | null): boolean =>
-      !!e && e.status !== "cancelled" && e.extendedProperties?.private?.ref === ref;
+      !!e && e.status !== "cancelled" &&
+      (e.extendedProperties?.private?.ref === ref || (!!input.orderId && e.extendedProperties?.private?.orderId === input.orderId));
     for (let gen = 0; gen < GENERATIONS && !saved; gen++) {
       const event = eventFor(input, slotEventId(input.date, input.start, gen), ref, startMs);
       try {

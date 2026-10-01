@@ -15,6 +15,8 @@ import { bookingCancelledEmails, bookingMovedEmails } from "@/lib/booking/notify
 import { isDateBlocked, TIME_SLOTS, AVAILABLE_DAYS } from "@/lib/calendly";
 
 export const dynamic = "force-dynamic";
+// Room for the booking engine to wait out Google's rate limit (src/lib/booking/google-calendar.ts, withRetry).
+export const maxDuration = 60;
 export const runtime = "nodejs";
 
 const bad = (status: number, error: string) => NextResponse.json({ ok: false, error }, { status });

@@ -43,27 +43,41 @@ export class CalendarError extends Error {
  * event id is the slot's (engine.ts): a repeated insert gets 409, and the
  * engine then finds its own booking already there.
  */
+function rateLimited(e: unknown): boolean {
+  return e instanceof CalendarError && (e.status === 429 || (e.status === 403 && /rateLimitExceeded|userRateLimitExceeded|quotaExceeded/i.test(e.message)));
+}
+
 function transient(e: unknown): boolean {
-  if (e instanceof CalendarError) {
-    if ([408, 429, 500, 502, 503, 504].includes(e.status)) return true;
-    return e.status === 403 && /rateLimitExceeded|userRateLimitExceeded|quotaExceeded/i.test(e.message);
-  }
+  if (rateLimited(e)) return true;
+  if (e instanceof CalendarError) return [408, 500, 502, 503, 504].includes(e.status);
   const name = (e as { name?: string })?.name;
   return name === "AbortError" || name === "TimeoutError" || e instanceof TypeError;
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** Up to `attempts` tries, backing off 0.3 s then 0.9 s (with jitter), never past `budgetMs` in all. */
-export async function withRetry<T>(fn: () => Promise<T>, attempts = 3, budgetMs = 15_000): Promise<T> {
+/*
+ * Two policies. A server error or timeout: three tries, 0.3 s then 0.9 s
+ * apart. Google's per-calendar write limit (rateLimitExceeded, 429): what
+ * Google asks for, exponential backoff with jitter, 0.5, 1, 2, 4 s and on,
+ * up to six tries. Measured on 1 Oct 2026: about a hundred writes to one
+ * calendar inside a minute trips it, which no real day comes near, but a
+ * burst must slow down rather than turn customers away. Never past
+ * `budgetMs` in all; the routes allow 60 s.
+ */
+export async function withRetry<T>(fn: () => Promise<T>, attempts = 3, budgetMs = 20_000): Promise<T> {
   const started = Date.now();
+  const base = Number(process.env.BOOKING_RETRY_BASE_MS) || 300;
   for (let i = 1; ; i++) {
     try {
       return await fn();
     } catch (e) {
-      const base = Number(process.env.BOOKING_RETRY_BASE_MS) || 300;
-      const wait = base * 3 ** (i - 1) + Math.floor(Math.random() * (base * 0.66));
-      if (i >= attempts || !transient(e) || Date.now() - started + wait > budgetMs) throw e;
+      const limited = rateLimited(e);
+      const max = limited ? Math.max(attempts, 6) : attempts;
+      const wait = limited
+        ? Math.round(base * (5 / 3) * 2 ** (i - 1) * (0.5 + Math.random()))
+        : base * 3 ** (i - 1) + Math.floor(Math.random() * (base * 0.66));
+      if (i >= max || !transient(e) || Date.now() - started + wait > budgetMs) throw e;
       await sleep(wait);
     }
   }

@@ -16,6 +16,8 @@ import { sendConsultationConfirmation } from "@/lib/email/send-customer";
 // POST routes are inherently dynamic but explicit is better, without
 // this, Next.js may try static optimization on a future major.
 export const dynamic = "force-dynamic";
+// Room for the booking engine to wait out Google's rate limit (src/lib/booking/google-calendar.ts, withRetry).
+export const maxDuration = 60;
 
 const SUBJECT_LABELS: Record<string, string> = {
   general: "General Enquiry",
