@@ -70,9 +70,11 @@ export function middleware(request: Request) {
        button is painted and dead, and the CRM cannot be exercised locally at
        all. Production bundles use no eval, so production keeps the strict
        policy. */
+    /* bzrcdn.openai.com serves the ChatGPT ads pixel's SDK, loaded only after
+       Accept (src/lib/chatgpt-pixel.ts); never on the CRM. */
     isCrm
       ? `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`
-      : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.gstatic.com https://js.stripe.com https://assets.calendly.com",
+      : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.gstatic.com https://js.stripe.com https://assets.calendly.com https://bzrcdn.openai.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://assets.calendly.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob: https:",
@@ -117,7 +119,11 @@ export function middleware(request: Request) {
     // site and get this same policy, so this line covers them too. Under
     // next dev only, a local ndt7 server is allowed for exercising the page
     // without M-Lab (see src/lib/wifi-check/speed-test.ts).
-    "connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://td.doubleclick.net https://stats.g.doubleclick.net https://ad.doubleclick.net https://*.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://*.google.ie https://*.google.co.uk https://api.calendly.com https://*.myshopify.com https://locate.measurementlab.net wss://*.measurement-lab.org" +
+    // bzr.openai.com takes the ChatGPT ads pixel's events and bzrcdn.openai.com
+    // its configuration; without them the SDK loads and every event it sends
+    // is refused, the failure this comment opens with. img-src above already
+    // allows every https host, bzr.openai.com included.
+    "connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://td.doubleclick.net https://stats.g.doubleclick.net https://ad.doubleclick.net https://*.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://*.google.ie https://*.google.co.uk https://api.calendly.com https://*.myshopify.com https://locate.measurementlab.net wss://*.measurement-lab.org https://bzr.openai.com https://bzrcdn.openai.com" +
       (process.env.NODE_ENV === "development" ? " ws://localhost:*" : ""),
     "worker-src 'self'",
     "frame-src https://js.stripe.com https://hooks.stripe.com https://calendly.com https://*.calendly.com https://www.google.com https://maps.google.com",

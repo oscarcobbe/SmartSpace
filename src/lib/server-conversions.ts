@@ -13,25 +13,31 @@
  * who accepted ad cookies. Nothing is sent for anybody else; see
  * fireServerConversion below.
  *
- * Two channels:
+ * Three channels:
  *   1) GA4 Measurement Protocol, official, authenticated. Requires
  *      GA4_API_SECRET (create in GA4 Admin → Data Streams → Measurement
- *      Protocol API secrets). When GA4 is linked to Google Ads, server-fired
- *      events become importable Google Ads conversions.
+ *      Protocol API secrets). A lead arrives as server_lead, never under the
+ *      browser's own event names; see ga4EventName below.
  *   2) Google Ads conversion pixel, unauthenticated GET to the legacy
- *      googleadservices endpoint. Less reliable than the Conversions API but
- *      requires zero new credentials and acts as a backstop when (1) is not
- *      configured.
+ *      googleadservices endpoint, for a browser whose own Google tag never
+ *      ran; see fireServerConversion.
+ *   3) OpenAI's Conversions API, the server-side copy of the ChatGPT ads
+ *      pixel. Off until OPENAI_ADS_API_KEY and NEXT_PUBLIC_OAI_PIXEL_ID are
+ *      both set; see fireOpenAi.
  *
- * Both are best-effort: failures are logged and never thrown. Customer flows
+ * All are best-effort: failures are logged and never thrown. Customer flows
  * never break because tracking is having a bad day.
  */
 
 import { createHash, randomUUID } from "crypto";
+import { normalisePhone } from "./phone";
 
 const GA4_ID = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID; // e.g. G-JR2WXNSLEL
 const GA4_API_SECRET = process.env.GA4_API_SECRET;
 const GADS_ACCOUNT_ID = "17978501655"; // from AW-17978501655
+/* The ChatGPT ads pixel the browser loads (src/lib/chatgpt-pixel.ts). The
+   Conversions API posts to the same pixel, so both halves share one id. */
+const OAI_PIXEL_ID = (process.env.NEXT_PUBLIC_OAI_PIXEL_ID || "").trim();
 
 /** Sha256 lowercase-trim, Google's Enhanced Conversions hashing format. */
 function hashPii(value: string | undefined): string | undefined {
@@ -41,11 +47,75 @@ function hashPii(value: string | undefined): string | undefined {
   return createHash("sha256").update(normalised).digest("hex");
 }
 
+/*
+ * The phone, hashed as Google matches it: E.164 (+353...), not as typed.
+ * "087 123 4567" and "+353871234567" are one customer and were two hashes,
+ * and only the second is the form Enhanced Conversions matches.
+ */
+const hashPhone = (phone: string | undefined) => hashPii(normalisePhone(phone) || undefined);
+
+function parseCookies(header: string | null): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const part of (header ?? "").split(";")) {
+    const i = part.indexOf("=");
+    if (i < 1) continue;
+    const k = part.slice(0, i).trim();
+    let v = part.slice(i + 1).trim();
+    try { v = decodeURIComponent(v); } catch { /* leave it raw */ }
+    if (k && !(k in out)) out[k] = v;
+  }
+  return out;
+}
+
+/**
+ * What an enquiry's own request says about the browser that sent it.
+ *
+ * The form POST is same-origin, so it carries the site's first-party cookies
+ * and headers with it. Read once, before the route answers, and passed to
+ * fireServerConversion.
+ */
+export interface BrowserContext {
+  /**
+   * Whether Google's Ads tag runs in this browser. It writes _gcl_au, and only
+   * once ad storage is granted, so the cookie on the request means the page's
+   * own conversion tag fires for this lead (SmartCare Living's browserTagsRan).
+   */
+  browserTagsRan: boolean;
+  /** The ChatGPT ad click (__oppref, 30 days) and OpenAI's browser reference
+      (__obref, a year): the pixel's own cookies, set only after Accept. */
+  oppref?: string;
+  obref?: string;
+  /** The page the enquiry was sent from, for OpenAI's source_url. */
+  sourceUrl?: string;
+  ip?: string;
+  userAgent?: string;
+}
+
+export function browserContext(request: Request): BrowserContext {
+  const h = request.headers;
+  const cookies = parseCookies(h.get("cookie"));
+  const ip = (h.get("x-real-ip") || (h.get("x-forwarded-for") ?? "").split(",")[0] || "").trim();
+  return {
+    browserTagsRan: Boolean(cookies._gcl_au),
+    oppref: cookies.__oppref ? cookies.__oppref.slice(0, 512) : undefined,
+    obref: cookies.__obref ? cookies.__obref.slice(0, 128) : undefined,
+    sourceUrl: (h.get("referer") || "").slice(0, 1000) || undefined,
+    ip: ip.slice(0, 64) || undefined,
+    userAgent: (h.get("user-agent") || "").slice(0, 400) || undefined,
+  };
+}
+
 export interface ServerConversionInput {
   /** Conversion label after the slash, e.g. `IofPCOiZuJkcEJfU6PxC`. */
   gadsLabel: string;
-  /** Recommended GA4 event name: `purchase` | `generate_lead` | `book_appointment`. */
-  ga4EventName: "purchase" | "generate_lead" | "book_appointment";
+  /**
+   * `purchase` for a paid order, `server_lead` for every enquiry. The browser
+   * sends a lead to GA4 as generate_lead, and GA4 dedupes that on nothing, so
+   * a server copy under the same name counted every consented lead twice
+   * (SmartCare Living found the same and moved to server_lead). purchase is
+   * deduped on transaction_id, so a paid order keeps its name.
+   */
+  ga4EventName: "purchase" | "server_lead";
   value?: number;
   currency?: string;
   /** Stripe session id / order id, dedupes the conversion across retries. */
@@ -71,12 +141,24 @@ export interface ServerConversionInput {
    * where its answer came from. Only "granted" lets anything leave.
    */
   adConsent: "granted" | "denied" | null;
+  /**
+   * The enquiry's browser, from browserContext(request). The Stripe webhook
+   * has no browser behind it and passes what /api/checkout recorded on the
+   * session instead.
+   */
+  browser: BrowserContext;
+  /**
+   * The same event for ChatGPT ads (OpenAI's Conversions API). consented is
+   * openAiConsented() of the visitor's answer: an Accept given under a notice
+   * that names OpenAI. Omitted, nothing goes to OpenAI.
+   */
+  openAi?: { type: "lead_created" | "order_created"; consented: boolean };
 }
 
 /**
- * Fire conversion through both channels concurrently. Awaits both with a
- * 4s ceiling so a hung Google endpoint can't pin the parent serverless
- * function. Always resolves, never throws.
+ * Fire conversion through every channel concurrently. Awaits them with a
+ * 4s ceiling so a hung endpoint can't pin the parent serverless function.
+ * Always resolves, never throws.
  *
  * Nothing is sent without a recorded yes to ad cookies.
  *
@@ -109,8 +191,25 @@ export async function fireServerConversion(input: ServerConversionInput): Promis
     console.warn("[conv] GA4_API_SECRET not set, skipping server-side GA4 conversion fire");
   }
 
-  // Always fire the Google Ads pixel, it has no setup requirements.
-  tasks.push(fireGoogleAdsPixel(input));
+  /*
+   * The Ads pixel only for a browser whose own Google tag never ran: an ad
+   * blocker, mostly.
+   *
+   * It used to fire for every consented conversion, and Google Ads keeps the
+   * first of two with the same transaction_id. The browser's tag is the better
+   * record of the pair: it carries the consent state and Google's own click
+   * cookies, which this request cannot. Whichever reached Google first won the
+   * dedupe, so the server could replace the better copy with the weaker one.
+   * So where the tag runs, the page records the conversion and this stays
+   * quiet, which is SmartCare Living's rule since September.
+   */
+  if (input.browser?.browserTagsRan) {
+    console.log(`[conv] Google Ads pixel skipped for ${input.transactionId ?? "-"}: the browser's own tag fires it (_gcl_au present)`);
+  } else {
+    tasks.push(fireGoogleAdsPixel(input));
+  }
+
+  if (input.openAi) tasks.push(fireOpenAi(input));
 
   await Promise.race([
     Promise.allSettled(tasks),
@@ -122,7 +221,7 @@ async function fireGA4(input: ServerConversionInput): Promise<void> {
   try {
     const userData: Record<string, unknown> = {};
     const sha_email = hashPii(input.email);
-    const sha_phone = hashPii(input.phone);
+    const sha_phone = hashPhone(input.phone);
     if (sha_email) userData.sha256_email_address = sha_email;
     if (sha_phone) userData.sha256_phone_number = sha_phone;
     if (input.firstName) userData.address = { ...(userData.address as object), sha256_first_name: hashPii(input.firstName) };
@@ -189,7 +288,7 @@ async function fireGoogleAdsPixel(input: ServerConversionInput): Promise<void> {
     if (input.transactionId) params.set("oid", input.transactionId);
     if (input.gclid) params.set("gclid", input.gclid);
     const sha_email = hashPii(input.email);
-    const sha_phone = hashPii(input.phone);
+    const sha_phone = hashPhone(input.phone);
     if (sha_email) params.set("em", sha_email);
     if (sha_phone) params.set("pn", sha_phone);
 
@@ -204,5 +303,73 @@ async function fireGoogleAdsPixel(input: ServerConversionInput): Promise<void> {
     }
   } catch (err) {
     console.error("[conv] Google Ads pixel error:", err);
+  }
+}
+
+/**
+ * The same event for ChatGPT ads, through OpenAI's Conversions API.
+ *
+ * The page's pixel sends it too, with this transaction id as its event_id,
+ * and OpenAI keeps the first event per pixel, event name and id, so the pair
+ * counts once. This copy survives an ad blocker, a closed tab and a pixel that
+ * had not finished loading. It carries the ad click (__oppref) and OpenAI's
+ * browser reference (__obref) from the pixel's own cookies.
+ *
+ * A no-op until both OPENAI_ADS_API_KEY (created in OpenAI Ads Manager, kept
+ * only in Vercel) and NEXT_PUBLIC_OAI_PIXEL_ID are set, and nothing is sent
+ * for a visitor whose Accept predates the notice naming OpenAI. Three seconds
+ * at most, inside fireServerConversion's own ceiling.
+ * https://developers.openai.com/ads/conversions-api
+ */
+async function fireOpenAi(input: ServerConversionInput): Promise<void> {
+  const key = (process.env.OPENAI_ADS_API_KEY || "").trim();
+  const oa = input.openAi;
+  if (!key || !OAI_PIXEL_ID || !oa) return;
+  if (!oa.consented) {
+    console.log(`[conv] OpenAI skipped for ${input.transactionId ?? "-"}: no Accept under the notice that names OpenAI`);
+    return;
+  }
+  if (!input.transactionId) return;
+  try {
+    const b = input.browser ?? { browserTagsRan: false };
+    const email = (input.email ?? "").trim().toLowerCase();
+    /* OpenAI's format: digits with the country code, no + and no leading zeros. */
+    const phone = normalisePhone(input.phone).replace(/^\+/, "").replace(/^0+/, "");
+    const user: Record<string, unknown> = {};
+    if (b.obref) user.obref = b.obref;
+    if (email) user.emails_sha256 = [createHash("sha256").update(email).digest("hex")];
+    if (/^\d{8,15}$/.test(phone)) user.phone_numbers_sha256 = [createHash("sha256").update(phone).digest("hex")];
+    if (b.ip) user.ip_address = b.ip;
+    if (b.userAgent) user.user_agent = b.userAgent;
+
+    const event: Record<string, unknown> = {
+      id: input.transactionId.slice(0, 64),
+      type: oa.type,
+      timestamp_ms: Date.now(),
+      source_url: /^https?:\/\//.test(b.sourceUrl ?? "") ? b.sourceUrl : "https://smart-space.ie/",
+      action_source: "web",
+      user,
+      data: {
+        type: oa.type === "order_created" ? "contents" : "customer_action",
+        amount: Math.round((input.value ?? 0) * 100),
+        currency: (input.currency || "EUR").toUpperCase(),
+      },
+    };
+    if (b.oppref) event.oppref = b.oppref;
+
+    const res = await fetch(`https://bzr.openai.com/v1/events?pid=${encodeURIComponent(OAI_PIXEL_ID)}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ events: [event] }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) {
+      console.error(`[conv] OpenAI Conversions API responded ${res.status}: ${(await res.text().catch(() => "")).slice(0, 300)}`);
+    } else {
+      console.log(`[conv] OpenAI ${oa.type} sent for ${input.transactionId} oppref=${b.oppref ? "yes" : "no"} obref=${b.obref ? "yes" : "no"}`);
+    }
+  } catch (err) {
+    console.error("[conv] OpenAI Conversions API error:", err instanceof Error ? err.message : err);
   }
 }

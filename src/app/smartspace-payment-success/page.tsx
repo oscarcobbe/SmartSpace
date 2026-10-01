@@ -4,11 +4,13 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, Home, Phone } from "lucide-react";
+import { oaiLead, oaiOrder } from "@/lib/chatgpt-pixel";
+import { normalisePhone } from "@/lib/phone";
 
 // Conversion send_to values. Pulled from env so the user can fix in
 // Vercel without a code redeploy if a label changes (e.g. the conversion
 // is recreated in Google Ads). Falls back to the historic labels.
-// .trim(), see src/components/ContactForm.tsx for the rationale.
+// .trim(), see src/lib/lead-conversion.ts for the rationale.
 // Trailing-newline env vars in Vercel silently break gtag conversion
 // labels. This was costing every phone-call conversion until 2026-05-14.
 const GADS_PAYMENT_TAG =
@@ -96,8 +98,22 @@ function PaymentSuccessContent() {
   // when third-party cookies or ad trackers are blocked.
   useEffect(() => {
     if (fired.current) return;
+    /*
+     * ChatGPT ads' copy first, and apart from gtag: a browser that blocks
+     * Google may still run OpenAI's pixel. It does nothing until that pixel
+     * exists and the visitor accepts, and OpenAI keeps one event per id, so a
+     * reload is still one lead or one order.
+     */
+    if (state.status === "free" && state.conversionId) {
+      oaiLead(state.email, state.phone, FREE_CONSULTATION_VALUE, state.conversionId);
+    } else if (state.status === "paid") {
+      oaiOrder(state.sessionId, state.amount, state.currency);
+    }
     const w = window as unknown as { gtag?: (...args: unknown[]) => void };
-    if (typeof w.gtag !== "function") return;
+    if (typeof w.gtag !== "function") {
+      if (state.status === "free" || state.status === "paid") fired.current = true;
+      return;
+    }
 
     /*
      * email_address, not email.
@@ -114,7 +130,9 @@ function PaymentSuccessContent() {
     const userData = (email?: string, phone?: string) => {
       const data: Record<string, string> = {};
       if (email) data.email_address = email;
-      if (phone) data.phone_number = phone;
+      /* E.164, which is what Google hashes on its side (src/lib/phone.ts). */
+      const e164 = normalisePhone(phone);
+      if (e164) data.phone_number = e164;
       return data;
     };
 

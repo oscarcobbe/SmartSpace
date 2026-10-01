@@ -25,9 +25,9 @@
  *   3. The round trip through Stripe. /api/checkout has to write the answer
  *      as metadata ad_consent and ad_consent_at, and the webhook has to read
  *      those same two keys back into consentFrom.
- *   4. Every browser request that posts an enquiry, a checkout or a phone tap
- *      has to send consent: consentRecord() in its own body, or the server
- *      never has a yes to read and the gate is shut for everybody.
+ *   4. Every browser request that posts an enquiry or a checkout has to send
+ *      consent: consentRecord() in its own body, or the server never has a
+ *      yes to read and the gate is shut for everybody.
  *
  *   node scripts/check-server-conversion-consent.mjs
  */
@@ -46,13 +46,15 @@ const ok = (s) => console.log(`ok    ${s}`);
 process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID = "G-CHECK000";
 process.env.GA4_API_SECRET = "check-secret";
 
-const src = readFileSync(join(ROOT, "src/lib/server-conversions.ts"), "utf8");
-const js = ts.transpileModule(src, {
-  compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
-}).outputText;
+const transpile = (rel) =>
+  ts.transpileModule(readFileSync(join(ROOT, rel), "utf8"), {
+    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+  }).outputText;
 const dir = mkdtempSync(join(tmpdir(), "server-consent-"));
+/* Its one import, the phone normaliser, goes alongside it. */
+writeFileSync(join(dir, "phone.mjs"), transpile("src/lib/phone.ts"));
 const file = join(dir, `server-conversions.${Date.now()}.mjs`);
-writeFileSync(file, js);
+writeFileSync(file, transpile("src/lib/server-conversions.ts").replace(/from\s+"\.\/phone"/, 'from "./phone.mjs"'));
 
 const sent = [];
 globalThis.fetch = async (url) => {
@@ -71,7 +73,7 @@ try {
 
 const lead = {
   gadsLabel: "CheckLabel",
-  ga4EventName: "generate_lead",
+  ga4EventName: "server_lead",
   value: 10,
   currency: "EUR",
   transactionId: "check-1",
@@ -472,12 +474,16 @@ if (problems.length === before3) ok("/api/checkout writes metadata ad_consent an
  * (CartDrawer sends a free booking to one route and a paid one to another)
  * must send the answer in both bodies.
  *
+ * /api/track/phone-click left this list when a tap became a browser-only
+ * conversion: that route only logs it to the sheet now.
+ * /api/wifi-check joined it, when a Wi-Fi enquiry became a conversion.
+ *
  * The route is recognised however the URL is written: "/api/contact",
  * "https://smart-space.ie/api/contact" or `${location.origin}/api/contact`.
  * Matching only the bare path let a request that switched to an absolute URL
  * drop out of this check, and the check still passed with one request fewer.
  */
-const ENDPOINTS = new Set(["/api/contact", "/api/checkout", "/api/checkout/free", "/api/booking", "/api/track/phone-click"]);
+const ENDPOINTS = new Set(["/api/contact", "/api/checkout", "/api/checkout/free", "/api/booking", "/api/wifi-check"]);
 const endpointOf = (m) => {
   const parts =
     ts.isStringLiteral(m) || ts.isNoSubstitutionTemplateLiteral(m)
@@ -496,7 +502,9 @@ const before4 = problems.length;
 let requests = 0;
 const senders = new Set();
 for (const sf of sources) {
-  if (rel(sf).startsWith(join("src", "app", "api"))) continue;
+  /* Server code, not the browser. The middleware names /api/wifi-check to set
+     a header on it, and posts nothing. */
+  if (rel(sf).startsWith(join("src", "app", "api")) || rel(sf) === join("src", "middleware.ts")) continue;
   const named = [];
   each(sf, (m) => {
     if (endpointOf(m)) named.push(m);
@@ -540,8 +548,8 @@ for (const sf of sources) {
     }
   }
 }
-if (!requests) problems.push("found no browser code posting an enquiry, checkout or phone tap, so this check is looking in the wrong place");
-else if (problems.length === before4) ok(`${requests} browser request(s) in ${senders.size} file(s) that post an enquiry, checkout or phone tap each send the banner answer`);
+if (!requests) problems.push("found no browser code posting an enquiry or checkout, so this check is looking in the wrong place");
+else if (problems.length === before4) ok(`${requests} browser request(s) in ${senders.size} file(s) that post an enquiry or checkout each send the banner answer`);
 
 if (problems.length) {
   console.error(`\n${problems.length} problem${problems.length === 1 ? "" : "s"}:\n`);

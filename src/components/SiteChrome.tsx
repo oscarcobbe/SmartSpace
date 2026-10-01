@@ -10,6 +10,7 @@ import CookieBanner from "@/components/CookieBanner";
 import VisitBeacon from "@/components/VisitBeacon";
 import PhoneClickTracker from "@/components/PhoneClickTracker";
 import EngagementTracker from "@/components/EngagementTracker";
+import ChatGptPixel from "@/components/ChatGptPixel";
 
 /**
  * The marketing site's furniture, and where it stops.
@@ -49,6 +50,7 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
       <GclidCapture />
       <PhoneClickTracker />
       <EngagementTracker />
+      <ChatGptPixel />
       <Navbar />
       <main id="main-content" className="min-h-screen">{children}</main>
       <CartDrawer />
