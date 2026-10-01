@@ -32,6 +32,9 @@ export default function ManageBooking({ bookingRef, token, kind, initial }: { bo
       }
       // The booking card above is drawn on the server: redraw it with the change.
       router.refresh();
+      // The tall date picker gives way to a short note; on a phone that would
+      // leave the screen on the footer, so bring the result into view.
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return { emailed: data.emailed === true };
     } catch {
       setError("We couldn't reach the site. Please check your connection and try again.");
