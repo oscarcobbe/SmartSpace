@@ -6,9 +6,12 @@
  *
  *   GET  ?date=YYYY-MM-DD                       free start times that day
  *   POST { action: "book", ...BookInput }       site is always "scl" here
- *   POST { action: "get", ref }
- *   POST { action: "cancel", ref }
- *   POST { action: "reschedule", ref, date, start }
+ *   POST { action: "get", ref, t }
+ *   POST { action: "cancel", ref, t }
+ *   POST { action: "reschedule", ref, t, date, start }
+ *
+ * t is the token from the customer's emailed link; the engine checks it, so
+ * SmartCare Living never needs the link secret.
  *
  * SmartCare Living sends its own emails; this only moves the calendar. It
  * answers 409 { backend: "calendly" } while this site is still on Calendly,
@@ -17,7 +20,7 @@
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { bookingBackend } from "@/lib/booking/backend";
-import { book, bookingByRef, cancel, freeStarts, manageUrl, reschedule, type Booking } from "@/lib/booking/engine";
+import { book, bookingByRef, cancel, freeStarts, manageUrl, reschedule, tokenMatches, type Booking } from "@/lib/booking/engine";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -63,6 +66,7 @@ export async function POST(request: Request) {
   }
   const str = (k: string) => (typeof body[k] === "string" ? (body[k] as string) : undefined);
   const ref = str("ref") || "";
+  if (body.action !== "book" && !tokenMatches(ref, str("t"))) return fail(404, "No such booking");
 
   try {
     switch (body.action) {
