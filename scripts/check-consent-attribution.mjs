@@ -41,7 +41,7 @@ function browser() {
   const session = store("session");
   globalThis.localStorage = local;
   globalThis.sessionStorage = session;
-  globalThis.document = { referrer: "" };
+  globalThis.document = { referrer: "", cookie: "" };
   globalThis.window = {
     localStorage: local,
     sessionStorage: session,
@@ -312,6 +312,65 @@ try {
       ? pass("a decision older than twelve months is not consent")
       : fail("an expired decision was treated as consent");
   }
+  /* 7. A returning visitor whose own record says organic, while Google's
+     cookie holds the ad click: what a form sends carries Google's click.
+     The 25 September 2026 consultation, which Google credited to an ad and
+     the CRM did not. */
+  {
+    const { local } = browser();
+    local.setItem("ss_consent", consentValue("granted"));
+    window.location.search = "";
+    window.location.pathname = "/services/eufy";
+    attribution.captureAttribution();
+    const nowS = Math.floor(Date.now() / 1000) - 5 * 86400;
+    document.cookie = `_ga=GA1.1.1.2; _gcl_aw=GCL.${nowS}.CjwKFROMCOOKIE123; _gcl_au=1.1.x`;
+    const sent = attribution.getAttribution();
+    const stored = JSON.parse(local.getItem("ss_attribution") ?? "{}");
+    sent?.gclid === "CjwKFROMCOOKIE123" && sent?.gclidFrom === "google-cookie" && sent?.landingPage === "/services/eufy" && !stored.gclid
+      ? pass("a return visit with no click of its own sends Google's click from _gcl_aw, and the stored record is left alone")
+      : fail(`Google's click was not used: sent ${JSON.stringify(sent)}, stored ${JSON.stringify(stored)}`);
+  }
+
+  // 8. Without consent the cookie is not read, even if one is there.
+  {
+    browser();
+    window.location.search = "";
+    document.cookie = `_gcl_aw=GCL.${Math.floor(Date.now() / 1000)}.CjwKNOCONSENT1`;
+    const sent = attribution.getAttribution();
+    !sent?.gclid
+      ? pass("without consent Google's cookie is not read")
+      : fail(`the cookie was read without consent: ${JSON.stringify(sent)}`);
+  }
+
+  // 9. A record's own click wins, and a ChatGPT click is not handed to Google.
+  {
+    const { local } = browser();
+    local.setItem("ss_consent", consentValue("granted"));
+    document.cookie = `_gcl_aw=GCL.${Math.floor(Date.now() / 1000)}.CjwKOLDERCOOKIE`;
+    window.location.search = "?gclid=OWN_CLICK";
+    attribution.captureAttribution();
+    const own = attribution.getAttribution()?.gclid;
+    browser().local.setItem("ss_consent", consentValue("granted"));
+    document.cookie = `_gcl_aw=GCL.${Math.floor(Date.now() / 1000)}.CjwKOLDERCOOKIE`;
+    window.location.search = "?oppref=op_chatgpt_1";
+    attribution.captureAttribution();
+    const chat = attribution.getAttribution();
+    own === "OWN_CLICK" && chat?.oppref === "op_chatgpt_1" && !chat?.gclid
+      ? pass("the record's own click wins, and a ChatGPT click is not given Google's cookie")
+      : fail(`own ${own}, ChatGPT record ${JSON.stringify(chat)}`);
+  }
+
+  // 10. Google's cookie older than ninety days is not a click any more.
+  {
+    const { local } = browser();
+    local.setItem("ss_consent", consentValue("granted"));
+    window.location.search = "";
+    attribution.captureAttribution();
+    document.cookie = `_gcl_aw=GCL.${Math.floor(Date.now() / 1000) - 91 * 86400}.CjwKTOOOLD1`;
+    !attribution.getAttribution()?.gclid
+      ? pass("a Google cookie older than ninety days is ignored")
+      : fail("a click older than ninety days was sent");
+  }
 } finally {
   rmSync(dir, { recursive: true, force: true });
 }
@@ -319,5 +378,5 @@ try {
 if (process.exitCode) {
   console.error("\nThe consent gate and attribution capture disagree.");
 } else {
-  console.log("\nConsent and attribution capture agree on all twelve cases.");
+  console.log("\nConsent and attribution capture agree on every case, Google's click cookie included.");
 }
