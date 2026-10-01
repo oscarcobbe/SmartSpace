@@ -57,9 +57,9 @@ SmartCare Living needs `BOOKING_BACKEND=google` and the same
   `Authorization: Bearer $BOOKING_API_SECRET` reads free/busy for the next
   weekday and reports which system books and whether the three booking emails
   are approved. Nothing is booked.
-- **Switch on:** set `BOOKING_BACKEND=google` on both projects and redeploy
+- **Switch on:** `node scripts/booking-switch.mjs go` (checks the health and approvals first). By hand: set `BOOKING_BACKEND=google` on both projects and redeploy
   both. Prove it with one booking through the engine, cancelled at once.
-- **Roll back:** remove `BOOKING_BACKEND` from both and redeploy. Calendly takes
+- **Roll back:** `node scripts/booking-switch.mjs rollback`, or remove `BOOKING_BACKEND` from both and redeploy. Calendly takes
   over again; bookings already on Google stay in Nigel's calendar and the jobs
   keep reading them while Google is configured.
 - **Calendly's leftovers:** the reminder, review, recovery and admin jobs read
