@@ -8,11 +8,24 @@
  * token is a signed JWT swapped at oauth2.googleapis.com, and the calendar is
  * plain REST.
  *
+ * Keyless, as set up on 1 Oct 2026: the smart-space.ie organisation forbids
+ * service account keys (iam.disableServiceAccountKeyCreation), so nothing
+ * secret is stored. On Vercel the deployment's own OIDC token is exchanged at
+ * Google's STS through the workload identity pool "vercel" (project
+ * smartspace-492216; only this project's production and preview deployments
+ * may use it), that is swapped for the service account's token, and the
+ * service account signs the delegation JWT with Google's managed key
+ * (iamcredentials signJwt). A JSON key still works if one is ever issued.
+ *
  * Env:
- *   GOOGLE_BOOKING_SA_KEY    the service account's JSON key, base64-encoded
+ *   GOOGLE_BOOKING_SA_EMAIL  site-bookings@smartspace-492216.iam.gserviceaccount.com
+ *   GOOGLE_WIF_PROVIDER      projects/845801375386/locations/global/workloadIdentityPools/vercel/providers/vercel
+ *   GOOGLE_BOOKING_SA_KEY    or instead: the service account's JSON key, base64
  *   BOOKING_CALENDAR_OWNER   the Workspace user whose calendar holds bookings
  *   BOOKING_BUSY_CALENDARS   calendars whose events block a slot, comma
  *                            separated (default "primary", the owner's own)
+ *   GOOGLE_SOURCE_ACCESS_TOKEN  local testing only: a token allowed to sign
+ *                            as the service account (gcloud auth print-access-token)
  */
 import { createSign } from "crypto";
 
@@ -44,8 +57,15 @@ export function calendarOwner(): string | null {
   return process.env.BOOKING_CALENDAR_OWNER?.trim() || null;
 }
 
+const saEmail = () => process.env.GOOGLE_BOOKING_SA_EMAIL?.trim() || "";
+const wifProvider = () => process.env.GOOGLE_WIF_PROVIDER?.trim() || "";
+
+function keyless(): boolean {
+  return !!saEmail() && (!!wifProvider() || !!process.env.GOOGLE_SOURCE_ACCESS_TOKEN);
+}
+
 export function googleCalendarConfigured(): boolean {
-  return !!readKey() && !!calendarOwner();
+  return (!!readKey() || keyless()) && !!calendarOwner();
 }
 
 const b64url = (b: Buffer | string) =>
@@ -54,19 +74,69 @@ const b64url = (b: Buffer | string) =>
 // One token per warm instance, refreshed a minute before Google's hour runs out.
 let cached: { token: string; owner: string; exp: number } | null = null;
 
+async function postJson<T>(url: string, body: unknown, bearer?: string): Promise<T> {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}) },
+    body: JSON.stringify(body),
+    cache: "no-store",
+    signal: AbortSignal.timeout(6000),
+  });
+  if (!res.ok) throw new Error(`${new URL(url).host}${new URL(url).pathname} ${res.status}: ${(await res.text().catch(() => "")).slice(0, 300)}`);
+  return (await res.json()) as T;
+}
+
+/** A Google token allowed to sign as the service account: the service account's own, reached from Vercel's OIDC token. */
+async function signerToken(): Promise<string> {
+  const local = process.env.GOOGLE_SOURCE_ACCESS_TOKEN?.trim();
+  if (local) return local;
+  const { getVercelOidcToken } = await import("@vercel/functions/oidc");
+  const oidc = await getVercelOidcToken();
+  const sts = await postJson<{ access_token: string }>("https://sts.googleapis.com/v1/token", {
+    grant_type: "urn:ietf:params:oauth:grant-type:token-exchange",
+    audience: `//iam.googleapis.com/${wifProvider()}`,
+    scope: "https://www.googleapis.com/auth/cloud-platform",
+    requested_token_type: "urn:ietf:params:oauth:token-type:access_token",
+    subject_token: oidc,
+    subject_token_type: "urn:ietf:params:oauth:token-type:jwt",
+  });
+  const sa = await postJson<{ accessToken: string }>(
+    `https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${encodeURIComponent(saEmail())}:generateAccessToken`,
+    { scope: ["https://www.googleapis.com/auth/cloud-platform"], lifetime: "600s" },
+    sts.access_token,
+  );
+  return sa.accessToken;
+}
+
+/** The delegation JWT, signed by a key file if there is one, otherwise by Google for the service account. */
+async function delegationAssertion(owner: string, now: number, tokenUri: string): Promise<string> {
+  const key = readKey();
+  if (key) {
+    const header = b64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+    const claims = b64url(JSON.stringify({ iss: key.client_email, sub: owner, scope: SCOPES, aud: tokenUri, iat: now, exp: now + 3600 }));
+    const signer = createSign("RSA-SHA256");
+    signer.update(`${header}.${claims}`);
+    return `${header}.${claims}.${b64url(signer.sign(key.private_key))}`;
+  }
+  const signed = await postJson<{ signedJwt: string }>(
+    `https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${encodeURIComponent(saEmail())}:signJwt`,
+    { payload: JSON.stringify({ iss: saEmail(), sub: owner, scope: SCOPES, aud: tokenUri, iat: now, exp: now + 3600 }) },
+    await signerToken(),
+  );
+  return signed.signedJwt;
+}
+
 async function accessToken(): Promise<string> {
   const key = readKey();
   const owner = calendarOwner();
-  if (!key || !owner) throw new Error("Google Calendar is not configured (GOOGLE_BOOKING_SA_KEY, BOOKING_CALENDAR_OWNER)");
+  if ((!key && !keyless()) || !owner) {
+    throw new Error("Google Calendar is not configured (GOOGLE_BOOKING_SA_EMAIL + GOOGLE_WIF_PROVIDER, or GOOGLE_BOOKING_SA_KEY; and BOOKING_CALENDAR_OWNER)");
+  }
   const now = Math.floor(Date.now() / 1000);
   if (cached && cached.owner === owner && cached.exp - 60 > now) return cached.token;
 
-  const tokenUri = key.token_uri || "https://oauth2.googleapis.com/token";
-  const header = b64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
-  const claims = b64url(JSON.stringify({ iss: key.client_email, sub: owner, scope: SCOPES, aud: tokenUri, iat: now, exp: now + 3600 }));
-  const signer = createSign("RSA-SHA256");
-  signer.update(`${header}.${claims}`);
-  const assertion = `${header}.${claims}.${b64url(signer.sign(key.private_key))}`;
+  const tokenUri = key?.token_uri || "https://oauth2.googleapis.com/token";
+  const assertion = await delegationAssertion(owner, now, tokenUri);
 
   const res = await fetch(tokenUri, {
     method: "POST",
