@@ -70,6 +70,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // Blog, informational top-of-funnel content. Each post targets a
     // distinct buyer-research query so they don't cannibalise each other.
     { url: `${BASE}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
+    // Home network pillar hub: gathers the Wi-Fi and broadband guides by topic.
+    // Content, not a gated service page, so it is always listed (the service
+    // pages under /services/wifi wait for NEXT_PUBLIC_NETWORK_PAGES_LIVE).
+    { url: `${BASE}/home-network`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
     /* Every guide in the blog's own list, so a new one cannot be left out. */
     ...BLOG_POSTS.map((post) => ({
       url: `${BASE}/blog/${post.slug}`,
