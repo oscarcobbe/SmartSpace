@@ -10,6 +10,16 @@ export type BlogPost = {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "why-wifi-slow-upstairs-irish-homes",
+    title: "Why Your Wi-Fi Is Slow Upstairs, and How to Fix It in an Irish House",
+    description:
+      "Foil-backed insulation, block walls, metal, distance and a router left where the line comes in all take Wi-Fi on its way upstairs. What ComReg's tests found, 2.4 or 5 GHz, how to find the weak spot, and the fixes from free upwards.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "7 min read",
+    category: "Home Network",
+  },
+  {
     slug: "broadband-speed-test-ireland-line-or-wifi",
     title: "Broadband Speed Test in Ireland: Is It the Line or the Wi-Fi?",
     description:
