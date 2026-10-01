@@ -5,6 +5,7 @@
  * which is set on both Vercel projects and never reaches a browser.
  *
  *   GET  ?date=YYYY-MM-DD                       free start times that day
+ *   GET  ?health=1                              can the calendar be read (see health())
  *   POST { action: "book", ...BookInput }       site is always "scl" here
  *   POST { action: "get", ref, t }
  *   POST { action: "cancel", ref, t }
@@ -20,6 +21,7 @@
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { bookingBackend } from "@/lib/booking/backend";
+import { googleCalendarConfigured } from "@/lib/booking/google-calendar";
 import { book, bookingByRef, cancel, freeStarts, manageUrl, reschedule, tokenMatches, type Booking } from "@/lib/booking/engine";
 
 export const dynamic = "force-dynamic";
@@ -44,7 +46,34 @@ function gate(request: Request): NextResponse | null {
   return null;
 }
 
+/**
+ * GET ?health=1: can this deployment read the booking calendar right now?
+ * Read-only (free/busy for the next weekday), and answered whichever system
+ * is taking bookings, so the Google connection can be proved on the live
+ * site before the switch and watched after it. Says nothing about the
+ * calendar beyond ok and how long it took.
+ */
+async function health(): Promise<NextResponse> {
+  const started = Date.now();
+  const day = new Date(started + 86_400_000);
+  while ([0, 6].includes(day.getUTCDay())) day.setUTCDate(day.getUTCDate() + 1);
+  const date = day.toISOString().slice(0, 10);
+  const base = { backend: bookingBackend(), googleConfigured: googleCalendarConfigured(), linkSecret: !!process.env.BOOKING_LINK_SECRET };
+  if (!base.googleConfigured) return NextResponse.json({ ok: false, ...base, error: "Google Calendar is not configured here" }, { status: 503 });
+  try {
+    await freeStarts(date);
+    return NextResponse.json({ ok: true, ...base, readMs: Date.now() - started }, { headers: { "Cache-Control": "no-store" } });
+  } catch (e) {
+    console.error("[booking/engine] health read failed:", e);
+    return NextResponse.json({ ok: false, ...base, readMs: Date.now() - started, error: e instanceof Error ? e.message.slice(0, 300) : String(e) }, { status: 503 });
+  }
+}
+
 export async function GET(request: Request) {
+  if (new URL(request.url).searchParams.get("health") === "1") {
+    if (!authorised(request)) return fail(401, "Unauthorized");
+    return health();
+  }
   const refused = gate(request);
   if (refused) return refused;
   const date = new URL(request.url).searchParams.get("date") || "";
