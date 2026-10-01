@@ -8,7 +8,7 @@ import { browserContext, fireServerConversion } from "@/lib/server-conversions";
 import { chatGptAdOf, sendToCrm } from "@/lib/crm";
 import { alertTo, monitorBcc } from "@/lib/business-constants";
 import { afterResponse, AFTER_CEILING } from "@/lib/after-response";
-import { foundUsDetailFrom, foundUsFrom, notesWithFoundUs } from "@/lib/found-us";
+import { foundUsDetailFrom, foundUsFrom, foundUsLine, notesWithFoundUs } from "@/lib/found-us";
 import { sendConsultationConfirmation } from "@/lib/email/send-customer";
 
 // POST routes are inherently dynamic but explicit is better, without
@@ -189,6 +189,7 @@ export async function POST(request: Request) {
             `Email: ${customerEmail}`,
             `Phone: ${customerPhone || "-"}`,
             `Address: ${customerAddress || "-"}`,
+            `Found us: ${foundUsLine(foundUs, foundUsDetail)}`,
             `Date: ${bookedItem.bookingLabel || bookedItem.bookingDate}`,
             `Time Slot: ${bookedItem.bookingSlot}`,
           ].join("\n"),
@@ -198,6 +199,7 @@ export async function POST(request: Request) {
             <p><strong>Email:</strong> ${escapeHtml(customerEmail)}</p>
             <p><strong>Phone:</strong> ${escapeHtml(customerPhone || "-")}</p>
             <p><strong>Address:</strong> ${escapeHtml(customerAddress || "-")}</p>
+            <p><strong>Found us:</strong> ${escapeHtml(foundUsLine(foundUs, foundUsDetail))}</p>
             <hr />
             <p><strong>Date:</strong> ${escapeHtml(bookedItem.bookingLabel || bookedItem.bookingDate || "")}</p>
             <p><strong>Time Slot:</strong> ${escapeHtml(bookedItem.bookingSlot || "")}</p>

@@ -133,3 +133,11 @@ export function foundUsInNotes(notes: unknown): { foundUs: string; detail: strin
   if (!foundUs && !detail) return { foundUs: "", detail: "", notes: text.trim() };
   return { foundUs, detail, notes: parts.join("|").trim() };
 }
+
+/** The answer as Nigel's lead emails show it: the label, and their own words if any, or "Not answered". */
+export function foundUsLine(key: unknown, detail: unknown = ""): string {
+  const k = foundUsFrom(key);
+  const label = k ? (FOUND_US_OPTIONS.find((o) => o.value === k)?.label ?? k).replace(/ \(please tell us\)$/, "") : "Not answered";
+  const words = foundUsDetailFrom(detail);
+  return words ? `${label}: "${words}"` : label;
+}

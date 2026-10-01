@@ -29,6 +29,12 @@ export default function CartDrawer() {
   };
 
   const handleCheckout = async () => {
+    // Required, like on every other form; said here because the cart's button is not a form submit.
+    if (!foundUs) {
+      setCheckoutError("Please tell us how you heard about us.");
+      document.getElementById("cart-found-us")?.focus();
+      return;
+    }
     setIsCheckingOut(true);
     setCheckoutError(null);
     try {
