@@ -205,43 +205,44 @@ export default function CookieBanner() {
       aria-label="Cookie consent"
       className="fixed bottom-4 left-4 right-4 sm:left-6 sm:right-auto sm:bottom-6 sm:max-w-md z-[1000] bg-white border border-gray-200 rounded-2xl shadow-xl p-5 sm:p-6"
     >
-      <h2 className="text-sm font-bold text-gray-900 mb-2">Can we see which pages helped?</h2>
-      {/*
-       * The old wording said we measure ad performance and how visitors use
-       * the site. Both are about us, and neither gives a reader any reason to
-       * agree. Refusing cannot lawfully be made harder, so an honest reason to
-       * agree is the only lever there is.
-       */}
-      <p className="text-xs sm:text-sm text-gray-600 leading-relaxed mb-4">
-        It tells us which pages actually lead to a job being booked, so we stop
-        paying to send people to the ones that do not. No names and no personal
-        details. Change your mind any time. See our{" "}
-        <a href="/privacy" className="text-brand-700 hover:underline">privacy policy</a>.
+      <p className="text-sm text-gray-700 leading-relaxed mb-4">
+        We&rsquo;re a small Irish business trying to reach the people who need us.{" "}
+        <a href="/privacy" className="text-brand-700 font-semibold underline hover:text-brand-800">
+          Privacy policy
+        </a>
       </p>
       {/*
-       * Equal prominence, which is not a preference.
-       *
-       * Accept was a filled brand button and refuse was a pale outline. That
-       * difference is the dark pattern the DPC and the EDPB both name, and it
-       * is the one thing about a consent banner a regulator will look at
-       * first. Same size, same weight, same depth of colour now: only the
-       * label and the hue differ.
+       * Oscar, 30 September 2026: "were gona have to bite the button because
+       * no one is accepting them. the accept must be alot bigger than the
+       * decline", with a short reason under each and a line that we are a
+       * small business. Until then the two buttons were the same size,
+       * because the DPC's cookie guidance asks for equal prominence; this is
+       * his call to depart from it. Decline stays a real, labelled button at
+       * least 32px tall, just smaller and quieter.
        */}
-      <div className="flex flex-col sm:flex-row gap-2">
-        <button
-          type="button"
-          onClick={() => decide("granted")}
-          className="flex-1 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold px-4 py-2.5 rounded-full transition-colors"
-        >
-          Accept all
-        </button>
-        <button
-          type="button"
-          onClick={() => decide("denied")}
-          className="flex-1 bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold px-4 py-2.5 rounded-full transition-colors"
-        >
-          Essential only
-        </button>
+      <div className="flex flex-wrap items-start gap-4">
+        <div className="flex flex-col gap-1.5 flex-[1_1_220px]">
+          <button
+            type="button"
+            onClick={() => decide("granted")}
+            className="w-full bg-brand-700 hover:bg-brand-800 text-white text-base font-bold px-5 py-3.5 rounded-xl shadow-lg shadow-brand-500/30 transition-colors"
+          >
+            Accept cookies
+          </button>
+          <span className="text-xs text-gray-500 leading-snug">
+            Shows us which of our ads work, so we spend less reaching you.
+          </span>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <button
+            type="button"
+            onClick={() => decide("denied")}
+            className="self-start min-h-[32px] bg-white hover:border-gray-500 text-gray-700 text-xs font-semibold px-3.5 py-1.5 rounded-lg border border-gray-300 transition-colors"
+          >
+            Decline
+          </button>
+          <span className="text-xs text-gray-500 leading-snug">Only what the site needs to work.</span>
+        </div>
       </div>
     </div>
   );
