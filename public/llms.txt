@@ -1,0 +1,60 @@
+# Smart Space
+
+> Smart Space is an Irish company based in Dublin. It supplies and installs Ring and Eufy video doorbells and security cameras, and fits existing devices, across Dublin and Leinster. It also fixes home Wi-Fi: a €395 home network assessment measures every room, leaves a trial system in place for three days, and the fee is credited in full against any work.
+
+Guides are written for Irish homes and list their sources.
+
+## Services
+
+- [Ring video doorbell installation](https://smart-space.ie/services/doorbell): supplied and fitted, with a Ring Chime and app setup.
+- [Security cameras](https://smart-space.ie/services/camera): camera supply and installation.
+- [Installation only](https://smart-space.ie/services/installation-only): fitting a Ring, Eufy, Nest, Tapo or Aosu device you already own, from €139.
+- [Free home security consultation](https://smart-space.ie/services/free-consultation): advice in your home and a written quote the same day.
+- [Home Wi-Fi and network](https://smart-space.ie/services/wifi): the €395 home network assessment and the fixes that follow it.
+- [Wi-Fi speed test](https://smart-space.ie/wifi-check): test your connection room by room.
+- [Areas covered](https://smart-space.ie/areas): Dublin, Wicklow, Kildare, Meath and the rest of Leinster.
+
+## Company
+
+- [About](https://smart-space.ie/about)
+- [Reviews](https://smart-space.ie/reviews)
+- [FAQ](https://smart-space.ie/faq)
+- [Contact](https://smart-space.ie/contact)## Guides: Home Network
+
+- [Why Your Wi-Fi Is Slow Upstairs, and How to Fix It in an Irish House](https://smart-space.ie/blog/why-wifi-slow-upstairs-irish-homes): Foil-backed insulation, block walls, metal, distance and a router left where the line comes in all take Wi-Fi on its way upstairs. What ComReg's tests found, 2.4 or 5 GHz, how to find the weak spot, and the fixes from free upwards.
+- [Wi-Fi in a Garden Office: Six Ways to Get a Good Connection](https://smart-space.ie/blog/wifi-garden-office-ireland): Wi-Fi rarely reaches a garden office or garden room on its own. Why the signal drops, the six ways to get a connection down the garden, from a mesh unit to a cable in a duct, what each involves, and how to keep video calls steady.
+- [Working From Home Wi-Fi: Why Teams and Zoom Calls Keep Dropping](https://smart-space.ie/blog/working-from-home-wifi-ireland): Video calls depend on upload and a steady connection more than on download speed. What Teams and Zoom actually need, why a busy house breaks calls up, and the fixes that work in an Irish home office, from a cable to the desk to a better plan.
+- [Wi-Fi Calling in Ireland: Which Networks Support It, and How to Turn It On](https://smart-space.ie/blog/wifi-calling-ireland): Bad mobile signal at home? Wi-Fi Calling carries your calls over your broadband instead. Which Irish networks offer it, how to switch it on for iPhone and Android, what it needs from your Wi-Fi, emergency calls, and the other fixes ComReg suggests.
+- [Broadband Speed Test in Ireland: Is It the Line or the Wi-Fi?](https://smart-space.ie/blog/broadband-speed-test-ireland-line-or-wifi): An eir, Virgin Media or Vodafone speed test tells you about your broadband line. A test in the room that struggles tells you about your Wi-Fi. How to run both, read the numbers, and know who to call.
+- [How to Test Your Wi-Fi Speed Properly, Room by Room](https://smart-space.ie/blog/how-to-test-wifi-speed-room-by-room): One Wi-Fi speed test beside the router tells you very little. Where to test instead, what download, upload and ping mean for your TV, calls and cameras, and when the results point to a fix.
+- [Mesh Wi-Fi Explained: What It Fixes, and What It Can't](https://smart-space.ie/blog/mesh-wifi-explained): A mesh system puts one Wi-Fi network in every room, if its units can talk to each other. What mesh is, why the link between the units decides everything, where the second unit should go, and when mesh is the wrong fix.
+- [Do Powerline Adapters Work? What Decides It in an Irish House](https://smart-space.ie/blog/powerline-adapters-ireland): Powerline adapters carry your broadband over the electrical wiring. Why they fly in one house and crawl in the next: the number on the box, extension leads, appliances, the route through your fuse board, and how to test it.
+- [Wi-Fi Extender, Mesh or Powerline: Which One Fixes Which Problem](https://smart-space.ie/blog/wifi-extender-mesh-or-powerline-ireland): Extenders, boosters, mesh systems and powerline adapters all promise Wi-Fi in every room. They fix different problems. How each one works in an Irish house, what stops it, and how to find out which yours needs.
+
+## Guides: Buying Guide
+
+- [Is My Doorbell Camera Legal in Ireland? GDPR, Neighbours and the DPC](https://smart-space.ie/blog/doorbell-camera-rules-ireland-gdpr): A video doorbell or camera that sees only your own property is outside GDPR. Once it takes in the footpath, the road or a neighbour's garden, the rules change. What the Data Protection Commission says, and how to set up your camera to stay within them.
+- [No Doorbell Wiring? How to Fit a Video Doorbell in an Irish Home](https://smart-space.ie/blog/video-doorbell-no-existing-wiring-ireland): No bell wire at the front door? You can still fit a Ring or Eufy video doorbell. The three ways to power it, how each one rings inside the house, what the makers say about charging, and what it costs.
+- [Covering the Whole Property with Eufy: Driveway, Garden and the Bits People Forget](https://smart-space.ie/blog/eufy-home-bundles-driveway-garden-ireland): A doorbell covers the front door and nothing else. Here is how we cover a whole Irish property with Eufy, the Floodlight Cam, the S380 HomeBase and the three bundles we fit most, all with footage kept at home and no monthly fee.
+- [Ring Doorbell Installation Ireland: Complete 2026 Guide](https://smart-space.ie/blog/ring-doorbell-installation-ireland-guide): Every Ring Video Doorbell model explained, wiring, weather, pricing, and whether to DIY or hire a professional installer in Ireland.
+- [Home Security Cameras Ireland: What Actually Works in 2026](https://smart-space.ie/blog/home-security-cameras-ireland-buyers-guide): An honest buyer's guide to home security cameras for Irish homes in 2026, Ring, Nest, Eufy, Tapo compared, insurance implications, and the setups that actually work.
+
+## Guides: Specialist Opinion
+
+- [The Eufy Video Doorbell E340, Fitted: An Irish Installer's Take](https://smart-space.ie/blog/eufy-video-doorbell-e340-fitted-ireland): We supply and fit the Eufy Video Doorbell E340 across Dublin and Leinster. Here is what the dual camera, the local storage and the no-subscription promise actually mean once it is on your wall, and the two power situations that decide your price.
+- [Ring vs Eufy: An Irish Installer's Honest Take in 2026](https://smart-space.ie/blog/ring-vs-eufy-doorbell-ireland): We've installed thousands of both across Dublin and Leinster. Here's what we tell homeowners when they ask, including why we get asked to swap Eufy for Ring but never the other way around, and why our install price is the same either way.
+- [Why Your Smart Camera Keeps Dropping the Signal](https://smart-space.ie/blog/smart-camera-wifi-drops-irish-homes): Nine times out of ten it isn't the camera. It's the foil-backed insulation in your wall, or your modem sitting two rooms away behind a thermal-insulated chimney breast. What we actually find on a survey.
+- [Tapo, Eufy, Ring: Is the Cheap Option Actually Cheap?](https://smart-space.ie/blog/tapo-vs-eufy-vs-ring-budget-doorbell-ireland): Tapo doorbells turn up on the same shelves as Ring and Eufy at half the price. They're not always the wrong buy, but here's what we've seen come down off Irish walls after eighteen months that helps you decide.
+- [The Front Door Is the Easy Bit: Side Gates, Extensions and Garden Offices](https://smart-space.ie/blog/whole-home-security-beyond-front-door-ireland): Most people stop thinking about security once the doorbell is up. The break-ins we hear about don't happen at the front door, they happen at the side gate of a semi-D, the patio door on a rear extension, or the garden office with a laptop in it.
+- [Battery or Hardwired? What Actually Works on an Irish Doorbell](https://smart-space.ie/blog/battery-vs-hardwired-smart-doorbell-ireland): Charging the doorbell every three months is most people's idea of hell. But your old 8V chime probably can't power a modern smart doorbell without help. Here's what we do on a hardwire conversion, and when battery is genuinely the right call.
+
+## Guides: Comparison
+
+- [Smart Doorbell vs Traditional Intercom in Ireland](https://smart-space.ie/blog/smart-doorbell-vs-traditional-intercom-ireland): Upgrading from an old wired intercom to a smart doorbell? Costs, wiring, retrofit difficulty, and who this works for in Ireland.
+
+## Company
+
+- [About](https://smart-space.ie/about)
+- [Reviews](https://smart-space.ie/reviews)
+- [FAQ](https://smart-space.ie/faq)
+- [Contact](https://smart-space.ie/contact)

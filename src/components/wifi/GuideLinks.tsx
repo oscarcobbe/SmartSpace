@@ -7,6 +7,10 @@ export const NETWORK_GUIDES = [
   { href: "/blog/wifi-extender-mesh-or-powerline-ireland", label: "Extender, mesh or powerline" },
   { href: "/blog/mesh-wifi-explained", label: "Mesh explained" },
   { href: "/blog/powerline-adapters-ireland", label: "Powerline in Irish houses" },
+  { href: "/blog/why-wifi-slow-upstairs-irish-homes", label: "Slow upstairs" },
+  { href: "/blog/working-from-home-wifi-ireland", label: "Working from home" },
+  { href: "/blog/wifi-garden-office-ireland", label: "Garden office" },
+  { href: "/blog/wifi-calling-ireland", label: "Wi-Fi Calling" },
 ];
 
 /* No underline until hover or focus, the way Oscar asked for links to the

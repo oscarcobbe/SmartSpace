@@ -14,10 +14,22 @@ export const BLOG_POSTS: BlogPost[] = [
     title: "Why Your Wi-Fi Is Slow Upstairs, and How to Fix It in an Irish House",
     description:
       "Foil-backed insulation, block walls, metal, distance and a router left where the line comes in all take Wi-Fi on its way upstairs. What ComReg's tests found, 2.4 or 5 GHz, how to find the weak spot, and the fixes from free upwards.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "7 min read",
+    category: "Home Network",
+  },
+  {
     slug: "wifi-garden-office-ireland",
     title: "Wi-Fi in a Garden Office: Six Ways to Get a Good Connection",
     description:
       "Wi-Fi rarely reaches a garden office or garden room on its own. Why the signal drops, the six ways to get a connection down the garden, from a mesh unit to a cable in a duct, what each involves, and how to keep video calls steady.",
+    datePublished: "2026-10-01",
+    dateModified: "2026-10-01",
+    readingTime: "7 min read",
+    category: "Home Network",
+  },
+  {
     slug: "working-from-home-wifi-ireland",
     title: "Working From Home Wi-Fi: Why Teams and Zoom Calls Keep Dropping",
     description:
@@ -25,6 +37,9 @@ export const BLOG_POSTS: BlogPost[] = [
     datePublished: "2026-10-01",
     dateModified: "2026-10-01",
     readingTime: "7 min read",
+    category: "Home Network",
+  },
+  {
     slug: "wifi-calling-ireland",
     title: "Wi-Fi Calling in Ireland: Which Networks Support It, and How to Turn It On",
     description:
@@ -33,6 +48,8 @@ export const BLOG_POSTS: BlogPost[] = [
     dateModified: "2026-10-01",
     readingTime: "6 min read",
     category: "Home Network",
+  },
+  {
     slug: "doorbell-camera-rules-ireland-gdpr",
     title: "Is My Doorbell Camera Legal in Ireland? GDPR, Neighbours and the DPC",
     description:
@@ -40,6 +57,9 @@ export const BLOG_POSTS: BlogPost[] = [
     datePublished: "2026-10-01",
     dateModified: "2026-10-01",
     readingTime: "8 min read",
+    category: "Buying Guide",
+  },
+  {
     slug: "video-doorbell-no-existing-wiring-ireland",
     title: "No Doorbell Wiring? How to Fit a Video Doorbell in an Irish Home",
     description:
