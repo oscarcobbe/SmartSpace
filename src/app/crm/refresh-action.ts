@@ -16,6 +16,7 @@ import { ROAS_TAG } from "@/lib/crm/roas";
 import { ROAS_LIVE_TAG } from "@/lib/crm/roas-live";
 import { ADS_TAG, CHANGES_TAG } from "@/lib/crm/google-ads";
 import { PERIODS_TAG } from "@/lib/crm/ads-periods";
+import { OPENAI_PERIODS_TAG } from "@/lib/crm/openai-ads";
 import { requireSession } from "@/lib/crm/session";
 
 export async function refreshCrmData(): Promise<void> {
@@ -29,4 +30,5 @@ export async function refreshCrmData(): Promise<void> {
   revalidateTag(ADS_TAG);
   revalidateTag(CHANGES_TAG);
   revalidateTag(PERIODS_TAG);
+  revalidateTag(OPENAI_PERIODS_TAG);
 }

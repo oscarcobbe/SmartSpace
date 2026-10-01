@@ -196,6 +196,8 @@ export default function RoasChart({
                 `${eur(shown.backViaEnquiry)} of the traced money was paid by link or invoice and traced through the customer's own enquiry. `}
               {shown.notFromAds > 0 &&
                 `${eur(shown.notFromAds)} came from customers who found you another way: search, a referral, a business card or typing the address in. `}
+              {(shown.chatgptBack ?? 0) > 0 &&
+                `${eur(shown.chatgptBack)} came from customers a ChatGPT ad reached. That is ChatGPT's, under ChatGPT ads below, and none of it is in these bars. `}
               {shown.unseen > 0
                 ? `${eur(shown.unseen)} could not be traced either way. The grey counts ${Math.round(shown.share * 100)}% of it, the share of traceable customers who came through an ad over the three months to here.`
                 : "Every customer this month could be traced, so nothing is estimated."}

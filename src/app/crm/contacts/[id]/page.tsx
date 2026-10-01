@@ -4,7 +4,7 @@ import { ArrowLeft, Check, Mail, MapPin, Phone } from "lucide-react";
 import { requireSession } from "@/lib/crm/session";
 import { getPerson, fullAddress, distinctLeads } from "@/lib/crm/people";
 import { getContact, STATUSES, type ActivityRow, type TaskRow } from "@/lib/crm/contacts";
-import { STATUS_PILL, STATUS_LABEL, sourceLabel, kindLabel, telHref, FOUND_US, foundUsOf, LIGHTS, LIGHT_LABEL, LIGHT_DOT, LIGHT_PILL, lightOf } from "@/lib/crm/labels";
+import { STATUS_PILL, STATUS_LABEL, sourceLabel, kindLabel, telHref, FOUND_US, foundUsOf, foundUsLabel, chatGptAdClick, LIGHTS, LIGHT_LABEL, LIGHT_DOT, LIGHT_PILL, lightOf } from "@/lib/crm/labels";
 import { moneyExact, money } from "@/lib/crm/leads";
 import { PageHeader, Panel, Empty, Pill, Note } from "../../ui";
 import { saveNote, setLeadStatus, setLeadLight, addTask, completeTask } from "../actions";
@@ -198,12 +198,13 @@ export default async function ContactPage({ params }: { params: { id: string } }
                     )}
 
                     <dl className="mt-2.5 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-500">
-                        <div><dt className="inline">Found us: </dt><dd className="inline text-slate-700">{FOUND_US[foundUsOf(l)] ?? foundUsOf(l)}{l.gclid ? " (the click was recorded)" : ""}</dd></div>
+                        <div><dt className="inline">Found us: </dt><dd className="inline text-slate-700">{foundUsLabel(l)}</dd></div>
                         {typeof l.custom?.found_us_detail === "string" && l.custom.found_us_detail && (
                           <div><dt className="inline">In their words: </dt><dd className="inline text-slate-700">&ldquo;{l.custom.found_us_detail}&rdquo;</dd></div>
                         )}
-                        {/* custom.oppref: they came from a ChatGPT ad (src/lib/crm.ts, chatGptAdOf). */}
-                        {typeof l.custom?.oppref === "string" && l.custom.oppref && (
+                        {/* custom.oppref: a ChatGPT ad reached them (src/lib/crm.ts, chatGptAdOf).
+                            Said here only when "Found us" above says something else. */}
+                        {chatGptAdClick(l) && !foundUsLabel(l).startsWith("A ChatGPT ad") && (
                           <div><dt className="inline">ChatGPT ad: </dt><dd className="inline text-slate-700">the click was recorded</dd></div>
                         )}
                         {l.utm_campaign && <div><dt className="inline">Campaign: </dt><dd className="inline text-slate-700">{l.utm_campaign}</dd></div>}
