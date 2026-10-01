@@ -8,6 +8,11 @@ const SITE = "https://smart-space.ie";
 const post = getPostBySlug("broadband-speed-test-ireland-line-or-wifi")!;
 
 /*
+ * Provider testing advice and the contract speeds added 30 September 2026,
+ * from ComReg's contract guidance and "All About Broadband" (2025), Virgin
+ * Media Ireland's and Vodafone Ireland's support pages, and eir's speed test
+ * page.
+ *
  * Written for the provider speed-test searches, which Keyword Planner put at
  * 1,900 a month for "eir speed test", 880 for "broadband speed test ireland",
  * 720 for "virgin media speed test" and 320 for "vodafone speed test"
@@ -41,6 +46,7 @@ export const metadata: Metadata = {
 const toc = [
   { id: "what-it-measures", label: "What a speed test actually measures" },
   { id: "which-test", label: "eir, Virgin Media, Vodafone or Google: which test to use" },
+  { id: "contract-speeds", label: "The speeds in your contract" },
   { id: "test-the-line", label: "Test the line: by cable, at the router" },
   { id: "test-the-rooms", label: "Then test the rooms" },
   { id: "reading-the-numbers", label: "Reading the numbers" },
@@ -108,6 +114,49 @@ export default function Post() {
           Lab, an open testing platform that is not run by any broadband provider. For comparing rooms, any test works, as
           long as you use the same one each time.
         </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Provider</th>
+              <th>What it says about testing</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>eir</td>
+              <td>Has a free speed test on its website, at eir.ie/broadbandspeed, for comparing your speed with the one you pay for.</td>
+            </tr>
+            <tr>
+              <td>Virgin Media</td>
+              <td>
+                Recommends a cable from your device to the modem for the fastest result, and points out that a device only
+                shows what it can handle: a laptop that tops out at 100Mb shows 100Mb on a 500Mb package.
+              </td>
+            </tr>
+            <tr>
+              <td>Vodafone</td>
+              <td>
+                Points to Speedtest.net, and asks you to plug a laptop into the modem with an Ethernet cable and run the test
+                with no other devices on the Wi-Fi. A computer that is busy with other work can also pull the result down.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p>The advice lines up: test on a cable, at the router, with nothing else running.</p>
+
+        <h2 id="contract-speeds">The speeds in your contract</h2>
+        <p>
+          ComReg, the communications regulator, says your provider must put the{" "}
+          <strong>minimum, normally available, maximum and advertised</strong> download and upload speeds of your home
+          broadband in your contract. The advertised figure is the one on the poster; the minimum and normally available
+          figures are the ones to hold your cable results against.
+        </p>
+        <p>
+          To see which connections your address can get at all, ComReg&apos;s Broadband Checker at{" "}
+          <a href="https://www.comreg.ie/broadbandchecker" rel="noopener">comreg.ie/broadbandchecker</a> lists them by
+          address or Eircode. ComReg describes full fibre as typically delivering up to 2 Gbps and cable broadband up to 1
+          Gbps; part-fibre speeds depend on how far you are from the street cabinet.
+        </p>
 
         <h2 id="test-the-line">Test the line: by cable, at the router</h2>
         <p>
@@ -121,8 +170,8 @@ export default function Post() {
           <li>Run it two or three times, and once in the evening, when more people in your area are online.</li>
         </ul>
         <p>
-          Compare the result with the speed on your contract. If the result is well below it, and stays low on a cable,
-          the problem is outside your house.
+          Compare the result with the minimum and normally available speeds in your contract. If the result is well
+          below them, and stays low on a cable, the problem is outside your house.
         </p>
 
         <h2 id="test-the-rooms">Then test the rooms</h2>
