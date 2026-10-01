@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     if (!gone) return bad(404, "This booking has already been cancelled.");
     const emailed = await bookingCancelledEmails(gone).catch((e) => `failed: ${e instanceof Error ? e.message : e}`);
     console.log(`[booking/manage] cancelled ${gone.id} ref=${ref}; email ${emailed}`);
-    return NextResponse.json({ ok: true, cancelled: true });
+    return NextResponse.json({ ok: true, cancelled: true, emailed: emailed === "sent" });
   }
 
   if (body.action === "reschedule") {
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     }
     const emailed = await bookingMovedEmails(moved.from, moved.booking, moved.leftover).catch((e) => `failed: ${e instanceof Error ? e.message : e}`);
     console.log(`[booking/manage] moved ref=${ref} ${moved.from.id} -> ${moved.booking.id}; email ${emailed}`);
-    return NextResponse.json({ ok: true, start: moved.booking.start, end: moved.booking.end });
+    return NextResponse.json({ ok: true, start: moved.booking.start, end: moved.booking.end, emailed: emailed === "sent" });
   }
 
   return bad(400, "Unknown action");

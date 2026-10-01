@@ -33,6 +33,12 @@ interface BookingCalendarProps {
   leadDays?: number;
   /** Accent colour theme. Eufy product pages pass "blue"; default is Ring orange. */
   accent?: "orange" | "blue";
+  /**
+   * The line under the chosen time. Checkout's default says the slot is held
+   * while they pay; moving an existing booking (src/app/booking) passes its
+   * own, since there is no checkout to complete.
+   */
+  holdNote?: (minutesLeft: number) => string;
 }
 
 function getAvailableDates(leadDays: number): Date[] {
@@ -60,7 +66,7 @@ function formatDateISO(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-export default function BookingCalendar({ onSelectionChange, compact, heading = "Choose an Installation Date", confirmLabel = "Installation", kind = "installation", leadDays = 4, accent = "orange" }: BookingCalendarProps) {
+export default function BookingCalendar({ onSelectionChange, compact, heading = "Choose an Installation Date", confirmLabel = "Installation", kind = "installation", leadDays = 4, accent = "orange", holdNote }: BookingCalendarProps) {
   // Accent theming only. Every booking rule/constraint (working days, lead
   // time, blackout ranges, slot logic) is identical regardless of accent;
   // Eufy product pages pass accent="blue" so only the colours differ.
@@ -336,7 +342,7 @@ export default function BookingCalendar({ onSelectionChange, compact, heading = 
                 at {slots.find((s) => s.value === selectedSlot)?.label}
               </p>
               <p className={`text-[10px] ${ac.text} mt-1`}>
-                Reserved for {minutesLeft} min, complete checkout to confirm
+                {holdNote ? holdNote(minutesLeft) : `Reserved for ${minutesLeft} min, complete checkout to confirm`}
               </p>
             </div>
           </div>
