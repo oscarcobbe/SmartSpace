@@ -94,25 +94,25 @@ const METRICS: Record<string, Metric> = {
     rank: (c) => (c.impressions ? c.clicks / c.impressions : 0),
   },
   enquiries: {
-    chart: "conversions", label: "Enquiries", hue: "indigo", better: "up",
+    chart: "conversions", label: "Google's conversions", hue: "indigo", better: "up",
     of: (r) => r.conversions, fmt: (n) => n.toFixed(0), move: (n) => n.toFixed(1),
-    what: "How many people got in touch after an ad.",
+    what: "What Google counted as a conversion after an ad: enquiries, but also payments and calls.",
     basis: (r) => `${moneyExact(r.conversions ? r.cost / r.conversions : 0)} each`,
-    reading: "The figure the account is bid to produce. It counts what Google was told about, so it can only be as complete as the tracking underneath it: an enquiry Google never heard about is not here and is not being bid for either.",
+    reading: "The figure the account is bid to produce, and not the number of enquiries: Google sees a website enquiry only from a visitor who accepted cookies, and it counts payments and calls here too. Your own enquiries, from every visitor, are on the Marketing page. This is kept because it is what the bidding works from.",
     rank: (c) => c.conversions,
   },
   won: {
-    chart: "value", label: "Work won", hue: "green", better: "up",
+    chart: "value", label: "Google's value", hue: "green", better: "up",
     of: (r) => r.value, fmt: money, move: money,
-    what: "The value recorded back against the ads.",
+    what: "The value Google recorded against the ads: a set figure per conversion type, with a few real payment amounts.",
     basis: (r) => `against ${money(r.cost)} spent`,
     reading: "Mostly placeholder values set per conversion action rather than real prices, mixed with a few real Stripe amounts, so treat the shape as the signal and not the total. The real euro figure lives on the money page.",
     rank: (c) => c.value,
   },
   back: {
-    chart: "roas", label: "Back per €1", hue: "red", better: "up",
+    chart: "roas", label: "Google's return", hue: "red", better: "up",
     of: (r) => (r.cost ? r.value / r.cost : null), fmt: (n) => `${n.toFixed(1)}x`, move: (n) => `${n.toFixed(1)}x`,
-    what: "What came back for every euro that went out.",
+    what: "Google's value for every euro spent. Not money paid: what came back in euro is the headline chart on Marketing.",
     basis: (r) => `${money(r.value)} recorded against ${money(r.cost)} spent`,
     reading: "A division, so a period with one or two enquiries cannot support it and is drawn hollow on the chart rather than compared. It is built from the value recorded against the ads, which is not the same as money Stripe took.",
     rank: (c) => (c.cost ? c.value / c.cost : 0),
@@ -188,14 +188,15 @@ export default async function MetricPage({ params }: { params: Promise<{ metric:
       <Back />
       <PageHeader title={m.label} sub={`${SITE_LABEL[site]} · ${own.window.from} to ${own.window.to}`} />
 
-      <div className="mb-6 overflow-hidden rounded-xl p-5 sm:p-6" style={{ background: HUE[m.hue] }}>
-        <div className="text-[12.5px] font-semibold uppercase tracking-wide text-white">{m.label}</div>
-        <div className="mt-2 text-[44px] font-bold leading-none tracking-tight tabular-nums text-white">
+      <div className="relative mb-6 overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <span aria-hidden="true" className="absolute inset-x-0 top-0 h-[3px]" style={{ background: HUE[m.hue] }} />
+        <div className="text-[12px] font-semibold uppercase tracking-wider text-slate-500">{m.label}</div>
+        <div className="mt-2 text-[44px] font-bold leading-none tracking-tight text-slate-900">
           {now === null ? "None" : m.fmt(now)}
         </div>
-        <p className="mt-2 text-[13px] text-white/90">{m.basis(own)}</p>
-        <p className="mt-3 max-w-[70ch] text-[13.5px] leading-relaxed text-white">{m.what}</p>
-        <p className="mt-1.5 text-[13px] text-white">{movement(delta, m)}</p>
+        <p className="mt-2 text-[13px] text-slate-500">{m.basis(own)}</p>
+        <p className="mt-3 max-w-[70ch] text-[13.5px] leading-relaxed text-slate-700">{m.what}</p>
+        <p className="mt-1.5 text-[13px] text-slate-700">{movement(delta, m)}</p>
       </div>
 
       <Panel title="How to read this one">
@@ -235,7 +236,7 @@ export default async function MetricPage({ params }: { params: Promise<{ metric:
         aside={
           <ExportButton
             filename={`marketing-${key}`}
-            headers={["Campaign", "Status", m.label, "Spend", "Clicks", "Enquiries", "Work won"]}
+            headers={["Campaign", "Status", m.label, "Spend", "Clicks", "Google's count", "Google's value"]}
             rows={campaigns.map((c) => {
               const v = m.of(c);
               /* Formatted, not raw: String(3091.4400000000005) beside three
@@ -253,7 +254,7 @@ export default async function MetricPage({ params }: { params: Promise<{ metric:
                 <th scope="col" className="px-4 py-2 font-semibold">Campaign</th>
                 <th scope="col" className="px-4 py-2 text-right font-semibold">{m.label}</th>
                 <th scope="col" className="px-4 py-2 text-right font-semibold">Spend</th>
-                <th scope="col" className="px-4 py-2 text-right font-semibold">Enquiries</th>
+                <th scope="col" className="px-4 py-2 text-right font-semibold">Google&apos;s count</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -264,7 +265,7 @@ export default async function MetricPage({ params }: { params: Promise<{ metric:
                     <td className="max-w-[20rem] px-4 py-2">
                       <span className="block truncate text-slate-900" title={plainText(c.name)}>{plainText(c.name)}</span>
                     </td>
-                    <td className="px-4 py-2 text-right font-semibold tabular-nums" style={{ color: HUE[m.hue] }}>
+                    <td className="px-4 py-2 text-right font-semibold tabular-nums text-slate-900">
                       {v === null ? "None" : m.fmt(v)}
                     </td>
                     <td className="px-4 py-2 text-right tabular-nums text-slate-700">{moneyExact(c.cost)}</td>

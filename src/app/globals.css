@@ -390,14 +390,14 @@ p {
     outline-offset: 1px;
   }
 
-  /* A coloured tile glows in its own colour rather than in slate, which on a
-     saturated card would read as a smudge. */
+  /* A white tile lifts a little on hover, in slate, so it reads as something
+     that opens. */
   .crm-root .kpi-tile {
-    transition: transform .16s cubic-bezier(.4, 0, .2, 1);
+    transition: transform .16s cubic-bezier(.4, 0, .2, 1), box-shadow .16s;
   }
   .crm-root .kpi-tile:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 28px -8px currentColor;
+    box-shadow: 0 10px 24px -12px rgb(15 23 42 / 0.25);
   }
 
   /* A tile that opens says so on hover, and only then. Six "Open" labels sitting
@@ -409,7 +409,7 @@ p {
   }
   .crm-root .kpi-open:hover .kpi-chev,
   .crm-root .kpi-open:focus-visible .kpi-chev {
-    color: rgb(255 255 255 / 0.85);
+    color: rgb(100 116 139);
     transform: none;
   }
 

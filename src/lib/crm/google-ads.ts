@@ -131,24 +131,41 @@ interface AdsRow {
   };
 }
 
+/*
+ * Google answers some reads with a bare 500 "Internal error encountered" and
+ * the same read a second later succeeds. On 1 October 2026 about one read in
+ * three failed that way, on queries that had worked for months, and every one
+ * of them reached the page as "Google Ads could not be read". A 500, 503 or
+ * 429 is retried twice, a little later each time; anything else (a bad query,
+ * a refused credential) is a real answer and is not.
+ */
+const RETRY_STATUS = new Set([429, 500, 502, 503, 504]);
+const RETRY_WAIT_MS = [400, 1200];
+
 export async function search(customerId: string, gaql: string): Promise<AdsRow[]> {
   const dev = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
   if (!dev) throw new Error("GOOGLE_ADS_DEVELOPER_TOKEN is not set on this deployment.");
-  const res = await fetch(`https://googleads.googleapis.com/${VERSION}/customers/${customerId}/googleAds:search`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${await accessToken()}`,
-      "developer-token": dev,
-      "login-customer-id": process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID ?? "",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ query: gaql }),
-    cache: "no-store",
-    signal: AbortSignal.timeout(20_000),
-  });
-  const text = await res.text();
-  if (!res.ok) throw new Error(`Google Ads ${res.status}: ${text.slice(0, 200)}`);
-  return JSON.parse(text).results ?? [];
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(`https://googleads.googleapis.com/${VERSION}/customers/${customerId}/googleAds:search`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${await accessToken()}`,
+        "developer-token": dev,
+        "login-customer-id": process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID ?? "",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ query: gaql }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(20_000),
+    });
+    const text = await res.text();
+    if (res.ok) return JSON.parse(text).results ?? [];
+    const wait = RETRY_WAIT_MS[attempt];
+    if (wait === undefined || !RETRY_STATUS.has(res.status)) {
+      throw new Error(`Google Ads ${res.status}: ${text.slice(0, 200)}`);
+    }
+    await new Promise((r) => setTimeout(r, wait));
+  }
 }
 
 export const iso = (d: Date) => d.toISOString().slice(0, 10);
@@ -162,6 +179,25 @@ export const num = (v: unknown) => (typeof v === "number" ? v : parseFloat(Strin
 
 export const isForeign = (site: AdSite, id: string, name: string) =>
   FOREIGN_CAMPAIGN_IDS[site].includes(id) || FOREIGN_NAME[site].test(name);
+
+/**
+ * Every account a business's campaigns run on, and which campaigns there are
+ * its own.
+ *
+ * Its own account, less the other business's campaigns on it; and the other
+ * business's account, keeping only the campaigns that are this business's.
+ * SmartCare Living's first campaign ran on Smart Space's account in April and
+ * May 2026 (EUR 926). It was kept out of Smart Space's figures, and it was in
+ * nobody's: SmartCare Living's own page started in September as though it had
+ * never advertised before.
+ */
+export function campaignSources(site: AdSite): { customerId: string; keep: (id: string, name: string) => boolean }[] {
+  const other: AdSite = site === "smart-space" ? "smartcareliving" : "smart-space";
+  return [
+    { customerId: ADS_ACCOUNT[site], keep: (id, name) => !isForeign(site, id, name) },
+    { customerId: ADS_ACCOUNT[other], keep: (id, name) => isForeign(other, id, name) },
+  ];
+}
 
 function buildMonths(cells: Cell[], monthKeys: string[], keep: (campaignId: string) => boolean): MonthSpend[] {
   const buckets = new Map<string, MonthSpend>(

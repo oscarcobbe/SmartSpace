@@ -24,6 +24,7 @@ export function Sparkline({
   height = 28,
   labels,
   format,
+  color,
 }: {
   series: number[];
   /* "light" is for a sparkline drawn on a coloured tile, where every other
@@ -44,6 +45,8 @@ export function Sparkline({
    * Components", and the whole page falls to the error boundary.
    */
   format?: "money" | "count" | "ratio";
+  /** A colour of its own, overriding tone: a white tile draws its sparkline in the tile's hue. */
+  color?: string;
 }) {
   const id = useId().replace(/:/g, "");
   /* Even a sparkline has to be able to say what a point is. Without this the
@@ -74,9 +77,9 @@ export function Sparkline({
   const line = series.map((v, i) => `${i === 0 ? "M" : "L"} ${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(" ");
   const area = `${line} L ${x(series.length - 1).toFixed(1)} ${height} L ${x(0).toFixed(1)} ${height} Z`;
 
-  const stroke =
-    tone === "good" ? "#047857" : tone === "bad" ? "#be123c"
-      : tone === "watch" ? "#b45309" : tone === "light" ? "#ffffff" : "#64748b";
+  const stroke = color ??
+    (tone === "good" ? "#047857" : tone === "bad" ? "#be123c"
+      : tone === "watch" ? "#b45309" : tone === "light" ? "#ffffff" : "#64748b");
 
   /* Only inside the plotted range, with a pixel of room at each edge, because
      a rule pinned to the top or bottom reads as the chart's own border. */

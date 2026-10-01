@@ -80,7 +80,9 @@ const METRICS: {
      top of the page is real euro and says "back from ads"; this must not wear
      the same words for a different number. */
   { id: "value",       label: "Google's value",   short: "Google's value", better: "up",  get: p => p.value,       fmt: money },
-  { id: "roas",        label: "Back per €1",      short: "Return",     better: "up",   ratio: true, get: p => p.roas, fmt: n => `${n.toFixed(1)}x` },
+  /* Google's value over Google's spend. The real return, money through
+     Stripe, is the headline chart's; this must not wear its words. */
+  { id: "roas",        label: "Google's return",  short: "Google's return", better: "up", ratio: true, get: p => p.roas, fmt: n => `${n.toFixed(1)}x` },
   { id: "cost",        label: "Spend",            short: "Spend",      better: "neither", get: p => p.cost,        fmt: money },
   { id: "clicks",      label: "Clicks",           short: "Clicks",     better: "neither", get: p => p.clicks,      fmt: n => nf.format(n) },
   /* A rate, so it needs a denominator worth dividing by in the same way the

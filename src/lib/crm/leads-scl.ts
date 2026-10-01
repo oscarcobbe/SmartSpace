@@ -12,6 +12,7 @@
  * is why this is only ever called from a server component.
  */
 import type { Lead, LeadsPayload, LeadsResult, QA } from "./leads";
+import type { Enquiry } from "./how-they-came";
 
 /** The columns the Apps Script writes. Anything absent is simply absent. */
 interface SheetRow {
@@ -30,7 +31,11 @@ interface SheetRow {
   "Booking Time"?: unknown;
   BookingDate?: unknown;
   BookingTime?: unknown;
-  Gclid?: unknown;
+  /* The sheet's own column names, read on 1 October 2026. This read Gclid and
+     Message, which no row has ever had, so no SmartCare Living enquiry showed
+     as an ad click and none showed what the person wrote. */
+  GCLID?: unknown;
+  "Subject / Message"?: unknown;
   /* unknown, not string. These values come off somebody else's endpoint and
      one of them was a number, which is how three pages died on .trim(). The
      compiler now insists every read goes through clean(). */
@@ -110,13 +115,13 @@ function toLead(row: SheetRow): Lead {
   const type: Lead["type"] = bookingDate ? "Consultation" : "Contact Enquiry";
 
   const details: QA[] = [];
-  const message = clean(row.Message);
+  const message = clean(row["Subject / Message"] ?? row.Message);
   if (message) details.push({ question: "What they said", answer: message });
   const notes = clean(row.Notes);
   if (notes) details.push({ question: "Where they came from", answer: notes });
   const risk = clean(row["Risk Label"]);
   if (risk) details.push({ question: "Flagged as", answer: risk });
-  if (clean(row.Gclid)) details.push({ question: "Source", answer: "Clicked a Google ad" });
+  if (clean(row.GCLID ?? row.Gclid) || /\b[gw]braid\s*:/i.test(notes)) details.push({ question: "Source", answer: "Clicked a Google ad" });
 
   return {
     date: stamp(row.Timestamp),
@@ -186,6 +191,26 @@ function sheetRequest(): { url: string; headers: Record<string, string>; via: "s
 }
 
 export async function fetchSclLeads(): Promise<LeadsResult> {
+  const read = await readSclRows();
+  if (!read.ok) return read;
+
+  /* Newest first, the order Orders and the overview both assume. The sheet
+     is append-only so it arrives oldest first. */
+  const leads = read.rows
+    .filter((r) => clean(r.Name) || clean(r.Email) || clean(r.Phone))
+    .map(toLead)
+    .sort((a, b) => sortKey(b.date) - sortKey(a.date));
+
+  const payload: LeadsPayload = {
+    leads,
+    count: leads.length,
+    generated: new Date().toISOString(),
+  };
+  return { ok: true, data: payload };
+}
+
+/** The sheet's rows as they are, for Orders above and for the advertising figures. */
+export async function readSclRows(): Promise<{ ok: true; rows: SheetRow[] } | { ok: false; reason: string }> {
   const req = sheetRequest();
   if ("missing" in req) return { ok: false, reason: req.missing };
 
@@ -224,20 +249,7 @@ export async function fetchSclLeads(): Promise<LeadsResult> {
       };
     }
     if (!Array.isArray(body.rows)) return { ok: false, reason: "SmartCare Living's enquiry sheet answered without any rows in it." };
-
-    /* Newest first, the order Orders and the overview both assume. The sheet
-       is append-only so it arrives oldest first. */
-    const leads = body.rows
-      .filter((r) => clean(r.Name) || clean(r.Email) || clean(r.Phone))
-      .map(toLead)
-      .sort((a, b) => sortKey(b.date) - sortKey(a.date));
-
-    const payload: LeadsPayload = {
-      leads,
-      count: leads.length,
-      generated: new Date().toISOString(),
-    };
-    return { ok: true, data: payload };
+    return { ok: true, rows: body.rows };
   } catch (err) {
     const raw = err instanceof Error ? `${err.name} ${err.message}` : String(err);
     if (/abort|timeout/i.test(raw)) return { ok: false, reason: SCL_WAKING };
@@ -249,4 +261,57 @@ export async function fetchSclLeads(): Promise<LeadsResult> {
 function sortKey(v: string): number {
   const m = /^(\d{2})\/(\d{2})\/(\d{4})(?:,\s*(\d{2}):(\d{2}))?/.exec(v);
   return m ? Date.UTC(+m[3], +m[2] - 1, +m[1], +(m[4] ?? 0), +(m[5] ?? 0)) : 0;
+}
+
+/* ─── The same rows as enquiries, for the advertising figures ───── */
+
+/** The items of a Notes cell ("from: ... | landed: ... | gbraid: ..."), by name. */
+function notesItems(notes: string): Map<string, string> {
+  const items = new Map<string, string>();
+  for (const part of notes.split("|")) {
+    const m = /^\s*([A-Za-z][\w ]*?)\s*:\s*(.*?)\s*$/.exec(part);
+    if (m && !items.has(m[1]!.toLowerCase())) items.set(m[1]!.toLowerCase(), m[2]!);
+  }
+  return items;
+}
+
+/** "yyyy-mm-dd hh:mm" in Dublin, the shape the enquiry trail compares as text. */
+function dublinWall(value: unknown): string {
+  const t = Date.parse(clean(value));
+  if (!Number.isFinite(t)) return "";
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Dublin", year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+  }).formatToParts(new Date(t));
+  const get = (k: string) => parts.find((p) => p.type === k)?.value ?? "00";
+  return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}`;
+}
+
+/**
+ * Every row a person wrote, as an enquiry with its trail.
+ *
+ * The team's own tests are left out the way the site marks them: "-INTERNAL"
+ * after the Source, "[INTERNAL]" on the name or the risk label. So is a
+ * cancellation, which is somebody stepping back rather than reaching out.
+ */
+export function sclEnquiries(rows: SheetRow[]): Enquiry[] {
+  const out: Enquiry[] = [];
+  for (const r of rows) {
+    const source = clean(r.Source);
+    if (!(clean(r.Name) || clean(r.Email) || clean(r.Phone))) continue;
+    if (/-INTERNAL$/i.test(source) || `${clean(r.Name)} ${clean(r["Risk Label"])}`.includes("[INTERNAL]")) continue;
+    if (/^cancellation/i.test(source)) continue;
+    const at = dublinWall(r.Timestamp);
+    if (!at) continue;
+    const notes = notesItems(clean(r.Notes));
+    out.push({
+      at, type: source || "enquiry", source,
+      name: clean(r.Name), email: clean(r.Email), phone: clean(r.Phone), status: clean(r.Status),
+      gclid: clean(r.GCLID ?? r.Gclid), gbraid: notes.get("gbraid") ?? "", wbraid: notes.get("wbraid") ?? "",
+      oppref: notes.get("oppref") ?? "",
+      landingPage: notes.get("landed") ?? "", referrer: notes.get("from") ?? "",
+      utmSource: clean(r.utmSource), utmMedium: clean(r.utmMedium),
+    });
+  }
+  return out;
 }

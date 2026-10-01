@@ -18,15 +18,17 @@ import { ArrowDown, ArrowUp, Minus } from "lucide-react";
  * and comparing two of those produces confident nonsense. Same reasoning as
  * the trend chart.
  *
- * ── COLOUR HERE IS IDENTITY, NOT JUDGEMENT ───────────────────────
+ * ── WHITE TILES, A COLOURED EDGE ─────────────────────────────────
  *
- * Each tile keeps its own hue so the row is scannable and a reader learns
- * where Spend sits. Whether the movement is good or bad is carried by the
- * arrow and its colour, not by the tile, because a red tile that merely means
- * "clicks" and a red arrow that means "worse" cannot share a screen.
+ * The tiles were solid blocks of six saturated colours. Read on a screen
+ * with a chart under them they were the loudest thing on the page, and the
+ * red one held a 4.2x return, which is good news in the colour of bad news.
+ * Oscar, 1 October 2026: white tiles. Each keeps its hue as a thin top edge
+ * and on its sparkline, so the row is still scannable and a reader still
+ * learns where Spend sits, and the figures are ink on white.
  *
- * Every hue below clears 4.5:1 against white, so the value on it is readable
- * rather than only bold.
+ * Whether a movement is good or bad is carried by the chip beside it, green
+ * or rose with an arrow, and never by the tile.
  */
 
 export type KpiHue = "blue" | "red" | "violet" | "green" | "orange" | "indigo" | "slate";
@@ -81,25 +83,22 @@ export function compareTail(
 
 function Movement({ delta }: { delta: Delta }) {
   if (delta.pct === null) {
-    return <span className="text-[11.5px] text-white/70">not enough history to compare</span>;
+    return <span className="text-[11.5px] text-slate-400">not enough history to compare</span>;
   }
   const flat = Math.abs(delta.pct) < 0.5;
   const rose = delta.pct > 0;
-  /* Good news is white and confident; bad news is dimmed rather than coloured,
-     because a red arrow on a red tile disappears and a green one on a green
-     tile says nothing. */
   const good = delta.better === "neither" ? null : delta.better === "up" ? rose : !rose;
   const Icon = flat ? Minus : rose ? ArrowUp : ArrowDown;
+  const chip = flat || good === null
+    ? "bg-slate-100 text-slate-700"
+    : good ? "bg-emerald-50 text-emerald-800" : "bg-rose-50 text-rose-800";
   return (
-    <span
-      className={`inline-flex items-center gap-1 text-[12px] font-semibold ${
-        good === false ? "text-white/65" : "text-white"
-      }`}
-      title={`Against ${delta.against}`}
-    >
-      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-      {flat ? "level" : `${Math.abs(delta.pct).toFixed(0)}%`}
-      {delta.absolute && !flat && <span className="font-normal text-white/70">{delta.absolute}</span>}
+    <span className="inline-flex flex-wrap items-center gap-1.5 text-[12px]" title={`Against ${delta.against}`}>
+      <span className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-semibold ${chip}`}>
+        <Icon className="h-3 w-3" aria-hidden="true" />
+        {flat ? "level" : `${Math.abs(delta.pct).toFixed(0)}%`}
+      </span>
+      {delta.absolute && !flat && <span className="text-slate-500">{delta.absolute}</span>}
     </span>
   );
 }
@@ -126,53 +125,53 @@ export function Kpi({
   icon?: ReactNode;
   delta?: Delta;
   note?: string;
-  /** A sparkline, drawn light so it reads on the tile's own colour. */
+  /** A sparkline, in the tile's own hue (Sparkline's color). */
   spark?: ReactNode;
   /** Where the tile opens. Omit and it is not clickable. */
   href?: string;
 }) {
   const inner = (
     <>
+      <span aria-hidden="true" className="absolute inset-x-0 top-0 h-[3px]" style={{ background: HUE[hue] }} />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-[12.5px] font-semibold uppercase tracking-wide text-white/85">{label}</div>
+          <div className="text-[11.5px] font-semibold uppercase tracking-wider text-slate-500">{label}</div>
           {/* A long value steps down a size rather than running off the
               tile. "~€13,959" clipped its last digit at six tiles across,
               and a figure missing a digit is a different figure. */}
-          <div className={`mt-1.5 font-bold leading-none tracking-tight tabular-nums text-white ${
-            value.length > 7 ? "text-[23px]" : "text-[30px]"}`}>
+          <div className={`mt-1.5 font-bold leading-none tracking-tight text-slate-900 ${
+            value.length > 7 ? "text-[22px]" : "text-[28px]"}`}>
             {value}
           </div>
         </div>
         {icon && (
-          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white/15 text-white" aria-hidden="true">
+          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg" aria-hidden="true"
+               style={{ background: `${HUE[hue]}14`, color: HUE[hue] }}>
             {icon}
           </div>
         )}
       </div>
-      <div className="mt-3 min-h-[18px]">
-        {delta ? <Movement delta={delta} /> : note ? <span className="text-[11.5px] text-white/75">{note}</span> : null}
+      <div className="mt-3 min-h-[20px]">
+        {delta ? <Movement delta={delta} /> : note ? <span className="text-[11.5px] text-slate-500">{note}</span> : null}
       </div>
-      {note && delta && <div className="mt-1 text-[11.5px] text-white/70">{note}</div>}
-      {spark && <div className="mt-2 -mb-1 opacity-80">{spark}</div>}
+      {note && delta && <div className="mt-1 text-[11.5px] text-slate-500">{note}</div>}
+      {spark && <div className="mt-2 -mb-1">{spark}</div>}
     </>
   );
 
-  const shell = "kpi-tile relative block overflow-hidden rounded-xl p-4 sm:p-5";
-  const style = { background: HUE[hue], color: HUE[hue] };
+  const shell = "kpi-tile relative block overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5";
 
-  if (!href) return <div className={shell} style={style}>{inner}</div>;
+  if (!href) return <div className={shell}>{inner}</div>;
 
   return (
     <Link
       href={href}
-      className={`${shell} kpi-open transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2`}
-      style={style}
+      className={`${shell} kpi-open transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2`}
       aria-label={`${label}: ${value}. Open the detail.`}
     >
       {inner}
       <span aria-hidden="true"
-            className="kpi-chev pointer-events-none absolute bottom-3 right-3 text-[11px] font-semibold text-white/0">
+            className="kpi-chev pointer-events-none absolute bottom-3 right-3 text-[11px] font-semibold text-transparent">
         Open &rsaquo;
       </span>
     </Link>

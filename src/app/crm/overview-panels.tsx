@@ -14,6 +14,7 @@ import { plainText, shortDay, slotText } from "@/lib/crm/display";
 import { fetchFinance } from "@/lib/crm/stripe-finance";
 import { fetchAds, adsSplit } from "@/lib/crm/google-ads";
 import { chatGptThisMonthLine } from "./chatgpt-ads";
+import { bucketEnquiries, fetchAdEnquiries } from "@/lib/crm/ad-enquiries";
 import { crm, crmConfigured, unlessWrongKey, type Site } from "@/lib/crm/db";
 import { fetchDiary } from "@/lib/crm/diary";
 import { DiaryToggle, type Row } from "./diary-toggle";
@@ -242,7 +243,7 @@ export async function MoneyThisMonth({ site }: { site: Site }) {
 export async function AdsThisMonth({ site }: { site: Site }) {
   /* ChatGPT's line never throws: not connected and a failed read are both a
      sentence, so it cannot take Google's figures down with it. */
-  const [result, chatgpt] = await Promise.all([fetchAds(site, 2), chatGptThisMonthLine(site)]);
+  const [result, chatgpt, enq] = await Promise.all([fetchAds(site, 2), chatGptThisMonthLine(site), fetchAdEnquiries(site)]);
   if (!result.ok) {
     return (
       <Panel title="Advertising" aside={<PanelLink href="/crm/marketing">Marketing</PanelLink>}>
@@ -273,7 +274,12 @@ export async function AdsThisMonth({ site }: { site: Site }) {
    * where the basis is named and switchable, and this says so rather than
    * answering it differently.
    */
-  const perEnquiry = now.conversions ? now.cost / now.conversions : null;
+  /* Enquiries from your own record, the same count as Marketing's, not
+     Google's conversions: those were consent-limited and mixed payments and
+     calls in with the enquiries (enquiry-count.ts). */
+  const mine = enq.ok ? bucketEnquiries(enq.data, (d) => d.slice(0, 7)).get(now.key) : undefined;
+  const enquiries = mine ? mine.googleWeb + Math.round(mine.calls) : 0;
+  const perEnquiry = enq.ok && enquiries ? now.cost / enquiries : null;
 
   return (
     <Panel title="Advertising" aside={<PanelLink href="/crm/marketing">Marketing</PanelLink>}>
@@ -286,16 +292,15 @@ export async function AdsThisMonth({ site }: { site: Site }) {
         />
         <Stat
           label="Cost per enquiry"
-          value={perEnquiry === null ? "None yet" : moneyExact(perEnquiry)}
-          note={now.conversions ? `${now.conversions.toFixed(0)} enquiries in ${now.label}` : "No enquiries yet this month"}
+          value={!enq.ok ? "Not read" : perEnquiry === null ? "None yet" : moneyExact(perEnquiry)}
+          note={!enq.ok ? enq.reason : enquiries ? `${enquiries} enquir${enquiries === 1 ? "y" : "ies"} from Google ads in ${now.label}` : "No enquiries from ads yet this month"}
           tone={perEnquiry === null ? "muted" : perEnquiry <= 60 ? "good" : perEnquiry <= 100 ? "warn" : "bad"}
           source={{ href: "/crm/marketing", label: "See what came back" }}
         />
       </div>
       <p className="border-t border-slate-100 px-4 py-2 text-xs text-slate-500">
-        What came back for this is on{" "}
-        <Link href="/crm/marketing" className="font-medium text-slate-700 underline-offset-2 hover:underline">Marketing</Link>,
-        where you can choose whether to count every euro Stripe took or only what Google could tie to a click.
+        What came back for this, and which keywords brought it, is on{" "}
+        <Link href="/crm/marketing" className="font-medium text-slate-700 underline-offset-2 hover:underline">Marketing</Link>.
       </p>
       <p className="border-t border-slate-100 px-4 py-2 text-xs text-slate-500">{chatgpt}</p>
     </Panel>
