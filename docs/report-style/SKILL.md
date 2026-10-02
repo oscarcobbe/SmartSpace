@@ -47,9 +47,12 @@ Then build the body only from the parts the stylesheet already has:
 | Status | `<span class="pill good">Healthy</span>`, `pill fair`, `pill poor`; our pick is `pill chosen` |
 | A chart | `<figure><div class="chart"><svg viewBox="0 0 820 …">…</svg></div><figcaption>…</figcaption></figure>` |
 | What we are not doing, and why | `<div class="wont"><h3>…</h3><p>…</p></div>` |
-| New page when printed | add `class="pagebreak"` to a `<section>` |
+| New page when printed | add `class="pagebreak"` to a `<section>`; otherwise let the pages break on their own |
 
 Do not add other fonts, colours, icons, emoji, shadows or gradients.
+
+The printed page footer reads "Smart Space · Home network assessment" and the page number. It is
+the `@bottom-left` line in the `@page` rule: change those words to name the new report.
 
 ## Colours
 

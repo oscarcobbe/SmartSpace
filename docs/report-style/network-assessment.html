@@ -161,12 +161,20 @@ figcaption{font-size:9.2pt;line-height:1.5;color:var(--ss-ink-soft);margin-top:3
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   body{background:var(--ss-paper);padding:0}
   .sheet{max-width:none;padding:0;border-radius:0;box-shadow:none}
-  section,figure,table,blockquote,.wont,.meta{break-inside:avoid}
+  section{margin-bottom:9mm}
+  .shead{break-inside:avoid;break-after:avoid;padding-top:4mm;margin-bottom:4mm}
+  figure,table,blockquote,.wont,.meta,.verdict,.foot{break-inside:avoid}
+  figure{margin:4mm 0 5mm}
+  p{orphans:3;widows:3}
   .pagebreak{break-before:page}
   .chart{overflow:visible}
   .chart svg{min-width:0}
 }
-@page{size:A4;margin:14mm 16mm}
+@page{
+  size:A4;margin:14mm 16mm 16mm;
+  @bottom-left{content:"Smart Space \00B7  Home network assessment";font:500 7.5pt "Plus Jakarta Sans",Arial,sans-serif;color:#8A817A}
+  @bottom-right{content:"Page " counter(page) " of " counter(pages);font:500 7.5pt "Plus Jakarta Sans",Arial,sans-serif;color:#8A817A}
+}
 </style>
 </head>
 <body>
@@ -353,7 +361,7 @@ const R = {
     <figcaption>Most speed tests measure an idle line. This one loads the connection and measures the delay while it is working, which is what causes video calls to stutter and pages to hang during a download.</figcaption></figure>
 </section>
 
-<section class="pagebreak">
+<section>
   <div class="shead"><div class="n">4</div><div class="t"><h2>Your existing Wi-Fi, room by room</h2>
     <p class="gloss">Measured where you actually use each device, including at the thermostat and the television rather than in the middle of the room.</p></div></div>
   <figure><div class="chart" id="c-rooms"></div>
@@ -367,7 +375,7 @@ const R = {
   <p class="soft small">Each figure above is a single measurement taken on the day, in Mbps. Only the floor carrying the trial system was monitored over three days.</p>
 </section>
 
-<section class="pagebreak">
+<section>
   <div class="shead"><div class="n">6</div><div class="t"><h2>The three-day trial</h2>
     <p class="gloss">A working system installed in your house, left running beside your own Wi-Fi, measured every hour and then removed.</p></div></div>
   <div id="m-trial"></div>
@@ -376,7 +384,7 @@ const R = {
   <div id="m-quote"></div>
 </section>
 
-<section class="pagebreak">
+<section>
   <div class="shead"><div class="n">7</div><div class="t"><h2>Your own devices on the trial system</h2>
     <p class="gloss">The devices you named were moved onto the trial network for the three days and everything else was left alone. This is what the equipment recorded about them.</p></div></div>
   <div id="m-devices"></div>
