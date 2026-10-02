@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Network assessment report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ================================================================
+   SMART SPACE REPORT STYLE
+   The smart-space.ie look on an A4 sheet: Plus Jakarta Sans, extrabold
+   headings, orange eyebrows and section numerals, one dark panel for
+   the verdict, and the Wi-Fi check's traffic-light colours for status.
+   Every colour is a token here; the charts read the same tokens.
+   ================================================================ */
+:root{
+  /* brand orange, from the site's tailwind brand scale */
+  --ss-orange:#F48222;         /* brand-500: rules and marks */
+  --ss-orange-strong:#D96D15;  /* brand-600: section numerals, upload line */
+  --ss-orange-text:#B55810;    /* brand-700: small orange text on white */
+  --ss-orange-line:#FACBA1;    /* brand-200: borders, the "what you pay for" bar */
+  --ss-orange-wash:#FEF4EB;    /* brand-50: tinted callouts */
+  /* warm neutrals, from globals.css */
+  --ss-ink:#26221E;
+  --ss-ink-soft:#5A524C;
+  --ss-ink-muted:#8A817A;
+  --ss-dark:#1C1A18;
+  --ss-cream-100:#F5F3EE;
+  --ss-cream-200:#EDEAE3;
+  --ss-paper:#FFFFFF;
+  --ss-on-dark:#FFFFFF;
+  --ss-on-dark-soft:#D6D0C9;
+  /* status: the traffic light's lamps, and darker shades for text */
+  --ss-good:#16A34A; --ss-good-text:#15803D; --ss-good-wash:#DCFCE7;
+  --ss-fair:#F5B400; --ss-fair-text:#B45309; --ss-fair-wash:#FEF3C7;
+  --ss-poor:#DC2626; --ss-poor-text:#B91C1C; --ss-poor-wash:#FEE2E2;
+  /* the desk the sheet sits on; the sheet itself stays paper white */
+  --ss-wash:#EDEAE3;
+  --ss-font:"Plus Jakarta Sans",Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ss-wash:#171513}}
+:root[data-theme="dark"]{--ss-wash:#171513}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  padding-block:10mm;
+  background:var(--ss-wash);
+  color:var(--ss-ink);
+  font-family:var(--ss-font);
+  font-size:10.6pt;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  font-feature-settings:"kern" 1,"liga" 1,"calt" 1;
+}
+.sheet{
+  background:var(--ss-paper);
+  max-width:210mm;
+  margin:0 auto;
+  padding:14mm 18mm 16mm;
+  border-radius:20px;
+  box-shadow:0 2px 4px rgba(38,34,30,.03),0 12px 24px rgba(38,34,30,.06),0 40px 80px -20px rgba(38,34,30,.12);
+}
+h1,h2,h3{color:var(--ss-ink);text-wrap:balance}
+h1{font-size:30pt;line-height:1.05;font-weight:800;letter-spacing:-.035em;margin:0 0 7mm}
+h2{font-size:16pt;line-height:1.2;font-weight:800;letter-spacing:-.03em;margin:0}
+h3{font-size:11pt;line-height:1.3;font-weight:800;letter-spacing:-.015em;margin:7mm 0 2mm}
+p{margin:0 0 3.4mm;max-width:74ch}
+strong{font-weight:700}
+.lede{font-size:12.6pt;line-height:1.55;font-weight:500;max-width:64ch}
+.soft{color:var(--ss-ink-soft)}
+.small{font-size:9.2pt}
+.kicker{font-size:8.2pt;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--ss-orange-text);margin:0 0 3mm}
+
+/* letterhead: the logo, the contact line, one orange rule */
+.letterhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:4mm 8mm;padding-bottom:5mm;border-bottom:3px solid var(--ss-orange)}
+.ss-logo{display:block;height:18mm;width:auto}
+.lh-contact{font-size:8.6pt;line-height:1.55;font-weight:500;color:var(--ss-ink-soft);text-align:right;font-variant-numeric:tabular-nums}
+.lh-contact b{display:block;color:var(--ss-ink);font-weight:700}
+
+/* cover */
+.cover{padding:10mm 0 9mm}
+.meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-flow:dense;gap:4mm 6mm;background:var(--ss-cream-100);border-radius:14px;padding:5mm 6mm;font-size:9.6pt;line-height:1.45}
+.meta div{min-width:0}
+.meta .wide{grid-column:span 2}
+.meta span{display:block;color:var(--ss-ink-soft);font-size:7.4pt;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:1mm}
+
+/* verdict: the one dark moment, like the site's dark surfaces */
+.verdict{background:var(--ss-dark);color:var(--ss-on-dark);border-radius:18px;padding:9mm 9mm 8mm;margin:0 0 13mm}
+.verdict h2{color:var(--ss-orange);font-size:8.2pt;font-weight:700;letter-spacing:.2em;text-transform:uppercase;margin:0 0 4mm}
+.verdict p{color:var(--ss-on-dark);font-size:16.5pt;line-height:1.32;font-weight:700;letter-spacing:-.02em;margin:0;max-width:52ch;text-wrap:pretty}
+.verdict .after{color:var(--ss-on-dark-soft);font-size:10.6pt;line-height:1.65;font-weight:400;margin-top:5mm;max-width:66ch}
+
+/* section head: an orange numeral, the title, a line saying how it was measured */
+section{margin:0 0 13mm}
+.shead{display:grid;grid-template-columns:10mm minmax(0,1fr);gap:0 4mm;align-items:baseline;border-top:1px solid var(--ss-cream-200);padding-top:5mm;margin-bottom:5mm}
+.shead .n{font-size:20pt;line-height:1;font-weight:800;letter-spacing:-.04em;color:var(--ss-orange-strong);font-variant-numeric:tabular-nums}
+.shead .gloss{font-size:9.3pt;line-height:1.5;color:var(--ss-ink-soft);margin:1.6mm 0 0;max-width:64ch}
+
+/* the client's words at collection */
+blockquote{margin:7mm 0 0;padding:6mm 7mm;background:var(--ss-cream-100);border-radius:16px;font-size:12pt;line-height:1.5;font-weight:500;max-width:none}
+blockquote cite{display:block;margin-top:2.5mm;font-size:8.6pt;font-style:normal;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ss-ink-soft)}
+
+/* tables */
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:4mm 0 5mm;font-size:9.8pt;font-variant-numeric:tabular-nums}
+th{text-align:left;font-size:7.4pt;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ss-ink-soft);border-bottom:1.5px solid var(--ss-ink);padding:0 3mm 2mm 0;white-space:nowrap}
+td{padding:2.2mm 3mm 2.2mm 0;border-bottom:1px solid var(--ss-cream-200);vertical-align:top}
+td.n,th.n{text-align:right;white-space:nowrap}
+td.n:not(:last-child),th.n:not(:last-child){padding-right:7mm}
+td:last-child,th:last-child{padding-right:0}
+tr.total td{border-bottom:none;border-top:1.5px solid var(--ss-ink);font-weight:800;font-size:11.5pt;padding-top:3mm}
+
+/* status pills: a lamp and a word, like the Wi-Fi check */
+.pill{display:inline-flex;align-items:center;gap:1.4mm;font-size:7.8pt;font-weight:700;line-height:1.5;padding:.4mm 2.4mm .4mm 2mm;border-radius:999px;white-space:nowrap;vertical-align:1px}
+.pill::before{content:"";width:1.8mm;height:1.8mm;border-radius:50%;flex:none}
+.pill.good{background:var(--ss-good-wash);color:var(--ss-good-text)}
+.pill.good::before{background:var(--ss-good)}
+.pill.fair{background:var(--ss-fair-wash);color:var(--ss-fair-text)}
+.pill.fair::before{background:var(--ss-fair)}
+.pill.poor{background:var(--ss-poor-wash);color:var(--ss-poor-text)}
+.pill.poor::before{background:var(--ss-poor)}
+.pill.chosen{background:var(--ss-orange-wash);color:var(--ss-orange-text)}
+.pill.chosen::before{background:var(--ss-orange)}
+
+/* charts */
+figure{margin:6mm 0 7mm}
+.chart{overflow-x:auto}
+.chart svg{display:block;width:100%;min-width:520px;height:auto}
+.chart svg text{font-family:var(--ss-font)}
+figcaption{font-size:9.2pt;line-height:1.5;color:var(--ss-ink-soft);margin-top:3mm;max-width:72ch}
+.ftitle{font-size:10.2pt;font-weight:700;margin:0 0 3mm}
+
+/* what we are not recommending: the site's orange-tinted callout */
+.wont{background:var(--ss-orange-wash);border:1px solid var(--ss-orange-line);border-radius:16px;padding:6mm 7mm;margin:6mm 0 0}
+.wont h3{margin:0 0 2mm}
+.wont p{margin:0}
+
+/* sign-off and company particulars */
+.foot{display:grid;gap:1.6mm;border-top:3px solid var(--ss-orange);padding-top:4mm;font-size:8.8pt;line-height:1.5;color:var(--ss-ink-soft)}
+.foot p{margin:0;max-width:none}
+.foot .legal{font-size:7.8pt}
+
+@media (max-width:680px){
+  body{padding-block:0}
+  .sheet{padding:7mm 5mm 10mm;border-radius:0;box-shadow:none}
+  .ss-logo{height:14mm}
+  .lh-contact{text-align:left}
+  h1{font-size:23pt}
+  .verdict{padding:7mm 6mm}
+  .verdict p{font-size:13.5pt}
+  .meta{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .shead{grid-template-columns:7mm minmax(0,1fr)}
+  .shead .n{font-size:16pt}
+}
+
+@media print{
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{background:var(--ss-paper);padding:0}
+  .sheet{max-width:none;padding:0;border-radius:0;box-shadow:none}
+  section{margin-bottom:9mm}
+  .shead{break-inside:avoid;break-after:avoid;padding-top:4mm;margin-bottom:4mm}
+  figure,table,blockquote,.wont,.meta,.verdict,.foot{break-inside:avoid}
+  figure{margin:4mm 0 5mm}
+  p{orphans:3;widows:3}
+  .pagebreak{break-before:page}
+  .chart{overflow:visible}
+  .chart svg{min-width:0}
+}
+@page{
+  size:A4;margin:14mm 16mm 16mm;
+  @bottom-left{content:"Smart Space \00B7  Home network assessment";font:500 7.5pt "Plus Jakarta Sans",Arial,sans-serif;color:#8A817A}
+  @bottom-right{content:"Page " counter(page) " of " counter(pages);font:500 7.5pt "Plus Jakarta Sans",Arial,sans-serif;color:#8A817A}
+}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+<!-- ============================================================
+     EDIT EVERYTHING INSIDE THIS BLOCK. Nothing below it needs
+     touching. Save, open in a browser, then File > Print >
+     Save as PDF.
+     ============================================================ -->
+<script>
+const R = {
+  client:      "Mr and Mrs Fitzgerald",
+  address:     "Wellington Road, Dublin 4",
+  property:    "Victorian end-of-terrace, three floors over garden level",
+  visitDate:   "14 October 2026",
+  collectDate: "17 October 2026",
+  engineer:    "Nigel Cobbe, SmartSpace Networks",
+
+  // Their complaint, in their own words.
+  complaint: "The telly in the back bedroom buffers every evening, and the "
+           + "Nest thermostat drops off the app two or three times a week. "
+           + "We've tried two plug-in extenders and neither made a difference.",
+
+  // The conclusion, in plain words. This is the first thing they read.
+  verdict: "Your broadband line is healthy. The problem is that one router, "
+         + "in a hall cupboard on the ground floor, cannot reach the top two "
+         + "floors through solid brick.",
+  verdictAfter: "Over three days we ran a working system on the second floor "
+         + "alongside your own Wi-Fi. It delivered 212 Mbps into the back "
+         + "bedroom, against 14 Mbps from your existing setup. Your thermostat "
+         + "and the bedroom television were moved onto it and stayed connected "
+         + "for the full 72 hours without dropping once. No cables were chased "
+         + "into walls, and none would be needed.",
+
+  // Their words at collection. Leave blank to hide.
+  quote: "We watched a film in the back bedroom on the Saturday and nobody "
+       + "said a word about it, which has never happened before.",
+
+  // --- The line, measured wired at the router -------------------
+  line: {
+    provider:   "Virgin Media",
+    package:    "500 Mbps",
+    packageNum: 500,
+    down:       486,
+    up:         47,
+    idleMs:     11,
+    loadDownMs: 18,
+    loadUpMs:   24,
+    grade:      "A",
+    loss:       "0%",
+    url:        "https://www.waveform.com/tools/bufferbloat",
+    verdict:    "good"   // good | fair | poor
+  },
+
+  // --- Where the speed goes (the cascade) -----------------------
+  cascade: [
+    { label:"What you pay for",            value:500, note:"advertised package" },
+    { label:"Arriving at the router",      value:486, note:"measured on a cable" },
+    { label:"Best room, hall",             value:310, note:"beside the router" },
+    { label:"First floor landing",         value:96,  note:"through one wall" },
+    { label:"Back bedroom, second floor",  value:14,  note:"the room you complained about" }
+  ],
+
+  // --- Room by room, existing Wi-Fi -----------------------------
+  // "need" draws the threshold line. 25 Mbps is comfortable 4K streaming.
+  roomsNeed: 25,
+  rooms: [
+    { room:"Hall",                 floor:"Ground", speed:310 },
+    { room:"Kitchen",              floor:"Ground", speed:188 },
+    { room:"Sitting room",         floor:"Ground", speed:142 },
+    { room:"Landing",              floor:"First",  speed:96  },
+    { room:"Main bedroom",         floor:"First",  speed:61  },
+    { room:"Study",                floor:"First",  speed:38  },
+    { room:"Back bedroom",         floor:"Second", speed:14  },
+    { room:"Box room",             floor:"Second", speed:9   }
+  ],
+
+  // --- What the mains wiring carries ----------------------------
+  sockets: [
+    { floor:"First floor",  socket:"Landing, beside the airing cupboard", down:248, up:231, chosen:true  },
+    { floor:"First floor",  socket:"Main bedroom, left of the door",      down:150, up:166, chosen:false },
+    { floor:"Second floor", socket:"Back bedroom, beside the window",     down:212, up:198, chosen:true  },
+    { floor:"Second floor", socket:"Landing, by the hot press",           down:88,  up:140, chosen:false },
+    { floor:"Second floor", socket:"Box room",                            down:41,  up:63,  chosen:false }
+  ],
+
+  // --- The three day trial --------------------------------------
+  trial: {
+    where:"Second floor, back bedroom",
+    compareRoom:"Back bedroom",   // must match a room name in rooms[] above
+    ssid:"SmartSpace Trial",
+    baselineDown:212,
+    baselineUp:198,
+    // Paste from throughput.csv. hour is 0-23, one entry per reading.
+    series: [
+      {h:9,d:214,u:199},{h:10,d:210,u:201},{h:11,d:216,u:197},{h:12,d:208,u:195},
+      {h:13,d:211,u:200},{h:14,d:213,u:198},{h:15,d:207,u:194},{h:16,d:205,u:192},
+      {h:17,d:201,u:190},{h:18,d:196,u:188},{h:19,d:188,u:184},{h:20,d:182,u:181},
+      {h:21,d:179,u:179},{h:22,d:186,u:185},{h:23,d:198,u:191},{h:0,d:209,u:196},
+      {h:1,d:214,u:199},{h:2,d:215,u:200},{h:3,d:216,u:201},{h:4,d:215,u:199},
+      {h:5,d:214,u:198},{h:6,d:212,u:197},{h:7,d:209,u:195},{h:8,d:211,u:196}
+    ],
+    dropouts:0,
+
+    // The named problem devices moved onto the trial SSID for the three days.
+    // "drops" lists the hour offsets (0-72) at which the Deco log shows the
+    // device leaving the network. An empty list means it never dropped.
+    devices:[
+      { name:"Nest thermostat, hall",      was:"Hall router, weak",        node:"Second floor node", drops:[] },
+      { name:"Bedroom television",         was:"Hall router, very weak",   node:"Second floor node", drops:[] },
+      { name:"Nest camera, landing",       was:"Hall router, weak",        node:"First floor node",  drops:[41] }
+    ],
+    // What the client said was happening before, in their words.
+    devicesBefore:"two or three times a week",
+    logExported:true
+  },
+
+  // --- What we recommend ----------------------------------------
+  plan: [
+    { floor:"First floor",  kit:"Access point, fed over the mains", where:"Landing, beside the airing cupboard", expect:"240 Mbps" },
+    { floor:"Second floor", kit:"Access point, fed over the mains", where:"Back bedroom, beside the window",      expect:"200 Mbps" }
+  ],
+
+  // What you will NOT do, and why. Never leave this empty.
+  wont: "We are not recommending cabling. It would give you more headroom on "
+      + "paper, but it means lifting floorboards on two levels and chasing "
+      + "the hall wall, and the measurements say you do not need it. Nothing "
+      + "in this house asks for more than the 200 Mbps the mains already "
+      + "carries. We also won't be touching the garden room, which is on its "
+      + "own supply and cannot be reached this way.",
+
+  // --- Money -----------------------------------------------------
+  quoteLines: [
+    { item:"Two access points and two mains adapters", amount:"€492" },
+    { item:"Installation, configuration and testing",  amount:"€903" }
+  ],
+  quoteTotal:   "€1,395",
+  credited:     "−€395",
+  balance:      "€1,000",
+  monitoring:   "€39 per month, optional, cancel any time",
+
+  reportDate: "18 October 2026"
+};
+</script>
+<!-- ================= END OF THE EDITABLE BLOCK ================= -->
+
+
+<div class="letterhead">
+  <img class="ss-logo" alt="Smart Space" src="data:image/png;base64,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">
+  <div class="lh-contact"><b>smart-space.ie</b>01 513 0424 · info@smart-space.ie<br>Dublin and Leinster</div>
+</div>
+
+<header class="cover">
+  <p class="kicker">Home network assessment and three-day trial</p>
+  <h1 id="h-client"></h1>
+  <div class="meta" id="m-meta"></div>
+</header>
+
+<div class="verdict">
+  <h2>What we found</h2>
+  <p id="m-verdict"></p>
+  <div class="after" id="m-verdict-after"></div>
+</div>
+
+<section>
+  <div class="shead"><div class="n">1</div><div class="t"><h2>What you told us</h2>
+    <p class="gloss">Recorded at the first visit, before anything was measured.</p></div></div>
+  <p class="lede" id="m-complaint"></p>
+</section>
+
+<section>
+  <div class="shead"><div class="n">2</div><div class="t"><h2>Where your speed goes</h2>
+    <p class="gloss">Every stage between what you pay for and what reaches the room you complained about. Measured, not estimated.</p></div></div>
+  <figure><div class="chart" id="c-cascade"></div>
+    <figcaption id="cap-cascade"></figcaption></figure>
+</section>
+
+<section>
+  <div class="shead"><div class="n">3</div><div class="t"><h2>Your broadband line</h2>
+    <p class="gloss">Measured on a cable at the router, so no Wi-Fi is involved. This establishes whether your provider is at fault.</p></div></div>
+  <div id="m-line"></div>
+  <figure><p class="ftitle">Delay while the line is busy</p><div class="chart" id="c-latency"></div>
+    <figcaption>Most speed tests measure an idle line. This one loads the connection and measures the delay while it is working, which is what causes video calls to stutter and pages to hang during a download.</figcaption></figure>
+</section>
+
+<section>
+  <div class="shead"><div class="n">4</div><div class="t"><h2>Your existing Wi-Fi, room by room</h2>
+    <p class="gloss">Measured where you actually use each device, including at the thermostat and the television rather than in the middle of the room.</p></div></div>
+  <figure><div class="chart" id="c-rooms"></div>
+    <figcaption id="cap-rooms"></figcaption></figure>
+</section>
+
+<section>
+  <div class="shead"><div class="n">5</div><div class="t"><h2>What your electrical wiring can carry</h2>
+    <p class="gloss">Several sockets were tested on each floor. Sockets a few feet apart can differ by a factor of three, depending which circuit they sit on.</p></div></div>
+  <div class="scroll"><table id="t-sockets"></table></div>
+  <p class="soft small">Each figure above is a single measurement taken on the day, in Mbps. Only the floor carrying the trial system was monitored over three days.</p>
+</section>
+
+<section>
+  <div class="shead"><div class="n">6</div><div class="t"><h2>The three-day trial</h2>
+    <p class="gloss">A working system installed in your house, left running beside your own Wi-Fi, measured every hour and then removed.</p></div></div>
+  <div id="m-trial"></div>
+  <figure><div class="chart" id="c-trial"></div>
+    <figcaption id="cap-trial"></figcaption></figure>
+  <div id="m-quote"></div>
+</section>
+
+<section>
+  <div class="shead"><div class="n">7</div><div class="t"><h2>Your own devices on the trial system</h2>
+    <p class="gloss">The devices you named were moved onto the trial network for the three days and everything else was left alone. This is what the equipment recorded about them.</p></div></div>
+  <div id="m-devices"></div>
+  <figure><div class="chart" id="c-devices"></div>
+    <figcaption id="cap-devices"></figcaption></figure>
+</section>
+
+<section>
+  <div class="shead"><div class="n">8</div><div class="t"><h2>What we recommend</h2>
+    <p class="gloss">Exactly what was trialled, made permanent. Nothing here is untested in your house.</p></div></div>
+  <div class="scroll"><table id="t-plan"></table></div>
+  <div class="wont"><h3>What we are not recommending</h3><p id="m-wont"></p></div>
+</section>
+
+<section>
+  <div class="shead"><div class="n">9</div><div class="t"><h2>What it costs</h2>
+    <p class="gloss">The assessment fee comes off in full. There is no obligation, and the report is yours either way.</p></div></div>
+  <div class="scroll"><table id="t-quote"></table></div>
+  <p class="soft" id="m-monitoring"></p>
+</section>
+
+<footer class="foot">
+  <p id="m-foot"></p>
+  <p class="legal">Smart Space Technologies Limited, trading as Smart Space. Registered in Ireland, company number 625163. Registered office: Fourwinds Cottage, Cuckoo Corner, Ballymerrigan, Co. Wicklow.</p>
+</footer>
+
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  // Chart colours come from the stylesheet's tokens, so the CSS is the one source.
+  const tok = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const C = {
+    ink:tok('--ss-ink'), soft:tok('--ss-ink-soft'), rule:tok('--ss-cream-200'),
+    good:tok('--ss-good'), fair:tok('--ss-fair'), poor:tok('--ss-poor'),
+    goodText:tok('--ss-good-text'), fairText:tok('--ss-fair-text'), poorText:tok('--ss-poor-text'),
+    ref:tok('--ss-orange-strong'), refBar:tok('--ss-orange-line'), refText:tok('--ss-orange-text')
+  };
+
+  // band a speed against what it needs to do
+  function band(v, need){
+    if (v >= need*4) return 'good';
+    if (v >= need)   return 'fair';
+    return 'poor';
+  }
+  const col  = b => C[b];          // fill for bars and lamps
+  const colT = b => C[b+'Text'];   // darker shade for numbers on white
+
+  // ---------- cover ----------
+  $('h-client').textContent = R.client;
+  $('m-meta').innerHTML = [
+    ['Property', R.address],
+    ['Type', R.property, 'wide'],
+    ['Assessed', R.visitDate],
+    ['Trial collected', R.collectDate],
+    ['Report by', R.engineer]
+  ].map(([k,v,c]) => `<div${c?` class="${c}"`:''}><span>${esc(k)}</span>${esc(v)}</div>`).join('');
+
+  $('m-verdict').textContent = R.verdict;
+  $('m-verdict-after').textContent = R.verdictAfter;
+  $('m-complaint').textContent = '“' + R.complaint + '”';
+
+  // ---------- 2. cascade ----------
+  (function(){
+    const d = R.cascade, max = Math.max(...d.map(x=>x.value));
+    const rowH = 64, w = 820, h = d.length*rowH + 16;
+    const barX = 300, barW = w - barX - 120;   // values sit in their own column on the right
+    let s = `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Speed at each stage">`;
+    d.forEach((x,i)=>{
+      const y = i*rowH + 8;
+      const bw = Math.max(2, (x.value/max)*barW);
+      const b = i===0 ? null : band(x.value, R.roomsNeed);
+      const fill = i===0 ? C.refBar : col(b);
+      const ink  = i===0 ? C.refText : colT(b);
+      if(i>0){
+        const prev = d[i-1].value;
+        if(prev > x.value){
+          const pbw = (prev/max)*barW;
+          s += `<rect x="${barX+bw}" y="${y+10}" width="${Math.max(0,pbw-bw)}" height="26" rx="3" fill="${C.rule}"/>`;
+        }
+      }
+      s += `<rect x="${barX}" y="${y+10}" width="${bw}" height="26" rx="3" fill="${fill}"/>`;
+      s += `<text x="0" y="${y+24}" font-size="17" font-weight="700" fill="${C.ink}">${esc(x.label)}</text>`;
+      s += `<text x="0" y="${y+44}" font-size="13.5" fill="${C.soft}">${esc(x.note)}</text>`;
+      s += `<text x="${w}" y="${y+30}" text-anchor="end" font-size="18" font-weight="800" fill="${ink}">${x.value} Mbps</text>`;
+    });
+    s += `</svg>`;
+    $('c-cascade').innerHTML = s;
+    const last = d[d.length-1], first = d[0];
+    const pct = Math.round(100 - (last.value/first.value*100));
+    $('cap-cascade').textContent =
+      `By the time it reaches ${last.label.toLowerCase()}, ${pct}% of the speed you pay for has `
+      + `been lost inside the house. None of it is lost on the line itself. The grey shows what `
+      + `is lost at each step.`;
+  })();
+
+  // ---------- 3. line ----------
+  (function(){
+    const L = R.line;
+    const pill = `<span class="pill ${esc(L.verdict)}">${L.verdict==='good'?'Healthy':L.verdict==='fair'?'Acceptable':'At fault'}</span>`;
+    $('m-line').innerHTML = `
+      <p>Your line is with ${esc(L.provider)} on a ${esc(L.package)} package. Measured on a cable
+      at the router it delivered <strong>${L.down} Mbps down</strong> and
+      <strong>${L.up} Mbps up</strong>, with packet loss of ${esc(L.loss)}. ${pill}</p>
+      <div class="scroll"><table>
+        <tr><th>Measurement</th><th class="n">Result</th><th>What it means</th></tr>
+        <tr><td>Download</td><td class="n">${L.down} Mbps</td><td>Against ${esc(L.package)} advertised</td></tr>
+        <tr><td>Upload</td><td class="n">${L.up} Mbps</td><td>Carries camera footage and video calls</td></tr>
+        <tr><td>Delay, line idle</td><td class="n">${L.idleMs} ms</td><td>How responsive the line is when nothing else is running</td></tr>
+        <tr><td>Delay, line busy</td><td class="n">${Math.max(L.loadDownMs,L.loadUpMs)} ms</td><td>How responsive it stays while someone is streaming</td></tr>
+        <tr><td>Independent grade</td><td class="n">${esc(L.grade)}</td><td>From a third-party test you can run yourself</td></tr>
+      </table></div>`;
+
+    const d = [
+      {label:'Line idle', v:L.idleMs},
+      {label:'While downloading', v:L.loadDownMs},
+      {label:'While uploading', v:L.loadUpMs}
+    ];
+    // 60 ms is where calls start to suffer; the scale runs past it so the marker sits inside
+    const max = Math.max(80, ...d.map(x=>x.v*1.15));
+    const w=820, rowH=52, h=d.length*rowH+34, barX=220, barW=w-barX-90;
+    let s=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Delay while the line is busy">`;
+    const mx = barX + (60/max)*barW;
+    s += `<line x1="${mx}" y1="4" x2="${mx}" y2="${d.length*rowH+6}" stroke="${C.fair}" stroke-width="2" stroke-dasharray="5 4"/>`;
+    s += `<text x="${mx-8}" y="${d.length*rowH+26}" text-anchor="end" font-size="13" font-weight="600" fill="${C.fairText}">60 ms, where calls start to suffer</text>`;
+    d.forEach((x,i)=>{
+      const y=i*rowH+8, bw=Math.max(2,(x.v/max)*barW);
+      const b = x.v<30?'good':x.v<60?'fair':'poor';
+      s+=`<rect x="${barX}" y="${y+6}" width="${bw}" height="24" rx="3" fill="${col(b)}"/>`;
+      s+=`<text x="0" y="${y+24}" font-size="16" font-weight="600" fill="${C.ink}">${esc(x.label)}</text>`;
+      s+=`<text x="${barX+bw+10}" y="${y+25}" font-size="16" font-weight="800" fill="${colT(b)}">${x.v} ms</text>`;
+    });
+    s+=`</svg>`;
+    $('c-latency').innerHTML = s;
+  })();
+
+  // ---------- 4. rooms ----------
+  (function(){
+    const d = R.rooms, need = R.roomsNeed;
+    const max = Math.max(...d.map(x=>x.speed));
+    const w=820, rowH=46, h=d.length*rowH+34, barX=270, barW=w-barX-70;
+    let s=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Measured speed in each room">`;
+    const nx = barX + (need/max)*barW;
+    s+=`<rect x="${barX}" y="0" width="${Math.max(0,nx-barX)}" height="${d.length*rowH+4}" fill="${C.poor}" opacity=".06"/>`;
+    s+=`<line x1="${nx}" y1="0" x2="${nx}" y2="${d.length*rowH+4}" stroke="${C.ink}" stroke-width="2" stroke-dasharray="5 4"/>`;
+    s+=`<text x="${nx+8}" y="${d.length*rowH+24}" font-size="13.5" font-weight="600" fill="${C.ink}">${need} Mbps, enough for one 4K stream</text>`;
+    let lastFloor='';
+    d.forEach((x,i)=>{
+      const y=i*rowH+4, bw=Math.max(2,(x.speed/max)*barW);
+      const b=band(x.speed,need);
+      s+=`<rect x="${barX}" y="${y+8}" width="${bw}" height="22" rx="3" fill="${col(b)}"/>`;
+      const fl = x.floor!==lastFloor ? x.floor : '';
+      lastFloor = x.floor;
+      if(fl) s+=`<text x="0" y="${y+25}" font-size="12" font-weight="700" letter-spacing="1.5" fill="${C.soft}">${esc(fl.toUpperCase())}</text>`;
+      s+=`<text x="100" y="${y+25}" font-size="16" font-weight="600" fill="${C.ink}">${esc(x.room)}</text>`;
+      s+=`<text x="${Math.max(barX+bw, nx)+10}" y="${y+25}" font-size="16" font-weight="800" fill="${colT(b)}">${x.speed}</text>`;   // clear of the threshold line
+    });
+    s+=`</svg>`;
+    $('c-rooms').innerHTML=s;
+    const bad = d.filter(x=>x.speed<need);
+    $('cap-rooms').textContent = bad.length
+      ? `${bad.length} of ${d.length} rooms fall below what a single 4K stream needs: `
+        + bad.map(x=>x.room.toLowerCase()).join(', ') + '. '
+        + 'Speeds in Mbps, measured where each device actually sits.'
+      : 'Every room clears what a 4K stream needs. Speeds in Mbps.';
+  })();
+
+  // ---------- 5. sockets ----------
+  (function(){
+    const rows = R.sockets.map(x=>`
+      <tr>
+        <td>${esc(x.floor)}</td>
+        <td>${esc(x.socket)}${x.chosen?' <span class="pill chosen">Chosen</span>':''}</td>
+        <td class="n">${x.down}</td>
+        <td class="n">${x.up}</td>
+      </tr>`).join('');
+    $('t-sockets').innerHTML =
+      `<tr><th>Floor</th><th>Socket tested</th><th class="n">To the room</th><th class="n">From the room</th></tr>${rows}`;
+  })();
+
+  // ---------- 6. trial ----------
+  (function(){
+    const T = R.trial;
+    const worst = R.rooms.find(x => x.room === T.compareRoom)
+               || R.rooms.reduce((a,b)=>a.speed<b.speed?a:b);
+    const mult = Math.round(T.baselineDown / Math.max(1,worst.speed));
+    $('m-trial').innerHTML = `
+      <p>A working system was installed on the ${esc(T.where.toLowerCase())} and left running for
+      three days on its own network, <em>${esc(T.ssid)}</em>, with your existing Wi-Fi switched on
+      beside it so you could move between the two. It was measured every hour, in both directions,
+      and removed on ${esc(R.collectDate)}.</p>
+      <p>It delivered <strong>${T.baselineDown} Mbps</strong> into a room that had been getting
+      ${worst.speed} Mbps, roughly ${mult} times as much, and recorded
+      <strong>${T.dropouts===0?'no dropouts at all':T.dropouts+' dropouts'}</strong> over the
+      three days.</p>`;
+
+    const d=T.series;
+    const w=820,h=320,padL=48,padR=12,padT=14,padB=74;
+    const max=Math.ceil(Math.max(...d.map(x=>Math.max(x.d,x.u)))/50)*50;
+    const X=i=>padL+(i/(d.length-1))*(w-padL-padR);
+    const Y=v=>padT+(1-v/max)*(h-padT-padB);
+    let s=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Throughput measured every hour over three days">`;
+    // evening band
+    const evIdx = d.map((x,i)=>({x,i})).filter(o=>o.x.h>=18&&o.x.h<23).map(o=>o.i);
+    if(evIdx.length){
+      const a=X(Math.min(...evIdx)), z=X(Math.max(...evIdx));
+      s+=`<rect x="${a}" y="${padT}" width="${z-a}" height="${h-padT-padB}" fill="${C.ink}" opacity=".05"/>`;
+      s+=`<text x="${(a+z)/2}" y="${padT+18}" text-anchor="middle" font-size="12" font-weight="700" letter-spacing="1.5" fill="${C.soft}">EVENING</text>`;
+    }
+    for(let g=0;g<=max;g+=50){
+      s+=`<line x1="${padL}" y1="${Y(g)}" x2="${w-padR}" y2="${Y(g)}" stroke="${C.rule}" stroke-width="1"/>`;
+      s+=`<text x="${padL-10}" y="${Y(g)+5}" text-anchor="end" font-size="13" fill="${C.soft}">${g}</text>`;
+    }
+    const path = k => d.map((x,i)=>`${i?'L':'M'}${X(i).toFixed(1)},${Y(x[k]).toFixed(1)}`).join('');
+    s+=`<path d="${path('u')}" fill="none" stroke="${C.ref}" stroke-width="2.5" stroke-dasharray="7 5" stroke-linejoin="round"/>`;
+    s+=`<path d="${path('d')}" fill="none" stroke="${C.good}" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+    d.forEach((x,i)=>{ if(x.h%6===0){
+      s+=`<text x="${X(i)}" y="${h-padB+24}" text-anchor="middle" font-size="13" fill="${C.soft}">${String(x.h).padStart(2,'0')}:00</text>`;}});
+    s+=`<rect x="${padL}" y="${h-21}" width="24" height="4" rx="2" fill="${C.good}"/>`;
+    s+=`<text x="${padL+32}" y="${h-14}" font-size="13.5" font-weight="600" fill="${C.ink}">to the room, streaming</text>`;
+    s+=`<rect x="${padL+230}" y="${h-21}" width="24" height="4" rx="2" fill="${C.ref}"/>`;
+    s+=`<text x="${padL+262}" y="${h-14}" font-size="13.5" font-weight="600" fill="${C.ink}">from the room, cameras and calls</text>`;
+    s+=`</svg>`;
+    $('c-trial').innerHTML=s;
+
+    const ev=d.filter(x=>x.h>=18&&x.h<23).map(x=>x.d);
+    const rest=d.filter(x=>!(x.h>=18&&x.h<23)).map(x=>x.d);
+    const avg=a=>a.reduce((p,c)=>p+c,0)/a.length;
+    const drop=Math.round((1-avg(ev)/avg(rest))*100);
+    $('cap-trial').textContent =
+      `Measured every hour, in Mbps. The shaded band is the evening, when you told us the trouble `
+      + `happens. Throughput eased by ${drop}% at peak and never fell below `
+      + `${Math.min(...d.map(x=>x.d))} Mbps, which is still ${Math.round(Math.min(...d.map(x=>x.d))/R.roomsNeed)} `
+      + `times what a 4K stream needs.`;
+
+    $('m-quote').innerHTML = R.quote
+      ? `<blockquote>“${esc(R.quote)}”<cite>${esc(R.client)}, at collection</cite></blockquote>` : '';
+  })();
+
+  // ---------- 7. devices on the trial network ----------
+  (function(){
+    const T = R.trial, d = T.devices || [];
+    if(!d.length){ $('m-devices').innerHTML=''; return; }
+
+    const clean = d.filter(x=>!x.drops || !x.drops.length).length;
+    const totalDrops = d.reduce((p,x)=>p+((x.drops||[]).length),0);
+
+    $('m-devices').innerHTML = `
+      <p>The devices you told us about were moved onto the trial network at the first
+      visit, and the rest of the house was left on your own Wi-Fi. The equipment keeps
+      its own record of every time a device joins or leaves, so this is what it logged
+      over the three days, not something we observed.</p>
+      <p>${clean} of ${d.length} stayed connected for the full 72 hours without dropping once.
+      ${totalDrops===0
+        ? 'Nothing left the network at any point.'
+        : 'There ' + (totalDrops===1?'was one drop':'were '+totalDrops+' drops') + ' in total, marked below.'}
+      You had told us this was happening ${esc(T.devicesBefore||'regularly')}.</p>`;
+
+    const w=820, rowH=58, h=d.length*rowH+34;
+    const barX=290, barW=w-barX-90, hours=72;
+    let s2=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Connection record for each device over three days">`;
+    // day dividers
+    for(let day=1; day<3; day++){
+      const x = barX + (day*24/hours)*barW;
+      s2+=`<line x1="${x}" y1="4" x2="${x}" y2="${d.length*rowH}" stroke="${C.rule}" stroke-width="1.5"/>`;
+    }
+    [0,24,48,72].forEach(hr=>{
+      const x = barX + (hr/hours)*barW;
+      const lab = hr===0?'installed':hr===72?'collected':'day '+(hr/24+1);
+      s2+=`<text x="${x}" y="${d.length*rowH+22}" text-anchor="${hr===0?'start':hr===72?'end':'middle'}" font-size="13" fill="${C.soft}">${lab}</text>`;
+    });
+    d.forEach((x,i)=>{
+      const y=i*rowH+6;
+      const drops=(x.drops||[]).slice().sort((a,b)=>a-b);
+      s2+=`<text x="0" y="${y+22}" font-size="16" font-weight="700" fill="${C.ink}">${esc(x.name)}</text>`;
+      s2+=`<text x="0" y="${y+41}" font-size="13" fill="${C.soft}">was on: ${esc(x.was)}</text>`;
+      // continuous bar, broken at each logged drop
+      let cursor=0;
+      const seg=(from,to)=>{
+        const x1=barX+(from/hours)*barW, x2=barX+(to/hours)*barW;
+        if(x2-x1>0.5) s2+=`<rect x="${x1}" y="${y+12}" width="${x2-x1}" height="20" fill="${C.good}"/>`;
+      };
+      drops.forEach(hr=>{ seg(cursor,hr); cursor=hr+0.7; });
+      seg(cursor,hours);
+      drops.forEach(hr=>{
+        const x1=barX+(hr/hours)*barW;
+        s2+=`<rect x="${x1}" y="${y+7}" width="3.5" height="30" rx="1" fill="${C.poor}"/>`;
+      });
+      const txt = drops.length?`${drops.length} drop${drops.length>1?'s':''}`:'no drops';
+      s2+=`<text x="${barX+barW+12}" y="${y+27}" font-size="14.5" font-weight="800" fill="${drops.length?C.poorText:C.goodText}">${txt}</text>`;
+    });
+    s2+=`</svg>`;
+    $('c-devices').innerHTML=s2;
+
+    $('cap-devices').textContent =
+      'Each bar is one device, read left to right across the three days. A solid bar means the '
+      + 'device stayed connected the whole time. A red mark is a moment the system recorded it '
+      + 'leaving the network.'
+      + (T.logExported ? ' Taken from the equipment’s own log, a copy of which is attached.' : '');
+  })();
+
+  // ---------- 8. plan ----------
+  (function(){
+    const rows=R.plan.map(x=>`<tr><td>${esc(x.floor)}</td><td>${esc(x.kit)}</td><td>${esc(x.where)}</td><td class="n">${esc(x.expect)}</td></tr>`).join('');
+    $('t-plan').innerHTML=`<tr><th>Floor</th><th>What goes in</th><th>Where</th><th class="n">Expected</th></tr>${rows}`;
+    $('m-wont').textContent=R.wont;
+  })();
+
+  // ---------- 9. money ----------
+  (function(){
+    const rows=R.quoteLines.map(x=>`<tr><td>${esc(x.item)}</td><td class="n">${esc(x.amount)}</td></tr>`).join('');
+    $('t-quote').innerHTML=`
+      <tr><th>Item</th><th class="n">Amount</th></tr>
+      ${rows}
+      <tr><td>Total, including VAT</td><td class="n">${esc(R.quoteTotal)}</td></tr>
+      <tr><td>Assessment fee already paid, credited in full</td><td class="n">${esc(R.credited)}</td></tr>
+      <tr class="total"><td>Balance if you go ahead</td><td class="n">${esc(R.balance)}</td></tr>`;
+    $('m-monitoring').textContent='Ongoing monitoring: '+R.monitoring+'. It watches the line and the devices you name, and tells us before you notice.';
+    $('m-foot').textContent=`Prepared by ${R.engineer} and issued on ${R.reportDate}. Every figure here was measured in your house, and can be measured again on request.`;
+  })();
+})();
+</script>
+</body>
+</html>
