@@ -38,10 +38,10 @@ export const GA4_PROPERTY: Record<Site, string> = {
  * destination is removed later. The server's Measurement Protocol events are
  * sent with G-N8886QEJ70 too, and a Measurement Protocol event is filed under
  * the stream whose measurement id it carries, so this filter keeps them. None
- * has in fact arrived in either stream since 20 August 2026: until then they
- * arrived in 14510064208, which holds the property's only Measurement
- * Protocol secret, and 15470580335 has none. That is a separate fault, and
- * this filter neither causes nor hides it.
+ * arrived in either stream from 20 August 2026: until then they arrived in
+ * 14510064208, which held the property's only Measurement Protocol secret.
+ * On 4 October 2026 a secret was created on 15470580335 and production's
+ * GA4_API_SECRET replaced with it. This filter neither caused nor hid that.
  *
  * SmartCare Living's property has one stream, named here so that a second
  * one added later cannot double its figures in the same way.

@@ -4,6 +4,7 @@ import "./globals.css";
 import SiteChrome from "@/components/SiteChrome";
 import { AGGREGATE_RATING, AGGREGATE_REVIEW_COUNT } from "@/lib/business-constants";
 import { COMPANY } from "@/lib/company";
+import { gtagBootstrap } from "@/lib/gtag-bootstrap";
 
 // next/font self-hosts the font, eliminates the render-blocking
 // `<link href="fonts.googleapis.com/...">` request, removes the need for
@@ -83,8 +84,9 @@ const BUSINESS_PHONE = "+35315130424";
 const BUSINESS_PHONE_CALL_TRACKING = "01 513 0424";
 // Google Analytics 4 measurement ID. Set NEXT_PUBLIC_GA4_MEASUREMENT_ID
 // in Vercel env to enable GA4 pageview + event tracking. Falls back to
-// Ads-only when the env var isn't set.
-const GA4_ID = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID ?? "";
+// Ads-only when the env var isn't set. Production: G-N8886QEJ70, stream
+// 15470580335 "SmartSpace Web" of property 534445467.
+const GA4_ID = (process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID ?? "").trim();
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -198,131 +200,23 @@ export default function RootLayout({
       <head>
         {/* Font is now loaded via next/font (self-hosted, no render-blocking
             external CSS, no preconnect needed). See `jakarta` constant. */}
-        {/* Google Ads + GA4 global tag (both use gtag.js).
-
-            Loaded with the GA4 id where one is set, not the Ads id.
-            Google's documented order is to load with the measurement id
-            and configure the conversion id after it, and this was the
-            other way round. Both config calls below are unchanged, so
-            Ads conversions are unaffected.
-
-            Worth recording why this was looked at. From 21 July 2026 the
-            GA4 property received no browser events at all while
-            server-side conversions kept arriving. The cause was at
-            Google's end: gtag/js for the measurement id G-JR2WXNSLEL
-            returned 404 while the sister site's id returned 508KB of
-            container, even though Google's own admin API listed the
-            stream as live and unmodified since April. A new data stream
-            was created and served immediately. The old one is left in
-            place rather than deleted, because sources disagree on
-            whether deleting a stream removes its history and there is
-            nothing to gain by finding out on a live account. */}
-        <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA4_ID || GTAG_ID}`} />
+        {/* Google Ads + GA4 (both gtag.js), consent default, and the call
+            tracking number swap. The script, and why each line is there,
+            is in src/lib/gtag-bootstrap.ts. It loads gtag.js itself, so that
+            staff pages (src/lib/staff-paths.ts) never request it at all. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: [
-              "window.dataLayer = window.dataLayer || [];",
-              "function gtag(){dataLayer.push(arguments);}",
-              "gtag('js', new Date());",
-              // ── Consent Mode v2 ADVANCED, the lever that brings denied-
-              // consent conversions back from /dev/null. ──
-              //   url_passthrough: true   → preserves the gclid query param
-              //     across internal navigation even when ad_storage='denied',
-              //     so the sequence "ad click → /ring-installation → /contact
-              //     → submit" still has the gclid attached on the final fire.
-              //     Without this, every Irish/EU paid click that doesn't
-              //     accept cookies loses its attribution after the first nav.
-              //   ads_data_redaction: true → when ad_storage='denied', send
-              //     anonymised conversion pings (no IP, no cookie id) instead
-              //     of dropping the ping entirely. Google then statistically
-              //     MODELS the conversion in Ads. Without this setting, ALL
-              //     denied-consent conversions are silently lost.
-              // These two MUST be set BEFORE the consent default below.
-              "gtag('set', 'url_passthrough', true);",
-              "gtag('set', 'ads_data_redaction', true);",
-              // ── The stored decision, applied before the first hit ──
-              // A returning visitor who already accepted was having every
-              // subsequent first-page-view counted as a refusal. The banner
-              // re-applies their choice, but it is a React component: the
-              // effect that does it runs after hydration, and gtag has sent
-              // the page_view long before that. So analytics_storage was
-              // denied at the only moment that mattered, on every visit, for
-              // everybody.
-              //
-              // What that looked like in the property: 1 to 7 users a day,
-              // zero sessions, zero page views, for a site running paid
-              // search. GA4 cannot form a session or record a page view from
-              // a cookieless ping, and this property will never hit the
-              // volume Google needs before it models the gap.
-              //
-              // Read here, synchronously, before the consent default, so a
-              // visitor who consented last week is counted this week.
-              "var ssStored = null;",
-              "try {",
-              "  var ssRaw = localStorage.getItem('ss_consent');",
-              "  if (ssRaw) {",
-              "    var ssSaved = JSON.parse(ssRaw);",
-              // Same twelve month window the banner enforces. Expired means
-              // undecided, not granted.
-              "    if (ssSaved && Date.now() - ssSaved.decidedAt < 31536000000) ssStored = ssSaved.decision;",
-              "  }",
-              "} catch (e) {}",
-              "var ssGrant = ssStored === 'granted' ? 'granted' : 'denied';",
-              // ── Consent Mode v2 default (REQUIRED for EEA/UK ad processing) ──
-              // Default everything to denied. CookieBanner.tsx fires
-              // gtag('consent','update',…) once the user makes a choice.
-              // This MUST run before any gtag('config',…) call.
-              "gtag('consent', 'default', {",
-              "  ad_storage: ssGrant,",
-              "  ad_user_data: ssGrant,",
-              "  ad_personalization: ssGrant,",
-              "  analytics_storage: ssGrant,",
-              // 500ms was shorter than the banner took to appear, so a
-              // first-time visitor's page_view was always sent before there
-              // was anything on screen to consent to. Two seconds is the
-              // upper end of what Google documents and still imperceptible.
-              "  wait_for_update: 2000",
-              "});",
-              // ── The CRM is not the website ──
-              // /crm is a private admin application on the same domain. Every
-              // config call below sends a hit, so without this guard Nigel
-              // reading his own order list filed a page_view against the GA4
-              // property the ads are judged by, and put paths like
-              // /crm/contacts/<id> into Google's reports.
-              //
-              // Only the config calls are guarded. gtag('js'), the consent
-              // defaults and url_passthrough all stay, because they send
-              // nothing on their own and because the consent default must run
-              // before any config on every page without exception. gtag.js
-              // still loads on /crm and, with no config call, sends no hit.
-              //
-              // Checked at load time rather than on navigation: the CRM is
-              // linked from nowhere on the site, so it is always a fresh
-              // document, and a config call only sends its page_view once per
-              // document anyway.
-              "var ssIsCrm = location.pathname === '/crm' || location.pathname.indexOf('/crm/') === 0;",
-              "if (!ssIsCrm) {",
-              // Google Ads
-              "gtag('config', " + JSON.stringify(GTAG_ID) + ", { allow_enhanced_conversions: true });",
-              // GA4 (only configured when the measurement ID env var is set)
-              GA4_ID
-                ? "gtag('config', " + JSON.stringify(GA4_ID) + ");"
-                : "// GA4 disabled, set NEXT_PUBLIC_GA4_MEASUREMENT_ID to enable",
-              // Phone-call conversion (Google Ads call tracking).
-              // .trim() is load-bearing: Vercel env vars can carry a
-              // trailing \n from copy-paste. Without trimming, gtag was
-              // configuring against the literal label "<id>\n" which
-              // Google Ads rejects as unknown, silently dropping every
-              // phone-call conversion. Discovered 2026-05-14 after a
-              // confirmed phone lead didn't register against the account.
-              "var callLabel = " + JSON.stringify((process.env.NEXT_PUBLIC_GADS_CALL_LABEL || "").trim()) + ";",
-              "if (callLabel) {",
-              "  gtag('config', " + JSON.stringify(GTAG_ID) + " + '/' + callLabel, {",
-              "    phone_conversion_number: " + JSON.stringify(BUSINESS_PHONE_CALL_TRACKING),
-              "  });",
-              "}",
-              "}",
-            ].join("\n"),
+            __html: gtagBootstrap({
+              ads: GTAG_ID,
+              ga4: GA4_ID,
+              // .trim() is load-bearing: Vercel env vars can carry a trailing
+              // \n from copy-paste, and Google Ads rejects "<id>\n" as an
+              // unknown label, silently dropping every phone-call conversion.
+              // Discovered 2026-05-14 after a confirmed phone lead didn't
+              // register against the account.
+              callLabel: (process.env.NEXT_PUBLIC_GADS_CALL_LABEL || "").trim(),
+              callNumber: BUSINESS_PHONE_CALL_TRACKING,
+            }),
           }}
         />
         {/* LocalBusiness + Organization + WebSite schema */}

@@ -11,6 +11,7 @@ import VisitBeacon from "@/components/VisitBeacon";
 import PhoneClickTracker from "@/components/PhoneClickTracker";
 import EngagementTracker from "@/components/EngagementTracker";
 import ChatGptPixel from "@/components/ChatGptPixel";
+import { isStaffPath } from "@/lib/staff-paths";
 
 /**
  * The marketing site's furniture, and where it stops.
@@ -37,6 +38,12 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
      no navbar, no cookie banner, no trackers. */
   if (path?.startsWith("/crm") || path?.startsWith("/dev/")) return <>{children}</>;
 
+  /* The other staff pages (src/lib/staff-paths.ts: /admin, the internal
+     hand-off pages) keep the furniture, which /admin hides with its own CSS,
+     and lose every tracker and the banner. The <head> script does not load
+     Google's tag on them either, so there is nothing for a banner to grant. */
+  const staff = isStaffPath(path);
+
   return (
     <CartProvider>
       {/* Skip-to-content must be the first focusable element in the DOM. It
@@ -47,16 +54,24 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
       <a href="#main-content" className="skip-link">
         Skip to content
       </a>
-      <GclidCapture />
-      <PhoneClickTracker />
-      <EngagementTracker />
-      <ChatGptPixel />
+      {!staff && (
+        <>
+          <GclidCapture />
+          <PhoneClickTracker />
+          <EngagementTracker />
+          <ChatGptPixel />
+        </>
+      )}
       <Navbar />
       <main id="main-content" className="min-h-screen">{children}</main>
       <CartDrawer />
       <Footer />
-      <CookieBanner />
-      <VisitBeacon />
+      {!staff && (
+        <>
+          <CookieBanner />
+          <VisitBeacon />
+        </>
+      )}
     </CartProvider>
   );
 }

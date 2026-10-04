@@ -8,11 +8,12 @@
  * signals from EEA users, which means Smart Bidding can't optimise on
  * that traffic and our enhanced-conversion data is rejected.
  *
- * The default-deny `gtag('consent','default',...)` call lives in
- * `src/app/layout.tsx` and runs BEFORE the gtag.js bootstrap so that the
- * very first page load is consent-compliant. This component then prompts
- * the user and fires `gtag('consent','update',...)` to either grant or
- * keep-denying once they choose.
+ * The default-deny `gtag('consent','default',...)` call lives in the <head>
+ * script (`src/lib/gtag-bootstrap.ts`, rendered by `src/app/layout.tsx`) and
+ * runs before any config call so that the very first page load is
+ * consent-compliant. This component then prompts the user and fires
+ * `gtag('consent','update',...)` to either grant or keep-denying once they
+ * choose (`src/lib/consent-gtag.ts`).
  *
  * Storage: `localStorage["ss_consent"]` = {decision, decidedAt, v}. 12-month
  * TTL (re-prompt yearly per ePrivacy guidance). v is the version of the
@@ -22,11 +23,11 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { CONSENT_VERSION } from "@/lib/consent-version";
+import { applyConsent, recordAnswer, type Decision } from "@/lib/consent-gtag";
 
 const STORAGE_KEY = "ss_consent";
 const TTL_MS = 365 * 24 * 60 * 60 * 1000;
 
-type Decision = "granted" | "denied";
 interface StoredConsent {
   decision: Decision;
   decidedAt: number;
@@ -47,102 +48,6 @@ function loadStored(): StoredConsent | null {
     return parsed;
   } catch {
     return null;
-  }
-}
-
-function fireConsentUpdate(decision: Decision) {
-  const w = window as unknown as {
-    gtag?: (...args: unknown[]) => void;
-    dataLayer?: unknown[];
-  };
-
-  /*
-   * Record the answer itself, before anything else and whichever way it goes.
-   *
-   * Google Ads only ever sees visitors who press Accept. An unanswered banner
-   * produces no conversion ping at all, while GA4 keeps counting the same
-   * events through a cookieless one, which is why the two systems have
-   * disagreed for months and why a real sale can be invisible in the ad
-   * account.
-   *
-   * Nobody knows what share of visitors answer, so nobody can say how much of
-   * that gap is the banner. This makes the rate a number rather than an
-   * argument. It carries no identifier and fires under either outcome, so it
-   * needs no consent of its own, and it is pushed before the gtag guard below
-   * because a page where gtag never loaded is exactly the case worth seeing.
-   */
-  try {
-    w.dataLayer = w.dataLayer || [];
-    w.dataLayer.push({ event: "consent_decision", consent_decision: decision, consent_prompt: "banner" });
-  } catch { /* a blocked dataLayer is not worth failing the banner over */ }
-
-  if (typeof w.gtag !== "function") return;
-  if (decision === "granted") {
-    /*
-     * Flush anything attribution.ts has been holding in memory. It captures
-     * on page load but no longer writes until this point, so the gclid that
-     * arrived in the landing URL survives a visitor who accepts two pages
-     * later, and is never stored for one who does not.
-     */
-    try {
-      const queued = (window as unknown as { __ssOnConsent?: (() => void)[] }).__ssOnConsent;
-      if (Array.isArray(queued)) {
-        queued.forEach((fn) => {
-          try { fn(); } catch { /* one bad writer must not stop the rest */ }
-        });
-        queued.length = 0;
-      }
-    } catch { /* nothing queued */ }
-
-    w.gtag("consent", "update", {
-      ad_storage: "granted",
-      ad_user_data: "granted",
-      ad_personalization: "granted",
-      analytics_storage: "granted",
-    });
-
-    /*
-     * Send the page view again, now that it can actually be recorded.
-     *
-     * This is the line that was missing, and without it the property
-     * recorded essentially nothing for months.
-     *
-     * The sequence for a first-time visitor: the page loads with consent
-     * defaulted to denied, gtag holds the page_view for the two seconds
-     * wait_for_update allows, nobody reads and answers a banner in two
-     * seconds, so the hit goes out cookieless with gcs=G100. GA4 cannot
-     * form a session or count a page view from a cookieless ping. It only
-     * feeds behavioural modelling, and modelling needs a traffic
-     * threshold this property will never reach.
-     *
-     * Then the visitor accepts at eight seconds. Consent updates to
-     * granted, every later hit is fine, and the page view they came for
-     * is already gone. gtag does not resend it. On a site where most
-     * visits are a single page, that is the whole visit.
-     *
-     * Measured on the live site before changing anything: the collect
-     * call carried tid=G-N8886QEJ70, en=page_view and gcs=G100, which is
-     * the browser confirming it in the request itself. The property showed
-     * one to seven users a day, zero sessions and zero page views.
-     *
-     * This cannot double count. The banner only renders when there is no
-     * stored decision, so reaching this line means the page really did
-     * load denied and the first hit really was wasted.
-     */
-    w.gtag("event", "page_view", {
-      page_location: window.location.href,
-      page_title: document.title,
-    });
-  } else {
-    // Reject = leave everything denied (the default), but explicitly send
-    // an update so Google Ads knows the user actively refused (vs. just
-    // not having decided yet, improves modeled conversion accuracy).
-    w.gtag("consent", "update", {
-      ad_storage: "denied",
-      ad_user_data: "denied",
-      ad_personalization: "denied",
-      analytics_storage: "denied",
-    });
   }
 }
 
@@ -173,14 +78,19 @@ export default function CookieBanner() {
   useEffect(() => {
     const stored = loadStored();
     if (stored) {
-      // A backstop rather than the mechanism. layout.tsx reads the same key
-      // synchronously and sets the consent default from it before gtag
-      // sends anything, which is the only place it can be applied in time:
-      // this effect runs after hydration and the page_view has already
-      // gone. It stays because the inline read is inside a try/catch and a
-      // browser that refuses localStorage there should still end up with
-      // the right state for everything after the first hit.
-      fireConsentUpdate(stored.decision);
+      // A backstop rather than the mechanism. The <head> script
+      // (src/lib/gtag-bootstrap.ts) reads the same key synchronously and
+      // sets the consent default from it before gtag sends anything, which
+      // is the only place it can be applied in time: this effect runs after
+      // hydration and the page view has already gone, counted. It stays
+      // because the inline read is inside a try/catch and a browser that
+      // refuses localStorage there should still end up with the right state
+      // for everything after the first hit.
+      //
+      // applyConsent, never recordAnswer: nobody pressed anything, and a
+      // second page view here is what counted every returning visitor's
+      // hard load twice from 24 August to 4 October 2026.
+      applyConsent(stored.decision);
       return;
     }
     // Shown on the next frame rather than after 600ms. The delay was there
@@ -240,7 +150,7 @@ export default function CookieBanner() {
       // Storage may be blocked, still fire the consent update so it
       // applies for this session at least.
     }
-    fireConsentUpdate(decision);
+    recordAnswer(decision);
     tally(decision);
     setVisible(false);
   }

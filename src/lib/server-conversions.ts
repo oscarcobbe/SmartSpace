@@ -33,7 +33,11 @@ import { createHash, randomUUID } from "crypto";
 import { oaiEventId } from "./oai-event-id";
 import { normalisePhone } from "./phone";
 
-const GA4_ID = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID; // e.g. G-JR2WXNSLEL
+/* G-N8886QEJ70 in production, stream 15470580335. A Measurement Protocol event
+   is filed under the stream whose id it carries, so GA4_API_SECRET has to be a
+   secret of that stream (replaced on 4 October 2026; the old one belonged to
+   G-JR2WXNSLEL's stream, and no server event arrived from 20 August). */
+const GA4_ID = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID;
 const GA4_API_SECRET = process.env.GA4_API_SECRET;
 const GADS_ACCOUNT_ID = "17978501655"; // from AW-17978501655
 /* The ChatGPT ads pixel the browser loads (src/lib/chatgpt-pixel.ts). The

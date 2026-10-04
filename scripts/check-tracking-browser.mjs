@@ -31,6 +31,11 @@
  *   - the Wi-Fi form, on a package page and on a check's report: SS -
  *     SmartNet enquiry once, with the id /api/wifi-check answered, E.164
  *     phone, generate_lead with lead_source wifi_enquiry or wifi_check.
+ *   - page views: one per hard load and reload with an Accept stored, and on
+ *     a first visit one before Accept and exactly one more from Accept.
+ *   - staff pages (/admin, /crm, the hand-off pages): no request leaves for
+ *     anybody, window.gtag and dataLayer are never defined, no tracker
+ *     beacon, no banner.
  */
 import { spawn } from "node:child_process";
 import fs from "node:fs";
@@ -282,6 +287,10 @@ try {
       f.elements.namedItem('email').value = 'test-ignore@example.ie';
       f.elements.namedItem('phone').value = '00353 87 123 4567';
       f.elements.namedItem('message').value = 'Test, ignore.';
+      /* Required since 1 October 2026 (#51): without an answer the browser
+         refuses the submit and this check saw no conversion at all. */
+      var found = f.elements.namedItem('found_us');
+      if (found) found.value = [...found.options].map(function(o){ return o.value; }).filter(Boolean)[0];
       f.requestSubmit(); return true; })()`);
     await waitFor("/Message Sent/.test(document.body.innerText)", 10_000);
     await wait(500);
@@ -346,6 +355,51 @@ try {
         `${where}: ChatGPT ads gets lead_created with hashed email and phone, 5000 cents and the same id`,
         `${where}: OpenAI after the enquiry ${JSON.stringify(ai)}`);
     }
+  }
+
+  /* ── One page view per load, and one more on Accept ─────────────────
+     gtag.js is answered empty here, so the page views are read from what
+     gtag was told: a GA4 config call sends one unless send_page_view is
+     false, and so does a page_view event. Until 4 October 2026 a stored
+     Accept sent two on every hard load, the second from CookieBanner. */
+  {
+    const pageViews = (dl) => dl.filter((a) => (a[0] === "config" && /^G-/.test(String(a[1])) && a[2]?.send_page_view !== false) ||
+      (a[0] === "event" && a[1] === "page_view")).length;
+    for (const how of ["a hard load", "a reload"]) {
+      if (how === "a hard load") await go("/about");
+      else { await cdp("Page.reload", { ignoreCache: true }, S); await waitFor("document.readyState === 'complete'"); await wait(2500); }
+      const pv = pageViews(await dataLayer());
+      check(pv === 1, `${how} with a stored Accept sends exactly one page view`,
+        `${how} with a stored Accept sends ${pv} page views: ${JSON.stringify((await dataLayer()).filter((a) => a[0] === "config" || a[1] === "page_view"))}`);
+    }
+    await ev("localStorage.removeItem('ss_consent')");
+    await go("/faq");
+    const before = await dataLayer();
+    await ev(`[...document.querySelectorAll('button')].find(function(b){ return b.textContent.trim().indexOf('Accept') === 0; }).click()`);
+    await wait(1500);
+    const after = (await dataLayer()).slice(before.length);
+    check(pageViews(before) === 1 && pageViews(after) === 1,
+      "a first visit sends one page view, denied, and Accept sends exactly one more",
+      `first visit: ${pageViews(before)} page view(s) before Accept, ${pageViews(after)} after`);
+  }
+
+  /* ── Staff pages carry no tag ───────────────────────────────────────
+     With an Accept stored, the worst case: nothing of Google's or OpenAI's
+     is requested, gtag is never defined, no tracker beacons, no banner. */
+  for (const p of ["/admin", "/admin/leads", "/admin/conversion-test", "/crm", "/ga4-setup", "/gbp-setup"]) {
+    const markSeen = seen.length;
+    const markAnswered = answered.length;
+    await cdp("Page.navigate", { url: BASE + p }, S);
+    await waitFor("document.readyState === 'complete'");
+    await wait(2500);
+    const out = seen.slice(markSeen).filter((u) => { try { return !u.startsWith("data:") && new URL(u).host !== local; } catch { return false; } });
+    const beacons = answered.slice(markAnswered).filter((r) => /\/api\/track\//.test(r.url));
+    const state = await ev("({ gtag: typeof window.gtag, dataLayer: window.dataLayer === undefined ? null : window.dataLayer.length, banner: !!document.querySelector('[aria-label=\"Cookie consent\"]'), path: location.pathname, html: document.contentType === 'text/html' })");
+    /* /crm answers a plain-text 404 from the middleware when this server has
+       no CRM database configured, which proves nothing about its page. */
+    check(out.length === 0 && beacons.length === 0 && state.gtag === "undefined" && state.dataLayer === null && !state.banner,
+      `${p} (${state.path}${state.html ? "" : ", a plain 404 here: no page to track"}): no tag, no gtag, no dataLayer, no beacon, no banner`,
+      `${p} (${state.path}) is tracked: requests ${JSON.stringify(out)}, beacons ${JSON.stringify(beacons.map((r) => r.url))}, ${JSON.stringify(state)}`);
   }
 
   /* ── Nothing left the machine ───────────────────────────────────── */

@@ -1,6 +1,6 @@
 # Smart Space — System Architecture
 
-Live snapshot of every external service, integration, script, and data flow wired into [smart-space.ie](https://smart-space.ie). Last revised: **2026-05-04**.
+Live snapshot of every external service, integration, script, and data flow wired into [smart-space.ie](https://smart-space.ie). Last revised: **2026-05-04**; Google tag, GA4 and consent sections (§7, §8, §10) revised **2026-10-04**.
 
 If you're reading this and something on the site is broken, this doc tells you which service the broken thing depends on, where the credentials live, and what the fallback paths are.
 
@@ -284,9 +284,9 @@ Smart Care Living conversion labels (separate site, same Google Ads account) —
 
 #### Channel A — client-side gtag.js (browser)
 
-1. `src/app/layout.tsx` loads `gtag.js?id=AW-17978501655` async on every page
-2. Sets Consent Mode v2 defaults to denied (legally required EEA)
-3. Configures Google Ads + GA4
+1. The `<head>` script, [`src/lib/gtag-bootstrap.ts`](./src/lib/gtag-bootstrap.ts) rendered by `src/app/layout.tsx`, loads `gtag.js?id=G-N8886QEJ70` (the GA4 id) async on every website page. Staff pages ([`src/lib/staff-paths.ts`](./src/lib/staff-paths.ts): `/admin`, `/crm`, `/ga4-setup`, `/gbp-setup` and the dev/test pages) load no Google tag at all, and [`src/components/SiteChrome.tsx`](./src/components/SiteChrome.tsx) mounts no tracker or banner there (since 4 Oct 2026; before that only `/crm` was spared)
+2. Sets Consent Mode v2 defaults: denied, or granted for a visitor whose stored answer was Accept (legally required EEA)
+3. Configures Google Ads, GA4 and the call-tracking label
 4. On user action (form submit / paid success), the relevant component calls `gtag('event', 'conversion', {...})` with: `send_to`, `value`, `currency`, `transaction_id` (UUID from API), `user_data` (email + phone for Enhanced Conversions)
 5. gtag.js sends the conversion via `navigator.sendBeacon` to `googleadservices.com/pagead/conversion/...`
 6. CSP `connect-src` in [`src/middleware.ts`](./src/middleware.ts) allows the relevant hosts (`googleadservices.com`, `googleads.g.doubleclick.net`, `td.doubleclick.net`) — **without these, the beacon is silently dropped (was the cause of 30 days of zero conversions)**
@@ -307,7 +307,7 @@ Account-level setting: **"Google tag" method** (changed from GTM 2026-05-04 — 
 
 ### Phone-call conversion
 
-Configured in [`src/app/layout.tsx`](./src/app/layout.tsx) via `gtag('config', 'AW-17978501655/' + callLabel, { phone_conversion_number: '+35315130424' })`. Label comes from `NEXT_PUBLIC_GADS_CALL_LABEL` env var.
+Configured in [`src/lib/gtag-bootstrap.ts`](./src/lib/gtag-bootstrap.ts) via `gtag('config', 'AW-17978501655/' + callLabel, { phone_conversion_number: '01 513 0424' })`, the number exactly as the page displays it, so Google's forwarding-number swap can find it. Label comes from `NEXT_PUBLIC_GADS_CALL_LABEL` env var. A tap on the number is a separate action, "SS - Phone tap" ([`src/components/PhoneClickTracker.tsx`](./src/components/PhoneClickTracker.tsx)).
 
 ---
 
@@ -315,24 +315,30 @@ Configured in [`src/app/layout.tsx`](./src/app/layout.tsx) via `gtag('config', '
 
 ### Property
 
-- Stream URL: `https://smart-space.ie`
-- Stream ID: `14510064208`
-- Measurement ID: `G-JR2WXNSLEL`
+- Property `534445467`, two web streams:
+  - `15470580335` "SmartSpace Web", measurement ID **`G-N8886QEJ70`**: the one the site configures, since 20 August 2026 (first event 25 August)
+  - `14510064208` "SmartSpace", measurement ID `G-JR2WXNSLEL`: the original. Never configure it on the page: its own `gtag/js` answers 404.
+- **Every browser event is still counted in both streams.** The Google Ads tag `AW-17978501655` (Google tag `GT-WB2RD8DJ`) lists `G-JR2WXNSLEL` as a destination, so gtag forwards everything the page sends to it as well. Only the Google tag's settings can stop that, not the code. `npm run check:tag-destinations` reads Google's published tag and fails while the destination is there; it gates nothing. The CRM reads one stream only ([`src/lib/crm/ga4.ts`](./src/lib/crm/ga4.ts), guarded by `npm run check:ga4-stream`).
+
+### What happened from 21 July to 24 August 2026
+
+The property recorded almost no browser events. It was put down at the time (PR #10) to Google: `gtag/js?id=G-JR2WXNSLEL` returned 404, so a new stream was created. That 404 is real but was not the cause. The site's own Content Security Policy refused `region1.analytics.google.com`, where GA4 had started sending, so every hit died in the browser; PR #11 (`b854161`, 25 August) added it to `connect-src`. The old stream was never dead: it still receives every event through the Ads tag's destination.
 
 ### Two channels
 
 #### Client-side gtag (every pageview + every conversion event)
 
-- Configured in [`src/app/layout.tsx`](./src/app/layout.tsx) via `gtag('config', 'G-JR2WXNSLEL')`
-- Auto-fires `page_view` on every navigation
-- Custom events: `generate_lead` (contact + booking), `purchase` (paid order), `book_appointment` (booking)
-- All custom events carry `transaction_id` for dedup against server-side
+- Configured in [`src/lib/gtag-bootstrap.ts`](./src/lib/gtag-bootstrap.ts) via `gtag('config', 'G-N8886QEJ70')`, which sends the page's one page view
+- On Accept, [`src/lib/consent-gtag.ts`](./src/lib/consent-gtag.ts) sends the page view again, because the first went out cookieless. A stored decision only updates consent: from 24 August to 4 October 2026 it also re-sent the page view, so every hard load by a returning visitor who had accepted was counted twice. `npm run check:gtag` (in the build) and `npm run check:tracking-browser` fail if it comes back.
+- Custom events: `generate_lead` (contact + booking), `purchase` (paid order), `book_appointment` (booking), and the engagement set in [`src/components/EngagementTracker.tsx`](./src/components/EngagementTracker.tsx)
+- All conversion events carry `transaction_id` for dedup against server-side
 - Enhanced measurement enabled in GA4 admin (page views, scrolls, outbound clicks etc.)
 
 #### Server-side via Measurement Protocol
 
 - Code in [`src/lib/server-conversions.ts`](./src/lib/server-conversions.ts) → `fireGA4()`
-- Fires from Vercel runtime via `POST https://www.google-analytics.com/mp/collect?measurement_id=G-JR2WXNSLEL&api_secret=$GA4_API_SECRET`
+- Fires from Vercel runtime via `POST https://www.google-analytics.com/mp/collect?measurement_id=$NEXT_PUBLIC_GA4_MEASUREMENT_ID&api_secret=$GA4_API_SECRET`, so to `G-N8886QEJ70`
+- A Measurement Protocol event is filed under the stream whose id it carries. Until 4 October 2026 the property's only secret was on the old stream, and from 20 August, when the site's id changed, no server event arrived in either stream. On 4 October a secret was created on `15470580335`, production `GA4_API_SECRET` was replaced with it, and a test event sent with that pair reached the stream.
 - Includes `client_id`, hashed `user_data`, event name + params
 - Wired into `/api/contact`, `/api/booking`, `/api/webhooks/stripe`
 - **Graceful no-op if `GA4_API_SECRET` missing** — only the Google Ads pixel fires
@@ -340,8 +346,8 @@ Configured in [`src/app/layout.tsx`](./src/app/layout.tsx) via `gtag('config', '
 
 ### Env vars
 
-- `NEXT_PUBLIC_GA4_MEASUREMENT_ID` = `G-JR2WXNSLEL` (loaded into client bundle at build time)
-- `GA4_API_SECRET` — Measurement Protocol secret (server-side only — added 2026-05-04)
+- `NEXT_PUBLIC_GA4_MEASUREMENT_ID` = `G-N8886QEJ70` (loaded into client bundle at build time; `npm run check:gtag` fails the build on `G-JR2WXNSLEL`)
+- `GA4_API_SECRET` — Measurement Protocol secret for stream `15470580335` (server-side only; replaced 4 October 2026)
 
 ---
 
@@ -379,8 +385,8 @@ Legally compliant EU/EEA consent flow for ad tracking + analytics.
 
 | File | Role |
 |---|---|
-| [`src/app/layout.tsx`](./src/app/layout.tsx) | Sets `gtag('consent', 'default', { ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied', analytics_storage: 'denied', wait_for_update: 500 })` BEFORE the gtag.js bootstrap. Required by GDPR — the very first page load must be consent-compliant. |
-| [`src/components/CookieBanner.tsx`](./src/components/CookieBanner.tsx) | Banner UI. On user choice (`Accept all` / `Essential only`), calls `gtag('consent', 'update', …)` with the chosen state. Persists decision in `localStorage["ss_consent"]` with 12-month TTL. Re-applies stored decision on every page load (so SPA navigations keep consent state). |
+| [`src/lib/gtag-bootstrap.ts`](./src/lib/gtag-bootstrap.ts) (rendered by `src/app/layout.tsx`) | Sets `gtag('consent', 'default', { ... , wait_for_update: 2000 })` before any config call: denied, or granted when `localStorage["ss_consent"]` holds an Accept under 12 months old. Required by GDPR — the very first page load must be consent-compliant. Not run at all on staff pages. |
+| [`src/components/CookieBanner.tsx`](./src/components/CookieBanner.tsx) + [`src/lib/consent-gtag.ts`](./src/lib/consent-gtag.ts) | Banner UI. On a press (`Accept cookies` / `Decline`), `recordAnswer` calls `gtag('consent', 'update', …)` and, on Accept, re-sends the page view. Persists decision in `localStorage["ss_consent"]` with 12-month TTL. On every page load a stored decision is re-applied with `applyConsent`, consent update only, no page view. |
 
 ### What "denied" means in Consent Mode v2
 
