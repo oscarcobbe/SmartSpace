@@ -260,7 +260,11 @@ export default function Post() {
         </p>
 
         <h2 id="fixes">What fixes slow Wi-Fi upstairs, from free upwards?</h2>
-        <p>Roughly in order of cost. Test after each one to see what helped.</p>
+        <p>
+          Roughly in order of cost. Test after each one to see what helped. For the same ladder across a whole house, and
+          the buys that are a waste of money, see{" "}
+          <Link href="/blog/how-to-boost-wifi-signal-ireland">how to boost your Wi-Fi signal</Link>.
+        </p>
 
         <h3>1. Move the router</h3>
         <p>It costs nothing. Router makers and providers agree:</p>

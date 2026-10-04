@@ -85,7 +85,8 @@ export default function Post() {
         </p>
         <p>
           The pair link with a button on each adapter, and newer models encrypt what passes between them, so a neighbour on
-          the same supply cannot read it.
+          the same supply cannot read it. That makes powerline a tidy, reversible fix for a flat, which our guide to{" "}
+          <Link href="/blog/apartment-wifi-ireland">apartment Wi-Fi</Link> goes into.
         </p>
 
         <h2 id="the-box">The speed on the box</h2>

@@ -298,7 +298,8 @@ export default function Post() {
           5G home broadband is a router with a SIM card, on the same signals as a phone. ComReg notes it will not normally
           be as fast or as reliable as a fixed line, and that insulation, thick walls and double or triple glazing can
           weaken indoor coverage. Check ComReg&apos;s coverage map for your Eircode, then try a phone on that network inside
-          the room.
+          the room. For the rural picture, fibre, fixed wireless and satellite together, see{" "}
+          <Link href="/blog/rural-broadband-ireland">rural broadband in Ireland</Link>.
         </p>
 
         <h2 id="video-calls">How do I keep video calls steady out there?</h2>
