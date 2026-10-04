@@ -34,7 +34,7 @@ Landing-Page Experience (factors into Quality Score):
 |---|---|---|
 | C1 | Google tag (gtag.js) installed sitewide | `src/app/layout.tsx:150` loads `googletagmanager.com/gtag/js?id=AW-17978501655` from `<head>`. Confirmed in live HTML on `/` (12 `gtag` references). |
 | C2 | Google Ads conversion ID configured | `AW-17978501655` — present in live HTML. |
-| C3 | GA4 also wired (cross-pollinates Quality Score signals) | `G-JR2WXNSLEL` — present in live HTML alongside Ads tag. |
+| C3 | GA4 also wired (cross-pollinates Quality Score signals) | `G-JR2WXNSLEL` — present in live HTML alongside Ads tag. *(Correction, 4 Oct 2026: since 20 Aug 2026 the site configures `G-N8886QEJ70`. `G-JR2WXNSLEL` is the property's original stream; it still receives every event because the Ads tag lists it as a destination, which double counts. Its 404 `gtag/js` was not why GA4 went quiet from 21 Jul to 24 Aug: the site's CSP blocked `region1.analytics.google.com`, fixed by PR #11. See SYSTEM-ARCHITECTURE.md §8.)* |
 | C4 | Enhanced Conversions enabled at config level | `gtag('config', 'AW-17978501655', { allow_enhanced_conversions: true })` — `layout.tsx:158`. |
 | C5 | Enhanced Conversions: hashed user_data sent on conversion events | Contact form: `gtag('set', 'user_data', { email, phone_number })` before fires (`ContactForm.tsx:73-76`). Payment success: same pattern (`smartspace-payment-success/page.tsx:78`). Google hashes client-side. |
 | C6 | Server-side validation of purchase value (anti-spoof) | `/api/verify-session` re-fetches Stripe to confirm `payment_status === "paid"` before the success page fires the conversion. Crafted `?session_id=fake` URL would fail. |

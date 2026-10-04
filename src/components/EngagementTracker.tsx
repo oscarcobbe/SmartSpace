@@ -71,23 +71,10 @@ export default function EngagementTracker() {
       (window.dataLayer ||= []).push(["event", name, payload] as unknown as Record<string, unknown>);
     };
 
-    /*
-     * One event that depends on nothing: not a scroll, not a click, not the
-     * tab being in front. It fires once per page as soon as this effect runs.
-     *
-     * It exists because none of the fourteen events below has appeared in GA4
-     * in twenty eight days across five hundred visits on two sites, and every
-     * attempt to reproduce that in a browser has been defeated by the test rig
-     * rather than by the code: the automated pane will not scroll the window
-     * and reports the tab as hidden, so the scroll and timer paths cannot be
-     * exercised there at all.
-     *
-     * If this appears in GA4 and the others do not, the component runs and the
-     * triggers are wrong. If this does not appear either, the component never
-     * runs on a real visitor's browser. Either answer arrives within hours and
-     * neither needs a person watching a listener fire.
-     */
-    send("fw_tracker_alive", { tracker_version: "2026-09-17" });
+    /* fw_tracker_alive, a diagnostic sent once per page from 17 September
+       2026 to prove this component ran on real visitors' browsers, was
+       removed on 4 October: it had answered that, and it was an extra event
+       on every page to GA4, Google Ads and the call conversion label. */
 
     /* Scroll depth. Next.js keeps the document between routes, so the marks
        reset per pathname through the effect's dependency rather than staying

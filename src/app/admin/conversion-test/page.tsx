@@ -276,8 +276,8 @@ export default function ConversionTestPage() {
           <dl className="grid sm:grid-cols-2 gap-3 text-sm">
             <div>
               <dt className="text-xs text-gray-500">window.gtag</dt>
-              <dd className={`font-mono ${gtagLoaded ? "text-emerald-600" : "text-red-600"}`}>
-                {gtagLoaded ? "✓ loaded" : "✗ NOT loaded"}
+              <dd className={`font-mono ${gtagLoaded ? "text-emerald-600" : "text-gray-700"}`}>
+                {gtagLoaded ? "✓ loaded" : "not loaded on staff pages, by design"}
               </dd>
             </div>
             <div>
@@ -348,31 +348,45 @@ export default function ConversionTestPage() {
           </div>
         </div>
 
-        {/* Fire buttons */}
+        {/* Fire buttons. Since 4 October 2026 no staff page loads Google's
+            tag (src/lib/staff-paths.ts), so these have no browser tag to fire
+            through here and say so rather than appearing to work. The server
+            buttons below are unaffected, and the browser path is exercised
+            against the built site by scripts/check-tracking-browser.mjs. */}
         <div className="bg-white rounded-xl shadow-sm p-5 mb-4">
           <h2 className="text-sm font-bold text-gray-700 mb-3">Fire test conversion</h2>
+          {!gtagLoaded && (
+            <p className="text-xs text-gray-500 mb-3">
+              Staff pages load no Google tag, so that nobody reading the admin pages is counted as a visitor,
+              and a browser-side test cannot fire from here. Use the server-side test below.
+            </p>
+          )}
           <div className="grid sm:grid-cols-2 gap-2">
             <button
               onClick={() => fire("lead")}
-              className="bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold py-2.5 rounded-lg"
+              disabled={!gtagLoaded}
+              className="disabled:opacity-50 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold py-2.5 rounded-lg"
             >
               Fire Lead (contact form)
             </button>
             <button
               onClick={() => fire("booking")}
-              className="bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold py-2.5 rounded-lg"
+              disabled={!gtagLoaded}
+              className="disabled:opacity-50 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold py-2.5 rounded-lg"
             >
               Fire Booking (book_appointment)
             </button>
             <button
               onClick={() => fire("free_consult")}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold py-2.5 rounded-lg"
+              disabled={!gtagLoaded}
+              className="disabled:opacity-50 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold py-2.5 rounded-lg"
             >
               Fire Free Consultation
             </button>
             <button
               onClick={() => fire("purchase")}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2.5 rounded-lg"
+              disabled={!gtagLoaded}
+              className="disabled:opacity-50 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2.5 rounded-lg"
             >
               Fire Purchase (€299)
             </button>
