@@ -25,6 +25,7 @@
  */
 import { spawn } from "node:child_process";
 import fs from "node:fs";
+import { hostname } from "node:os";
 
 const CHROME =
   process.env.CHROME_PATH || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
@@ -71,6 +72,7 @@ async function browser() {
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 let bad = 0;
+const failures = [];
 
 for (const site of SITES) {
   if (only && site.url !== only) continue;
@@ -95,11 +97,13 @@ for (const site of SITES) {
       console.log(`ok    ${site.name}: clicked an ad, read ${site.second}, accepted there, click id survived`);
     } else {
       console.error(`FAIL  ${site.name}: the click id was lost. Expected ${gclid}, ${site.key} holds ${JSON.stringify(stored).slice(0, 120)}`);
+      failures.push(`${site.name}: the click id was lost after reading ${site.second} and accepting there.`);
       console.error(`      Paid traffic is arriving and cannot be tied back to the ad. Google will not record these sales.`);
       bad++;
     }
   } catch (e) {
     console.error(`FAIL  ${site.name}: ${e.message}`);
+    failures.push(`${site.name}: the walk itself failed (${e.message.slice(0, 160)}), so the click id was not checked.`);
     bad++;
   } finally { b.close(); }
 }
@@ -115,8 +119,18 @@ if (bad && process.argv.includes("--alert")) {
   const to = process.env.ATTRIBUTION_ALERT_TO?.trim() || "oscar@fourwindsdigital.com";
   if (!key) console.error("(--alert given but RESEND_API_KEY is not set, so no email was sent)");
   else {
+    /*
+     * The alert used to give a count and nothing else. On 5 October 2026 one
+     * arrived at 18:22 Dublin saying "1 site(s)", while this Mac's own run that
+     * morning and a re-run that evening both passed, and nothing in it said
+     * which site failed, how, or which machine sent it (the old laptop still
+     * runs an old copy of the scheduler). Naming all three makes the next one
+     * answerable from the email alone.
+     */
     const body = [
       `${bad} site(s) are losing the Google click id on the way to the cookie banner.`,
+      "",
+      ...failures,
       "",
       "A visitor clicks an ad, reads a second page, accepts cookies there, and the",
       "click id is gone. Google will not record a conversion it cannot match to a",
@@ -125,6 +139,7 @@ if (bad && process.argv.includes("--alert")) {
       "",
       "Reproduce:  npm run check:attribution-live",
       "Checked at: " + new Date().toISOString(),
+      "Ran on:     " + hostname(),
     ].join("\n");
     try {
       const r = await fetch("https://api.resend.com/emails", {
