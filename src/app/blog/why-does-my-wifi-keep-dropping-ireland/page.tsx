@@ -203,7 +203,11 @@ export default function Post() {
         </p>
 
         <h2 id="fixes">How to stop Wi-Fi dropping, from free upwards</h2>
-        <p>Roughly in order of cost. Give each one a day or two to show whether it helped.</p>
+        <p>
+          Roughly in order of cost. Give each one a day or two to show whether it helped. For the fuller list of what
+          helps and what is a waste of money, see{" "}
+          <Link href="/blog/how-to-boost-wifi-signal-ireland">how to boost your Wi-Fi signal</Link>.
+        </p>
 
         <h3>1. Restart the router, and keep it updated</h3>
         <p>

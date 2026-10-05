@@ -68,7 +68,9 @@ export default function Post() {
         <p>
           Search for a way to get Wi-Fi upstairs and you will find extenders, boosters, mesh systems and powerline
           adapters, often side by side on the same shelf. They are not four versions of the same thing. Each moves the
-          connection around your house in a different way, and which one works depends on what is in the way.
+          connection around your house in a different way, and which one works depends on what is in the way. For the
+          wider picture of what helps and what is a waste of money, start with{" "}
+          <Link href="/blog/how-to-boost-wifi-signal-ireland">how to boost your Wi-Fi signal</Link>.
         </p>
 
         <h2 id="one-problem">Four products, one problem</h2>

@@ -165,7 +165,8 @@ export default function Post() {
         <p>
           The 5 GHz band avoids most of it, because, as NETGEAR explains, it has far more channels and fewer devices on
           them, though it does not carry as far through the house. This is the same crowding behind a lot of{" "}
-          <Link href="/blog/why-does-my-wifi-keep-dropping-ireland">Wi-Fi that drops in the evening</Link>.
+          <Link href="/blog/why-does-my-wifi-keep-dropping-ireland">Wi-Fi that drops in the evening</Link>, and it is
+          worst in flats, which our guide to{" "}<Link href="/blog/apartment-wifi-ireland">apartment Wi-Fi</Link> covers.
         </p>
 
         <h2 id="your-house">Your own house, all on at once</h2>

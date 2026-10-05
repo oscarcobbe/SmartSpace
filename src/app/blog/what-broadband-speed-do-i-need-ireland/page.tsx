@@ -211,7 +211,9 @@ export default function Post() {
           <a href="https://www.comreg.ie/broadbandchecker" rel="noopener">comreg.ie/broadbandchecker</a> lists the
           connections available by address or Eircode. ComReg describes full fibre as typically delivering up to 2 Gbps
           and cable up to 1 Gbps, while part-fibre speeds depend on how far you are from the street cabinet. In practice
-          most plans are sold around 100, 500 and 1,000 Mbps.
+          most plans are sold around 100, 500 and 1,000 Mbps. In rural areas the choice is different again, between fibre,
+          fixed wireless and satellite, which our guide to{" "}
+          <Link href="/blog/rural-broadband-ireland">rural broadband in Ireland</Link> covers.
         </p>
         <p>
           Whatever you pick, the contract has to state the minimum, normally available, maximum and advertised speeds.

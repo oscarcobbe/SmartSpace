@@ -24,6 +24,7 @@ const companyLinks = [
   { href: "/about", label: "About Us" },
   { href: "/reviews", label: "Reviews" },
   { href: "/blog", label: "Guides" },
+  { href: "/home-network", label: "Home Network Help" },
   { href: "/faq", label: "FAQs" },
   { href: "/areas", label: "Areas We Cover" },
   { href: "/contact", label: "Contact" },
