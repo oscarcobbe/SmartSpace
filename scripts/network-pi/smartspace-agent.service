@@ -1,0 +1,16 @@
+[Unit]
+Description=Smart Space assessment agent (calls in to smart-space.ie)
+After=network-online.target time-sync.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=smartspace
+ExecStart=/usr/bin/python3 /opt/smartspace-agent/agent.py
+Restart=always
+RestartSec=15
+Environment=PYTHONUNBUFFERED=1
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

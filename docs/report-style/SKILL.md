@@ -22,6 +22,20 @@ Template: https://raw.githubusercontent.com/oscarcobbe/SmartSpace/main/docs/repo
 4. Open the file in Chrome, then File > Print > Save as PDF, paper size A4. If the dark
    panel prints white, tick "Background graphics" under More settings.
 
+The sentences under the charts are written from the figures, so they only say what was
+measured. Leave a field out rather than guess it:
+
+- `trial.tests`, `trial.medianDown`, `trial.medianUp`, `trial.failed`, `trial.hours`: from the
+  three-day log. With them the trial section says how many hourly tests ran and which could not.
+- `trial.eveningComplaint: true` only when the customer said the trouble is worst in the evening.
+- `trial.roomOnTrial`: the compared room's speed on the trial network, if it was measured.
+- `trial.deviceSource: "checks"` when device drops come from the Pi's two-minute checks rather
+  than the Deco log.
+- `monitoring`: leave it empty and the monitoring line is left out.
+
+The CRM's assessment portal (smart-space.ie/crm/network/assessments) fills all of this from the
+visit and the logs, and drafts the report for Nigel to approve.
+
 If you are working in a Claude artifact, edit the `R` block in place rather than writing the
 page out again.
 
