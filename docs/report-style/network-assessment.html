@@ -269,6 +269,16 @@ const R = {
     ssid:"SmartSpace Trial",
     baselineDown:212,
     baselineUp:198,
+    // From the three-day log: the number of hourly tests, their medians, the
+    // hours the trial ran, and each hour whose test could not run, as
+    // { at:"Sat 21:10" }. With these the report says how many tests completed;
+    // without them it falls back to the baseline and dropouts below.
+    // tests:72, medianDown:208, medianUp:196, failed:[], hours:72,
+    // true only when they told you the trouble is worst in the evening.
+    eveningComplaint:true,
+    // The compared room's own speed on the trial network, measured with the
+    // phone after the install. Leave it out if it was not measured.
+    // roomOnTrial:180,
     // Paste from throughput.csv. hour is 0-23, one entry per reading.
     series: [
       {h:9,d:214,u:199},{h:10,d:210,u:201},{h:11,d:216,u:197},{h:12,d:208,u:195},
@@ -283,6 +293,8 @@ const R = {
     // The named problem devices moved onto the trial SSID for the three days.
     // "drops" lists the hour offsets (0-72) at which the Deco log shows the
     // device leaving the network. An empty list means it never dropped.
+    // When the drops come from the Pi's two-minute checks (devices.log)
+    // rather than the Deco log, add  deviceSource:"checks"  beside devices.
     devices:[
       { name:"Nest thermostat, hall",      was:"Hall router, weak",        node:"Second floor node", drops:[] },
       { name:"Bedroom television",         was:"Hall router, very weak",   node:"Second floor node", drops:[] },
@@ -370,7 +382,7 @@ const R = {
 
 <section>
   <div class="shead"><div class="n">5</div><div class="t"><h2>What your electrical wiring can carry</h2>
-    <p class="gloss">Several sockets were tested on each floor. Sockets a few feet apart can differ by a factor of three, depending which circuit they sit on.</p></div></div>
+    <p class="gloss" id="g-sockets">Several sockets were tested on each floor.</p></div></div>
   <div class="scroll"><table id="t-sockets"></table></div>
   <p class="soft small">Each figure above is a single measurement taken on the day, in Mbps. Only the floor carrying the trial system was monitored over three days.</p>
 </section>
@@ -433,6 +445,13 @@ const R = {
     if (v >= need)   return 'fair';
     return 'poor';
   }
+  // "the back bedroom" from "Back bedroom", leaving "your kitchen" or "the hall" as they are.
+  const the = label => { const l = label.charAt(0).toLowerCase() + label.slice(1); return /^(the|your|a|an)\b/.test(l) ? l : 'the ' + l; };
+  // "three days", from how many hours the trial ran. Three days when not given.
+  function spanWords(hours){
+    const days = hours ? Math.max(1, Math.round(hours/24)) : 3;
+    return ['','one day','two days','three days','four days','five days','six days','seven days'][days] || days+' days';
+  }
   const col  = b => C[b];          // fill for bars and lamps
   const colT = b => C[b+'Text'];   // darker shade for numbers on white
 
@@ -476,12 +495,19 @@ const R = {
     });
     s += `</svg>`;
     $('c-cascade').innerHTML = s;
-    const last = d[d.length-1], first = d[0];
-    const pct = Math.round(100 - (last.value/first.value*100));
-    $('cap-cascade').textContent =
-      `By the time it reaches ${last.label.toLowerCase()}, ${pct}% of the speed you pay for has `
-      + `been lost inside the house. None of it is lost on the line itself. The grey shows what `
-      + `is lost at each step.`;
+    // The first stage is what they pay for and the second is the line, measured at the
+    // router, so the line's share and the house's share are said separately.
+    const last = d[d.length-1], first = d[0], line = d.length > 2 ? d[1] : null;
+    let cap = '';
+    if (line) {
+      cap += `Your line delivers ${line.value} of the ${first.value} Mbps you pay for, measured on a cable at the router. `;
+      const lost = Math.round(100 - (last.value/Math.max(1,line.value))*100);
+      if (lost >= 1) cap += `By the time it reaches ${the(last.label)}, ${lost}% of that has been lost inside the house. `;
+    } else {
+      const lost = Math.round(100 - (last.value/Math.max(1,first.value))*100);
+      if (lost >= 1) cap += `By the time it reaches ${the(last.label)}, ${lost}% of the speed you pay for has been lost. `;
+    }
+    $('cap-cascade').textContent = cap + `The grey shows what is lost at each step.`;
   })();
 
   // ---------- 3. line ----------
@@ -561,35 +587,73 @@ const R = {
       <tr>
         <td>${esc(x.floor)}</td>
         <td>${esc(x.socket)}${x.chosen?' <span class="pill chosen">Chosen</span>':''}</td>
-        <td class="n">${x.down}</td>
-        <td class="n">${x.up}</td>
+        <td class="n">${x.down==null?'':x.down}</td>
+        <td class="n">${x.up==null?'':x.up}</td>
       </tr>`).join('');
     $('t-sockets').innerHTML =
       `<tr><th>Floor</th><th>Socket tested</th><th class="n">To the room</th><th class="n">From the room</th></tr>${rows}`;
+
+    // What was actually tested, rather than a claim about every house.
+    const byFloor = {};
+    R.sockets.forEach(x => { (byFloor[x.floor] = byFloor[x.floor] || []).push(x); });
+    const floors = Object.keys(byFloor);
+    let g = `${R.sockets.length} socket${R.sockets.length===1?' was':'s were'} tested`
+          + (floors.length > 1 ? ` across ${floors.length} floors.` : '.');
+    if (floors.length > 1 && floors.every(f => byFloor[f].length > 1)) g = 'Several sockets were tested on each floor.';
+    let spread = null;
+    floors.forEach(f => {
+      const v = byFloor[f].map(x => x.down).filter(n => typeof n === 'number');
+      if (v.length > 1) {
+        const lo = Math.min(...v), hi = Math.max(...v);
+        if (!spread || hi/Math.max(1,lo) > spread.r) spread = { f, lo, hi, r: hi/Math.max(1,lo) };
+      }
+    });
+    if (spread && spread.r >= 1.5) g += ` On the ${spread.f.toLowerCase()} they ran from ${spread.lo} to ${spread.hi} Mbps.`;
+    $('g-sockets').textContent = g;
   })();
 
   // ---------- 6. trial ----------
   (function(){
     const T = R.trial;
-    const worst = R.rooms.find(x => x.room === T.compareRoom)
-               || R.rooms.reduce((a,b)=>a.speed<b.speed?a:b);
-    const mult = Math.round(T.baselineDown / Math.max(1,worst.speed));
+    const rooms = R.rooms || [];
+    const worst = rooms.find(x => x.room === T.compareRoom)
+               || (rooms.length ? rooms.reduce((a,b)=>a.speed<b.speed?a:b) : null);
+    const span = spanWords(T.hours);
+
+    // Each sentence below says only what was measured. The link feeding the trial
+    // system and the Wi-Fi in a room are different measurements, so they are never
+    // set against each other; the room is compared with the room.
+    let p2 = '';
+    if (T.roomOnTrial != null && worst) {
+      p2 += `In the ${esc(worst.room.toLowerCase())} it measured <strong>${T.roomOnTrial} Mbps</strong>, `
+         + `against ${worst.speed} Mbps on your existing Wi-Fi. `;
+    }
+    if (T.medianDown != null && T.tests) {
+      const failed = T.failed || [];
+      p2 += `The connection feeding it carried a median of <strong>${T.medianDown} Mbps</strong> to that floor`
+         + (T.medianUp != null ? ` and ${T.medianUp} Mbps back` : '')
+         + `, across ${T.tests} hourly tests. `
+         + (failed.length
+             ? `${failed.length} of them did not complete: ${failed.map(f => esc(f.at)).join(', ')}.`
+             : `Every one of them completed.`);
+    } else if (T.baselineDown != null) {
+      p2 += `Before the trial began, the connection to that floor measured <strong>${T.baselineDown} Mbps</strong>`
+         + (T.baselineUp != null ? ` to the room and ${T.baselineUp} Mbps back.` : '.');
+      if (T.dropouts != null) p2 += T.dropouts===0 ? ' None of the hourly tests failed.' : ` ${T.dropouts} of the hourly tests failed.`;
+    }
     $('m-trial').innerHTML = `
       <p>A working system was installed on the ${esc(T.where.toLowerCase())} and left running for
-      three days on its own network, <em>${esc(T.ssid)}</em>, with your existing Wi-Fi switched on
+      ${span} on its own network, <em>${esc(T.ssid)}</em>, with your existing Wi-Fi switched on
       beside it so you could move between the two. It was measured every hour, in both directions,
-      and removed on ${esc(R.collectDate)}.</p>
-      <p>It delivered <strong>${T.baselineDown} Mbps</strong> into a room that had been getting
-      ${worst.speed} Mbps, roughly ${mult} times as much, and recorded
-      <strong>${T.dropouts===0?'no dropouts at all':T.dropouts+' dropouts'}</strong> over the
-      three days.</p>`;
+      and removed on ${esc(R.collectDate)}.</p>` + (p2 ? `<p>${p2}</p>` : '');
 
-    const d=T.series;
+    const d=T.series.filter(x => typeof x.d === 'number' && typeof x.u === 'number');
+    if (d.length >= 2) {
     const w=820,h=320,padL=48,padR=12,padT=14,padB=74;
     const max=Math.ceil(Math.max(...d.map(x=>Math.max(x.d,x.u)))/50)*50;
     const X=i=>padL+(i/(d.length-1))*(w-padL-padR);
     const Y=v=>padT+(1-v/max)*(h-padT-padB);
-    let s=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Throughput measured every hour over three days">`;
+    let s=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Throughput measured every hour over ${span}">`;
     // evening band
     const evIdx = d.map((x,i)=>({x,i})).filter(o=>o.x.h>=18&&o.x.h<23).map(o=>o.i);
     if(evIdx.length){
@@ -616,12 +680,23 @@ const R = {
     const ev=d.filter(x=>x.h>=18&&x.h<23).map(x=>x.d);
     const rest=d.filter(x=>!(x.h>=18&&x.h<23)).map(x=>x.d);
     const avg=a=>a.reduce((p,c)=>p+c,0)/a.length;
-    const drop=Math.round((1-avg(ev)/avg(rest))*100);
-    $('cap-trial').textContent =
-      `Measured every hour, in Mbps. The shaded band is the evening, when you told us the trouble `
-      + `happens. Throughput eased by ${drop}% at peak and never fell below `
-      + `${Math.min(...d.map(x=>x.d))} Mbps, which is still ${Math.round(Math.min(...d.map(x=>x.d))/R.roomsNeed)} `
-      + `times what a 4K stream needs.`;
+    let cap = 'Measured every hour, in Mbps.';
+    if (ev.length && rest.length) {
+      const drop=Math.round((1-avg(ev)/avg(rest))*100);
+      // "when you told us" only when they did: eveningComplaint is set from what they said.
+      cap += ` The shaded band is the evening, 18:00 to 23:00${T.eveningComplaint ? ', when you told us the trouble happens' : ''}.`;
+      cap += drop >= 1 ? ` Throughput to the room eased by ${drop}% in the evening`
+           : drop <= -1 ? ` Throughput to the room rose by ${-drop}% in the evening`
+           : ` Throughput to the room held steady in the evening`;
+      const low = T.lowest != null ? T.lowest : Math.min(...d.map(x=>x.d));
+      const times = Math.floor(low / R.roomsNeed);
+      cap += ` and never fell below ${low} Mbps` + (times >= 2 ? `, ${times} times what one 4K stream needs.` : '.');
+    }
+    $('cap-trial').textContent = cap;
+    } else {
+      // No hourly readings to draw: leave the chart out rather than draw an empty frame.
+      const fig = $('c-trial').closest('figure'); if (fig) fig.remove();
+    }
 
     $('m-quote').innerHTML = R.quote
       ? `<blockquote>“${esc(R.quote)}”<cite>${esc(R.client)}, at collection</cite></blockquote>` : '';
@@ -634,30 +709,40 @@ const R = {
 
     const clean = d.filter(x=>!x.drops || !x.drops.length).length;
     const totalDrops = d.reduce((p,x)=>p+((x.drops||[]).length),0);
+    const hours = T.hours || 72, span = spanWords(T.hours);
+    // "checks": the trial system asked each device every two minutes (devices.log).
+    // Otherwise the drops were read from the equipment's own join and leave log.
+    const viaChecks = T.deviceSource === 'checks';
 
     $('m-devices').innerHTML = `
       <p>The devices you told us about were moved onto the trial network at the first
-      visit, and the rest of the house was left on your own Wi-Fi. The equipment keeps
-      its own record of every time a device joins or leaves, so this is what it logged
-      over the three days, not something we observed.</p>
-      <p>${clean} of ${d.length} stayed connected for the full 72 hours without dropping once.
+      visit, and the rest of the house was left on your own Wi-Fi. ${viaChecks
+        ? 'Every two minutes, the trial system checked whether each of these devices was still connected. This is what it recorded, not something we observed.'
+        : `The equipment keeps its own record of every time a device joins or leaves, so this is what it logged over the ${span}, not something we observed.`}</p>
+      <p>${d.length === 1
+        ? (clean ? `${esc(d[0].name)} ${viaChecks ? 'answered every check' : 'stayed connected without dropping once'} for ${hours===72 ? 'the full 72 hours' : `all ${Math.round(hours)} hours`}.` : '')
+        : `${clean} of ${d.length} ${viaChecks ? 'answered every check' : 'stayed connected without dropping once'} for ${hours===72 ? 'the full 72 hours' : `all ${Math.round(hours)} hours`}.`}
       ${totalDrops===0
-        ? 'Nothing left the network at any point.'
+        ? (viaChecks ? 'No device missed a check.' : 'Nothing left the network at any point.')
         : 'There ' + (totalDrops===1?'was one drop':'were '+totalDrops+' drops') + ' in total, marked below.'}
-      You had told us this was happening ${esc(T.devicesBefore||'regularly')}.</p>`;
+      ${T.devicesBefore ? `You had told us this was happening ${esc(T.devicesBefore)}.` : ''}</p>`;
 
     const w=820, rowH=58, h=d.length*rowH+34;
-    const barX=290, barW=w-barX-90, hours=72;
-    let s2=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Connection record for each device over three days">`;
-    // day dividers
-    for(let day=1; day<3; day++){
-      const x = barX + (day*24/hours)*barW;
-      s2+=`<line x1="${x}" y1="4" x2="${x}" y2="${d.length*rowH}" stroke="${C.rule}" stroke-width="1.5"/>`;
-    }
-    [0,24,48,72].forEach(hr=>{
+    const barX=290, barW=w-barX-90;
+    let s2=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Connection record for each device over ${span}">`;
+    // day dividers, one at each full day
+    const marks = [0];
+    for (let hr = 24; hr < hours - 12; hr += 24) marks.push(hr);
+    marks.push(hours);
+    marks.slice(1, -1).forEach(hr=>{
       const x = barX + (hr/hours)*barW;
-      const lab = hr===0?'installed':hr===72?'collected':'day '+(hr/24+1);
-      s2+=`<text x="${x}" y="${d.length*rowH+22}" text-anchor="${hr===0?'start':hr===72?'end':'middle'}" font-size="13" fill="${C.soft}">${lab}</text>`;
+      s2+=`<line x1="${x}" y1="4" x2="${x}" y2="${d.length*rowH}" stroke="${C.rule}" stroke-width="1.5"/>`;
+    });
+    marks.forEach((hr,i)=>{
+      const x = barX + (hr/hours)*barW;
+      const end = i === marks.length-1;
+      const lab = hr===0?'installed':end?'collected':'day '+(hr/24+1);
+      s2+=`<text x="${x}" y="${d.length*rowH+22}" text-anchor="${hr===0?'start':end?'end':'middle'}" font-size="13" fill="${C.soft}">${lab}</text>`;
     });
     d.forEach((x,i)=>{
       const y=i*rowH+6;
@@ -683,9 +768,10 @@ const R = {
     $('c-devices').innerHTML=s2;
 
     $('cap-devices').textContent =
-      'Each bar is one device, read left to right across the three days. A solid bar means the '
-      + 'device stayed connected the whole time. A red mark is a moment the system recorded it '
-      + 'leaving the network.'
+      `Each bar is one device, read left to right across the ${span}. A solid bar means the device `
+      + (viaChecks
+          ? 'answered every check. A red mark is a check it did not answer.'
+          : 'stayed connected the whole time. A red mark is a moment the system recorded it leaving the network.')
       + (T.logExported ? ' Taken from the equipment’s own log, a copy of which is attached.' : '');
   })();
 
@@ -698,6 +784,9 @@ const R = {
 
   // ---------- 9. money ----------
   (function(){
+    $('m-foot').textContent=`Prepared by ${R.engineer} and issued on ${R.reportDate}. Every figure here was measured in your house, and can be measured again on request.`;
+    // No work quoted, as when the honest answer is no: there is nothing to cost.
+    if (!R.quoteLines || !R.quoteLines.length) { const sec = $('t-quote').closest('section'); if (sec) sec.remove(); return; }
     const rows=R.quoteLines.map(x=>`<tr><td>${esc(x.item)}</td><td class="n">${esc(x.amount)}</td></tr>`).join('');
     $('t-quote').innerHTML=`
       <tr><th>Item</th><th class="n">Amount</th></tr>
@@ -705,8 +794,9 @@ const R = {
       <tr><td>Total, including VAT</td><td class="n">${esc(R.quoteTotal)}</td></tr>
       <tr><td>Assessment fee already paid, credited in full</td><td class="n">${esc(R.credited)}</td></tr>
       <tr class="total"><td>Balance if you go ahead</td><td class="n">${esc(R.balance)}</td></tr>`;
-    $('m-monitoring').textContent='Ongoing monitoring: '+R.monitoring+'. It watches the line and the devices you name, and tells us before you notice.';
-    $('m-foot').textContent=`Prepared by ${R.engineer} and issued on ${R.reportDate}. Every figure here was measured in your house, and can be measured again on request.`;
+    // No monitoring line at all unless a price for it has been settled and written in.
+    if (R.monitoring) $('m-monitoring').textContent='Ongoing monitoring: '+R.monitoring+'. It watches the line and the devices you name, and tells us before you notice.';
+    else $('m-monitoring').remove();
   })();
 })();
 </script>

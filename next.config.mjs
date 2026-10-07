@@ -5,6 +5,13 @@ const nextConfig = {
   // deps, race conditions) BEFORE they hit production. No runtime cost
   // in production builds — strict mode only double-invokes in dev.
   reactStrictMode: true,
+  // The network assessment report template, imported as text by
+  // src/lib/network/report.ts, so the CRM draws every report from the same
+  // file Nigel's own Claude reads for the house style.
+  webpack(config) {
+    config.module.rules.push({ test: /network-assessment\.html$/, type: "asset/source" });
+    return config;
+  },
   images: {
     remotePatterns: [
       {

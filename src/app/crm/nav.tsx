@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { Activity, BadgeCheck, BarChart3, CalendarDays, CheckSquare, Euro, Home, Mail, Megaphone, Receipt, Send, Users, Wifi } from "lucide-react";
+import { Activity, BadgeCheck, BarChart3, CalendarDays, CheckSquare, ClipboardList, Cpu, Euro, Home, Mail, Megaphone, Receipt, Send, Users, Wifi } from "lucide-react";
 import type { Site } from "@/lib/crm/db";
 
 /**
@@ -64,6 +64,8 @@ const GROUPS: { heading: string; items: { href: string; label: string; icon: typ
   {
     heading: "Network service",
     items: [
+      { href: "/crm/network/assessments", label: "Assessments", icon: ClipboardList, sites: ["smart-space"] },
+      { href: "/crm/network/pis", label: "Pis", icon: Cpu, sites: ["smart-space"] },
       { href: "/crm/network", label: "Pages and Wi-Fi check", icon: Wifi, sites: ["smart-space"] },
     ],
   },
@@ -77,10 +79,13 @@ const GROUPS: { heading: string; items: { href: string; label: string; icon: typ
   },
 ];
 
+/* Pages that are also the parent of other sections: only an exact match
+   lights them, or Overview would light up on every page and "Pages and Wi-Fi
+   check" on every assessment. */
+const EXACT = new Set(["/crm", "/crm/network"]);
+
 const isActive = (path: string | null, href: string) =>
-  /* "/crm" is a real page now, not a prefix, so the exact test has to come
-     first or Overview would light up on every section beneath it. */
-  href === "/crm" ? path === "/crm" : path === href || Boolean(path?.startsWith(`${href}/`));
+  EXACT.has(href) ? path === href : path === href || Boolean(path?.startsWith(`${href}/`));
 
 export default function CrmNav({ site, horizontal = false }: { site: Site; horizontal?: boolean }) {
   const path = usePathname();

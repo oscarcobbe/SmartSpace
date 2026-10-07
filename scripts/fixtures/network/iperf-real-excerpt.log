@@ -1,0 +1,605 @@
+Fri  2 Oct 13:01:37 IST 2026
+Connecting to host smartspace-server.local, port 5201
+[  5] local 192.168.1.23 port 39788 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+[  5]   0.00-1.00   sec  12.2 MBytes   103 Mbits/sec    0    478 KBytes       
+[  5]   1.00-2.00   sec  10.4 MBytes  87.0 Mbits/sec    0    515 KBytes       
+[  5]   2.00-3.00   sec  10.6 MBytes  89.1 Mbits/sec    0    515 KBytes       
+[  5]   3.00-4.00   sec  10.9 MBytes  91.2 Mbits/sec    0    540 KBytes       
+[  5]   4.00-5.00   sec  9.75 MBytes  81.8 Mbits/sec    0    540 KBytes       
+[  5]   5.00-6.00   sec  11.0 MBytes  92.3 Mbits/sec    0    540 KBytes       
+[  5]   6.00-7.00   sec  10.9 MBytes  91.2 Mbits/sec    0    540 KBytes       
+[  5]   7.00-8.00   sec  11.1 MBytes  93.3 Mbits/sec    0    540 KBytes       
+[  5]   8.00-9.00   sec  11.0 MBytes  92.3 Mbits/sec    0    540 KBytes       
+[  5]   9.00-10.00  sec  10.9 MBytes  91.1 Mbits/sec    0    540 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec   109 MBytes  91.2 Mbits/sec    0            sender
+[  5]   0.00-10.02  sec   106 MBytes  88.8 Mbits/sec                  receiver
+
+iperf Done.
+Fri  2 Oct 13:10:01 IST 2026
+Connecting to host smartspace-server.local, port 5201
+[  5] local 192.168.1.23 port 42988 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+[  5]   0.00-1.00   sec  11.2 MBytes  94.3 Mbits/sec    0    410 KBytes       
+[  5]   1.00-2.00   sec  10.5 MBytes  88.1 Mbits/sec    0    419 KBytes       
+[  5]   2.00-3.00   sec  10.5 MBytes  88.1 Mbits/sec    0    438 KBytes       
+[  5]   3.00-4.00   sec  10.9 MBytes  91.2 Mbits/sec    0    461 KBytes       
+[  5]   4.00-5.00   sec  11.2 MBytes  94.4 Mbits/sec    0    461 KBytes       
+[  5]   5.00-6.00   sec  10.4 MBytes  87.0 Mbits/sec    0    461 KBytes       
+[  5]   6.00-7.00   sec  11.4 MBytes  95.4 Mbits/sec    0    461 KBytes       
+[  5]   7.00-8.00   sec  10.4 MBytes  87.0 Mbits/sec    0    461 KBytes       
+[  5]   8.00-9.00   sec  10.8 MBytes  90.2 Mbits/sec    0    485 KBytes       
+[  5]   9.00-10.00  sec  12.0 MBytes   101 Mbits/sec    0    485 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec   109 MBytes  91.6 Mbits/sec    0            sender
+[  5]   0.00-10.02  sec   107 MBytes  89.3 Mbits/sec                  receiver
+
+iperf Done.
+Fri  2 Oct 14:10:01 IST 2026
+Connecting to host smartspace-server.local, port 5201
+[  5] local 192.168.1.23 port 42902 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+[  5]   0.00-1.00   sec  10.8 MBytes  90.1 Mbits/sec    0    379 KBytes       
+[  5]   1.00-2.00   sec  9.38 MBytes  78.6 Mbits/sec    0    379 KBytes       
+[  5]   2.00-3.00   sec  10.4 MBytes  87.0 Mbits/sec    0    379 KBytes       
+[  5]   3.00-4.00   sec  10.5 MBytes  88.1 Mbits/sec    0    399 KBytes       
+[  5]   4.00-5.00   sec  10.5 MBytes  88.1 Mbits/sec    0    414 KBytes       
+[  5]   5.00-6.00   sec  10.6 MBytes  89.1 Mbits/sec    0    420 KBytes       
+[  5]   6.00-7.00   sec  10.5 MBytes  88.1 Mbits/sec    0    420 KBytes       
+[  5]   7.00-8.00   sec  10.5 MBytes  88.1 Mbits/sec    0    420 KBytes       
+[  5]   8.00-9.00   sec  11.2 MBytes  94.4 Mbits/sec    0    420 KBytes       
+[  5]   9.00-10.00  sec  10.5 MBytes  88.0 Mbits/sec    0    420 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec   105 MBytes  88.0 Mbits/sec    0            sender
+[  5]   0.00-10.02  sec   104 MBytes  86.6 Mbits/sec                  receiver
+
+iperf Done.
+Fri  2 Oct 15:10:01 IST 2026
+Connecting to host smartspace-server.local, port 5201
+[  5] local 192.168.1.23 port 56466 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+[  5]   0.00-1.00   sec  9.38 MBytes  78.6 Mbits/sec    0    368 KBytes       
+[  5]   1.00-2.00   sec  8.88 MBytes  74.4 Mbits/sec    0    400 KBytes       
+[  5]   2.00-3.00   sec  10.5 MBytes  88.1 Mbits/sec    0    444 KBytes       
+[  5]   3.00-4.00   sec  10.6 MBytes  89.1 Mbits/sec    0    469 KBytes       
+[  5]   4.00-5.00   sec  10.5 MBytes  88.1 Mbits/sec    0    469 KBytes       
+[  5]   5.00-6.00   sec  10.4 MBytes  87.0 Mbits/sec    0    469 KBytes       
+[  5]   6.00-7.00   sec  11.5 MBytes  96.5 Mbits/sec    0    469 KBytes       
+[  5]   7.00-8.00   sec  10.5 MBytes  88.1 Mbits/sec    0    469 KBytes       
+[  5]   8.00-9.00   sec  10.5 MBytes  88.1 Mbits/sec    0    469 KBytes       
+[  5]   9.00-10.00  sec  11.4 MBytes  95.3 Mbits/sec    0    469 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec   104 MBytes  87.3 Mbits/sec    0            sender
+[  5]   0.00-10.02  sec   102 MBytes  85.5 Mbits/sec                  receiver
+
+iperf Done.
+--- reverse ---
+Connecting to host smartspace-server.local, port 5201
+Reverse mode, remote host smartspace-server.local is sending
+[  5] local 192.168.1.23 port 37690 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-1.00   sec  5.62 MBytes  47.2 Mbits/sec                  
+[  5]   1.00-2.00   sec  5.25 MBytes  44.0 Mbits/sec                  
+[  5]   2.00-3.00   sec  5.00 MBytes  41.9 Mbits/sec                  
+[  5]   3.00-4.00   sec  5.00 MBytes  41.9 Mbits/sec                  
+[  5]   4.00-5.00   sec  5.00 MBytes  41.9 Mbits/sec                  
+[  5]   5.00-6.00   sec  4.75 MBytes  39.8 Mbits/sec                  
+[  5]   6.00-7.00   sec  5.50 MBytes  46.1 Mbits/sec                  
+[  5]   7.00-8.00   sec  5.25 MBytes  44.0 Mbits/sec                  
+[  5]   8.00-9.00   sec  5.62 MBytes  47.2 Mbits/sec                  
+[  5]   9.00-10.00  sec  5.75 MBytes  48.2 Mbits/sec                  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.01  sec  53.1 MBytes  44.5 Mbits/sec  212            sender
+[  5]   0.00-10.00  sec  52.8 MBytes  44.2 Mbits/sec                  receiver
+
+iperf Done.
+Fri  2 Oct 16:10:01 IST 2026
+--- down ---
+Connecting to host smartspace-server.local, port 5201
+Reverse mode, remote host smartspace-server.local is sending
+[  5] local 192.168.1.23 port 37358 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-1.00   sec  3.62 MBytes  30.4 Mbits/sec                  
+[  5]   1.00-2.00   sec  4.00 MBytes  33.6 Mbits/sec                  
+[  5]   2.00-3.00   sec  4.50 MBytes  37.7 Mbits/sec                  
+[  5]   3.00-4.00   sec  4.50 MBytes  37.7 Mbits/sec                  
+[  5]   4.00-5.00   sec  3.88 MBytes  32.5 Mbits/sec                  
+[  5]   5.00-6.00   sec  5.12 MBytes  43.0 Mbits/sec                  
+[  5]   6.00-7.00   sec  4.75 MBytes  39.8 Mbits/sec                  
+[  5]   7.00-8.00   sec  4.62 MBytes  38.8 Mbits/sec                  
+[  5]   8.00-9.00   sec  5.12 MBytes  43.0 Mbits/sec                  
+[  5]   9.00-10.00  sec  4.75 MBytes  39.8 Mbits/sec                  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec  45.8 MBytes  38.4 Mbits/sec  224            sender
+[  5]   0.00-10.00  sec  44.9 MBytes  37.6 Mbits/sec                  receiver
+
+iperf Done.
+--- up ---
+Connecting to host smartspace-server.local, port 5201
+[  5] local 192.168.1.23 port 57938 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+[  5]   0.00-1.00   sec  10.9 MBytes  91.1 Mbits/sec    0    404 KBytes       
+[  5]   1.00-2.00   sec  11.1 MBytes  93.3 Mbits/sec    0    451 KBytes       
+[  5]   2.00-3.00   sec  11.2 MBytes  94.4 Mbits/sec    0    451 KBytes       
+[  5]   3.00-4.00   sec  10.4 MBytes  87.0 Mbits/sec    0    472 KBytes       
+[  5]   4.00-5.00   sec  11.1 MBytes  93.4 Mbits/sec    0    495 KBytes       
+[  5]   5.00-6.00   sec  11.2 MBytes  94.3 Mbits/sec    0    495 KBytes       
+[  5]   6.00-7.00   sec  12.0 MBytes   101 Mbits/sec    0    495 KBytes       
+[  5]   7.00-8.00   sec  11.0 MBytes  92.3 Mbits/sec    0    495 KBytes       
+[  5]   8.00-9.00   sec  10.0 MBytes  83.9 Mbits/sec    0    522 KBytes       
+[  5]   9.00-10.00  sec  11.8 MBytes  98.5 Mbits/sec    0    522 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec   111 MBytes  92.9 Mbits/sec    0            sender
+[  5]   0.00-10.02  sec   108 MBytes  90.7 Mbits/sec                  receiver
+
+iperf Done.
+Fri  2 Oct 17:10:01 IST 2026
+--- down ---
+Connecting to host smartspace-server.local, port 5201
+Reverse mode, remote host smartspace-server.local is sending
+[  5] local 192.168.1.23 port 42372 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-1.00   sec  4.62 MBytes  38.8 Mbits/sec                  
+[  5]   1.00-2.00   sec  4.38 MBytes  36.7 Mbits/sec                  
+[  5]   2.00-3.00   sec  4.12 MBytes  34.6 Mbits/sec                  
+[  5]   3.00-4.00   sec  4.38 MBytes  36.7 Mbits/sec                  
+[  5]   4.00-5.00   sec  4.12 MBytes  34.6 Mbits/sec                  
+[  5]   5.00-6.00   sec  4.62 MBytes  38.8 Mbits/sec                  
+[  5]   6.00-7.00   sec  4.25 MBytes  35.7 Mbits/sec                  
+[  5]   7.00-8.00   sec  4.50 MBytes  37.7 Mbits/sec                  
+[  5]   8.00-9.00   sec  5.38 MBytes  45.1 Mbits/sec                  
+[  5]   9.00-10.00  sec  4.88 MBytes  40.9 Mbits/sec                  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.01  sec  46.1 MBytes  38.7 Mbits/sec  239            sender
+[  5]   0.00-10.00  sec  45.2 MBytes  38.0 Mbits/sec                  receiver
+
+iperf Done.
+--- up ---
+Connecting to host smartspace-server.local, port 5201
+[  5] local 192.168.1.23 port 54706 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+[  5]   0.00-1.00   sec  10.2 MBytes  85.9 Mbits/sec    0    409 KBytes       
+[  5]   1.00-2.00   sec  9.88 MBytes  82.9 Mbits/sec    0    457 KBytes       
+[  5]   2.00-3.00   sec  12.2 MBytes   103 Mbits/sec    0    503 KBytes       
+[  5]   3.00-4.00   sec  10.4 MBytes  87.1 Mbits/sec    0    503 KBytes       
+[  5]   4.00-5.00   sec  10.4 MBytes  86.9 Mbits/sec    0    503 KBytes       
+[  5]   5.00-6.00   sec  11.1 MBytes  93.3 Mbits/sec    0    503 KBytes       
+[  5]   6.00-7.00   sec  11.2 MBytes  94.4 Mbits/sec    0    503 KBytes       
+[  5]   7.00-8.00   sec  10.4 MBytes  87.0 Mbits/sec    0    503 KBytes       
+[  5]   8.00-9.00   sec  11.1 MBytes  93.3 Mbits/sec    0    503 KBytes       
+[  5]   9.00-10.00  sec  12.1 MBytes   102 Mbits/sec    0    503 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec   110 MBytes  92.3 Mbits/sec    0            sender
+[  5]   0.00-10.02  sec   107 MBytes  89.8 Mbits/sec                  receiver
+
+iperf Done.
+Fri  2 Oct 18:10:01 IST 2026
+--- down ---
+Connecting to host smartspace-server.local, port 5201
+Reverse mode, remote host smartspace-server.local is sending
+[  5] local 192.168.1.23 port 57354 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-1.00   sec  4.38 MBytes  36.7 Mbits/sec                  
+[  5]   1.00-2.00   sec  4.38 MBytes  36.7 Mbits/sec                  
+[  5]   2.00-3.00   sec  5.25 MBytes  44.0 Mbits/sec                  
+[  5]   3.00-4.00   sec  4.75 MBytes  39.8 Mbits/sec                  
+[  5]   4.00-5.00   sec  4.75 MBytes  39.9 Mbits/sec                  
+[  5]   5.00-6.00   sec  4.62 MBytes  38.8 Mbits/sec                  
+[  5]   6.00-7.00   sec  4.62 MBytes  38.8 Mbits/sec                  
+[  5]   7.00-8.00   sec  5.00 MBytes  42.0 Mbits/sec                  
+[  5]   8.00-9.00   sec  5.00 MBytes  41.9 Mbits/sec                  
+[  5]   9.00-10.00  sec  5.38 MBytes  45.1 Mbits/sec                  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec  48.8 MBytes  40.9 Mbits/sec  249            sender
+[  5]   0.00-10.00  sec  48.1 MBytes  40.4 Mbits/sec                  receiver
+
+iperf Done.
+--- up ---
+Connecting to host smartspace-server.local, port 5201
+[  5] local 192.168.1.23 port 38518 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+[  5]   0.00-1.00   sec  11.6 MBytes  97.4 Mbits/sec    0    397 KBytes       
+[  5]   1.00-2.00   sec  10.0 MBytes  83.9 Mbits/sec    0    417 KBytes       
+[  5]   2.00-3.00   sec  10.6 MBytes  89.1 Mbits/sec    0    438 KBytes       
+[  5]   3.00-4.00   sec  10.6 MBytes  89.1 Mbits/sec    0    461 KBytes       
+[  5]   4.00-5.00   sec  10.6 MBytes  89.1 Mbits/sec    0    461 KBytes       
+[  5]   5.00-6.00   sec  11.5 MBytes  96.5 Mbits/sec    0    461 KBytes       
+[  5]   6.00-7.00   sec  11.2 MBytes  94.4 Mbits/sec    0    461 KBytes       
+[  5]   7.00-8.00   sec  10.4 MBytes  87.0 Mbits/sec    0    461 KBytes       
+[  5]   8.00-9.00   sec  10.5 MBytes  88.1 Mbits/sec    0    461 KBytes       
+[  5]   9.00-10.00  sec  10.5 MBytes  88.0 Mbits/sec    0    461 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec   108 MBytes  90.3 Mbits/sec    0            sender
+[  5]   0.00-10.03  sec   105 MBytes  88.0 Mbits/sec                  receiver
+
+iperf Done.
+Fri  2 Oct 19:10:01 IST 2026
+--- down ---
+Connecting to host smartspace-server.local, port 5201
+Reverse mode, remote host smartspace-server.local is sending
+[  5] local 192.168.1.23 port 38736 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-1.00   sec  4.38 MBytes  36.7 Mbits/sec                  
+[  5]   1.00-2.00   sec  4.62 MBytes  38.8 Mbits/sec                  
+[  5]   2.00-3.00   sec  4.62 MBytes  38.8 Mbits/sec                  
+[  5]   3.00-4.00   sec  5.38 MBytes  45.1 Mbits/sec                  
+[  5]   4.00-5.00   sec  4.88 MBytes  40.9 Mbits/sec                  
+[  5]   5.00-6.00   sec  4.25 MBytes  35.7 Mbits/sec                  
+[  5]   6.00-7.00   sec  4.50 MBytes  37.7 Mbits/sec                  
+[  5]   7.00-8.00   sec  5.00 MBytes  41.9 Mbits/sec                  
+[  5]   8.00-9.00   sec  5.12 MBytes  43.0 Mbits/sec                  
+[  5]   9.00-10.00  sec  5.38 MBytes  45.1 Mbits/sec                  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.01  sec  49.1 MBytes  41.2 Mbits/sec  266            sender
+[  5]   0.00-10.00  sec  48.1 MBytes  40.4 Mbits/sec                  receiver
+
+iperf Done.
+--- up ---
+Connecting to host smartspace-server.local, port 5201
+[  5] local 192.168.1.23 port 58918 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+[  5]   0.00-1.00   sec  11.8 MBytes  98.5 Mbits/sec    0    383 KBytes       
+[  5]   1.00-2.00   sec  10.8 MBytes  90.2 Mbits/sec    0    403 KBytes       
+[  5]   2.00-3.00   sec  10.5 MBytes  88.1 Mbits/sec    0    424 KBytes       
+[  5]   3.00-4.00   sec  10.5 MBytes  88.1 Mbits/sec    0    424 KBytes       
+[  5]   4.00-5.00   sec  11.1 MBytes  93.3 Mbits/sec    0    447 KBytes       
+[  5]   5.00-6.00   sec  9.50 MBytes  79.7 Mbits/sec    0    447 KBytes       
+[  5]   6.00-7.00   sec  11.1 MBytes  93.3 Mbits/sec    0    447 KBytes       
+[  5]   7.00-8.00   sec  11.0 MBytes  92.3 Mbits/sec    0    447 KBytes       
+[  5]   8.00-9.00   sec  11.1 MBytes  93.3 Mbits/sec    0    530 KBytes       
+[  5]   9.00-10.00  sec  11.8 MBytes  98.5 Mbits/sec    0    530 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec   110 MBytes  92.0 Mbits/sec    0            sender
+[  5]   0.00-10.02  sec   107 MBytes  89.6 Mbits/sec                  receiver
+
+iperf Done.
+Fri  2 Oct 20:10:01 IST 2026
+--- down ---
+Connecting to host smartspace-server.local, port 5201
+Reverse mode, remote host smartspace-server.local is sending
+[  5] local 192.168.1.23 port 49164 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-1.00   sec  4.62 MBytes  38.8 Mbits/sec                  
+[  5]   1.00-2.00   sec  4.38 MBytes  36.7 Mbits/sec                  
+[  5]   2.00-3.00   sec  4.88 MBytes  40.9 Mbits/sec                  
+[  5]   3.00-4.00   sec  4.75 MBytes  39.8 Mbits/sec                  
+[  5]   4.00-5.00   sec  4.88 MBytes  40.9 Mbits/sec                  
+[  5]   5.00-6.00   sec  4.62 MBytes  38.8 Mbits/sec                  
+[  5]   6.00-7.00   sec  5.00 MBytes  41.9 Mbits/sec                  
+[  5]   7.00-8.00   sec  5.12 MBytes  43.0 Mbits/sec                  
+[  5]   8.00-9.00   sec  5.25 MBytes  44.0 Mbits/sec                  
+[  5]   9.00-10.00  sec  4.88 MBytes  40.9 Mbits/sec                  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec  49.0 MBytes  41.1 Mbits/sec  220            sender
+[  5]   0.00-10.00  sec  48.4 MBytes  40.6 Mbits/sec                  receiver
+
+iperf Done.
+--- up ---
+Connecting to host smartspace-server.local, port 5201
+[  5] local 192.168.1.23 port 49522 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+[  5]   0.00-1.00   sec  11.1 MBytes  93.2 Mbits/sec    0    389 KBytes       
+[  5]   1.00-2.00   sec  10.4 MBytes  87.0 Mbits/sec    0    433 KBytes       
+[  5]   2.00-3.00   sec  11.5 MBytes  96.5 Mbits/sec    0    433 KBytes       
+[  5]   3.00-4.00   sec  10.6 MBytes  89.1 Mbits/sec    0    433 KBytes       
+[  5]   4.00-5.00   sec  10.8 MBytes  90.2 Mbits/sec    0    458 KBytes       
+[  5]   5.00-6.00   sec  10.8 MBytes  90.2 Mbits/sec    0    482 KBytes       
+[  5]   6.00-7.00   sec  10.9 MBytes  91.2 Mbits/sec    0    482 KBytes       
+[  5]   7.00-8.00   sec  10.0 MBytes  83.9 Mbits/sec    0    482 KBytes       
+[  5]   8.00-9.00   sec  10.9 MBytes  91.2 Mbits/sec    0    482 KBytes       
+[  5]   9.00-10.00  sec  10.9 MBytes  91.1 Mbits/sec    0    482 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec   108 MBytes  90.4 Mbits/sec    0            sender
+[  5]   0.00-10.02  sec   106 MBytes  88.7 Mbits/sec                  receiver
+
+iperf Done.
+Fri  2 Oct 21:10:01 IST 2026
+--- down ---
+Connecting to host smartspace-server.local, port 5201
+Reverse mode, remote host smartspace-server.local is sending
+[  5] local 192.168.1.23 port 44100 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-1.00   sec  3.75 MBytes  31.4 Mbits/sec                  
+[  5]   1.00-2.00   sec  4.00 MBytes  33.6 Mbits/sec                  
+[  5]   2.00-3.00   sec  4.12 MBytes  34.6 Mbits/sec                  
+[  5]   3.00-4.00   sec  4.25 MBytes  35.6 Mbits/sec                  
+[  5]   4.00-5.00   sec  4.00 MBytes  33.6 Mbits/sec                  
+[  5]   5.00-6.00   sec  4.12 MBytes  34.6 Mbits/sec                  
+[  5]   6.00-7.00   sec  4.25 MBytes  35.7 Mbits/sec                  
+[  5]   7.00-8.00   sec  3.62 MBytes  30.4 Mbits/sec                  
+[  5]   8.00-9.00   sec  3.88 MBytes  32.5 Mbits/sec                  
+[  5]   9.00-10.00  sec  4.75 MBytes  39.8 Mbits/sec                  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec  41.4 MBytes  34.7 Mbits/sec  181            sender
+[  5]   0.00-10.00  sec  40.8 MBytes  34.2 Mbits/sec                  receiver
+
+iperf Done.
+--- up ---
+Connecting to host smartspace-server.local, port 5201
+[  5] local 192.168.1.23 port 54510 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+[  5]   0.00-1.00   sec  12.2 MBytes   103 Mbits/sec    0    392 KBytes       
+[  5]   1.00-2.00   sec  11.0 MBytes  92.3 Mbits/sec    0    436 KBytes       
+[  5]   2.00-3.00   sec  9.75 MBytes  81.8 Mbits/sec    0    436 KBytes       
+[  5]   3.00-4.00   sec  10.5 MBytes  88.1 Mbits/sec    0    436 KBytes       
+[  5]   4.00-5.00   sec  11.1 MBytes  93.3 Mbits/sec    0    461 KBytes       
+[  5]   5.00-6.00   sec  11.2 MBytes  94.4 Mbits/sec    0    461 KBytes       
+[  5]   6.00-7.00   sec  11.4 MBytes  95.4 Mbits/sec    0    484 KBytes       
+[  5]   7.00-8.00   sec  11.0 MBytes  92.3 Mbits/sec    0    484 KBytes       
+[  5]   8.00-9.00   sec  11.0 MBytes  92.3 Mbits/sec    0    484 KBytes       
+[  5]   9.00-10.00  sec  10.9 MBytes  91.1 Mbits/sec    0    484 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec   110 MBytes  92.4 Mbits/sec    0            sender
+[  5]   0.00-10.02  sec   108 MBytes  90.3 Mbits/sec                  receiver
+
+iperf Done.
+Fri  2 Oct 22:10:01 IST 2026
+--- down ---
+Connecting to host smartspace-server.local, port 5201
+Reverse mode, remote host smartspace-server.local is sending
+[  5] local 192.168.1.23 port 47642 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-1.00   sec  4.75 MBytes  39.8 Mbits/sec                  
+[  5]   1.00-2.00   sec  4.75 MBytes  39.8 Mbits/sec                  
+[  5]   2.00-3.00   sec  5.12 MBytes  43.0 Mbits/sec                  
+[  5]   3.00-4.00   sec  5.00 MBytes  41.9 Mbits/sec                  
+[  5]   4.00-5.00   sec  4.88 MBytes  40.9 Mbits/sec                  
+[  5]   5.00-6.00   sec  5.00 MBytes  41.9 Mbits/sec                  
+[  5]   6.00-7.00   sec  4.50 MBytes  37.7 Mbits/sec                  
+[  5]   7.00-8.00   sec  5.12 MBytes  43.0 Mbits/sec                  
+[  5]   8.00-9.00   sec  4.75 MBytes  39.8 Mbits/sec                  
+[  5]   9.00-10.00  sec  5.38 MBytes  45.1 Mbits/sec                  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec  49.8 MBytes  41.7 Mbits/sec  208            sender
+[  5]   0.00-10.00  sec  49.2 MBytes  41.3 Mbits/sec                  receiver
+
+iperf Done.
+--- up ---
+Connecting to host smartspace-server.local, port 5201
+[  5] local 192.168.1.23 port 38506 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+[  5]   0.00-1.00   sec  11.9 MBytes  99.6 Mbits/sec    0    373 KBytes       
+[  5]   1.00-2.00   sec  11.1 MBytes  93.3 Mbits/sec    0    458 KBytes       
+[  5]   2.00-3.00   sec  10.4 MBytes  87.0 Mbits/sec    0    458 KBytes       
+[  5]   3.00-4.00   sec  11.2 MBytes  94.4 Mbits/sec    0    458 KBytes       
+[  5]   4.00-5.00   sec  11.2 MBytes  94.3 Mbits/sec    0    458 KBytes       
+[  5]   5.00-6.00   sec  10.5 MBytes  88.1 Mbits/sec    0    458 KBytes       
+[  5]   6.00-7.00   sec  11.5 MBytes  96.5 Mbits/sec    0    481 KBytes       
+[  5]   7.00-8.00   sec  11.0 MBytes  92.3 Mbits/sec    0    481 KBytes       
+[  5]   8.00-9.00   sec  11.0 MBytes  92.3 Mbits/sec    0    481 KBytes       
+[  5]   9.00-10.00  sec  11.8 MBytes  98.5 Mbits/sec    0    481 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec   112 MBytes  93.6 Mbits/sec    0            sender
+[  5]   0.00-10.03  sec   109 MBytes  91.4 Mbits/sec                  receiver
+
+iperf Done.
+Fri  2 Oct 23:10:01 IST 2026
+--- down ---
+Connecting to host smartspace-server.local, port 5201
+Reverse mode, remote host smartspace-server.local is sending
+[  5] local 192.168.1.23 port 43422 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-1.00   sec  4.12 MBytes  34.6 Mbits/sec                  
+[  5]   1.00-2.00   sec  4.50 MBytes  37.7 Mbits/sec                  
+[  5]   2.00-3.00   sec  4.25 MBytes  35.7 Mbits/sec                  
+[  5]   3.00-4.00   sec  4.38 MBytes  36.7 Mbits/sec                  
+[  5]   4.00-5.00   sec  3.88 MBytes  32.5 Mbits/sec                  
+[  5]   5.00-6.00   sec  4.50 MBytes  37.7 Mbits/sec                  
+[  5]   6.00-7.00   sec  5.00 MBytes  41.9 Mbits/sec                  
+[  5]   7.00-8.00   sec  5.00 MBytes  41.9 Mbits/sec                  
+[  5]   8.00-9.00   sec  4.88 MBytes  40.9 Mbits/sec                  
+[  5]   9.00-10.00  sec  4.88 MBytes  40.9 Mbits/sec                  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.01  sec  46.4 MBytes  38.9 Mbits/sec  292            sender
+[  5]   0.00-10.00  sec  45.4 MBytes  38.1 Mbits/sec                  receiver
+
+iperf Done.
+--- up ---
+Connecting to host smartspace-server.local, port 5201
+[  5] local 192.168.1.23 port 55314 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+[  5]   0.00-1.00   sec  11.0 MBytes  92.2 Mbits/sec    0    403 KBytes       
+[  5]   1.00-2.00   sec  11.2 MBytes  94.4 Mbits/sec    0    428 KBytes       
+[  5]   2.00-3.00   sec  10.1 MBytes  84.9 Mbits/sec    0    454 KBytes       
+[  5]   3.00-4.00   sec  11.4 MBytes  95.5 Mbits/sec    0    454 KBytes       
+[  5]   4.00-5.00   sec  11.2 MBytes  94.3 Mbits/sec    0    454 KBytes       
+[  5]   5.00-6.00   sec  11.2 MBytes  94.4 Mbits/sec    0    454 KBytes       
+[  5]   6.00-7.00   sec  11.2 MBytes  94.5 Mbits/sec    0    454 KBytes       
+[  5]   7.00-8.00   sec  10.4 MBytes  87.0 Mbits/sec    0    454 KBytes       
+[  5]   8.00-9.00   sec  11.2 MBytes  94.4 Mbits/sec    0    454 KBytes       
+[  5]   9.00-10.00  sec  12.2 MBytes   103 Mbits/sec    0    543 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec   111 MBytes  93.4 Mbits/sec    0            sender
+[  5]   0.00-10.02  sec   108 MBytes  90.8 Mbits/sec                  receiver
+
+iperf Done.
+Sat  3 Oct 00:10:01 IST 2026
+--- down ---
+Connecting to host smartspace-server.local, port 5201
+Reverse mode, remote host smartspace-server.local is sending
+[  5] local 192.168.1.23 port 46908 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-1.00   sec  4.62 MBytes  38.8 Mbits/sec                  
+[  5]   1.00-2.00   sec  5.00 MBytes  41.9 Mbits/sec                  
+[  5]   2.00-3.00   sec  5.00 MBytes  41.9 Mbits/sec                  
+[  5]   3.00-4.00   sec  4.50 MBytes  37.8 Mbits/sec                  
+[  5]   4.00-5.00   sec  4.25 MBytes  35.6 Mbits/sec                  
+[  5]   5.00-6.00   sec  4.12 MBytes  34.6 Mbits/sec                  
+[  5]   6.00-7.00   sec  4.62 MBytes  38.8 Mbits/sec                  
+[  5]   7.00-8.00   sec  4.62 MBytes  38.8 Mbits/sec                  
+[  5]   8.00-9.00   sec  5.25 MBytes  44.0 Mbits/sec                  
+[  5]   9.00-10.00  sec  5.00 MBytes  42.0 Mbits/sec                  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec  47.8 MBytes  40.0 Mbits/sec  184            sender
+[  5]   0.00-10.00  sec  47.0 MBytes  39.4 Mbits/sec                  receiver
+
+iperf Done.
+--- up ---
+Connecting to host smartspace-server.local, port 5201
+[  5] local 192.168.1.23 port 37782 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+[  5]   0.00-1.00   sec  12.2 MBytes   103 Mbits/sec    0    427 KBytes       
+[  5]   1.00-2.00   sec  10.6 MBytes  89.1 Mbits/sec    0    427 KBytes       
+[  5]   2.00-3.00   sec  10.6 MBytes  89.1 Mbits/sec    0    427 KBytes       
+[  5]   3.00-4.00   sec  11.0 MBytes  92.3 Mbits/sec    0    451 KBytes       
+[  5]   4.00-5.00   sec  10.4 MBytes  87.0 Mbits/sec    0    451 KBytes       
+[  5]   5.00-6.00   sec  11.2 MBytes  94.4 Mbits/sec    0    451 KBytes       
+[  5]   6.00-7.00   sec  9.25 MBytes  77.6 Mbits/sec    0    451 KBytes       
+[  5]   7.00-8.00   sec  11.4 MBytes  95.4 Mbits/sec    0    474 KBytes       
+[  5]   8.00-9.00   sec  10.6 MBytes  89.1 Mbits/sec    0    474 KBytes       
+[  5]   9.00-10.00  sec  11.6 MBytes  97.4 Mbits/sec    0    474 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec   109 MBytes  91.5 Mbits/sec    0            sender
+[  5]   0.00-10.03  sec   107 MBytes  89.3 Mbits/sec                  receiver
+
+iperf Done.
+Sat  3 Oct 01:10:01 IST 2026
+--- down ---
+Connecting to host smartspace-server.local, port 5201
+Reverse mode, remote host smartspace-server.local is sending
+[  5] local 192.168.1.23 port 59580 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-1.00   sec  4.12 MBytes  34.6 Mbits/sec                  
+[  5]   1.00-2.00   sec  3.50 MBytes  29.4 Mbits/sec                  
+[  5]   2.00-3.00   sec  4.00 MBytes  33.6 Mbits/sec                  
+[  5]   3.00-4.00   sec  4.12 MBytes  34.6 Mbits/sec                  
+[  5]   4.00-5.00   sec  4.00 MBytes  33.6 Mbits/sec                  
+[  5]   5.00-6.00   sec  4.50 MBytes  37.7 Mbits/sec                  
+[  5]   6.00-7.00   sec  4.50 MBytes  37.7 Mbits/sec                  
+[  5]   7.00-8.00   sec  4.62 MBytes  38.8 Mbits/sec                  
+[  5]   8.00-9.00   sec  4.50 MBytes  37.7 Mbits/sec                  
+[  5]   9.00-10.00  sec  5.12 MBytes  43.0 Mbits/sec                  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.01  sec  43.8 MBytes  36.7 Mbits/sec  203            sender
+[  5]   0.00-10.00  sec  43.0 MBytes  36.1 Mbits/sec                  receiver
+
+iperf Done.
+--- up ---
+Connecting to host smartspace-server.local, port 5201
+[  5] local 192.168.1.23 port 51470 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+[  5]   0.00-1.00   sec  12.5 MBytes   105 Mbits/sec    0    404 KBytes       
+[  5]   1.00-2.00   sec  10.9 MBytes  91.2 Mbits/sec    0    426 KBytes       
+[  5]   2.00-3.00   sec  11.0 MBytes  92.3 Mbits/sec    0    448 KBytes       
+[  5]   3.00-4.00   sec  10.2 MBytes  86.0 Mbits/sec    0    448 KBytes       
+[  5]   4.00-5.00   sec  11.1 MBytes  93.3 Mbits/sec    0    448 KBytes       
+[  5]   5.00-6.00   sec  11.1 MBytes  93.3 Mbits/sec    0    448 KBytes       
+[  5]   6.00-7.00   sec  11.1 MBytes  93.3 Mbits/sec    0    448 KBytes       
+[  5]   7.00-8.00   sec  10.1 MBytes  84.9 Mbits/sec    0    448 KBytes       
+[  5]   8.00-9.00   sec  11.9 MBytes  99.6 Mbits/sec    0    448 KBytes       
+[  5]   9.00-10.00  sec  11.1 MBytes  93.2 Mbits/sec    0    508 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec   111 MBytes  93.2 Mbits/sec    0            sender
+[  5]   0.00-10.02  sec   109 MBytes  91.2 Mbits/sec                  receiver
+
+iperf Done.
+Sat  3 Oct 02:10:01 IST 2026
+--- down ---
+Connecting to host smartspace-server.local, port 5201
+Reverse mode, remote host smartspace-server.local is sending
+[  5] local 192.168.1.23 port 51102 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-1.00   sec  3.88 MBytes  32.5 Mbits/sec                  
+[  5]   1.00-2.00   sec  4.12 MBytes  34.6 Mbits/sec                  
+[  5]   2.00-3.00   sec  4.25 MBytes  35.7 Mbits/sec                  
+[  5]   3.00-4.00   sec  3.88 MBytes  32.5 Mbits/sec                  
+[  5]   4.00-5.00   sec  3.88 MBytes  32.5 Mbits/sec                  
+[  5]   5.00-6.00   sec  4.38 MBytes  36.7 Mbits/sec                  
+[  5]   6.00-7.00   sec  4.25 MBytes  35.7 Mbits/sec                  
+[  5]   7.00-8.00   sec  4.88 MBytes  40.9 Mbits/sec                  
+[  5]   8.00-9.00   sec  4.75 MBytes  39.8 Mbits/sec                  
+[  5]   9.00-10.00  sec  5.12 MBytes  43.0 Mbits/sec                  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.01  sec  44.0 MBytes  36.9 Mbits/sec  197            sender
+[  5]   0.00-10.00  sec  43.4 MBytes  36.4 Mbits/sec                  receiver
+
+iperf Done.
+--- up ---
+Connecting to host smartspace-server.local, port 5201
+[  5] local 192.168.1.23 port 38626 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+[  5]   0.00-1.00   sec  11.8 MBytes  98.5 Mbits/sec    0    397 KBytes       
+[  5]   1.00-2.00   sec  10.6 MBytes  89.1 Mbits/sec    0    397 KBytes       
+[  5]   2.00-3.00   sec  9.88 MBytes  82.8 Mbits/sec    0    397 KBytes       
+[  5]   3.00-4.00   sec  9.75 MBytes  81.8 Mbits/sec    0    397 KBytes       
+[  5]   4.00-5.00   sec  10.1 MBytes  84.9 Mbits/sec    0    417 KBytes       
+[  5]   5.00-6.00   sec  10.6 MBytes  89.1 Mbits/sec    0    440 KBytes       
+[  5]   6.00-7.00   sec  10.1 MBytes  84.9 Mbits/sec    0    440 KBytes       
+[  5]   7.00-8.00   sec  10.9 MBytes  91.2 Mbits/sec    0    440 KBytes       
+[  5]   8.00-9.00   sec  10.5 MBytes  88.1 Mbits/sec    0    491 KBytes       
+[  5]   9.00-10.00  sec  11.0 MBytes  92.2 Mbits/sec    0    491 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec   105 MBytes  88.3 Mbits/sec    0            sender
+[  5]   0.00-10.02  sec   104 MBytes  86.6 Mbits/sec                  receiver
+
+iperf Done.
+Sat  3 Oct 03:10:01 IST 2026
+--- down ---
+Connecting to host smartspace-server.local, port 5201
+Reverse mode, remote host smartspace-server.local is sending
+[  5] local 192.168.1.23 port 59250 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-1.00   sec  4.62 MBytes  38.8 Mbits/sec                  
+[  5]   1.00-2.00   sec  4.88 MBytes  40.9 Mbits/sec                  
+[  5]   2.00-3.00   sec  4.75 MBytes  39.8 Mbits/sec                  
+[  5]   3.00-4.00   sec  4.75 MBytes  39.8 Mbits/sec                  
+[  5]   4.00-5.00   sec  4.88 MBytes  40.9 Mbits/sec                  
+[  5]   5.00-6.00   sec  5.25 MBytes  44.0 Mbits/sec                  
+[  5]   6.00-7.00   sec  5.12 MBytes  43.0 Mbits/sec                  
+[  5]   7.00-8.00   sec  4.75 MBytes  39.8 Mbits/sec                  
+[  5]   8.00-9.00   sec  5.00 MBytes  41.9 Mbits/sec                  
+[  5]   9.00-10.00  sec  5.00 MBytes  41.9 Mbits/sec                  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec  49.6 MBytes  41.6 Mbits/sec  227            sender
+[  5]   0.00-10.00  sec  49.0 MBytes  41.1 Mbits/sec                  receiver
+
+iperf Done.
+--- up ---
+Connecting to host smartspace-server.local, port 5201
+[  5] local 192.168.1.23 port 41320 connected to 192.168.1.22 port 5201
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+[  5]   0.00-1.00   sec  11.0 MBytes  92.2 Mbits/sec    0    370 KBytes       
+[  5]   1.00-2.00   sec  11.2 MBytes  94.4 Mbits/sec    0    431 KBytes       
+[  5]   2.00-3.00   sec  10.8 MBytes  90.2 Mbits/sec    0    431 KBytes       
+[  5]   3.00-4.00   sec  10.8 MBytes  90.2 Mbits/sec    0    431 KBytes       
+[  5]   4.00-5.00   sec  11.6 MBytes  97.5 Mbits/sec    0    431 KBytes       
+[  5]   5.00-6.00   sec  10.1 MBytes  85.0 Mbits/sec    0    478 KBytes       
+[  5]   6.00-7.00   sec  11.9 MBytes  99.6 Mbits/sec    0    478 KBytes       
+[  5]   7.00-8.00   sec  10.8 MBytes  90.2 Mbits/sec    0    478 KBytes       
+[  5]   8.00-9.00   sec  11.8 MBytes  98.7 Mbits/sec    0    478 KBytes       
+[  5]   9.00-10.00  sec  10.6 MBytes  88.9 Mbits/sec    0    478 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec   110 MBytes  92.7 Mbits/sec    0            sender
+[  5]   0.00-10.02  sec   109 MBytes  90.9 Mbits/sec                  receiver
+
+iperf Done.

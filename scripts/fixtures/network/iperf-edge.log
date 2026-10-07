@@ -1,0 +1,39 @@
+Sun 25 Oct 01:10:01 IST 2026
+--- down ---
+Connecting to host smartspace-server.local, port 5201
+Reverse mode, remote host smartspace-server.local is sending
+[  5] local 192.168.68.23 port 40000 connected to 192.168.68.22 port 5201
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec   250 MBytes   210 Mbits/sec   12             sender
+[  5]   0.00-10.00  sec   248 MBytes   208 Mbits/sec                  receiver
+
+iperf Done.
+--- up ---
+Connecting to host smartspace-server.local, port 5201
+[  5] local 192.168.68.23 port 40002 connected to 192.168.68.22 port 5201
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec   230 MBytes   193 Mbits/sec    0             sender
+[  5]   0.00-10.02  sec   229 MBytes   192 Mbits/sec                  receiver
+
+iperf Done.
+Sun 25 Oct 01:10:01 GMT 2026
+--- down ---
+iperf3: error - unable to connect to server: Connection refused
+--- up ---
+iperf3: error - unable to connect to server: Connection refused
+Sun Oct 25 02:10:01 GMT 2026
+--- down ---
+Connecting to host smartspace-server.local, port 5201
+Reverse mode, remote host smartspace-server.local is sending
+[  5]   0.00-10.00  sec  1.23 GBytes  1.05 Gbits/sec    3             sender
+[  5]   0.00-10.00  sec  1.22 GBytes  1.05 Gbits/sec                  receiver
+
+iperf Done.
+--- up ---
+Connecting to host smartspace-server.local, port 5201
+[  5]   0.00-10.00  sec  1.14 MBytes   955 Kbits/sec    0             sender
+[  5]   0.00-10.02  sec  1.13 MBytes   950 Kbits/sec                  receiver
+
+iperf Done.
