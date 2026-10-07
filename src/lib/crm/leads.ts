@@ -36,6 +36,8 @@ export interface Lead {
   upcoming?: boolean;
   orderId: string;
   details?: QA[];
+  /** What Google Ads could make of it; SmartCare Living's sheet rows only. */
+  ad?: import("./ad-outcome").AdFacts;
 }
 
 export interface LeadsPayload {

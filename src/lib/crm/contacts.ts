@@ -39,6 +39,8 @@ export interface LeadRow {
   value_cents: number | null;
   utm_source: string | null;
   utm_campaign: string | null;
+  utm_medium?: string | null;
+  referrer?: string | null;
   gclid: string | null;
   stripe_session_id: string | null;
   paid_at: string | null;

@@ -46,7 +46,8 @@
     "check:partner-price": "node scripts/check-partner-price.mjs",
     "check:money-split": "node scripts/check-money-split.mjs",
     "check:attribution-live": "node scripts/check-attribution-live.mjs",
-    "check:ads-rules": "node scripts/check-ads-rules.mjs"
+    "check:ads-rules": "node scripts/check-ads-rules.mjs",
+    "check:ad-outcome": "node scripts/check-ad-outcome.mjs"
   },
   "dependencies": {
     "@m-lab/ndt7": "0.1.5",
