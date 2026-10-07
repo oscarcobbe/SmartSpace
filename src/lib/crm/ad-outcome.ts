@@ -77,7 +77,8 @@ export interface SiteRules {
 export const GRACE_DAYS = 2;
 
 const pretty = (day: string) =>
-  new Date(`${day}T12:00:00Z`).toLocaleDateString("en-IE", { timeZone: "UTC", day: "numeric", month: "short" });
+  /* Noon UTC is the same date in Dublin all year. */
+  new Date(`${day}T12:00:00Z`).toLocaleDateString("en-IE", { timeZone: "Europe/Dublin", day: "numeric", month: "short" });
 
 const daysBetween = (from: string, to: string) =>
   Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
