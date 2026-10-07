@@ -21,6 +21,38 @@ open), reports its health, and picks up anything waiting for it.
    It asks for the key, installs the program under systemd as the
    `smartspace` user, and waits until the portal hears from the Pi.
 
+## Setting them up with Claude Code
+
+Claude Code can do the installing, run from Nigel's Mac at home with both Pis
+powered and on the same network. It cannot type into a prompt, so:
+
+1. **The CRM must be live.** This prints 200 once it is (404 until the change is merged):
+
+   ```
+   curl -s -o /dev/null -w "%{http_code}\n" https://smart-space.ie/crm/network/pis
+   ```
+
+2. **The Mac must sign in to each Pi without a password.** This must succeed for both:
+
+   ```
+   ssh -o BatchMode=yes smartspace@smartspace-node1.local true
+   ssh -o BatchMode=yes smartspace@smartspace-server.local true
+   ```
+
+   If one fails, Nigel runs `ssh-copy-id smartspace@<that Pi>.local` once,
+   himself, in Terminal. It asks for the Pi's password.
+
+3. **Each Pi's key** comes from the CRM (Network service, Pis, Add a Pi).
+   Nigel pastes it into the chat, and Claude passes it as an environment
+   variable, never into a file:
+
+   ```
+   SMARTSPACE_PI_KEY='<the server key>' scripts/network-pi/install.sh smartspace-server.local server
+   SMARTSPACE_PI_KEY='<the node key>' scripts/network-pi/install.sh smartspace-node1.local node
+   ```
+
+   Each ends "Done. The portal heard from ..." when it has worked.
+
 A lost or stolen Pi: Switch off in the CRM. Its key stops working at once and
 the other Pi is unaffected. `install.sh <host> --key` puts a new key on.
 
