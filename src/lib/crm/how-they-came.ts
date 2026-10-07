@@ -116,6 +116,8 @@ export interface Enquiry extends Visit {
   orderId?: string;
   /** What was bought or asked about, as the log wrote it. */
   product?: string;
+  /** The cookie banner's answer recorded with the enquiry (ad-outcome.ts). */
+  cookie?: import("./ad-outcome").CookieAnswer;
 }
 
 /** Who paid, as Stripe knows them. Any of these can find their enquiries. */

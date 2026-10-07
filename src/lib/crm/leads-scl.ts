@@ -14,7 +14,8 @@
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import type { Lead, LeadsPayload, LeadsResult, QA } from "./leads";
-import type { Enquiry } from "./how-they-came";
+import { readVisit, type Enquiry } from "./how-they-came";
+import type { AdFacts, CookieAnswer } from "./ad-outcome";
 
 /** The columns the Apps Script writes. Anything absent is simply absent. */
 interface SheetRow {
@@ -142,7 +143,25 @@ function toLead(row: SheetRow): Lead {
     upcoming: isAhead(bookingDate),
     orderId: "-",
     details: details.length ? details : undefined,
+    ad: adFactsOf(row),
   };
+}
+
+/**
+ * The cookie answer the site wrote into Notes when the enquiry was made.
+ * "ads: denied" stands for a No and for no answer alike (see CookieAnswer),
+ * and a row from before 22 September says nothing.
+ */
+function cookieOf(notes: Map<string, string>): CookieAnswer {
+  const a = (notes.get("ads") ?? "").toLowerCase();
+  return a === "granted" ? "granted" : a === "denied" ? "no-or-none" : null;
+}
+
+/** What Google Ads could make of this row, for the customer's page. */
+function adFactsOf(row: SheetRow): AdFacts | undefined {
+  const e = enquiryOf(row);
+  if (!e) return undefined;
+  return { at: e.at, came: readVisit(e, "smartcareliving"), consent: e.cookie ?? null, kind: "form" };
 }
 
 /**
@@ -299,23 +318,30 @@ function dublinWall(value: unknown): string {
 export function sclEnquiries(rows: SheetRow[]): Enquiry[] {
   const out: Enquiry[] = [];
   for (const r of rows) {
-    const source = clean(r.Source);
-    if (!(clean(r.Name) || clean(r.Email) || clean(r.Phone))) continue;
-    if (/-INTERNAL$/i.test(source) || `${clean(r.Name)} ${clean(r["Risk Label"])}`.includes("[INTERNAL]")) continue;
-    if (/^cancellation/i.test(source)) continue;
-    const at = dublinWall(r.Timestamp);
-    if (!at) continue;
-    const notes = notesItems(clean(r.Notes));
-    out.push({
-      at, type: source || "enquiry", source,
-      name: clean(r.Name), email: clean(r.Email), phone: clean(r.Phone), status: clean(r.Status),
-      gclid: clean(r.GCLID ?? r.Gclid), gbraid: notes.get("gbraid") ?? "", wbraid: notes.get("wbraid") ?? "",
-      oppref: notes.get("oppref") ?? "",
-      landingPage: notes.get("landed") ?? "", referrer: notes.get("from") ?? "",
-      utmSource: clean(r.utmSource), utmMedium: clean(r.utmMedium),
-    });
+    const e = enquiryOf(r);
+    if (e) out.push(e);
   }
   return out;
+}
+
+/** One row as an enquiry, or null for a test, a cancellation or an undated row. */
+function enquiryOf(r: SheetRow): Enquiry | null {
+  const source = clean(r.Source);
+  if (!(clean(r.Name) || clean(r.Email) || clean(r.Phone))) return null;
+  if (/-INTERNAL$/i.test(source) || `${clean(r.Name)} ${clean(r["Risk Label"])}`.includes("[INTERNAL]")) return null;
+  if (/^cancellation/i.test(source)) return null;
+  const at = dublinWall(r.Timestamp);
+  if (!at) return null;
+  const notes = notesItems(clean(r.Notes));
+  return {
+    at, type: source || "enquiry", source,
+    name: clean(r.Name), email: clean(r.Email), phone: clean(r.Phone), status: clean(r.Status),
+    gclid: clean(r.GCLID ?? r.Gclid), gbraid: notes.get("gbraid") ?? "", wbraid: notes.get("wbraid") ?? "",
+    oppref: notes.get("oppref") ?? "",
+    landingPage: notes.get("landed") ?? "", referrer: notes.get("from") ?? "",
+    utmSource: clean(r.utmSource), utmMedium: clean(r.utmMedium),
+    cookie: cookieOf(notes),
+  };
 }
 
 /**
@@ -337,7 +363,7 @@ export const sclEnquiriesShared = cache(async (): Promise<{ ok: true; rows: Enqu
         if (!r.ok) throw new Error(r.reason);
         return sclEnquiries(r.rows);
       },
-      ["crm-scl-enquiries", "v1"],
+      ["crm-scl-enquiries", "v2"],
       { revalidate: 60, tags: ["crm-leads", "crm-leads:smartcareliving"] },
     )();
     return { ok: true, rows };

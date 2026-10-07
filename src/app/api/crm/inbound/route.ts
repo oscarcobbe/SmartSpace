@@ -94,7 +94,14 @@ export async function POST(request: Request) {
         utm_content: str("utm_content"), gclid: str("gclid"),
         referrer: str("referrer"),
         tags: Array.isArray(payload.tags) ? payload.tags : [],
-        custom: typeof payload.custom === "object" && payload.custom ? payload.custom : {},
+        /* gbraid and wbraid are an iPhone's ad click, sent beside gclid by
+           SmartCare Living and dropped here until 6 October 2026, so those
+           enquiries read as "not known whether from an ad" in the CRM. */
+        custom: {
+          ...(typeof payload.custom === "object" && payload.custom ? payload.custom : {}),
+          ...(str("gbraid") ? { gbraid: str("gbraid") } : {}),
+          ...(str("wbraid") ? { wbraid: str("wbraid") } : {}),
+        },
         stripe_session_id: stripeId,
         paid_at: stripeId ? new Date().toISOString() : null,
         status: stripeId ? "won" : "new",

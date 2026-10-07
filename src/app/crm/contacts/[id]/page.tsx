@@ -11,6 +11,28 @@ import { saveNote, setLeadStatus, setLeadLight, addTask, completeTask } from "..
 import PaymentLinkForm from "../payment-link-form";
 import { ActionForm, SubmitButton } from "../../action-form";
 import { plainText, slotText } from "@/lib/crm/display";
+import { adOutcomesFor } from "@/lib/crm/ad-outcome-live";
+import type { AdOutcome } from "@/lib/crm/ad-outcome";
+
+/**
+ * Whether Google Ads counted this enquiry, and why not when it did not
+ * (src/lib/crm/ad-outcome.ts). Amber only when something is wrong; a No to
+ * cookies is how it should be and reads as plain grey.
+ */
+function AdLine({ o }: { o: AdOutcome | undefined }) {
+  if (!o) return null;
+  const tone = o.problem
+    ? "border-amber-200 bg-amber-50 text-amber-900"
+    : o.verdict === "counted"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+      : "border-slate-200 bg-white text-slate-700";
+  return (
+    <div className={`mt-2.5 rounded-lg border px-3 py-2 text-sm ${tone}`}>
+      <p><span className="font-medium">Google Ads: </span>{o.headline}</p>
+      <p className="mt-0.5 text-xs opacity-80">{o.why}</p>
+    </div>
+  );
+}
 
 export const dynamic = "force-dynamic";
 /* The person is assembled from the orders feed, and SmartCare Living's sheet
@@ -70,6 +92,13 @@ export default async function ContactPage({ params }: { params: { id: string } }
       recordProblem = `The history and next steps could not be read (${err instanceof Error ? err.message.slice(0, 240) : "no answer"}), so they are not shown. Nothing has been lost.`;
     }
   }
+
+  /* Never takes the page down: a failure here is an absent line, and each
+     read inside already turns its own failure into "could not be checked". */
+  const ads = await adOutcomesFor(site, person).catch((err) => {
+    console.error("[contact] ad outcomes:", err instanceof Error ? err.message : err);
+    return null;
+  });
 
   const address = fullAddress(person);
   const leads = distinctLeads(person);
@@ -166,6 +195,7 @@ export default async function ContactPage({ params }: { params: { id: string } }
                         ))}
                       </dl>
                     ) : null}
+                    <AdLine o={ads?.feed.get(i)} />
                   </li>
                 ))}
 
@@ -211,6 +241,7 @@ export default async function ContactPage({ params }: { params: { id: string } }
                         {l.booked_for && <div><dt className="inline">Booked for: </dt><dd className="inline text-slate-700">{day(l.booked_for)}</dd></div>}
                         {l.installed_at && <div><dt className="inline">Installed: </dt><dd className="inline text-slate-700">{day(l.installed_at)}</dd></div>}
                     </dl>
+                    <AdLine o={ads?.leads.get(l.id)} />
 
                     <ActionForm action={setLeadStatus} className="mt-3 flex flex-wrap items-end gap-2">
                       <input type="hidden" name="leadId" value={l.id} />
