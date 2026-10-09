@@ -384,7 +384,7 @@ const R = {
   <div class="shead"><div class="n">5</div><div class="t"><h2>What your electrical wiring can carry</h2>
     <p class="gloss" id="g-sockets">Several sockets were tested on each floor.</p></div></div>
   <div class="scroll"><table id="t-sockets"></table></div>
-  <p class="soft small">Each figure above is a single measurement taken on the day, in Mbps. Only the floor carrying the trial system was monitored over three days.</p>
+  <p class="soft small">Each figure above is a single measurement taken on the day, in Mbps. They measure your house wiring, not your broadband: a device can never get more than your broadband line delivers. Only the floor carrying the trial system was monitored over three days.</p>
 </section>
 
 <section>
@@ -591,7 +591,7 @@ const R = {
         <td class="n">${x.up==null?'':x.up}</td>
       </tr>`).join('');
     $('t-sockets').innerHTML =
-      `<tr><th>Floor</th><th>Socket tested</th><th class="n">To the room</th><th class="n">From the room</th></tr>${rows}`;
+      `<tr><th>Floor</th><th>Socket tested</th><th class="n">Download to the room</th><th class="n">Upload from the room</th></tr>${rows}`;
 
     // What was actually tested, rather than a claim about every house.
     const byFloor = {};
