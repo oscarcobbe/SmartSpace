@@ -486,6 +486,8 @@ const R = {
         if(prev > x.value){
           const pbw = (prev/max)*barW;
           s += `<rect x="${barX+bw}" y="${y+10}" width="${Math.max(0,pbw-bw)}" height="26" rx="3" fill="${C.rule}"/>`;
+          // dotted line from the end of the grey up to the end of the bar above
+          s += `<line x1="${barX+pbw}" y1="${y-rowH+36}" x2="${barX+pbw}" y2="${y+36}" stroke="${C.soft}" stroke-width="1.5" stroke-dasharray="2 3"/>`;
         }
       }
       s += `<rect x="${barX}" y="${y+10}" width="${bw}" height="26" rx="3" fill="${fill}"/>`;
