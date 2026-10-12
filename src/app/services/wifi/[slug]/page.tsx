@@ -4,7 +4,17 @@ import { notFound } from "next/navigation";
 import { ArrowRight, Check, Phone } from "lucide-react";
 import TrafficLight, { LIGHT_WORD } from "@/components/wifi/TrafficLight";
 import WifiEnquiryForm from "@/components/wifi/WifiEnquiryForm";
-import { WIFI_PACKAGES, MONITOR_POINTS, MONITOR_UNIT, packageBySlug, priceLabel, priceNote } from "@/data/wifiPackages";
+import NetworkPayButton from "@/components/wifi/NetworkPayButton";
+import {
+  WIFI_PACKAGES,
+  MONITOR_POINTS,
+  MONITOR_UNIT,
+  NETWORK_PAYABLE,
+  packageBySlug,
+  priceLabel,
+  priceNote,
+  type NetworkPayable,
+} from "@/data/wifiPackages";
 import { BUSINESS_PHONE_DISPLAY, BUSINESS_PHONE_E164 } from "@/lib/business-constants";
 
 const SITE = "https://smart-space.ie";
@@ -41,6 +51,7 @@ export default function WifiPackagePage({ params }: { params: { slug: string } }
   const isMonitoring = pkg.slug === "network-monitoring";
   const isAssessment = pkg.slug === "home-network-assessment";
   const isEvidence = pkg.slug === "broadband-evidence";
+  const payable = NETWORK_PAYABLE.includes(pkg.slug as NetworkPayable) && pkg.price.kind === "fixed" ? pkg.price.euro : null;
   const eyebrow = isMonitoring
     ? "Network Monitoring"
     : isAssessment
@@ -59,6 +70,30 @@ export default function WifiPackagePage({ params }: { params: { slug: string } }
       { "@type": "ListItem", position: 4, name: pkg.name, item: `${SITE}/services/wifi/${pkg.slug}` },
     ],
   };
+  /* What is sold, where, and at what price when it is fixed: rich results and AI answers read this. */
+  const serviceSchema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: pkg.name,
+    description: pkg.forWho,
+    serviceType: "Home network diagnosis",
+    provider: { "@id": "https://smart-space.ie/#organization" },
+    areaServed: { "@type": "AdministrativeArea", name: "Dublin and Leinster, Ireland" },
+    url: `https://smart-space.ie/services/wifi/${pkg.slug}`,
+    ...(pkg.price.kind === "quote"
+      ? {}
+      : {
+          offers: {
+            "@type": "Offer",
+            priceCurrency: "EUR",
+            price: String(pkg.price.euro),
+            ...(pkg.price.kind === "monthly"
+              ? { priceSpecification: { "@type": "UnitPriceSpecification", price: String(pkg.price.euro), priceCurrency: "EUR", unitCode: "MON" } }
+              : {}),
+          },
+        }),
+  };
+
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -69,6 +104,7 @@ export default function WifiPackagePage({ params }: { params: { slug: string } }
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }} />
 
       <section className="pt-32 lg:pt-36 pb-14 lg:pb-20 bg-gradient-to-b from-cream to-white relative overflow-clip">
         <div className="absolute top-20 -left-40 w-80 h-80 bg-brand-500/5 rounded-full blur-3xl pointer-events-none" />
@@ -241,18 +277,31 @@ export default function WifiPackagePage({ params }: { params: { slug: string } }
               ))}
             </div>
           </div>
-          <WifiEnquiryForm
-            pkg={pkg.slug}
-            title={isAssessment ? "Book your assessment" : isEvidence ? "Book the evidence service" : `Ask about ${pkg.name}`}
-            blurb={
-              isAssessment
-                ? "Leave your details and we'll ring you to pick a date. The €395 is paid on booking, by a secure payment link."
-                : isEvidence
-                  ? "Leave your details and we'll ring you to confirm the speed you pay for. The €199 is paid on booking, by a secure payment link, and the box goes in the post."
+          <div className="space-y-6">
+            {payable !== null && (
+              <div className="rounded-3xl bg-white border-2 border-brand-500 shadow-premium p-6 sm:p-8">
+                <h2 className="text-2xl font-extrabold text-ink tracking-[-0.03em] mb-1.5">
+                  {isEvidence ? "Book the evidence service" : "Book your assessment"}
+                </h2>
+                <p className="text-sm text-ink-soft leading-relaxed mb-5">
+                  Pay €{payable} securely now and we ring you within one working day to{" "}
+                  {isEvidence ? "confirm your speed and post the box" : "pick a time for the first visit"}.
+                  {isAssessment && " Credited in full against any work."}
+                </p>
+                <NetworkPayButton slug={pkg.slug} name={pkg.name} euro={payable} />
+              </div>
+            )}
+            <WifiEnquiryForm
+              pkg={pkg.slug}
+              title={payable ? "Or ask us to ring you first" : `Ask about ${pkg.name}`}
+              blurb={
+                payable
+                  ? "Prefer to talk it through first? Leave your details and we'll ring you, and take payment by a secure link."
                   : "Leave your details and we'll ring you to talk it through."
-            }
-            button={isAssessment || isEvidence ? "Request a booking" : "Request a callback"}
-          />
+              }
+              button="Request a callback"
+            />
+          </div>
         </div>
       </section>
 

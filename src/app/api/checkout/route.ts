@@ -4,6 +4,7 @@ import { getProductByHandle } from "@/lib/shopify";
 import type { AttributionRecord } from "@/lib/leads";
 import { foundUsDetailFrom, foundUsFrom } from "@/lib/found-us";
 import { browserContext } from "@/lib/server-conversions";
+import { networkCheckoutItem } from "@/data/wifiPackages";
 
 // POST routes are inherently dynamic but explicit is better, without
 // this, Next.js may try static optimization on a future major.
@@ -64,6 +65,16 @@ async function resolveItems(items: CartItem[]): Promise<ResolvedItem[]> {
     }
     if (!Number.isFinite(item.price) || item.price <= 0 || item.price > 20_000) {
       throw new Error(`Invalid price for item ${item.productId}`);
+    }
+
+    /* A home network service: priced here, not in Shopify (src/data/wifiPackages.ts). */
+    const network = networkCheckoutItem(item.productId);
+    if (network) {
+      if (item.quantity !== 1 || Math.round(item.price * 100) !== network.cents) {
+        throw new Error(`Price out of range for ${item.productId}: submitted €${item.price}, expected €${network.cents / 100}`);
+      }
+      resolved.push({ id: item.productId, title: network.name, unitAmountCents: network.cents, quantity: 1, image: "" });
+      continue;
     }
 
     const product = await getProductByHandle(item.productId);
@@ -188,7 +199,12 @@ export async function POST(request: Request) {
     params.append("phone_number_collection[enabled]", "true");
     params.append("custom_fields[0][key]", "installation_address");
     params.append("custom_fields[0][label][type]", "custom");
-    params.append("custom_fields[0][label][custom]", "Installation Address (if different from billing)");
+    params.append(
+      "custom_fields[0][label][custom]",
+      resolved.some((i) => networkCheckoutItem(i.id))
+        ? "Address for the visit (if different from billing)"
+        : "Installation Address (if different from billing)"
+    );
     params.append("custom_fields[0][type]", "text");
     params.append("custom_fields[0][optional]", "true");
     params.append("allow_promotion_codes", "true");
@@ -247,6 +263,14 @@ export async function POST(request: Request) {
       params.append("metadata[booking_slot]", bookedItem.bookingSlot ?? "");
       params.append("metadata[booking_label]", bookedItem.bookingLabel ?? "");
       params.append("metadata[product_name]", bookedItem.title);
+    }
+
+    /* A home network service names itself, so the webhook sends the network
+       order email and Nigel's alert says what was bought, not "Installation". */
+    const networkItem = resolved.map((i) => networkCheckoutItem(i.id)).find(Boolean);
+    if (networkItem && !bookedItem) {
+      params.append("metadata[network_service]", networkItem.slug);
+      params.append("metadata[product_name]", networkItem.name);
     }
 
     // Aggregate every item's product-page answers into a single JSON-encoded
