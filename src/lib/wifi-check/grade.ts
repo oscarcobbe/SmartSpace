@@ -72,7 +72,7 @@ export interface Check {
 export type Cause = "line" | "rooms" | "busy" | "drops" | "none";
 
 /** The network services, by slug in src/data/wifiPackages.ts. */
-export type PackageSlug = "home-network-assessment" | "powerline-access-points" | "network-monitoring";
+export type PackageSlug = "home-network-assessment" | "powerline-access-points" | "network-monitoring" | "broadband-evidence";
 
 export interface Grade {
   light: Light;

@@ -55,6 +55,7 @@ export const priceLabel = (p: WifiPackage) =>
 export const priceNote = (p: WifiPackage) => p.price.note;
 
 export const ASSESSMENT_EURO = 395;
+export const EVIDENCE_EURO = 199;
 
 export const WIFI_PACKAGES: WifiPackage[] = [
   {
@@ -246,6 +247,71 @@ export const WIFI_PACKAGES: WifiPackage[] = [
     ],
   },
 ];
+
+/*
+ * The broadband evidence service, from Nigel's trial page and his reply of
+ * 12 October 2026: ready to sell, boxes in hand, €199 including VAT, Dublin
+ * and Leinster only because he goes through the results in the home and
+ * collects the box.
+ */
+WIFI_PACKAGES.push({
+  slug: "broadband-evidence",
+  name: "Broadband Evidence Service",
+  forWho: "Think your provider is letting you down? Get the evidence they need to take you seriously.",
+  price: { kind: "fixed", euro: EVIDENCE_EURO, note: "No assessment needed. Dublin and Leinster." },
+  lights: ["amber", "red"],
+  features: [
+    "A small box posted to you, with the cable to plug it into your router",
+    "Your line logged for 7 days: dropouts and delays every minute",
+    "Speed tests through the day and evening",
+    "A one-page report: every dropout, slowdown and evening speed against what you pay for",
+    "We go through it with you in your home and collect the box",
+  ],
+  intro:
+    "Hard numbers, not \"it feels slow\". We post you a small box that plugs into your router and logs your broadband line for 7 days, every minute, day and evening. Then we write a one-page report showing every dropout, every slowdown and your evening speeds against the speed you pay for, ready to send to your provider.",
+  details: [
+    {
+      title: "Book, and we post you a box",
+      body: "Book and tell us the speed you pay for. We post you a small box. Plug it into your router with the cable supplied. That's it.",
+    },
+    {
+      title: "Your line, logged for 7 days",
+      body: "Dropouts and delays are recorded every minute, with speed tests through the day and evening, so the busy hours are in the record too.",
+    },
+    {
+      title: "One page your provider can't argue with",
+      body: "Every dropout, slowdown and evening speed against what you pay for, on one page you can send to your provider.",
+    },
+    {
+      title: "Gone through in your home",
+      body: "We explain the results in your home and collect the box at the same time. That is why the service covers Dublin and Leinster only.",
+    },
+  ],
+  faq: [
+    {
+      q: "Do I need the home network assessment first?",
+      a: "No. The evidence service is on its own: it measures your broadband line at the router, not the Wi-Fi in your rooms.",
+    },
+    {
+      q: "What does the €199 cover?",
+      a: "The box and its postage, 7 days of logging, the one-page report, and a visit to go through it with you and collect the box. It includes VAT.",
+    },
+    {
+      q: "What if the line turns out to be fine?",
+      a: "Then the report says so, and the problem is inside the house. That is what the 3-day Wi-Fi trial is for.",
+    },
+    {
+      q: "Which areas do you cover?",
+      a: "Dublin and the rest of Leinster, because we go through the results in your home and collect the box.",
+    },
+  ],
+  related: [
+    { href: "/blog/broadband-speed-test-ireland-line-or-wifi", label: "Is it the line or the Wi-Fi?" },
+    { href: "/blog/wifi-slow-in-the-evening-ireland", label: "Evening slowdowns" },
+    { href: "/services/wifi", label: "The 3-day Wi-Fi trial" },
+    { href: "/wifi-check", label: "The free Wi-Fi check" },
+  ],
+});
 
 export const packageBySlug = (slug: string | null | undefined) =>
   WIFI_PACKAGES.find((p) => p.slug === slug) ?? null;

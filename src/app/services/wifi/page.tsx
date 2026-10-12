@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight, Check, Clock, Gauge, Home, Tv, X } from "lucide-react";
 import NetworkHouse from "@/components/wifi/NetworkHouse";
 import GuideLinks from "@/components/wifi/GuideLinks";
-import { ASSESSMENT_EURO, packageBySlug } from "@/data/wifiPackages";
+import { ASSESSMENT_EURO, EVIDENCE_EURO, packageBySlug } from "@/data/wifiPackages";
 
 const SITE = "https://smart-space.ie";
 
@@ -17,8 +17,8 @@ const SITE = "https://smart-space.ie";
  * "Ireland's first", "before you spend a cent" and "usually one day" are
  * Nigel's and kept on Oscar's word (12 October). The sample report is his
  * report template with its example figures, served from
- * public/network-sample-report.html. Not here yet: the €199 broadband
- * evidence service, waiting on Nigel.
+ * public/network-sample-report.html. The €199 broadband evidence service
+ * was confirmed by Nigel on 12 October.
  *
  * Held to the briefing and Oscar's copy rules: never "Wi-Fi installation",
  * powerline said plainly, "monitored" rather than "managed". Three lines of
@@ -146,6 +146,7 @@ const FAQ: { q: string; a: string; more?: { href: string; label: string } }[] = 
   {
     q: "Do I need to change broadband provider?",
     a: "No. We test the line you have. If the report shows the line itself is the problem, you have the figures to take to your provider.",
+    more: { href: "/services/wifi/broadband-evidence", label: "The €199 broadband evidence service" },
   },
 ];
 
@@ -528,6 +529,34 @@ export default function NetworkDiagnosisPage() {
                   Network Monitoring Plans <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Broadband evidence, Nigel's other supporting service */}
+      <section className="pb-12 lg:pb-16 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="rounded-3xl bg-cream border border-gray-100 p-6 sm:p-10 grid lg:grid-cols-5 gap-8 items-center">
+            <div className="lg:col-span-3 text-center lg:text-left">
+              <div className={EYEBROW}>Broadband Evidence Service</div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-ink tracking-[-0.03em] mb-3">
+                Think Your Provider Is Letting You Down?
+              </h2>
+              <p className="text-ink-soft leading-relaxed">
+                Get the evidence they need to take you seriously. We post you a small box that logs your line for 7 days,
+                then write a one-page report showing every dropout, slowdown and evening speed against what you pay for.
+                No assessment needed.
+              </p>
+            </div>
+            <div className="lg:col-span-2 rounded-2xl bg-white border border-gray-100 shadow-premium p-6 text-center lg:text-left">
+              <div className="text-3xl font-extrabold text-ink tracking-[-0.03em]">€{EVIDENCE_EURO}</div>
+              <p className="mt-2 text-sm text-ink-soft leading-relaxed">
+                Including VAT. We go through the report in your home and collect the box. Dublin and Leinster.
+              </p>
+              <Link href="/services/wifi/broadband-evidence" className={`mt-4 inline-flex items-center gap-1.5 text-sm ${QUIET}`}>
+                Hard numbers, not &ldquo;it feels slow&rdquo; <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
           </div>
         </div>
