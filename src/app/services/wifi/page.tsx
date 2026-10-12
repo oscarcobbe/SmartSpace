@@ -14,10 +14,11 @@ const SITE = "https://smart-space.ie";
  * design. Every section links quietly to the guide or package page that goes
  * deeper, so a visitor from an ad can read around without losing the thread.
  *
- * Left out of his page: "Ireland's first" (nothing supports it, and Google
- * Ads asks for proof of a superlative), "before you spend a cent" (the
- * assessment costs €395), the €199 broadband evidence service and the sample
- * report link (neither exists on the site yet).
+ * "Ireland's first", "before you spend a cent" and "usually one day" are
+ * Nigel's and kept on Oscar's word (12 October). The sample report is his
+ * report template with its example figures, served from
+ * public/network-sample-report.html. Not here yet: the €199 broadband
+ * evidence service, waiting on Nigel.
  *
  * Held to the briefing and Oscar's copy rules: never "Wi-Fi installation",
  * powerline said plainly, "monitored" rather than "managed". Three lines of
@@ -32,7 +33,7 @@ export const metadata: Metadata = {
   description: `Try better Wi-Fi in your own home for 3 days before you buy it. A €${ASSESSMENT_EURO} home network assessment: your broadband and every floor measured, a working trial measured every hour, and a plain-English report. Credited in full against any work. Dublin and Leinster.`,
   alternates: { canonical: "/services/wifi" },
   openGraph: {
-    title: "Try Better Wi-Fi in Your Own Home for 3 Days | Smart Space",
+    title: "Ireland's First Try-Before-You-Buy Wi-Fi Assessment | Smart Space",
     description: `We measure every floor, leave a working system running for 3 days, and show you the numbers before you decide. €${ASSESSMENT_EURO}, credited in full against any work.`,
     url: `${SITE}/services/wifi`,
     type: "website",
@@ -57,6 +58,16 @@ const PROBLEMS: { text: string; href: string; label: string }[] = [
   { text: "Games lag, stutter or disconnect at the worst moment", href: "/blog/why-does-my-wifi-keep-dropping-ireland", label: "Why Wi-Fi drops" },
   { text: "Upstairs or the back bedroom barely gets a signal", href: "/blog/why-wifi-slow-upstairs-irish-homes", label: "Slow upstairs" },
   { text: "It's always worse in the evening when everyone is online", href: "/blog/wifi-slow-in-the-evening-ireland", label: "Evening slowdowns" },
+];
+
+/* The cascade from the sample report (public/network-sample-report.html). */
+const SAMPLE_REPORT = "/network-sample-report.html";
+const CASCADE = [
+  { label: "What you pay for", value: 500 },
+  { label: "Arriving at the router", value: 486 },
+  { label: "Best room, hall", value: 310 },
+  { label: "First floor landing", value: 96 },
+  { label: "Back bedroom, second floor", value: 14 },
 ];
 
 const TRIAL_POINTS = [
@@ -194,10 +205,10 @@ export default function NetworkDiagnosisPage() {
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
             <div className="text-center lg:text-left">
               <div className="fade-up inline-block text-brand-500 text-xs font-bold uppercase tracking-[0.2em] mb-4">
-                Try-Before-You-Buy Wi-Fi Assessment · Dublin &amp; Leinster
+                Ireland&apos;s First Try-Before-You-Buy Wi-Fi Assessment
               </div>
               <h1 className="fade-up-delay-1 text-[2rem] sm:text-5xl lg:text-[3rem] font-extrabold text-ink leading-[1.05] tracking-[-0.04em] mb-5 text-balance">
-                Try Better Wi-Fi in Your Own Home for 3 Days, Before You Buy It.
+                Try Better Wi-Fi in Your Own Home for 3 Days Before You Spend a Cent on It.
               </h1>
               <p className="fade-up-delay-2 text-ink-soft text-base sm:text-lg max-w-xl mx-auto lg:mx-0 mb-8">
                 You&apos;ve asked why your Wi-Fi keeps buffering. An AI assistant can tell you what usually causes it, but it
@@ -230,6 +241,48 @@ export default function NetworkDiagnosisPage() {
               </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Where your speed goes */}
+      <section className="py-16 lg:py-24 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          <div className="text-center lg:text-left">
+            <div className={EYEBROW}>Where Your Speed Goes</div>
+            <h2 className={`${H2} mb-5`}>You Pay for 500 Mbps. The Back Bedroom Gets 14.</h2>
+            <p className="text-ink-soft leading-relaxed max-w-xl mx-auto lg:mx-0 mb-4">
+              This is from one of our sample reports. We measure every step between what you pay for and the room
+              you&apos;re complaining about, so you see exactly where the speed is lost.
+            </p>
+            <p className="text-ink-soft leading-relaxed max-w-xl mx-auto lg:mx-0 mb-6">
+              By the time it reaches the back bedroom, 97% of the speed paid for has been lost inside the house. Almost
+              none of it is lost on the line itself: 486 of the 500 Mbps arrives at the router.
+            </p>
+            <a href={SAMPLE_REPORT} className={`inline-flex items-center gap-1.5 text-sm ${QUIET}`}>
+              See a full sample report <ArrowRight className="h-4 w-4" />
+            </a>
+          </div>
+          <figure className="rounded-3xl bg-cream border border-gray-100 p-6 sm:p-8">
+            <figcaption className="text-[11px] font-bold uppercase tracking-[0.15em] text-ink-muted mb-5">
+              Example from a sample report · download, Mbps
+            </figcaption>
+            <ul className="space-y-4">
+              {CASCADE.map((c, i) => (
+                <li key={c.label}>
+                  <div className="flex items-baseline justify-between gap-4 text-sm mb-1.5">
+                    <span className="text-ink-soft">{c.label}</span>
+                    <span className={`font-extrabold ${i === CASCADE.length - 1 ? "text-red-600" : "text-ink"}`}>{c.value}</span>
+                  </div>
+                  <div className="h-2.5 rounded-full bg-gray-200 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${i === CASCADE.length - 1 ? "bg-red-500" : i < 2 ? "bg-green-500" : "bg-amber-500"}`}
+                      style={{ width: `${Math.max(2, (c.value / CASCADE[0].value) * 100)}%` }}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </figure>
         </div>
       </section>
 
@@ -384,6 +437,14 @@ export default function NetworkDiagnosisPage() {
                 We use the latest G.hn powerline technology to carry your connection through your home&apos;s existing
                 electrical wiring, to a tri-band Wi-Fi 6E access point on each floor. No drilling, no trunking, no mess.
               </p>
+              <ul className="mt-4 flex flex-wrap gap-2">
+                {["No chasing walls", "No floors lifted", "Usually one day"].map((t) => (
+                  <li key={t} className="inline-flex items-center gap-1.5 rounded-full bg-cream border border-gray-100 px-3 py-1 text-xs font-semibold text-ink">
+                    <Check className="h-3 w-3 text-brand-500" strokeWidth={3} />
+                    {t}
+                  </li>
+                ))}
+              </ul>
               <Link href="/services/wifi/powerline-access-points" className={`mt-5 inline-flex items-center gap-1.5 text-sm ${QUIET}`}>
                 How the fix is quoted <ArrowRight className="h-4 w-4" />
               </Link>
@@ -546,6 +607,11 @@ export default function NetworkDiagnosisPage() {
             >
               Book Your Assessment <ArrowRight className="w-4 h-4" />
             </Link>
+            <p className="mt-4">
+              <a href={SAMPLE_REPORT} className="text-sm font-semibold text-white/90 hover:text-white no-underline hover:underline underline-offset-4">
+                See a sample report
+              </a>
+            </p>
             <p className="mt-6 text-sm text-white/85">
               <a href="tel:+35315130424" className="font-semibold hover:text-white">01 513 0424</a>
               {" · "}

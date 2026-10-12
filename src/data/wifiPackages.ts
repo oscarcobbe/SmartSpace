@@ -120,6 +120,7 @@ export const WIFI_PACKAGES: WifiPackage[] = [
     ],
     related: [
       { href: "/services/wifi", label: "How the 3-day trial works" },
+      { href: "/network-sample-report.html", label: "A sample report" },
       { href: "/blog/broadband-speed-test-ireland-line-or-wifi", label: "Is it the line or the Wi-Fi?" },
       { href: "/blog/why-wifi-slow-upstairs-irish-homes", label: "Slow upstairs" },
       { href: "/blog/wifi-slow-in-the-evening-ireland", label: "Evening slowdowns" },

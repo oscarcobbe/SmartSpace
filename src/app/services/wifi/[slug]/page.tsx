@@ -161,9 +161,16 @@ export default function WifiPackagePage({ params }: { params: { slug: string } }
               {pkg.related.map((r, i) => (
                 <span key={r.href}>
                   {i > 0 && " · "}
-                  <Link href={r.href} className={QUIET}>
-                    {r.label}
-                  </Link>
+                  {/* A static file (the sample report) needs a plain link, not client navigation. */}
+                  {r.href.endsWith(".html") ? (
+                    <a href={r.href} className={QUIET}>
+                      {r.label}
+                    </a>
+                  ) : (
+                    <Link href={r.href} className={QUIET}>
+                      {r.label}
+                    </Link>
+                  )}
                 </span>
               ))}
             </p>
