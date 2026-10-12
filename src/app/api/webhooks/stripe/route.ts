@@ -12,6 +12,9 @@ import { formatEuro } from "@/lib/format";
 import { sendSiteAlert } from "@/lib/site-alerts";
 import { alertTo, monitorBcc } from "@/lib/business-constants";
 import { foundUsDetailFrom, foundUsFrom, foundUsLine, notesWithFoundUs } from "@/lib/found-us";
+import { networkOrderConfirmed } from "@/lib/email/customer";
+import { approval } from "@/lib/signoff/state";
+import { NETWORK_PAYABLE, type NetworkPayable } from "@/data/wifiPackages";
 
 // EXPLICIT runtime + dynamic flags. The webhook calls req.text() to get
 // the raw body for Stripe signature verification (which uses Node's
@@ -66,6 +69,8 @@ async function sendOrderNotification(params: {
   calendlyStatus: "created" | "failed" | "skipped";
   foundUs?: string;
   foundUsDetail?: string;
+  /** A home network service paid online (metadata.network_service), not an install. */
+  network?: NetworkPayable;
 }) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM_EMAIL;
@@ -75,8 +80,9 @@ async function sendOrderNotification(params: {
     return;
   }
 
-  const calendlyLine =
-    params.calendlyStatus === "created"
+  const calendlyLine = params.network
+    ? "📞 A home network service: ring the customer to pick the visit (nothing is booked automatically)."
+    : params.calendlyStatus === "created"
       ? "✅ Booked into your calendar automatically."
       : params.calendlyStatus === "failed"
       ? "⚠️ The automatic booking FAILED: please put it in your calendar by hand and confirm the time with the customer."
@@ -164,6 +170,29 @@ async function sendOrderNotification(params: {
   // ──────────────────────────────────────────────────────────────
   if (!params.email) {
     console.warn(`[stripe webhook] no customer email on session=${params.sessionId}, skipping customer confirmation`);
+    return;
+  }
+
+  /* A network service gets its own email, and only once Nigel has signed it
+     off; the install wording below would promise an install that is not booked. */
+  if (params.network) {
+    try {
+      const ok = await approval("email:network-order");
+      if (!ok.approved) {
+        console.log(`[stripe webhook] network order email not sent, not signed off: ${ok.reason} session=${params.sessionId}`);
+        return;
+      }
+      const mail = networkOrderConfirmed({
+        name: params.customerName,
+        service: params.network,
+        product: params.productName,
+        amount: formattedAmount,
+      });
+      await resend.emails.send({ from, to: [params.email], replyTo: to, subject: mail.subject, text: mail.text, html: mail.html });
+      console.log(`[stripe webhook] network order email sent for session=${params.sessionId}`);
+    } catch (err) {
+      console.error(`[stripe webhook] network order email FAILED for session=${params.sessionId}:`, err);
+    }
     return;
   }
 
@@ -745,7 +774,9 @@ export async function POST(req: NextRequest) {
 
     // Notify Nigel, runs after Calendly so we can include the outcome in
     // the email body (e.g. "Calendly failed, book manually").
+    const networkService = NETWORK_PAYABLE.find((n) => n === session.metadata?.network_service);
     await sendOrderNotification({
+      network: networkService,
       customerName,
       email,
       phone,

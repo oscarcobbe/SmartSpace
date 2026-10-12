@@ -187,6 +187,14 @@ export const SIGNOFF_ITEMS: SignoffItem[] = [
     content: () => JSON.stringify({ WIFI_PACKAGES, SYMPTOMS, MONITOR_POINTS }),
   },
   {
+    id: "email:network-order",
+    group: "network",
+    title: "Email: network service booked",
+    effect: "Sent when someone pays online for the €395 assessment or the €199 broadband evidence service.",
+    preview: [studio("network-order")],
+    content: () => rendered("network-order"),
+  },
+  {
     id: "email:wifi-report",
     group: "network",
     title: "Email: your Wi-Fi report",

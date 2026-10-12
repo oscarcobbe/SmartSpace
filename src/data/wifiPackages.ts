@@ -313,6 +313,25 @@ WIFI_PACKAGES.push({
   ],
 });
 
+/**
+ * The network services that can be paid for online, at the price the server
+ * charges. /api/checkout reads this, never the browser's figure, for a cart
+ * item named "network:<slug>". Only fixed-price packages qualify: the fix is
+ * quoted from the measurements and monitoring is monthly.
+ */
+export const NETWORK_CHECKOUT_PREFIX = "network:";
+export const NETWORK_PAYABLE = ["home-network-assessment", "broadband-evidence"] as const;
+export type NetworkPayable = (typeof NETWORK_PAYABLE)[number];
+
+export function networkCheckoutItem(productId: string): { slug: NetworkPayable; name: string; cents: number } | null {
+  if (!productId.startsWith(NETWORK_CHECKOUT_PREFIX)) return null;
+  const slug = productId.slice(NETWORK_CHECKOUT_PREFIX.length) as NetworkPayable;
+  if (!NETWORK_PAYABLE.includes(slug)) return null;
+  const pkg = WIFI_PACKAGES.find((p) => p.slug === slug);
+  if (!pkg || pkg.price.kind !== "fixed") return null;
+  return { slug, name: pkg.name, cents: pkg.price.euro * 100 };
+}
+
 export const packageBySlug = (slug: string | null | undefined) =>
   WIFI_PACKAGES.find((p) => p.slug === slug) ?? null;
 

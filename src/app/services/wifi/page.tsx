@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, Check, Clock, Gauge, Home, Tv, X } from "lucide-react";
 import NetworkHouse from "@/components/wifi/NetworkHouse";
 import GuideLinks from "@/components/wifi/GuideLinks";
+import { WIFI_AREAS } from "@/data/wifiAreas";
 import { ASSESSMENT_EURO, EVIDENCE_EURO, packageBySlug } from "@/data/wifiPackages";
 
 const SITE = "https://smart-space.ie";
@@ -596,6 +597,17 @@ export default function NetworkDiagnosisPage() {
           <h2 className="text-2xl sm:text-3xl font-extrabold text-ink tracking-[-0.03em] text-center mb-3">Before You Book</h2>
           <p className="text-center text-ink-soft mb-8">
             Dublin and the rest of Leinster, the same area as our security installations. Over 5,000 installs behind us.
+          </p>
+          <p className="text-center text-sm text-ink-soft -mt-5 mb-8">
+            Local pages:{" "}
+            {WIFI_AREAS.map((a, i) => (
+              <span key={a.slug}>
+                {i > 0 && " · "}
+                <Link href={`/services/wifi/areas/${a.slug}`} className={QUIET}>
+                  {a.name}
+                </Link>
+              </span>
+            ))}
           </p>
           <div className="divide-y divide-gray-100 rounded-3xl border border-gray-100 bg-white shadow-premium">
             {FAQ.map((f) => (

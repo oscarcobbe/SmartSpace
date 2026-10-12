@@ -234,7 +234,7 @@ function PaymentSuccessContent() {
           <p className="text-gray-500 text-sm mb-6">
             {isFree
               ? "Our specialist will visit your home at the time you selected. We\u2019ll be in touch to confirm."
-              : "You\u2019ll receive a receipt by email shortly. Our team will be in touch to confirm your installation date."}
+              : "You\u2019ll receive a receipt by email shortly. Our team will be in touch to confirm your date."}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">

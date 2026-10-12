@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 import { BLOG_POSTS } from "./blog/blog-posts";
+import { WIFI_PACKAGES } from "@/data/wifiPackages";
+import { WIFI_AREA_SLUGS } from "@/data/wifiAreas";
 
 const BASE = "https://smart-space.ie";
 
@@ -92,10 +94,23 @@ export default function sitemap(): MetadataRoute.Sitemap {
   if (process.env.NEXT_PUBLIC_NETWORK_PAGES_LIVE === "1") {
     staticRoutes.push(
       { url: `${BASE}/services/wifi`, lastModified: now, changeFrequency: "weekly", priority: 0.85 },
-      { url: `${BASE}/services/wifi/home-network-assessment`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-      { url: `${BASE}/services/wifi/powerline-access-points`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-      { url: `${BASE}/services/wifi/network-monitoring`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+      /* Every package from the package list, so a new one (the evidence
+         service was missed on 12 October) cannot be left out. */
+      ...WIFI_PACKAGES.map((p) => ({
+        url: `${BASE}/services/wifi/${p.slug}`,
+        lastModified: now,
+        changeFrequency: "monthly" as const,
+        priority: 0.8,
+      })),
       { url: `${BASE}/wifi-check`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
+      // Local home-network pages, generated from the data so a new area is
+      // never left out of the sitemap when it is added.
+      ...WIFI_AREA_SLUGS.map((slug) => ({
+        url: `${BASE}/services/wifi/areas/${slug}`,
+        lastModified: now,
+        changeFrequency: "monthly" as const,
+        priority: 0.75,
+      })),
     );
   }
 

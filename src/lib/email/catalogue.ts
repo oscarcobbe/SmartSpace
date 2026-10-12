@@ -17,6 +17,7 @@ import {
   reminderSms,
   reviewRequest,
   wifiReport,
+  networkOrderConfirmed,
   type Email,
 } from "./customer";
 import { networkDiagnosisA, networkDiagnosisB, smartGuardianAnnouncement } from "./marketing";
@@ -121,6 +122,22 @@ export const ENTRIES: Entry[] = [
         reportUrl: "https://smart-space.ie/wifi-check/report?r=sample",
         recommend: "Home Network Assessment",
       }),
+  },
+  {
+    id: "network-order",
+    stage: "purchase",
+    name: "Network service booked",
+    channel: "email",
+    status: "draft",
+    statusNote: "New, with online payment for the €395 assessment and the €199 evidence service. Nothing sends it until it is approved in Sign-off; until then the buyer gets Stripe's receipt and Nigel rings them.",
+    trigger: "Someone pays for the home network assessment or the broadband evidence service on the website.",
+    timing: "Straight away, from the Stripe webhook.",
+    from: SENDER,
+    replyTo: NIGEL,
+    source: "src/app/api/webhooks/stripe/route.ts",
+    alongside: "Stripe's payment receipt.",
+    render: () =>
+      networkOrderConfirmed({ name: SAMPLE.name, service: "home-network-assessment", product: "Home Network Assessment", amount: "€395" }),
   },
   {
     id: "consultation-booked",

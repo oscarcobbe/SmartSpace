@@ -223,6 +223,80 @@ export function orderConfirmed(d: { name: string; product: string; amount: strin
   };
 }
 
+/* ── A home network service paid online: src/app/api/webhooks/stripe ── */
+/*    Held for Nigel's sign-off (email:network-order) before it sends.    */
+
+const NETWORK_NEXT: Record<"home-network-assessment" | "broadband-evidence", string[]> = {
+  "home-network-assessment": [
+    "We ring you within one working day to pick a time for the first visit, about 2 hours.",
+    "On the visit we test your broadband at the router, measure every floor, set up the trial on your weakest floor and move up to 3 problem devices onto it.",
+    "The trial is measured every hour for 3 days while you carry on as normal. Then we go through your report together on a 30-minute call.",
+    "The €395 is credited in full against any work you go ahead with.",
+  ],
+  "broadband-evidence": [
+    "We ring you within one working day to confirm the speed you pay for, and post you the box.",
+    "Plug it into your router with the cable supplied. It logs your line for 7 days, every minute, day and evening.",
+    "We write your one-page report, then go through it with you in your home and collect the box.",
+  ],
+};
+
+export function networkOrderConfirmed(d: {
+  name: string;
+  service: "home-network-assessment" | "broadband-evidence";
+  product: string;
+  amount: string;
+}): Email {
+  const f = first(d.name);
+  const next = NETWORK_NEXT[d.service];
+  const preheader = `Payment received for your ${d.product}. Here is what happens next.`;
+  return {
+    subject: `Booked, Smart Space, ${d.product}`,
+    preheader,
+    html: renderEmail({
+      title: "Booked, Smart Space",
+      preheader,
+      blocks: [
+        eyebrow("Booked"),
+        heading(`Thanks, ${f}. You're booked in.`),
+        para("We've got your payment. Here's what you booked and what happens next.", { size: 16, pad: "14px 32px 0" }),
+        summary("Your booking", [
+          ["Service", d.product],
+          ["Paid", d.amount],
+        ]),
+        steps("What happens next", next.map(esc)),
+        contactNote("Questions before then?"),
+        signoff("Talk soon,", "Nigel and the Smart Space team"),
+      ],
+      footer: {
+        kind: "transactional",
+        note: "Stripe sends a separate payment receipt to this address. This email is what you booked and what happens next.",
+      },
+    }),
+    text: [
+      `Hi ${f},`,
+      "",
+      "Thanks. We've got your payment and you're booked in.",
+      "",
+      "Your booking",
+      `  Service: ${d.product}`,
+      `  Paid:    ${d.amount}`,
+      "",
+      "What happens next",
+      ...next.map((t, i) => `  ${i + 1}. ${t}`),
+      "",
+      "Questions before then?",
+      `  Phone: ${BUSINESS_PHONE_DISPLAY}`,
+      "  Email: info@smart-space.ie",
+      "",
+      "Talk soon,",
+      "Nigel and the Smart Space team",
+      "smart-space.ie",
+      "",
+      "Stripe sends a separate payment receipt to this address.",
+    ].join("\n"),
+  };
+}
+
 /* ── Day before: built, paused 10 June 2026, now switched by Sign-off ── */
 /*    src/app/api/cron/booking-reminders/route.ts                        */
 
