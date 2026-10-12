@@ -41,6 +41,8 @@ export interface WifiPackage {
   intro: string;
   details: { title: string; body: string }[];
   faq: { q: string; a: string }[];
+  /** Guides and pages to link quietly from the package page, most relevant first. */
+  related: { href: string; label: string }[];
 }
 
 export const priceLabel = (p: WifiPackage) =>
@@ -58,20 +60,20 @@ export const WIFI_PACKAGES: WifiPackage[] = [
   {
     slug: "home-network-assessment",
     name: "Home Network Assessment",
-    forWho: "For buffering, devices that drop offline, and rooms the Wi-Fi does not reach.",
+    forWho: "Try better Wi-Fi in your own home for 3 days before you buy it.",
     price: { kind: "fixed", euro: ASSESSMENT_EURO, note: "Credited in full against any work you go ahead with." },
     lights: ["amber", "red"],
     popular: true,
     features: [
-      "A two-hour visit: your broadband tested at the router by cable, then every room measured",
-      "The speed each floor of your house can actually carry, measured rather than estimated",
-      "A working trial system installed on the floor that struggles",
-      "Three days of continuous monitoring while you live with it",
-      "A second visit to collect the equipment",
-      "A written report: the figures, what they mean, and what we would recommend",
+      "A first visit of about 2 hours: your broadband tested at the router by cable, then every floor measured",
+      "A working trial system on your weakest floor, beside your own Wi-Fi",
+      "Speed measured every hour for 3 days, evenings included",
+      "Up to 3 of your problem devices moved onto the trial and watched",
+      "A plain-English report and a 30-minute call to go through it",
+      "A second visit to collect the trial kit, or install your new system",
     ],
     intro:
-      "We measure your house before you spend a euro. We test your broadband at the router and measure every floor, then leave a trial system working on the worst floor and monitor it for three days. You get a written report with the actual figures: whether the problem is your broadband or your house, and what we'd recommend.",
+      "The speed printed on a box in a shop was measured in a lab, not in your house. So we bring the solution to your home first and let it prove itself there. We test your broadband at the router, measure every floor, and leave a working system on your weakest floor for 3 days. Then you see the numbers and decide, with no pressure to buy.",
     details: [
       {
         title: "Tested at the router",
@@ -83,30 +85,46 @@ export const WIFI_PACKAGES: WifiPackage[] = [
       },
       {
         title: "A working trial, for three days",
-        body: "We install a trial system on the worst floor and leave a monitoring unit wired to your router. It checks the trial every 30 seconds and tests your broadband every six hours, so the report shows how both held up, day and night. You live with it and judge it yourself.",
+        body: "We set up a working system where your Wi-Fi is weakest, running beside your own network. Nothing of yours is switched off. Speed and steadiness are recorded every hour, day and night, including the evenings when everyone is online. Stream, work and game as normal.",
       },
       {
-        title: "A negative result is reported too",
-        body: "If the trial doesn't perform well in your house, we'll tell you, and you keep the measurements to take elsewhere.",
+        title: "Your problem devices, watched",
+        body: "We move up to 3 of the devices that give you the most trouble, like a smart TV or a Nest thermostat, onto the trial and track them for all 3 days. The report shows if they ever dropped off, and when.",
+      },
+      {
+        title: "A clear answer either way",
+        body: "Either the trial fixes it without cables, or the measurements prove it can't, and the report shows which floors and rooms need a cabled connection.",
       },
     ],
     faq: [
       {
         q: "What does the €395 cover?",
-        a: "The visit, the trial system for three days, the monitoring, the collection visit and the written report. It is credited in full against any work you go ahead with.",
+        a: "The first visit, the trial system for 3 days, the hourly measurements, the report and the 30-minute call, and the second visit. It is credited in full against any work you go ahead with.",
       },
       {
         q: "Do I need to change my broadband provider?",
         a: "No. We test the line you have. If the report shows the line itself is the problem, you have the figures to take to your provider.",
       },
       {
+        q: "Do I have to buy anything after the assessment?",
+        a: "No. You get the report either way, and the €395 is credited in full if you go ahead with any work.",
+      },
+      {
         q: "Will you run cables through the walls?",
-        a: "No. The fix carries your connection over the electrical wiring already in the house, powerline, to access points placed where they are needed.",
+        a: "No. The fix carries your connection over the electrical wiring already in the house, powerline, to access points placed where they are needed. If nothing can be fixed without cables, the report says so plainly and shows which rooms need one.",
       },
       {
         q: "Which areas do you cover?",
         a: "Dublin and the rest of Leinster, the same area as our smart security installations.",
       },
+    ],
+    related: [
+      { href: "/services/wifi", label: "How the 3-day trial works" },
+      { href: "/network-sample-report.html", label: "A sample report" },
+      { href: "/blog/broadband-speed-test-ireland-line-or-wifi", label: "Is it the line or the Wi-Fi?" },
+      { href: "/blog/why-wifi-slow-upstairs-irish-homes", label: "Slow upstairs" },
+      { href: "/blog/wifi-slow-in-the-evening-ireland", label: "Evening slowdowns" },
+      { href: "/wifi-check", label: "The free Wi-Fi check" },
     ],
   },
   {
@@ -123,11 +141,11 @@ export const WIFI_PACKAGES: WifiPackage[] = [
       "Configured and tested floor by floor before we leave",
     ],
     intro:
-      "Powerline adapters carry your broadband over the electrical wiring already in your walls, to an access point on each floor that needs one. Your phones, TVs, cameras and thermostats connect to the nearest access point, on one network.",
+      "G.hn powerline carries your connection through your home's existing electrical wiring, to a tri-band Wi-Fi 6E access point on each floor that needs one. No drilling, no trunking, no mess. Your phones, TVs, cameras and thermostats connect to the nearest access point, on one network.",
     details: [
       {
         title: "Powerline, measured first",
-        body: "How fast powerline runs depends on the wiring in each house. The assessment measures it in yours, and the quote is based on those figures.",
+        body: "How fast powerline runs depends on the wiring in each house. The assessment tests several sockets on each floor of yours, and the quote is based on those figures.",
       },
       {
         title: "Placed by measurement",
@@ -145,7 +163,7 @@ export const WIFI_PACKAGES: WifiPackage[] = [
     faq: [
       {
         q: "Is powerline reliable?",
-        a: "It depends on the wiring, which is why the trial runs in your house for three days before you buy anything, and the report shows the figures it achieved.",
+        a: "It depends on the wiring, which is why the trial runs in your house for 3 days before you buy anything, measured every hour, and the report shows the figures it achieved.",
       },
       {
         q: "Will my smart devices work with it?",
@@ -155,6 +173,13 @@ export const WIFI_PACKAGES: WifiPackage[] = [
         q: "Which areas do you cover?",
         a: "Dublin and the rest of Leinster, the same area as our smart security installations.",
       },
+    ],
+    related: [
+      { href: "/services/wifi", label: "Try it for 3 days first" },
+      { href: "/blog/powerline-adapters-ireland", label: "Powerline in Irish houses" },
+      { href: "/blog/wifi-extender-mesh-or-powerline-ireland", label: "Extender, mesh or powerline" },
+      { href: "/blog/mesh-wifi-explained", label: "Mesh explained" },
+      { href: "/blog/running-ethernet-cable-existing-house-ireland", label: "When cable is the answer" },
     ],
   },
   {
@@ -172,7 +197,7 @@ export const WIFI_PACKAGES: WifiPackage[] = [
       "A plain-English health report every month",
     ],
     intro:
-      "A small, silent unit stays wired to your router. When your broadband fails, or a device that matters to you drops offline, we know. Every month you get a short report in plain English: what happened, whether it mattered, and anything that needs attention.",
+      "A small box keeps an eye on your network around the clock, so we often know about a problem before you do. When your broadband fails, or a device that matters to you drops offline, we know. Every month you get a short report in plain English: uptime, outages and evening speeds.",
     details: [
       {
         title: "Your broadband, watched",
@@ -212,6 +237,12 @@ export const WIFI_PACKAGES: WifiPackage[] = [
         q: "Can I have monitoring without the assessment?",
         a: "Yes. The unit connects to the router you already have.",
       },
+    ],
+    related: [
+      { href: "/services/wifi", label: "The 3-day trial" },
+      { href: "/blog/wifi-slow-in-the-evening-ireland", label: "Evening slowdowns" },
+      { href: "/blog/smart-camera-wifi-drops-irish-homes", label: "Devices dropping off" },
+      { href: "/blog/secure-home-wifi-ireland", label: "Securing your Wi-Fi" },
     ],
   },
 ];
@@ -286,14 +317,14 @@ export const MONITOR_UNIT: { specs: { label: string; value: string }[]; tips: st
 export const SYMPTOMS: { title: string; body: string }[] = [
   {
     title: "Buffering",
-    body: "The TV stalls in the evening, or a video call freezes, while the broadband looks fine at the router.",
+    body: "The TV buffers in the middle of the film, or a video call freezes, while the broadband looks fine at the router.",
   },
   {
     title: "Devices dropping off",
-    body: "A camera, doorbell or thermostat keeps going offline and coming back. When that happens, the network is the first thing to check.",
+    body: "The Nest thermostat, a camera or another smart device keeps going offline and coming back. When that happens, the network is the first thing to check.",
   },
   {
     title: "Dead rooms",
-    body: "Fine downstairs, hopeless upstairs, or nothing at all in the back bedroom or the garden room.",
+    body: "Upstairs or the back bedroom barely gets a signal, and it's always worse in the evening when everyone is online.",
   },
 ];

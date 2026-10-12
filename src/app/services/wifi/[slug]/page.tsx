@@ -10,6 +10,9 @@ import { BUSINESS_PHONE_DISPLAY, BUSINESS_PHONE_E164 } from "@/lib/business-cons
 const SITE = "https://smart-space.ie";
 
 /* Three packages, all known at build time. Any other slug is a real 404. */
+
+/* A quiet link, the same as the hub's and the guides': no underline until hover or focus. */
+const QUIET = "font-semibold text-brand-700 hover:text-brand-800 no-underline hover:underline focus-visible:underline underline-offset-4";
 export const dynamicParams = false;
 export const generateStaticParams = () => WIFI_PACKAGES.map((p) => ({ slug: p.slug }));
 
@@ -81,6 +84,15 @@ export default function WifiPackagePage({ params }: { params: { slug: string } }
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-ink mb-4 tracking-[-0.035em]">{pkg.name}</h1>
               <p className="text-ink-soft text-base sm:text-lg max-w-xl mx-auto lg:mx-0">{pkg.forWho}</p>
               <p className="mt-5 text-ink-soft leading-relaxed max-w-2xl mx-auto lg:mx-0">{pkg.intro}</p>
+              {!isAssessment && (
+                <p className="mt-3 text-sm text-ink-soft max-w-2xl mx-auto lg:mx-0">
+                  Starts with the{" "}
+                  <Link href="/services/wifi/home-network-assessment" className={QUIET}>
+                    €395 assessment
+                  </Link>
+                  , a working trial in your home for 3 days, credited in full against the work.
+                </p>
+              )}
               <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
                 <a
                   href="#book"
@@ -142,6 +154,27 @@ export default function WifiPackagePage({ params }: { params: { slug: string } }
               </div>
             ))}
           </div>
+
+          {pkg.related.length > 0 && (
+            <p className="mt-6 text-sm text-ink-soft text-center sm:text-left">
+              Read around it:{" "}
+              {pkg.related.map((r, i) => (
+                <span key={r.href}>
+                  {i > 0 && " · "}
+                  {/* A static file (the sample report) needs a plain link, not client navigation. */}
+                  {r.href.endsWith(".html") ? (
+                    <a href={r.href} className={QUIET}>
+                      {r.label}
+                    </a>
+                  ) : (
+                    <Link href={r.href} className={QUIET}>
+                      {r.label}
+                    </Link>
+                  )}
+                </span>
+              ))}
+            </p>
+          )}
 
           {isMonitoring && (
             <div className="mt-10">
