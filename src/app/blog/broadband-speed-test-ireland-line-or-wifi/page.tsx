@@ -223,6 +223,11 @@ export default function Post() {
           If the report shows the line itself is the problem, you have the figures to take to your provider.
         </p>
         <p>
+          If it is the line you doubt, the{" "}
+          <Link href="/services/wifi/broadband-evidence">€199 broadband evidence service</Link> logs it for 7 days, every
+          minute, day and evening, and gives you a one-page report to send to your provider.
+        </p>
+        <p>
           To start for free, run the <Link href="/wifi-check">Wi-Fi check</Link> beside your router and again in the room
           that struggles. It grades the result green, amber or red, and tells you whether it is worth going further.
         </p>

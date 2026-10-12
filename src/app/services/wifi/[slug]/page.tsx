@@ -40,7 +40,14 @@ export default function WifiPackagePage({ params }: { params: { slug: string } }
   const others = WIFI_PACKAGES.filter((p) => p.slug !== pkg.slug);
   const isMonitoring = pkg.slug === "network-monitoring";
   const isAssessment = pkg.slug === "home-network-assessment";
-  const eyebrow = isMonitoring ? "Network Monitoring" : isAssessment ? "Home Network Diagnosis" : "The Fix";
+  const isEvidence = pkg.slug === "broadband-evidence";
+  const eyebrow = isMonitoring
+    ? "Network Monitoring"
+    : isAssessment
+      ? "Home Network Diagnosis"
+      : isEvidence
+        ? "Broadband Evidence · Dublin & Leinster"
+        : "The Fix";
 
   const breadcrumb = {
     "@context": "https://schema.org",
@@ -84,7 +91,7 @@ export default function WifiPackagePage({ params }: { params: { slug: string } }
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-ink mb-4 tracking-[-0.035em]">{pkg.name}</h1>
               <p className="text-ink-soft text-base sm:text-lg max-w-xl mx-auto lg:mx-0">{pkg.forWho}</p>
               <p className="mt-5 text-ink-soft leading-relaxed max-w-2xl mx-auto lg:mx-0">{pkg.intro}</p>
-              {!isAssessment && (
+              {!isAssessment && !isEvidence && (
                 <p className="mt-3 text-sm text-ink-soft max-w-2xl mx-auto lg:mx-0">
                   Starts with the{" "}
                   <Link href="/services/wifi/home-network-assessment" className={QUIET}>
@@ -98,7 +105,7 @@ export default function WifiPackagePage({ params }: { params: { slug: string } }
                   href="#book"
                   className="btn-sheen inline-flex items-center justify-center gap-2 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-600 text-white font-bold text-sm px-7 py-3.5 rounded-full shadow-[0_10px_40px_-5px_rgba(242,130,34,0.55)] transition-all"
                 >
-                  <span className="relative z-10">{isAssessment ? "Book an Assessment" : "Ask About This"}</span>
+                  <span className="relative z-10">{isAssessment ? "Book an Assessment" : isEvidence ? "Book the Evidence Service" : "Ask About This"}</span>
                   <ArrowRight className="relative z-10 w-4 h-4" />
                 </a>
                 <a
@@ -236,21 +243,23 @@ export default function WifiPackagePage({ params }: { params: { slug: string } }
           </div>
           <WifiEnquiryForm
             pkg={pkg.slug}
-            title={isAssessment ? "Book your assessment" : `Ask about ${pkg.name}`}
+            title={isAssessment ? "Book your assessment" : isEvidence ? "Book the evidence service" : `Ask about ${pkg.name}`}
             blurb={
               isAssessment
                 ? "Leave your details and we'll ring you to pick a date. The €395 is paid on booking, by a secure payment link."
-                : "Leave your details and we'll ring you to talk it through."
+                : isEvidence
+                  ? "Leave your details and we'll ring you to confirm the speed you pay for. The €199 is paid on booking, by a secure payment link, and the box goes in the post."
+                  : "Leave your details and we'll ring you to talk it through."
             }
-            button={isAssessment ? "Request a booking" : "Request a callback"}
+            button={isAssessment || isEvidence ? "Request a booking" : "Request a callback"}
           />
         </div>
       </section>
 
-      {/* The other two */}
+      {/* The other services */}
       <section className="py-12 bg-cream">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid sm:grid-cols-2 gap-5">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {others.map((o) => (
               <Link
                 key={o.slug}
