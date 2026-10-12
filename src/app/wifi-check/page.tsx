@@ -180,8 +180,18 @@ export default function WifiCheckPage({ searchParams }: { searchParams: { r?: st
           </div>
 
           <div className="mt-10 text-center">
+            <p className="text-sm text-ink-soft max-w-2xl mx-auto mb-3">
+              A speed test shows what reached one room at one moment. Amber or red? We can{" "}
+              <Link
+                href="/services/wifi"
+                className="font-semibold text-brand-700 hover:text-brand-800 no-underline hover:underline focus-visible:underline underline-offset-4"
+              >
+                try better Wi-Fi in your home for 3 days
+              </Link>
+              , measured every hour, before you buy anything.
+            </p>
             <Link
-              href="/services/wifi"
+              href="/services/wifi/home-network-assessment"
               className="inline-flex items-center gap-1.5 text-brand-700 font-semibold text-sm hover:underline"
             >
               See the home network assessment <ArrowRight className="h-4 w-4" />
