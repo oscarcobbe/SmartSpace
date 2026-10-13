@@ -123,7 +123,7 @@ export function bookingMoved(d: BookingFacts & { fromLabel: string }): Email {
 }
 
 export function bookingCancelled(d: Omit<BookingFacts, "rescheduleUrl" | "cancelUrl"> & { bookAgainUrl: string }): Email {
-  const preheader = `Your ${d.title.toLowerCase()} on ${d.dateLabel} is cancelled.`;
+  const preheader = `Your ${d.title} on ${d.dateLabel} is cancelled.`;
   return {
     subject: `Cancelled: ${d.title} on ${d.dateLabel} at ${d.time.split(" ")[0]}`,
     preheader,

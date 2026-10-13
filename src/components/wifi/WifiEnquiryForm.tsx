@@ -16,6 +16,7 @@ import { Check, Send } from "lucide-react";
 import { getAttribution, consentRecord } from "@/lib/attribution";
 import { fireLeadConversion, WIFI_LEAD_VALUE } from "@/lib/lead-conversion";
 import type { PackageSlug } from "@/lib/wifi-check/grade";
+import FoundUsField from "@/components/FoundUsField";
 
 const field =
   "w-full min-h-11 rounded-xl border border-gray-300 px-3.5 text-base sm:text-sm text-gray-900 bg-white focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30";
@@ -54,6 +55,9 @@ export default function WifiEnquiryForm({
       email: value("email"),
       phone: value("phone"),
       eircode: value("eircode"),
+      /* "How did you hear about us?", as on every other lead form (src/lib/found-us.ts). */
+      found_us: value("found_us"),
+      found_us_detail: value("found_us_detail"),
       report: report ?? null,
       package: pkg ?? null,
       page: typeof window !== "undefined" ? window.location.pathname : null,
@@ -152,6 +156,13 @@ export default function WifiEnquiryForm({
           <input id="wf-eircode" name="eircode" autoComplete="postal-code" className={`${field} uppercase`} maxLength={8} />
         </div>
       </div>
+
+      <FoundUsField
+        id="wf-found-us"
+        className="mt-3"
+        labelClassName="block text-xs font-medium text-gray-700 mb-1"
+        selectClassName="w-full min-h-11 rounded-xl border border-gray-300 px-3.5 text-base sm:text-sm text-gray-900 bg-white focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+      />
 
       <button
         type="submit"

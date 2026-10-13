@@ -80,7 +80,7 @@ const LABEL = "How did you hear about us?";
 const BLANK = "Choose one";
 const DETAIL_LABEL = "Tell us more (optional)";
 const DETAIL_MAX = 200;
-const ENDPOINTS = new Set(["/api/contact", "/api/checkout", "/api/checkout/free"]);
+const ENDPOINTS = new Set(["/api/contact", "/api/checkout", "/api/checkout/free", "/api/wifi-check"]);
 /* Every file that posted a lead on 28 September 2026. One missing from what
    the scan finds means the scan is reading the wrong thing. */
 const KNOWN_POSTERS = [
@@ -89,6 +89,8 @@ const KNOWN_POSTERS = [
   "src/components/CartDrawer.tsx",
   "src/app/services/free-consultation/page.tsx",
   "src/components/AddToCartButton.tsx",
+  /* Added 14 October 2026: it posted leads from 28 September without the question. */
+  "src/components/wifi/WifiEnquiryForm.tsx",
 ];
 /* A component that sends the answer and the words the page it sits on hands
    it. Each use that posts must pass the props, and sit on a page that renders
@@ -368,7 +370,7 @@ try {
   eq(foundUs.foundUsLine("other", "My neighbour"), 'Other: "My neighbour"', "the email line adds the visitor's words");
   eq(foundUs.foundUsLine("", ""), "Not answered", "the email line says when there is no answer");
   for (const [rel, what] of [["src/app/api/contact/route.ts", "the contact email"], ["src/app/api/checkout/free/route.ts", "the free consultation email"],
-    ["src/app/api/webhooks/stripe/route.ts", "the paid order email"]]) {
+    ["src/app/api/webhooks/stripe/route.ts", "the paid order email"], ["src/app/api/wifi-check/route.ts", "the Wi-Fi enquiry email"]]) {
     const src = readFileSync(join(ROOT, rel), "utf8");
     ok(/Found us:[^\n]*foundUsLine\(/.test(src), `${what} to Nigel has no "Found us" line (${rel})`);
   }
