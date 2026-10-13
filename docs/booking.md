@@ -27,6 +27,22 @@ Google itself.
   Living: `www.smartcareliving.ie/booking/<ref>` (its own page and emails).
 - **Emails.** Confirmed, moved and cancelled (with an .ics) replace Calendly's,
   behind Nigel's Sign-off like every customer message.
+- **The customer is a guest on the event, as with Calendly** (13 Oct 2026).
+  Each booking is written the way Calendly wrote it into Nigel's calendar:
+  "<customer> and Nigel", red, the visit's name and description, the
+  customer's answers, and their cancel and reschedule links. Google sends the
+  customer the invitation to accept. When Nigel drags or deletes the event in
+  his calendar, Google asks him whether to email the guest, exactly as it did
+  for Calendly's bookings, and the CRM and the reminder jobs read the new time
+  because they read the calendar itself. A move or cancel through the
+  customer's link sends Google's update too. Lock events never email anyone.
+  A slot someone cancelled is taken back with no guest first, so its last
+  customer is not told twice.
+- **Calendly's own bookings after Calendly.** Once `CALENDLY_PERSONAL_TOKEN`
+  is unset, the engine also reads the events Calendly left in Nigel's
+  calendar (by their Calendly links), so the diary, reminders and review
+  request keep them. Their Calendly links stop working with the account:
+  Nigel moves or cancels those in his calendar.
 
 ## Google access (keyless)
 

@@ -26,6 +26,7 @@ import {
   getEvent,
   insertEvent,
   listEvents,
+  patchEvent,
   replaceEvent,
   type CalendarEvent,
 } from "./google-calendar";
@@ -202,12 +203,55 @@ function fromEvent(e: CalendarEvent): Booking | null {
   };
 }
 
+/**
+ * A booking Calendly made, read from the event it left in Nigel's calendar:
+ * "<customer> and Nigel", the customer a guest, and a description that
+ * starts with the event type ("Event Name\nSmart Space Installation") and
+ * carries the answers ("Product: ... | Order: ... | Address: ... | Phone: ...")
+ * and Calendly's own cancel link. Those visits stay in his calendar after
+ * Calendly is cancelled, so the diary, the reminders and the review request
+ * keep finding them here. Read only: Calendly's links in them stop working
+ * with the account, so they are moved or cancelled by Nigel in his calendar.
+ */
+export function fromCalendlyEvent(e: CalendarEvent): Booking | null {
+  const d = e.description || "";
+  if (!/calendly\.com\/(cancellations|reschedulings)\//.test(d) || !e.start?.dateTime || !e.end?.dateTime) return null;
+  const eventName = (/^Event Name\s*\n([^\n]+)/.exec(d)?.[1] || "").trim();
+  const site: BookingSite = /^smartcare living/i.test(eventName) ? "scl" : "ss";
+  const kind: BookingKind = /consultation/i.test(eventName) ? "consultation" : /network assessment/i.test(eventName) ? "assessment" : "installation";
+  const guest = (e.attendees || []).find((a) => !a.organizer && !a.self);
+  const answer = (label: string) => new RegExp(`(?:^|\\||\\s)${label}:\\s*([^|\\n]+)`).exec(d)?.[1]?.trim() || undefined;
+  return {
+    id: e.id,
+    ref: `calendly-${e.id}`,
+    site,
+    kind,
+    title: eventName || bookingTitle(site, kind),
+    start: new Date(e.start.dateTime).toISOString(),
+    end: new Date(e.end.dateTime).toISOString(),
+    name: guest?.displayName || (e.summary || "").replace(/\s+and Nigel\s*$/i, "").trim(),
+    email: guest?.email || "",
+    phone: answer("Phone"),
+    address: answer("Address"),
+    product: answer("Product"),
+    orderId: answer("Order"),
+    seq: 0,
+  };
+}
+
 /** Active bookings starting in [startIso, endIso), soonest first. */
 export async function bookingsBetween(startIso: string, endIso: string): Promise<Booking[]> {
   const events = await listEvents({ timeMin: startIso, timeMax: endIso, privateProperty: "ssbooking=1" });
-  return events
-    .filter((e) => e.status !== "cancelled")
-    .map(fromEvent)
+  const ours = events.filter((e) => e.status !== "cancelled").map(fromEvent);
+  /* Calendly's bookings, once nothing reads Calendly itself (its token gone).
+     While the token is set, the readers take them from Calendly and this
+     would count each twice. */
+  const calendly = process.env.CALENDLY_PERSONAL_TOKEN?.trim()
+    ? []
+    : (await listEvents({ timeMin: startIso, timeMax: endIso }))
+        .filter((e) => e.status !== "cancelled" && e.extendedProperties?.private?.ssbooking !== "1")
+        .map(fromCalendlyEvent);
+  return [...ours, ...calendly]
     .filter((b): b is Booking => !!b && Date.parse(b.start) >= Date.parse(startIso) && Date.parse(b.start) < Date.parse(endIso))
     .sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
 }
@@ -247,26 +291,69 @@ export async function freeStarts(dateStr: string, now = Date.now()): Promise<str
 
 const clip = (s: string | undefined, n = 900) => (s ? s.replace(/\s+/g, " ").trim().slice(0, n) : "");
 
+/*
+ * The event as Calendly wrote it into Nigel's calendar, so his week looks the
+ * same after the switch (read from his calendar on 13 October 2026): titled
+ * "<customer> and Nigel", red, with the visit's name and description, the
+ * customer's answers, and the links to cancel or reschedule; the customer a
+ * guest, so Google sends them the invitation to accept and tells them when
+ * Nigel moves or cancels it. The descriptions are each Calendly event type's own.
+ */
+const DESCRIPTIONS: Record<BookingSite, Record<BookingKind, string>> = {
+  ss: {
+    installation:
+      "Professional installation of your Ring doorbell, camera, or security system. Our certified installer will arrive at your home and set everything up, including mounting, wiring, Wi-Fi setup, and app configuration. Allow 2 hours for the appointment.",
+    consultation:
+      "Free home consultation for Ring security assessment. Our expert installer will visit your home, assess optimal device placement, check Wi-Fi coverage, and provide a personalised written quote, completely free, no obligation.",
+    assessment:
+      "First visit, about 2 hours. We test your broadband and every floor, set up the trial and move up to 3 problem devices onto it. The trial records speed every hour for 3 days while you carry on as normal, then we go through your report together.",
+  },
+  scl: {
+    installation:
+      "Book your SmartGuardian installation. Our team arrives at your loved one's home, fits the agreed setup, and shows you how everything works before they leave. Allow up to 2 hours. Dublin and all of Leinster.",
+    consultation:
+      "Book a complimentary home consultation with SmartCare Living. Our specialist visits your loved one's home, assesses what's needed, answers your questions, and recommends the right SmartGuardian setup. Free, no obligation, no card required. Allow up to 2 hours.",
+    assessment:
+      "First visit, about 2 hours. We test your broadband and every floor, set up the trial and move up to 3 problem devices onto it.",
+  },
+};
+
 function eventFor(input: BookInput, id: string, ref: string, startMs: number): CalendarEvent {
   const title = bookingTitle(input.site, input.kind);
   const booking = { ref, site: input.site };
-  const lines = [
-    `Customer: ${input.name}`,
-    `Email: ${input.email}`,
-    input.phone ? `Phone: ${input.phone}` : "",
-    input.address ? `Address: ${input.address}` : "",
-    input.eircode ? `Eircode: ${input.eircode}` : "",
+  const answers = [
     input.product ? `Product: ${input.product}` : "",
     input.orderId ? `Order: ${input.orderId}` : "",
-    input.notes ? `\nNotes: ${input.notes}` : "",
-    `\nBooked on ${input.site === "scl" ? "smartcareliving.ie" : "smart-space.ie"}. Moving or cancelling it here does not tell the customer; use the customer's link instead:`,
-    manageUrl(booking),
+    input.address ? `Address: ${input.address}` : "",
+    input.eircode ? `Eircode: ${input.eircode}` : "",
+    input.phone ? `Phone: ${input.phone}` : "",
+    input.notes ? `Notes: ${input.notes}` : "",
   ].filter(Boolean);
+  const lines = [
+    "Event Name",
+    title,
+    "",
+    DESCRIPTIONS[input.site][input.kind],
+    "",
+    "Location: Customer's home",
+    "",
+    `Customer: ${input.name}`,
+    `Email: ${input.email}`,
+    ...(answers.length ? [answers.join(" | ")] : []),
+    "",
+    "Need to make changes to this event?",
+    `Cancel: ${manageUrl(booking, "cancel")}`,
+    `Reschedule: ${manageUrl(booking, "reschedule")}`,
+  ];
   return {
     id,
-    summary: `${title}: ${input.name}`,
+    summary: `${input.name.trim()} and Nigel`,
     description: lines.join("\n"),
     location: input.address ? `Customer's home, ${input.address}` : "Customer's home",
+    colorId: "11",
+    attendees: [{ email: input.email.trim(), displayName: input.name.trim() }],
+    guestsCanModify: false,
+    guestsCanInviteOthers: false,
     start: { dateTime: new Date(startMs).toISOString(), timeZone: "Europe/Dublin" },
     end: { dateTime: new Date(startMs + SLOT_MINUTES * 60_000).toISOString(), timeZone: "Europe/Dublin" },
     extendedProperties: {
@@ -357,7 +444,10 @@ export async function book(input: BookInput, now = Date.now()): Promise<BookResu
       if (existing.status === "cancelled") {
         if (!existing.etag) return taken;
         try {
-          saved = await replaceEvent({ ...event, status: "confirmed" }, existing.etag);
+          /* Taken back with no guest first, silently: the cancelled event still
+             names its last customer, and a write that drops a guest tells them
+             again it is cancelled. The new customer is added below, with notice. */
+          saved = await replaceEvent({ ...event, attendees: [], status: "confirmed" }, existing.etag);
         } catch (e) {
           const now2 = await getEvent(event.id).catch(() => null);
           if (now2 && ours(now2)) {
@@ -372,6 +462,12 @@ export async function book(input: BookInput, now = Date.now()): Promise<BookResu
       }
     }
     if (!saved) return taken;
+    /* The customer as a guest, so Google sends them the invitation. Already
+       there on a fresh insert; added here when a cancelled slot was taken back. */
+    const guest = input.email.trim().toLowerCase();
+    if (!saved.attendees?.some((a) => a.email?.toLowerCase() === guest)) {
+      saved = await patchEvent(saved.id, { attendees: [{ email: input.email.trim(), displayName: input.name.trim() }] });
+    }
     const booking = fromEvent(saved);
     if (!booking) throw new Error("Google returned the booking without its details");
     return { ok: true, booking };
@@ -460,7 +556,8 @@ export async function cancel(ref: string): Promise<Booking | null> {
   const r = await exclusively(ref, async () => {
     const live = await liveEventsByRef(ref);
     if (!live.length) return null;
-    for (const e of live) await deleteEvent(e.id);
+    /* Google tells the customer, a guest on it, that the visit is cancelled. */
+    for (const e of live) await deleteEvent(e.id, true);
     return fromEvent(live[0]);
   });
   if (r === "busy") throw new CalendarError(503, "Another change to this booking is still in progress");
@@ -484,7 +581,8 @@ export async function reschedule(ref: string, date: string, start: string, now =
       // and the old event is reported so a person can delete it.
       // bookingByRef already prefers the newer event, and cancel() removes both.
       try {
-        await deleteEvent(from.id);
+        /* The customer has the new time's invitation; Google tells them the old one is off. */
+        await deleteEvent(from.id, true);
       } catch (e) {
         console.error(`[booking] moved ${ref} but could not release ${from.id}:`, e);
         return { ok: true as const, from, booking: result.booking, leftover: from.id };

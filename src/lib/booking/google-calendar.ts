@@ -264,7 +264,21 @@ export interface CalendarEvent {
   created?: string;
   updated?: string;
   extendedProperties?: { private?: Record<string, string> };
+  /** The customer, as a guest: Google sends them the invitation, and Nigel's moves and cancels reach them, as Calendly's bookings did. */
+  attendees?: { email: string; displayName?: string; organizer?: boolean; self?: boolean; responseStatus?: string }[];
+  /** Google's event colour; "11" is the red Calendly gave every booking. */
+  colorId?: string;
+  guestsCanModify?: boolean;
+  guestsCanInviteOthers?: boolean;
 }
+
+/*
+ * A customer's booking has the customer as a guest, and Google emails a guest
+ * about it: the invitation, a new time, a cancellation. That is how Calendly's
+ * bookings reached customers, so every write of an event with a guest says
+ * sendUpdates=all, and every other write (the lock events) stays silent.
+ */
+const updatesFor = (event: { attendees?: unknown[] }) => (event.attendees?.length ? "all" : "none");
 
 export function busyCalendars(): string[] {
   const list = (process.env.BOOKING_BUSY_CALENDARS || "primary").split(",").map((s) => s.trim()).filter(Boolean);
@@ -292,7 +306,7 @@ export async function busyBetween(timeMin: string, timeMax: string): Promise<{ s
 const enc = encodeURIComponent;
 
 export function insertEvent(event: Omit<CalendarEvent, "etag">): Promise<CalendarEvent> {
-  return call<CalendarEvent>("POST", `/calendars/primary/events?sendUpdates=none`, { body: event });
+  return call<CalendarEvent>("POST", `/calendars/primary/events?sendUpdates=${updatesFor(event)}`, { body: event });
 }
 
 /** Returns null for an id that has never existed. A deleted event comes back with status "cancelled". */
@@ -307,22 +321,23 @@ export async function getEvent(id: string): Promise<CalendarEvent | null> {
 
 /** Replaces the event, only if nobody has changed it since `etag` was read (412 otherwise). */
 export function replaceEvent(event: CalendarEvent, etag: string): Promise<CalendarEvent> {
-  return call<CalendarEvent>("PUT", `/calendars/primary/events/${enc(event.id)}?sendUpdates=none`, {
+  return call<CalendarEvent>("PUT", `/calendars/primary/events/${enc(event.id)}?sendUpdates=${updatesFor(event)}`, {
     body: event,
     headers: { "If-Match": etag },
   });
 }
 
 export function patchEvent(id: string, patch: Partial<CalendarEvent>, etag?: string): Promise<CalendarEvent> {
-  return call<CalendarEvent>("PATCH", `/calendars/primary/events/${enc(id)}?sendUpdates=none`, {
+  return call<CalendarEvent>("PATCH", `/calendars/primary/events/${enc(id)}?sendUpdates=${updatesFor(patch)}`, {
     body: patch,
     headers: etag ? { "If-Match": etag } : undefined,
   });
 }
 
-export async function deleteEvent(id: string): Promise<void> {
+/** `tellGuests`: Google emails the event's guests that it is cancelled (a customer's booking). */
+export async function deleteEvent(id: string, tellGuests = false): Promise<void> {
   try {
-    await call<void>("DELETE", `/calendars/primary/events/${enc(id)}?sendUpdates=none`);
+    await call<void>("DELETE", `/calendars/primary/events/${enc(id)}?sendUpdates=${tellGuests ? "all" : "none"}`);
   } catch (e) {
     if (e instanceof CalendarError && e.status === 410) return; // already gone
     throw e;

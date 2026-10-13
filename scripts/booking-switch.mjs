@@ -8,6 +8,11 @@
 //   node scripts/booking-switch.mjs rollback   switch both sites back to Calendly and redeploy
 //
 // Secrets are read from Vercel into memory and never printed or kept.
+//
+// The proving booking makes the customer a guest, as every booking now does, so
+// Google sends its invitation and then its cancellation to that address. It is
+// Oscar's (oscar@smart-space.ie): an address that bounced would land the bounce
+// in Nigel's inbox, as the organiser.
 import { execFileSync, spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
@@ -98,7 +103,7 @@ async function go() {
     const date = day.toISOString().slice(0, 10);
     const free = (await (await fetch(`${api}?date=${date}`, { headers: auth })).json()).starts || [];
     if (!free.length) continue;
-    const r = await (await fetch(api, { method: "POST", headers: auth, body: JSON.stringify({ action: "book", kind: "consultation", date, start: free[free.length - 1], name: "TEST switch-over check (deleting now)", email: "switch-check@example.invalid" }) })).json();
+    const r = await (await fetch(api, { method: "POST", headers: auth, body: JSON.stringify({ action: "book", kind: "consultation", date, start: free[free.length - 1], name: "TEST switch-over check (deleting now)", email: "oscar@smart-space.ie" }) })).json();
     if (r.ok) booked = r.booking;
   }
   if (!booked) throw new Error("could not make the test booking; run rollback");
