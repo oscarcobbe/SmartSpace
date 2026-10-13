@@ -33,6 +33,7 @@ import { afterResponse, AFTER_CEILING } from "@/lib/after-response";
 import { wifiReport } from "@/lib/email/customer";
 import { approval } from "@/lib/signoff/state";
 import { chatGptAdOf, sendToCrm } from "@/lib/crm";
+import { foundUsDetailFrom, foundUsFrom, foundUsLine, notesWithFoundUs } from "@/lib/found-us";
 import { consentFrom, openAiConsented, recordEnquiryConsent, type ConsentInput } from "@/lib/ad-consent";
 import { browserContext, fireServerConversion } from "@/lib/server-conversions";
 import { GADS_WIFI_SEND_TO, WIFI_LEAD_VALUE } from "@/lib/lead-conversion";
@@ -109,6 +110,10 @@ export async function POST(request: Request) {
     | AttributionRecord
     | undefined;
   const consent = (body.consent ?? null) as ConsentInput | null;
+  /* "How did you hear about us?": missing from this form until 14 October 2026,
+     so Wi-Fi enquiries reached Nigel, the sheet and the CRM with no source. */
+  const foundUs = foundUsFrom(body.found_us);
+  const foundUsDetail = foundUsDetailFrom(body.found_us_detail);
 
   const detail = g ? `${g.light[0].toUpperCase()}${g.light.slice(1)}, ${pkg?.name ?? "smart security"}` : pkg?.name ?? "Wi-Fi enquiry";
   const contact = [
@@ -117,6 +122,7 @@ export async function POST(request: Request) {
     `Phone: ${phone}`,
     `Eircode: ${eircode || "not given"}`,
     `Page: ${page || "not given"}`,
+    `Found us: ${foundUsLine(foundUs, foundUsDetail)}`,
   ];
   const report = [
     `Package: ${pkg ? `${pkg.name} (${priceLabel(pkg)})` : "none, the Wi-Fi is fine"}`,
@@ -201,7 +207,7 @@ export async function POST(request: Request) {
         address: eircode || undefined,
         product: pkg?.name,
         source: "smart-space.ie",
-        notes,
+        notes: notesWithFoundUs(notes, foundUs, foundUsDetail),
         attribution,
       },
       SHEET_BACKGROUND,
@@ -261,6 +267,8 @@ export async function POST(request: Request) {
       tags: ["wifi-check", ...(g ? [`wifi-${g.light}`] : [])],
       custom: {
         conversion_id: conversionId,
+        found_us: foundUs || null,
+        found_us_detail: foundUsDetail || null,
         wifi: g
           ? { light: g.light, cause: g.cause, recommend: g.recommend, also: g.also, report: reportUrl }
           : { package: pkg?.slug ?? null },
