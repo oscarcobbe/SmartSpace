@@ -51,6 +51,15 @@ const cal = new Map(); // id -> event
 let etagN = 0;
 let unreadable = false;
 let freeBusyHook = null; // runs before freeBusy answers, to stage a race
+/*
+ * What Google would email the event's guests, by its rules: with
+ * sendUpdates=all, an insert invites every guest, a write that adds a guest
+ * invites them, one that drops a guest tells them it is cancelled, one that
+ * moves the time tells the guests who stay, and a delete tells every guest it
+ * is cancelled. With sendUpdates=none, nobody hears anything.
+ */
+const mail = []; // { to, kind: "invitation" | "updated" | "cancelled", id }
+const guests = (e) => (e?.attendees || []).map((a) => a.email.toLowerCase());
 const json = (status, body) => new Response(body === undefined ? null : JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 const stamp = (e) => ({ ...e, etag: `"${++etagN}"`, updated: new Date().toISOString() });
 
@@ -109,11 +118,13 @@ async function google(url, method, init) {
   const m = path.match(/^\/calendars\/primary\/events(?:\/([^/]+))?$/);
   if (!m) return json(404, { error: "no route" });
   const id = m[1] && decodeURIComponent(m[1]);
+  const notify = url.searchParams.get("sendUpdates") === "all";
   if (method === "POST") {
     calls.insert++;
     if (cal.has(body.id)) return json(409, { error: { message: "The requested identifier already exists." } });
     const e = stamp({ status: "confirmed", created: new Date().toISOString(), ...body });
     cal.set(body.id, e);
+    if (notify) for (const to of guests(e)) mail.push({ to, kind: "invitation", id: e.id });
     return json(200, e);
   }
   if (method === "GET" && id) return cal.has(id) ? json(200, cal.get(id)) : json(404, {});
@@ -124,6 +135,12 @@ async function google(url, method, init) {
     if (ifMatch && ifMatch !== cur.etag) return json(412, { error: "conditionNotMet" });
     const e = stamp(method === "PUT" ? { created: cur.created, ...body, id } : { ...cur, ...body });
     cal.set(id, e);
+    if (notify) {
+      const before = cur.status === "cancelled" ? [] : guests(cur), after = guests(e), was = guests(cur);
+      for (const to of after) if (!before.includes(to)) mail.push({ to, kind: "invitation", id });
+      for (const to of was) if (!after.includes(to)) mail.push({ to, kind: "cancelled", id });
+      if (cur.start?.dateTime !== e.start?.dateTime) for (const to of after) if (before.includes(to)) mail.push({ to, kind: "updated", id });
+    }
     return json(200, e);
   }
   if (method === "DELETE") {
@@ -131,6 +148,7 @@ async function google(url, method, init) {
     const cur = cal.get(id);
     if (!cur || cur.status === "cancelled") return json(410, {});
     cal.set(id, stamp({ ...cur, status: "cancelled" }));
+    if (notify) for (const to of guests(cur)) mail.push({ to, kind: "cancelled", id });
     return new Response(null, { status: 204 });
   }
   if (method === "GET") {
@@ -168,7 +186,7 @@ const check = (name, ok, detail = "") => {
 const NOW = Date.parse("2026-10-01T09:00:00Z"); // a Thursday
 const person = { name: "Mary Byrne", email: "mary@example.ie", phone: "087 123 4567", address: "1 Main St, Naas" };
 const book = (date, start, extra = {}) => E.book({ site: "ss", kind: "installation", date, start, ...person, ...extra }, NOW);
-const reset = () => { cal.clear(); unreadable = false; freeBusyHook = null; faults = []; };
+const reset = () => { cal.clear(); unreadable = false; freeBusyHook = null; faults = []; mail.length = 0; };
 const live = () => [...cal.values()].filter((e) => e.status !== "cancelled" && e.extendedProperties?.private?.ssbooking === "1");
 const locks = () => [...cal.values()].filter((e) => e.status !== "cancelled" && e.extendedProperties?.private?.sslock === "1");
 
@@ -198,7 +216,14 @@ check("a free slot books", r1.ok && r1.booking.id === "ssb2026100510000", JSON.s
 const ev = cal.get("ssb2026100510000");
 check("the event is 2 hours, from 10:00 Dublin", ev?.start.dateTime === "2026-10-05T09:00:00.000Z" && ev?.end.dateTime === "2026-10-05T11:00:00.000Z");
 check("the event carries the customer and order", ev?.extendedProperties.private.email === "mary@example.ie" && ev?.extendedProperties.private.orderId === "cs_test_1" && ev?.extendedProperties.private.ssbooking === "1");
-check("the event's title is the visit type and the customer", ev?.summary === "Smart Space Installation: Mary Byrne");
+check("the event's title is Calendly's: the customer and Nigel", ev?.summary === "Mary Byrne and Nigel");
+check("in Calendly's red", ev?.colorId === "11");
+check("with the visit's name and the customer's details, as Calendly wrote them",
+  /^Event Name\nSmart Space Installation\n/.test(ev?.description || "") && /Product: Ring Video Doorbell 4 \| Order: cs_test_1/.test(ev?.description || "") && /Phone: 087 123 4567/.test(ev?.description || ""));
+check("and the customer's own links to cancel or reschedule",
+  /Cancel: https:\/\/smart-space\.ie\/booking\/[0-9a-f]+\?t=[^&\s]+&do=cancel/.test(ev?.description || "") && /Reschedule: https:\/\/smart-space\.ie\/booking\/[0-9a-f]+\?t=[^&\s]+&do=reschedule/.test(ev?.description || ""));
+check("the customer is a guest on it", JSON.stringify(guests(ev)) === '["mary@example.ie"]');
+check("so Google sends them one invitation to accept, as with Calendly", JSON.stringify(mail) === JSON.stringify([{ to: "mary@example.ie", kind: "invitation", id: "ssb2026100510000" }]), JSON.stringify(mail));
 const r2 = await book("2026-10-05", "10:00");
 check("the same slot cannot be booked twice", !r2.ok && r2.reason === "taken", JSON.stringify(r2));
 const sclTry = await E.book({ site: "scl", kind: "consultation", date: "2026-10-05", start: "10:00", ...person }, NOW);
@@ -397,6 +422,53 @@ const s2 = await book("2026-11-19", "10:00", { orderId: "cs_live_dup" });
 check("the same paid order arriving twice is one booking, reported booked both times", s1.ok && s2.ok && s1.booking.id === s2.booking.id && live().length === 1, JSON.stringify([s1.ok, s2]));
 const s3 = await book("2026-11-19", "10:00", { orderId: "cs_live_other" });
 check("a different order for that slot is still refused", !s3.ok && s3.reason === "taken");
+
+// What the customer hears from Google, end to end
+reset();
+const g1 = await book("2026-10-13", "10:00", { orderId: "cs_test_mail" });
+check("a booking: one invitation, to the customer", mail.length === 1 && mail[0].kind === "invitation" && mail[0].to === "mary@example.ie", JSON.stringify(mail));
+mail.length = 0;
+const g2 = await E.reschedule(g1.booking.ref, "2026-10-14", "12:30", NOW);
+check("a move through the customer's link: the new time's invitation, and the old time cancelled", g2.ok &&
+  mail.some((m) => m.kind === "invitation" && m.id === g2.booking.id) && mail.some((m) => m.kind === "cancelled" && m.id === g1.booking.id) && mail.length === 2, JSON.stringify(mail));
+check("the lock that guarded the move never emailed anyone", mail.every((m) => !m.id.startsWith("ssk")));
+mail.length = 0;
+await E.cancel(g1.booking.ref);
+check("a cancel through the customer's link: Google tells them it is cancelled", mail.length === 1 && mail[0].kind === "cancelled" && mail[0].to === "mary@example.ie", JSON.stringify(mail));
+mail.length = 0;
+const g3 = await E.book({ site: "ss", kind: "consultation", date: "2026-10-14", start: "12:30", name: "Sean Kelly", email: "sean@example.ie" }, NOW);
+check("someone else books the slot Mary left: Sean is invited, on the slot's own event", g3.ok && g3.booking.id === g2.booking.id && mail.some((m) => m.to === "sean@example.ie" && m.kind === "invitation"), JSON.stringify({ g3, mail }));
+check("and Mary hears nothing more about it", !mail.some((m) => m.to === "mary@example.ie"), JSON.stringify(mail));
+check("the slot's event names Sean alone", JSON.stringify(guests(cal.get(g2.booking.id))) === '["sean@example.ie"]');
+mail.length = 0;
+const dragged = cal.get(g2.booking.id);
+cal.set(dragged.id, { ...dragged, start: { dateTime: "2026-10-15T09:00:00.000Z" }, end: { dateTime: "2026-10-15T11:00:00.000Z" } });
+const afterDrag = await E.bookingByRef(g3.booking.ref);
+check("Nigel drags it to Thursday in his calendar: the booking is read at its new time", afterDrag?.start === "2026-10-15T09:00:00.000Z", JSON.stringify(afterDrag));
+check("and its old slot is free again for the next customer", (await E.freeStarts("2026-10-14", NOW)).includes("12:30"));
+
+// Calendly's bookings, still in Nigel's calendar after Calendly is cancelled
+reset();
+cal.set("calendlyevt1", {
+  id: "calendlyevt1", status: "confirmed", summary: "Caroline Stynes and Nigel", colorId: "11",
+  start: { dateTime: "2026-10-20T14:00:00Z" }, end: { dateTime: "2026-10-20T16:00:00Z" },
+  attendees: [{ email: "carolinestynes@gmail.com", responseStatus: "needsAction" }, { email: "nigel@smart-space.ie", organizer: true, self: true }],
+  description: "Event Name\nSmart Space Installation\n\nProfessional installation of your Ring doorbell.\n\nLocation: Customer's home\n\nPlease share anything that will help prepare for our meeting.: Product: Plus Video Doorbell, No New Cabling Required | Order: cs_live_abc | Address: 18 Jamestown Road, Inchicore, Dublin 8 | Phone: +353860659800\n\nNeed to make changes to this event?\nCancel: https://calendly.com/cancellations/4529f87f\nReschedule: https://calendly.com/reschedulings/4529f87f\n",
+});
+cal.set("nigel-dentist", { id: "nigel-dentist", status: "confirmed", summary: "Dentist", start: { dateTime: "2026-10-20T08:00:00Z" }, end: { dateTime: "2026-10-20T09:00:00Z" } });
+const bookedOnGoogle = await book("2026-10-20", "10:00");
+const savedToken = process.env.CALENDLY_PERSONAL_TOKEN;
+process.env.CALENDLY_PERSONAL_TOKEN = "still-on-calendly";
+const whileCalendly = await E.bookingsBetween("2026-10-20T00:00:00Z", "2026-10-21T00:00:00Z");
+check("while Calendly is still read, its bookings are not counted a second time from the calendar", whileCalendly.length === 1 && whileCalendly[0].ref === bookedOnGoogle.booking.ref, JSON.stringify(whileCalendly.map((b) => b.ref)));
+delete process.env.CALENDLY_PERSONAL_TOKEN;
+const afterCalendly = await E.bookingsBetween("2026-10-20T00:00:00Z", "2026-10-21T00:00:00Z");
+const legacy = afterCalendly.find((b) => b.id === "calendlyevt1");
+check("once Calendly is gone, its booking is read from Nigel's calendar", afterCalendly.length === 2 && !!legacy, JSON.stringify(afterCalendly.map((b) => b.id)));
+check("with the customer, the visit and their answers", legacy?.name === "Caroline Stynes" && legacy?.email === "carolinestynes@gmail.com" && legacy?.kind === "installation" && legacy?.site === "ss" &&
+  legacy?.product === "Plus Video Doorbell, No New Cabling Required" && legacy?.orderId === "cs_live_abc" && legacy?.phone === "+353860659800" && legacy?.address === "18 Jamestown Road, Inchicore, Dublin 8", JSON.stringify(legacy));
+check("and Nigel's own appointments are never taken for bookings", !afterCalendly.some((b) => b.id === "nigel-dentist"));
+if (savedToken !== undefined) process.env.CALENDLY_PERSONAL_TOKEN = savedToken;
 
 console.log(failed ? `\n${failed} failed` : "\nall passed");
 process.exit(failed ? 1 : 0);
