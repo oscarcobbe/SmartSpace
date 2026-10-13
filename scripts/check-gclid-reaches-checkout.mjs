@@ -136,16 +136,40 @@ try {
     b.click();
     return "ok";
   })()`);
+  /*
+   * "How did you hear about us" is required before the button wakes (since
+   * 30 September), and the times load from the calendar a few seconds after a
+   * date is pressed. The check pressed after a fixed 1.2 seconds and never
+   * answered the question, so from 13 October it failed on a page that was
+   * working. Each step now waits up to ten seconds for its button, and the
+   * question is answered between the time and the button.
+   */
+  const answerFoundUs = () => evaluate(`(() => {
+    /* The booking form's own question: the callback form on the same page
+       has one too, and answering that one left the button asleep. */
+    const s = document.getElementById("ring-install-found-us");
+    if (!s) return "missing";
+    const o = [...s.options].find((x) => x.value);
+    if (!o) return "missing";
+    Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value").set.call(s, o.value);
+    s.dispatchEvent(new Event("change", { bubbles: true }));
+    return "ok";
+  })()`);
   const steps = [
     ["the wiring answer", "/^Yes/"],
     ["an installation date", "/(Mon|Tue|Wed|Thu|Fri) \\d{1,2} [A-Z][a-z]{2}/"],
     ["a time", "/\\d{1,2}:\\d{2}/"],
+    ["how they heard about us", null],
     ["Book Installation Now", "/Book Installation Now/"],
   ];
   for (const [what, re] of steps) {
-    const r = await press(re);
+    let r = "missing";
+    for (let i = 0; i < 20 && r !== "ok"; i++) {
+      r = re ? await press(re) : await answerFoundUs();
+      if (r !== "ok") await wait(500);
+    }
     if (r !== "ok") { problems.push(`could not press ${what} on /ring-installation: the page has changed`); break; }
-    await wait(1200);
+    await wait(800);
   }
 
   /* 5. The request the button sent, paused before it left the browser. */
