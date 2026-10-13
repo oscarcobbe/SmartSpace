@@ -11,6 +11,7 @@ import {
   MONITOR_POINTS,
   MONITOR_UNIT,
   NETWORK_PAYABLE,
+  EVIDENCE_STEPS,
   packageBySlug,
   priceLabel,
   priceNote,
@@ -261,8 +262,46 @@ export default function WifiPackagePage({ params }: { params: { slug: string } }
         </div>
       </section>
 
-      {/* Questions and the form */}
-      <section id="book" className="py-14 lg:py-20 bg-gradient-to-b from-white to-cream scroll-mt-28">
+      {/* Book online: Nigel's step one, the main way in for a fixed-price service */}
+      {payable !== null && (
+        <section id="book" className="py-14 lg:py-20 bg-gradient-to-b from-white to-cream scroll-mt-28">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="rounded-3xl bg-white border-2 border-brand-500 shadow-[0_30px_70px_-20px_rgba(242,100,25,0.3)] p-6 sm:p-10">
+              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6">
+                <div>
+                  <div className="text-brand-500 text-xs font-bold uppercase tracking-[0.2em] mb-2">{pkg.name}</div>
+                  <h2 className="text-2xl sm:text-3xl font-extrabold text-ink tracking-[-0.03em]">Book online</h2>
+                  <p className="mt-1.5 text-ink-soft">
+                    {isEvidence
+                      ? (EVIDENCE_STEPS[0]?.body ?? "")
+                      : "Pay for the assessment and pick a time."}
+                  </p>
+                </div>
+                <div className="sm:text-right">
+                  <div className="text-3xl font-extrabold text-ink tracking-[-0.03em]">€{payable}</div>
+                  <div className="text-xs text-ink-muted">
+                    {isAssessment ? "incl. VAT, credited in full against any work" : "incl. VAT"}
+                  </div>
+                </div>
+              </div>
+              {isAssessment ? (
+                <NetworkBookAndPay slug={pkg.slug} name={pkg.name} euro={payable} />
+              ) : (
+                <div className="max-w-md">
+                  <NetworkPayButton slug={pkg.slug} name={pkg.name} euro={payable} />
+                  <p className="mt-3 text-xs text-ink-muted">The payment page asks for the speed you pay for.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Questions, and the callback form */}
+      <section
+        id={payable === null ? "book" : "callback"}
+        className={`py-14 lg:py-20 scroll-mt-28 ${payable === null ? "bg-gradient-to-b from-white to-cream" : "bg-cream"}`}
+      >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-10 items-start">
           <div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-ink tracking-[-0.03em] mb-6">Questions</h2>
@@ -278,35 +317,12 @@ export default function WifiPackagePage({ params }: { params: { slug: string } }
               ))}
             </div>
           </div>
-          <div className="space-y-6">
-            {payable !== null && (
-              <div className="rounded-3xl bg-white border-2 border-brand-500 shadow-premium p-6 sm:p-8">
-                <h2 className="text-2xl font-extrabold text-ink tracking-[-0.03em] mb-1.5">
-                  {isEvidence ? "Book the evidence service" : "Book your assessment"}
-                </h2>
-                <p className="text-sm text-ink-soft leading-relaxed mb-5">
-                  {isAssessment
-                    ? `Choose a date and time for the first visit, about 2 hours, and pay €${payable} securely. Credited in full against any work.`
-                    : `Pay €${payable} securely now and we ring you within one working day to confirm your speed and post the box.`}
-                </p>
-                {isAssessment ? (
-                  <NetworkBookAndPay slug={pkg.slug} name={pkg.name} euro={payable} />
-                ) : (
-                  <NetworkPayButton slug={pkg.slug} name={pkg.name} euro={payable} />
-                )}
-              </div>
-            )}
-            <WifiEnquiryForm
-              pkg={pkg.slug}
-              title={payable ? "Or ask us to ring you first" : `Ask about ${pkg.name}`}
-              blurb={
-                payable
-                  ? "Prefer to talk it through first? Leave your details and we'll ring you, and take payment by a secure link."
-                  : "Leave your details and we'll ring you to talk it through."
-              }
-              button="Request a callback"
-            />
-          </div>
+          <WifiEnquiryForm
+            pkg={pkg.slug}
+            title={payable !== null ? "Rather talk first?" : `Ask about ${pkg.name}`}
+            blurb="Leave your details and we'll ring you to talk it through."
+            button="Request a callback"
+          />
         </div>
       </section>
 

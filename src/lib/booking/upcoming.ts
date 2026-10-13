@@ -26,6 +26,13 @@ export interface BookedVisit {
   source: "calendly" | "google";
   site: "ss" | "scl";
   consultation: boolean;
+  /**
+   * A SmartSpace Networks home network assessment (its own Calendly event type
+   * or Google kind, or an early one booked as an installation named for it).
+   * Neither the install reminder nor the review request fits it, so both jobs
+   * leave it out; there is no assessment message for Nigel to approve yet.
+   */
+  assessment: boolean;
   title: string;
   start: string;
   end: string;
@@ -34,6 +41,12 @@ export interface BookedVisit {
   phone?: string;
   address?: string;
   product?: string;
+}
+
+const ASSESSMENT = /home network assessment/i;
+/** By the visit's name, or the product it was booked for. */
+export function isAssessment(title?: string, product?: string): boolean {
+  return ASSESSMENT.test(title || "") || ASSESSMENT.test(product || "");
 }
 
 /** Visits starting in [startIso, endIso]. `problems` says which source could not be read; the rest still come back. */
@@ -56,6 +69,7 @@ export async function visitsBetween(startIso: string, endIso: string): Promise<{
           source: "calendly",
           site: /^smartcare living/i.test(e.name || "") ? "scl" : "ss",
           consultation: isConsultation(e),
+          assessment: isAssessment(e.name, productFrom(inv.questions_and_answers)),
           title: (e.name || "").trim(),
           start: e.start_time,
           end: e.end_time,
@@ -79,6 +93,7 @@ export async function visitsBetween(startIso: string, endIso: string): Promise<{
           source: "google",
           site: b.site,
           consultation: b.kind === "consultation",
+          assessment: b.kind === "assessment" || isAssessment(b.title, b.product),
           title: b.title,
           start: b.start,
           end: b.end,

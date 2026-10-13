@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAvailableSlots } from "@/lib/calendly";
+import { getAvailableSlots, EVENT_KINDS, type EventKind } from "@/lib/calendly";
 
 
 // POST routes are inherently dynamic but explicit is better, without
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     // Parse JSON in its own try-block. Malformed bodies from bots / scanners
     // should return a 400 rather than fall into the outer catch which would
     // 500 + log noise.
-    let body: { date?: string; timeSlot?: string; kind?: "consultation" | "installation" };
+    let body: { date?: string; timeSlot?: string; kind?: EventKind };
     try {
       body = await request.json();
     } catch {
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     if (typeof timeSlot !== "string" || timeSlot.length > 40) {
       return NextResponse.json({ error: "Invalid time slot" }, { status: 400 });
     }
-    if (kind !== "consultation" && kind !== "installation") {
+    if (!EVENT_KINDS.includes(kind)) {
       return NextResponse.json({ error: "Invalid kind" }, { status: 400 });
     }
 

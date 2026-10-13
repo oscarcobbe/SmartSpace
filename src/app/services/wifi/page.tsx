@@ -4,7 +4,7 @@ import { ArrowRight, Check, Clock, Gauge, Home, Tv, X } from "lucide-react";
 import NetworkHouse from "@/components/wifi/NetworkHouse";
 import GuideLinks from "@/components/wifi/GuideLinks";
 import { WIFI_AREAS } from "@/data/wifiAreas";
-import { ASSESSMENT_EURO, EVIDENCE_EURO, packageBySlug } from "@/data/wifiPackages";
+import { ASSESSMENT_EURO, EVIDENCE_EURO, EVIDENCE_STEPS, MONITORING_POINTS, NIGEL_PROBLEMS, NIGEL_STEPS, packageBySlug } from "@/data/wifiPackages";
 
 const SITE = "https://smart-space.ie";
 
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
 };
 
 const assessment = packageBySlug("home-network-assessment")!;
-const BOOK = `/services/wifi/${assessment.slug}`;
+const BOOK = `/services/wifi/${assessment.slug}#book`;
 
 /* A quiet in-text link: brand colour and semibold, no underline until hover or
    focus, the way the guide links work (Oscar, 30 September and 12 October). */
@@ -52,14 +52,7 @@ const QUIET_DARK = "font-semibold text-brand-400 hover:text-brand-300 no-underli
 
 /* Nigel's list from his trial page of October 2026, each line pointing to the
    guide that answers it. */
-const PROBLEMS: { text: string; href: string; label: string }[] = [
-  { text: "The TV buffers in the middle of the film", href: "/blog/too-many-devices-slow-wifi-ireland", label: "Why it happens" },
-  { text: "Video calls freeze or drop when you're working from home", href: "/blog/working-from-home-wifi-ireland", label: "Working from home" },
-  { text: "The Nest thermostat or other smart devices keep going offline", href: "/blog/smart-camera-wifi-drops-irish-homes", label: "Devices dropping off" },
-  { text: "Games lag, stutter or disconnect at the worst moment", href: "/blog/why-does-my-wifi-keep-dropping-ireland", label: "Why Wi-Fi drops" },
-  { text: "Upstairs or the back bedroom barely gets a signal", href: "/blog/why-wifi-slow-upstairs-irish-homes", label: "Slow upstairs" },
-  { text: "It's always worse in the evening when everyone is online", href: "/blog/wifi-slow-in-the-evening-ireland", label: "Evening slowdowns" },
-];
+const PROBLEMS = NIGEL_PROBLEMS;
 
 /* The cascade from the sample report (public/network-sample-report.html). */
 const SAMPLE_REPORT = "/network-sample-report.html";
@@ -70,6 +63,7 @@ const CASCADE = [
   { label: "First floor landing", value: 96 },
   { label: "Back bedroom, second floor", value: 14 },
 ];
+
 
 const TRIAL_POINTS = [
   {
@@ -101,13 +95,7 @@ const USUAL_WAY = [
   "Never know if the broadband was the real problem",
 ];
 
-const STEPS = [
-  { title: "Book", body: "Choose a date and time online, or leave your details and we ring you." },
-  { title: "First visit, about 2 hours", body: "We test your broadband and every floor, set up the trial and move up to 3 problem devices onto it." },
-  { title: "3 days of real life", body: "The trial records speed every hour and watches your devices while you carry on as normal." },
-  { title: "30-minute call", body: "We go through your report together." },
-  { title: "Second visit", body: "We collect the trial kit, or install your new system." },
-];
+const STEPS = NIGEL_STEPS;
 
 const FAQ: { q: string; a: string; more?: { href: string; label: string } }[] = [
   {
@@ -350,7 +338,7 @@ export default function NetworkDiagnosisPage() {
                 home first and let it prove itself there.
               </p>
               <p className="text-sm">
-                Weighing up kit yourself?{" "}
+                Read more:{" "}
                 <Link href="/blog/mesh-wifi-explained" className={QUIET}>Mesh explained</Link>
                 {" · "}
                 <Link href="/blog/wifi-extender-mesh-or-powerline-ireland" className={QUIET}>Extender, mesh or powerline</Link>
@@ -375,8 +363,8 @@ export default function NetworkDiagnosisPage() {
       <section className="py-16 lg:py-24 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10 sm:mb-12">
-            <div className={EYEBROW}>2. No Guesswork, No Wasted Kit</div>
-            <h2 className={H2}>We Start by Measuring Your Home</h2>
+            <div className={EYEBROW}>2. The Zero-Risk Way to Buy</div>
+            <h2 className={H2}>No Guesswork, No Wasted Kit. We Start by Measuring Your Home.</h2>
           </div>
           <div className="grid md:grid-cols-2 gap-5 sm:gap-6">
             <div className="rounded-3xl bg-cream border border-gray-100 p-6 sm:p-8">
@@ -455,7 +443,7 @@ export default function NetworkDiagnosisPage() {
               <h3 className="text-xl font-bold text-ink mb-3">If It Won&apos;t Work in Your Home</h3>
               <p className="text-sm sm:text-[15px] text-ink-soft leading-relaxed">
                 The measurements prove it, and the report shows which floors and rooms need a cabled connection. You can
-                hand it to a cable specialist knowing there is no other option.
+                hand it to a cable specialist with the knowledge that there is no other option.
               </p>
               <Link
                 href="/blog/running-ethernet-cable-existing-house-ireland"
@@ -476,7 +464,7 @@ export default function NetworkDiagnosisPage() {
             <h2 className={`${H2} mb-4`}>Two Visits, Three Days, One Clear Answer.</h2>
             <p className="text-ink-soft leading-relaxed mb-6">
               €{ASSESSMENT_EURO} incl. VAT, credited in full against any work. See{" "}
-              <Link href={BOOK} className={QUIET}>everything the assessment includes</Link>.
+              <Link href={`/services/wifi/${assessment.slug}`} className={QUIET}>everything the assessment includes</Link>.
             </p>
             <Link href={BOOK} className={PRIMARY}>
               <span className="relative z-10">Book Your Assessment</span>
@@ -499,64 +487,63 @@ export default function NetworkDiagnosisPage() {
         </div>
       </section>
 
-      {/* 5. Monitoring, optional */}
-      <section className="py-12 lg:py-16 bg-white">
+      {/* 5. Our other supporting services: Nigel's words, both cards */}
+      <section className="py-16 lg:py-20 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a1a1a] via-[#1f1a16] to-[#1a1a1a] p-6 sm:p-10 lg:p-14 shadow-premium-lg">
-            <div className="absolute -top-20 -right-20 w-96 h-96 bg-brand-500/20 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="relative grid lg:grid-cols-5 gap-8 items-center">
-              <div className="lg:col-span-3 text-center lg:text-left">
-                <div className="inline-flex items-center gap-2 bg-green-500/15 text-green-400 text-[10px] sm:text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider mb-4">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                  5. After We Install It
-                </div>
-                <h2 className="text-[1.75rem] leading-[1.1] sm:text-4xl font-extrabold text-white tracking-[-0.025em] mb-4">
-                  Ongoing Monitoring
-                </h2>
-                <p className="text-white/75 text-[15px] sm:text-lg leading-relaxed">
-                  A small box keeps an eye on your network around the clock, so we often know about a problem before you
-                  do. We are alerted when your broadband goes down and when it is back, you hear when something new joins
-                  your network, and you get a plain-English report every month.
-                </p>
-              </div>
-              <div className="lg:col-span-2 rounded-2xl bg-white/5 border border-white/10 p-6 text-center lg:text-left">
-                <div className="text-3xl font-extrabold text-white tracking-[-0.03em]">From €39 a month</div>
-                <p className="mt-3 text-sm text-white/65 leading-relaxed">
-                  Monitored, not managed. We see whether a device is online, not what it does. Your accounts stay in your
-                  name.
-                </p>
-                <Link href="/services/wifi/network-monitoring" className={`mt-5 inline-flex items-center gap-1.5 text-sm ${QUIET_DARK}`}>
-                  Network Monitoring Plans <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-            </div>
+          <div className="text-center mb-10 sm:mb-12 max-w-3xl mx-auto">
+            <div className={EYEBROW}>5. Our Other Supporting Services</div>
+            <h2 className={`${H2} mb-4`}>More Ways We Can Help With Your Wi-Fi and Broadband.</h2>
+            <p className="text-ink-soft leading-relaxed">
+              We can monitor your network after we install it. If you have doubts about the broadband service you&apos;re
+              getting, we also offer a broadband quality check, with no assessment needed.
+            </p>
           </div>
-        </div>
-      </section>
-
-      {/* Broadband evidence, Nigel's other supporting service */}
-      <section className="pb-12 lg:pb-16 bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="rounded-3xl bg-cream border border-gray-100 p-6 sm:p-10 grid lg:grid-cols-5 gap-8 items-center">
-            <div className="lg:col-span-3 text-center lg:text-left">
-              <div className={EYEBROW}>Broadband Evidence Service</div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-ink tracking-[-0.03em] mb-3">
-                Think Your Provider Is Letting You Down?
-              </h2>
-              <p className="text-ink-soft leading-relaxed">
-                Get the evidence they need to take you seriously. We post you a small box that logs your line for 7 days,
-                then write a one-page report showing every dropout, slowdown and evening speed against what you pay for.
-                No assessment needed.
-              </p>
+          <div className="grid lg:grid-cols-2 gap-5 sm:gap-6">
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a1a1a] via-[#1f1a16] to-[#1a1a1a] p-6 sm:p-9 shadow-premium-lg flex flex-col">
+              <div className="absolute -top-20 -right-20 w-80 h-80 bg-brand-500/20 rounded-full blur-3xl pointer-events-none" />
+              <div className="relative flex-1">
+                <h3 className="text-2xl font-extrabold text-white tracking-[-0.02em]">Ongoing Monitoring</h3>
+                <div className="mt-1 text-brand-400 font-bold">from €39/month</div>
+                <p className="mt-4 text-white/75 leading-relaxed">
+                  A small box keeps an eye on your network around the clock, so we often know about a problem before you do.
+                </p>
+                <ul className="mt-5 space-y-3">
+                  {MONITORING_POINTS.map((m) => (
+                    <li key={m.title} className="flex items-start gap-3 text-sm leading-relaxed">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" strokeWidth={3} />
+                      <span className="text-white/75">
+                        <strong className="text-white">{m.title}</strong> {m.body}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <Link href="/services/wifi/network-monitoring" className={`relative mt-6 inline-flex items-center gap-1.5 text-sm ${QUIET_DARK}`}>
+                Network monitoring <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
-            <div className="lg:col-span-2 rounded-2xl bg-white border border-gray-100 shadow-premium p-6 text-center lg:text-left">
-              <div className="text-3xl font-extrabold text-ink tracking-[-0.03em]">€{EVIDENCE_EURO}</div>
-              <p className="mt-2 text-sm text-ink-soft leading-relaxed">
-                Including VAT. We go through the report in your home and collect the box. Dublin and Leinster.
-              </p>
-              <Link href="/services/wifi/broadband-evidence" className={`mt-4 inline-flex items-center gap-1.5 text-sm ${QUIET}`}>
-                Hard numbers, not &ldquo;it feels slow&rdquo; <ArrowRight className="h-4 w-4" />
+            <div className="rounded-3xl bg-cream border border-gray-100 p-6 sm:p-9 flex flex-col">
+              <div className="flex-1">
+                <h3 className="text-2xl font-extrabold text-ink tracking-[-0.02em]">Broadband Evidence Service</h3>
+                <div className="mt-1 text-brand-700 font-bold">€{EVIDENCE_EURO}</div>
+                <p className="mt-4 text-ink-soft leading-relaxed">
+                  Think your provider is letting you down? Get the evidence they need to take you seriously.
+                </p>
+                <ol className="mt-5 space-y-3">
+                  {EVIDENCE_STEPS.map((m, i) => (
+                    <li key={m.title} className="flex items-start gap-3 text-sm leading-relaxed">
+                      <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1C1A18] text-[11px] font-extrabold text-white">
+                        {i + 1}
+                      </span>
+                      <span className="text-ink-soft">
+                        <strong className="text-ink">{m.title}</strong> {m.body}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+              <Link href="/services/wifi/broadband-evidence" className={`mt-6 inline-flex items-center gap-1.5 text-sm ${QUIET}`}>
+                Book the evidence service <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </div>

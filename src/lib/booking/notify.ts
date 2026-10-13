@@ -126,7 +126,13 @@ export async function bookingMovedEmails(from: Booking, b: Booking, leftover?: s
 
 export async function bookingCancelledEmails(b: Booking): Promise<string> {
   if (b.site !== "ss") return "skipped: SmartCare Living sends its own";
-  const mail = bookingCancelled({ ...facts(b), bookAgainUrl: b.kind === "consultation" ? "https://smart-space.ie/services/free-consultation" : "https://smart-space.ie/services" });
+  const mail = bookingCancelled({ ...facts(b), bookAgainUrl:
+      b.kind === "consultation"
+        ? "https://smart-space.ie/services/free-consultation"
+        : b.kind === "assessment"
+          ? "https://smart-space.ie/services/wifi/home-network-assessment"
+          : "https://smart-space.ie/services",
+  });
   const [outcome] = await Promise.all([
     approval("email:booking-cancelled").then((ok) => toCustomer(ok, b, mail, ics(b, { sequence: Math.floor(Date.now() / 1000), cancelled: true }))),
     toNigel(`Cancelled: ${b.title}, ${when(b)}`, [`${b.title}`, when(b), "", ...who(b), "", "The customer cancelled from their confirmation email. It's gone from your Google Calendar.", b.orderId ? "This was a paid order: refund it in Stripe if that's owed." : ""].filter((l, i, a) => l || a[i - 1] !== "")),

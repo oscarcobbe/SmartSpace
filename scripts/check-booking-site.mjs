@@ -55,10 +55,11 @@ try {
     { uri: "https://api.calendly.com/scheduled_events/scl-visit", name: "SmartCare Living - Complimentary Consultation", start_time: at("09"), end_time: at("11") },
     { uri: "https://api.calendly.com/scheduled_events/scl-install", name: "SmartCare Living - Installation", start_time: at("14"), end_time: at("16") },
     { uri: "https://api.calendly.com/scheduled_events/scl-old", name: "SmartCare living - Home Consultation", start_time: at("14"), end_time: at("16") },
+    { uri: "https://api.calendly.com/scheduled_events/ss-assess", name: "SmartSpace Networks - Home Network Assessment", start_time: at("15"), end_time: at("17") },
   ];
   const ev = (id, site, kind, h) => ({ id, status: "confirmed", start: { dateTime: at(h) }, end: { dateTime: at(String(Number(h) + 2).padStart(2, "0")) },
     extendedProperties: { private: { ssbooking: "1", ref: `${id}ref`, site, kind, name: "Check", email: `${id}@example.ie` } } });
-  const google = [ev("g1", "ss", "installation", "09"), ev("g2", "scl", "installation", "11"), ev("g3", "scl", "consultation", "14")];
+  const google = [ev("g1", "ss", "installation", "09"), ev("g2", "scl", "installation", "11"), ev("g3", "scl", "consultation", "14"), ev("g4", "ss", "assessment", "12")];
   globalThis.fetch = async (input) => {
     const u = new URL(typeof input === "string" ? input : input.url);
     if (u.host === "api.calendly.com" && u.pathname === "/users/me") return json({ resource: { uri: "https://api.calendly.com/users/nigel" } });
@@ -81,16 +82,19 @@ const check = (name, ok, detail = "") => {
 };
 const { visits, problems } = await U.visitsBetween("2026-10-14T00:00:00Z", "2026-10-14T23:59:59Z");
 const site = (key) => visits.find((v) => v.key === key || v.key.includes(key))?.site;
-check("both calendars were read", problems.length === 0 && visits.length === 8, JSON.stringify({ problems, n: visits.length }));
+check("both calendars were read", problems.length === 0 && visits.length === 10, JSON.stringify({ problems, n: visits.length }));
 check("Calendly's Smart Space visit and install are Smart Space's", site("ss-visit") === "ss" && site("ss-install") === "ss");
 check("Calendly's SmartCare Living events are SmartCare Living's, whatever the capitals", ["scl-visit", "scl-install", "scl-old"].every((k) => site(k) === "scl"));
 check("Google bookings keep the site they were made on", site("g1ref") === "ss" && site("g2ref") === "scl" && site("g3ref") === "scl");
 
 const src = (p) => readFileSync(join(ROOT, p), "utf8");
-check("the day-before reminder keeps only Smart Space's visits", /visitsBetween\([^)]*\)[\s\S]{0,400}\.filter\(\(v\) => v\.site === "ss"\)/.test(src("src/app/api/cron/booking-reminders/route.ts")));
-check("the review request asks only Smart Space's installations", /visits\.filter\(\(x\) => !x\.consultation && x\.site === "ss"\)/.test(src("src/app/api/cron/review-requests/route.ts")));
-const ssOnly = visits.filter((v) => v.site === "ss");
-check("which, on this day, is 3 of the 8 visits", ssOnly.length === 3, JSON.stringify(ssOnly.map((v) => v.key)));
+const assessed = (key) => visits.find((v) => v.key === key || v.key.includes(key))?.assessment;
+check("a home network assessment is known as one, on Calendly and on Google", assessed("ss-assess") === true && assessed("g4ref") === true);
+check("and nothing else is", visits.filter((v) => v.assessment).length === 2, JSON.stringify(visits.filter((v) => v.assessment).map((v) => v.key)));
+check("the day-before reminder keeps only Smart Space's visits, never an assessment", /visitsBetween\([^)]*\)[\s\S]{0,600}\.filter\(\(v\) => v\.site === "ss" && !v\.assessment\)/.test(src("src/app/api/cron/booking-reminders/route.ts")));
+check("the review request asks only Smart Space's installations, never an assessment", /visits\.filter\(\(x\) => !x\.consultation && !x\.assessment && x\.site === "ss"\)/.test(src("src/app/api/cron/review-requests/route.ts")));
+const ssOnly = visits.filter((v) => v.site === "ss" && !v.assessment);
+check("which, on this day, is 3 of the 10 visits", ssOnly.length === 3, JSON.stringify(ssOnly.map((v) => v.key)));
 
 console.log(failed ? `\n${failed} failed` : "\ncheck-booking-site: Smart Space's reminders and review requests reach Smart Space's visits only");
 process.exit(failed ? 1 : 0);

@@ -217,6 +217,14 @@ export async function POST(request: Request) {
     );
     params.append("custom_fields[0][type]", "text");
     params.append("custom_fields[0][optional]", "true");
+    /* Nigel's evidence service, step one: "Pay €199 and tell us the speed you pay for." */
+    if (resolved.some((i) => networkCheckoutItem(i.id)?.slug === "broadband-evidence")) {
+      params.append("custom_fields[1][key]", "paid_speed");
+      params.append("custom_fields[1][label][type]", "custom");
+      params.append("custom_fields[1][label][custom]", "The speed you pay for, e.g. 500 Mbps");
+      params.append("custom_fields[1][type]", "text");
+      params.append("custom_fields[1][optional]", "false");
+    }
     params.append("allow_promotion_codes", "true");
     params.append("metadata[gclid]", gclid);
     /* The buyer's cookie answer, so the offline upload can tell Google what
@@ -282,6 +290,13 @@ export async function POST(request: Request) {
     if (networkItem) {
       params.append("metadata[network_service]", networkItem.slug);
       if (!bookedItem) params.append("metadata[product_name]", networkItem.name);
+      if (networkItem.slug === "home-network-assessment") {
+        /* Nigel's step one: "Pay for the assessment and pick a time." No time, no charge. */
+        if (!bookedItem) {
+          return NextResponse.json({ error: "Choose a date and time for the first visit" }, { status: 400 });
+        }
+        params.append("metadata[booking_kind]", "assessment");
+      }
     }
 
     // Aggregate every item's product-page answers into a single JSON-encoded

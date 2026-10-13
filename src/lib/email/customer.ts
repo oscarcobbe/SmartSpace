@@ -226,23 +226,28 @@ export function orderConfirmed(d: { name: string; product: string; amount: strin
 /* ── A home network service paid online: src/app/api/webhooks/stripe ── */
 /*    Held for Nigel's sign-off (email:network-order) before it sends.    */
 
+/* Nigel's own steps, word for word from his trial page (October 2026):
+   "4. How it works" for the assessment, and the evidence service's list. */
 const NETWORK_NEXT: Record<"home-network-assessment" | "broadband-evidence", string[]> = {
   "home-network-assessment": [
-    "We ring you within one working day to pick a time for the first visit, about 2 hours.",
     /* Replaced by VISIT_FIRST when the visit was booked online (NetworkBookAndPay). */
-    "On the visit we test your broadband at the router, measure every floor, set up the trial on your weakest floor and move up to 3 problem devices onto it.",
-    "The trial is measured every hour for 3 days while you carry on as normal. Then we go through your report together on a 30-minute call.",
-    "The €395 is credited in full against any work you go ahead with.",
+    "We ring you to pick a time for the first visit.",
+    "3 days of real life: the trial records speed every hour and watches your devices while you carry on as normal.",
+    "30-minute call: we go through your report together.",
+    "Second visit: we collect the trial kit, or install your new system.",
   ],
   "broadband-evidence": [
-    "We ring you within one working day to confirm the speed you pay for, and post you the box.",
-    "Plug it into your router with the cable supplied. It logs your line for 7 days, every minute, day and evening.",
-    "We write your one-page report, then go through it with you in your home and collect the box.",
+    "We post you a small box. Plug it into your router with the cable supplied. That's it.",
+    "It logs your line for 7 days: dropouts and delays every minute, and speed tests through the day and evening.",
+    "We write your report: one page showing every dropout, slowdown and evening speed against what you pay for.",
+    "We go through it with you: we explain the results in your home and collect the box at the same time.",
+    "You send it to your provider. Hard numbers, not \"it feels slow\".",
   ],
 };
 
 /** The first step when the assessment's visit was booked and is in the calendar. */
-const VISIT_FIRST = "We arrive in your slot for the first visit, about 2 hours.";
+const VISIT_FIRST =
+  "First visit, about 2 hours: we test your broadband and every floor, set up the trial and move up to 3 problem devices onto it.";
 
 export function networkOrderConfirmed(d: {
   name: string;
@@ -251,6 +256,8 @@ export function networkOrderConfirmed(d: {
   amount: string;
   /** The booked first visit, "Tue 20 Oct 10:00 – 12:00", once it is in the calendar. */
   visit?: string;
+  /** The evidence service: the speed they told us they pay for. */
+  paidSpeed?: string;
 }): Email {
   const f = first(d.name);
   const next = d.visit ? [VISIT_FIRST, ...NETWORK_NEXT[d.service].slice(1)] : NETWORK_NEXT[d.service];
@@ -268,6 +275,7 @@ export function networkOrderConfirmed(d: {
         summary("Your booking", [
           ["Service", d.product],
           ...(d.visit ? ([["First visit", d.visit]] as [string, string][]) : []),
+          ...(d.paidSpeed ? ([["Speed you pay for", d.paidSpeed]] as [string, string][]) : []),
           ["Paid", d.amount],
         ]),
         steps("What happens next", next.map(esc)),
@@ -287,6 +295,7 @@ export function networkOrderConfirmed(d: {
       "Your booking",
       `  Service: ${d.product}`,
       ...(d.visit ? [`  First visit: ${d.visit}`] : []),
+      ...(d.paidSpeed ? [`  Speed you pay for: ${d.paidSpeed}`] : []),
       `  Paid:    ${d.amount}`,
       "",
       "What happens next",

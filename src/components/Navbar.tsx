@@ -4,14 +4,17 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ShoppingBag, Star } from "lucide-react";
+import { ArrowRight, Menu, X, ShoppingBag, Star } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+
+/** The home network pages are signed off and switched on (Vercel, NEXT_PUBLIC_NETWORK_PAGES_LIVE). */
+const NETWORK_LIVE = process.env.NEXT_PUBLIC_NETWORK_PAGES_LIVE === "1";
 
 const navLinks = [
   { href: "/services", label: "Services" },
   /* The home network service under its own name, listed once its pages are
      signed off and switched on, like the footer's links (Footer.tsx). */
-  ...(process.env.NEXT_PUBLIC_NETWORK_PAGES_LIVE === "1" ? [{ href: "/services/wifi", label: "SmartSpace Networks" }] : []),
+  ...(NETWORK_LIVE ? [{ href: "/services/wifi", label: "SmartSpace Networks" }] : []),
   { href: "/reviews", label: "Reviews" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
@@ -39,22 +42,51 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Review strip */}
-      <Link
-        href="/reviews"
-        className="fixed top-0 left-0 right-0 z-[60] bg-[#1a1a1a] text-white text-center py-1 px-4 text-xs font-medium hover:bg-black transition-colors flex items-center justify-center gap-2"
-      >
-        <span className="inline-flex items-center gap-0.5 text-yellow-400">
-          <Star className="w-3 h-3 fill-yellow-400" />
-          <Star className="w-3 h-3 fill-yellow-400" />
-          <Star className="w-3 h-3 fill-yellow-400" />
-          <Star className="w-3 h-3 fill-yellow-400" />
-          <Star className="w-3 h-3 fill-yellow-400" />
-        </span>
-        <span className="font-semibold">on Google</span>
-        <span className="hidden sm:inline text-white/60">·</span>
-        <span className="hidden sm:inline">5,000+ installations across Dublin &amp; Leinster</span>
-      </Link>
+      {NETWORK_LIVE ? (
+        /* "We've expanded" (Oscar, 13 Oct 2026): the review strip's place, same 24px
+           height so every page's offset still holds. Black, with an orange glow
+           behind the name and a fine orange line along the foot. */
+        <Link
+          href="/services/wifi"
+          aria-label="We've expanded: SmartSpace Networks. Try better Wi-Fi in your own home for 3 days."
+          className="group fixed top-0 left-0 right-0 z-[60] h-6 overflow-hidden bg-[#0d0b09] text-white flex items-center justify-center gap-2 px-4 text-[11px] sm:text-xs tracking-[0.01em]"
+        >
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_140%_at_50%_50%,rgba(242,130,34,0.42),rgba(242,130,34,0.10)_45%,transparent_75%)] transition-opacity duration-500 group-hover:opacity-90"
+          />
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-brand-500 to-transparent"
+          />
+          <span className="relative inline-flex items-center rounded-full bg-brand-500 px-1.5 py-px text-[9px] sm:text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#0d0b09] shadow-[0_0_12px_rgba(242,130,34,0.65)]">
+            We&apos;ve expanded
+          </span>
+          <span className="relative font-bold">SmartSpace Networks</span>
+          <span className="relative hidden md:inline text-white/70">· Try better Wi-Fi in your own home for 3 days</span>
+          <ArrowRight
+            aria-hidden="true"
+            className="relative h-3 w-3 text-brand-400 transition-transform duration-300 group-hover:translate-x-0.5 motion-reduce:transition-none"
+          />
+        </Link>
+      ) : (
+        /* Review strip, until the network pages are switched on */
+        <Link
+          href="/reviews"
+          className="fixed top-0 left-0 right-0 z-[60] bg-[#1a1a1a] text-white text-center py-1 px-4 text-xs font-medium hover:bg-black transition-colors flex items-center justify-center gap-2"
+        >
+          <span className="inline-flex items-center gap-0.5 text-yellow-400">
+            <Star className="w-3 h-3 fill-yellow-400" />
+            <Star className="w-3 h-3 fill-yellow-400" />
+            <Star className="w-3 h-3 fill-yellow-400" />
+            <Star className="w-3 h-3 fill-yellow-400" />
+            <Star className="w-3 h-3 fill-yellow-400" />
+          </span>
+          <span className="font-semibold">on Google</span>
+          <span className="hidden sm:inline text-white/60">·</span>
+          <span className="hidden sm:inline">5,000+ installations across Dublin &amp; Leinster</span>
+        </Link>
+      )}
 
       {/* Nav */}
       <header

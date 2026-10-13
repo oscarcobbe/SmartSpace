@@ -71,6 +71,8 @@ async function sendOrderNotification(params: {
   foundUsDetail?: string;
   /** A home network service paid online (metadata.network_service), not an install. */
   network?: NetworkPayable;
+  /** The evidence service's "speed you pay for", from the checkout's custom field. */
+  paidSpeed?: string;
 }) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM_EMAIL;
@@ -82,7 +84,9 @@ async function sendOrderNotification(params: {
 
   /* A network service with no slot (the evidence box, or an order from before
      the assessment had a calendar) still needs a call; a booked one reads like an install. */
-  const calendlyLine = params.network && params.calendlyStatus === "skipped"
+  const calendlyLine = params.network === "broadband-evidence"
+    ? `📦 Broadband evidence service: post the box. The speed they pay for: ${params.paidSpeed || "(not given)"}.`
+    : params.network && params.calendlyStatus === "skipped"
     ? "📞 A home network service: ring the customer to pick the visit (nothing is booked automatically)."
     : params.calendlyStatus === "created"
       ? "✅ Booked into your calendar automatically."
@@ -190,6 +194,7 @@ async function sendOrderNotification(params: {
         product: params.productName,
         amount: formattedAmount,
         visit: params.calendlyStatus === "created" ? params.bookingLabel || undefined : undefined,
+        paidSpeed: params.paidSpeed,
       });
       await resend.emails.send({ from, to: [params.email], replyTo: to, subject: mail.subject, text: mail.text, html: mail.html });
       console.log(`[stripe webhook] network order email sent for session=${params.sessionId}`);
@@ -705,6 +710,8 @@ export async function POST(req: NextRequest) {
       console.log(`[stripe] emergency booking session=${sessionId}, Calendly intentionally skipped (manual slot)`);
     } else if (bookingDate && bookingSlot) {
       const result = await createBookingEvent({
+        /* The assessment's own Calendly event type, so the customer's invite names it. */
+        kind: session.metadata?.booking_kind === "assessment" ? "assessment" : undefined,
         date: bookingDate,
         timeSlot: bookingSlot,
         customerName,
@@ -778,8 +785,10 @@ export async function POST(req: NextRequest) {
     // Notify Nigel, runs after Calendly so we can include the outcome in
     // the email body (e.g. "Calendly failed, book manually").
     const networkService = NETWORK_PAYABLE.find((n) => n === session.metadata?.network_service);
+    const paidSpeed = session.custom_fields?.find((f) => f.key === "paid_speed")?.text?.value ?? undefined;
     await sendOrderNotification({
       network: networkService,
+      paidSpeed,
       customerName,
       email,
       phone,

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAvailableSlots, AVAILABLE_DAYS, isDateBlocked } from "@/lib/calendly";
+import { getAvailableSlots, AVAILABLE_DAYS, isDateBlocked, EVENT_KINDS, type EventKind } from "@/lib/calendly";
 
 export const dynamic = "force-dynamic";
 // Room for the booking engine to wait out Google's rate limit (src/lib/booking/google-calendar.ts, withRetry).
@@ -8,7 +8,10 @@ export const maxDuration = 60;
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const date = searchParams.get("date");
-  const kind = (searchParams.get("kind") ?? "installation") as "consultation" | "installation";
+  const kind = (searchParams.get("kind") ?? "installation") as EventKind;
+  if (!EVENT_KINDS.includes(kind)) {
+    return NextResponse.json({ error: "Invalid kind" }, { status: 400 });
+  }
 
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return NextResponse.json({ error: "Invalid date format. Use YYYY-MM-DD" }, { status: 400 });

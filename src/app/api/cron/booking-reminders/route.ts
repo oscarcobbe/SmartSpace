@@ -103,7 +103,9 @@ export async function GET(request: Request) {
   // Smart Space's own visits only. SmartCare Living's share the calendar
   // (Calendly's, then Nigel's Google Calendar) but this reminder is Smart
   // Space's, in Smart Space's name; scripts/check-booking-site.mjs holds it.
-  const events = everyVisit.filter((v) => v.site === "ss");
+  /* Smart Space's visits only, and no home network assessment: the install and
+     site-visit reminders both describe something else (src/lib/booking/upcoming.ts). */
+  const events = everyVisit.filter((v) => v.site === "ss" && !v.assessment);
   if (problems.length) {
     console.error("[cron/booking-reminders] read problems:", problems);
     await sendSiteAlert({

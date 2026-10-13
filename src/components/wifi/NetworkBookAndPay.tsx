@@ -14,6 +14,10 @@ import NetworkPayButton from "@/components/wifi/NetworkPayButton";
  *
  * Two working days' notice, as for Installation Only: there is no stock to
  * order for a visit that brings its own trial kit.
+ *
+ * kind "assessment" (13 Oct 2026): the same slots, booked as Nigel's Calendly
+ * event "SmartSpace Networks - Home Network Assessment", so the customer's
+ * confirmation names the assessment and not a Ring installation.
  */
 export default function NetworkBookAndPay({ slug, name, euro }: { slug: string; name: string; euro: number }) {
   const [selection, setSelection] = useState<{ date: string; timeSlot: string; dateLabel: string; slotLabel: string } | null>(null);
@@ -22,7 +26,7 @@ export default function NetworkBookAndPay({ slug, name, euro }: { slug: string; 
       <BookingCalendar
         heading="Choose a Date for the First Visit"
         confirmLabel="First visit"
-        kind="installation"
+        kind="assessment"
         leadDays={2}
         onSelectionChange={setSelection}
       />
