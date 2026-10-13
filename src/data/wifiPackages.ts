@@ -249,60 +249,85 @@ export const WIFI_PACKAGES: WifiPackage[] = [
 ];
 
 /*
- * The broadband evidence service, from Nigel's trial page and his reply of
- * 12 October 2026: ready to sell, boxes in hand, €199 including VAT, Dublin
- * and Leinster only because he goes through the results in the home and
- * collects the box.
+ * Nigel's own words from his trial page (October 2026), kept here once so the
+ * hub, the package pages and the area pages say the same thing.
+ */
+
+/** "Who it's for": the problems, each with the guide that answers it. */
+export const NIGEL_PROBLEMS: { text: string; href: string; label: string }[] = [
+  { text: "The TV buffers in the middle of the film", href: "/blog/too-many-devices-slow-wifi-ireland", label: "Why it happens" },
+  { text: "Video calls freeze or drop when you're working from home", href: "/blog/working-from-home-wifi-ireland", label: "Working from home" },
+  { text: "The Nest thermostat or other smart devices keep going offline", href: "/blog/smart-camera-wifi-drops-irish-homes", label: "Devices dropping off" },
+  { text: "Games lag, stutter or disconnect at the worst moment", href: "/blog/why-does-my-wifi-keep-dropping-ireland", label: "Why Wi-Fi drops" },
+  { text: "Upstairs or the back bedroom barely gets a signal", href: "/blog/why-wifi-slow-upstairs-irish-homes", label: "Slow upstairs" },
+  { text: "It's always worse in the evening when everyone is online", href: "/blog/wifi-slow-in-the-evening-ireland", label: "Evening slowdowns" },
+];
+
+/** "4. How it works". */
+export const NIGEL_STEPS: { title: string; body: string }[] = [
+  { title: "Book online", body: "Pay for the assessment and pick a time." },
+  { title: "First visit, about 2 hours", body: "We test your broadband and every floor, set up the trial and move up to 3 problem devices onto it." },
+  { title: "3 days of real life", body: "The trial records speed every hour and watches your devices while you carry on as normal." },
+  { title: "30-minute call", body: "We go through your report together." },
+  { title: "Second visit", body: "We collect the trial kit, or install your new system." },
+];
+
+/** "6. Questions people ask". */
+export const NIGEL_FAQ: { q: string; a: string }[] = [
+  { q: "Why not just buy a mesh system?", a: "Mesh works well when the units can reach each other. Thick walls, extensions and older houses often stop that. We test first so you only buy what will work in your home." },
+  { q: "Is it my broadband or my Wi-Fi?", a: "That's the first thing we find out, with a wired test at your router. If the broadband is the problem, we tell you, and you don't buy kit you don't need." },
+  { q: "Why is my Wi-Fi worse in the evening?", a: "Evenings are when everyone in the house, and often the whole area, is online. The 3-day trial records those hours specifically, so the report shows your evening speed against the rest of the day." },
+  { q: "My TV or thermostat keeps dropping off. Will this help?", a: "Yes. During the trial we move up to 3 of your problem devices onto the trial network and watch them for the full 3 days. If they stay connected, you know the fix works for them before you buy." },
+  { q: "Do I have to buy anything after the assessment?", a: `No. You get the report either way, and the €${ASSESSMENT_EURO} is credited in full if you go ahead with any work.` },
+  { q: "What if nothing can be fixed without cables?", a: "Then the report says so plainly and shows which floors and rooms need a cable, so you can invest with confidence." },
+];
+
+/** Ongoing monitoring, "from €39/month". */
+export const MONITORING_POINTS: { title: string; body: string }[] = [
+  { title: "Your weakest floor speed-tested.", body: "Real speed checks several times a day where it matters most, and every floor checked for drop-outs." },
+  { title: "Broadband outage texts.", body: "We text you when your broadband goes down, and again when it's back." },
+  { title: "New device alerts.", body: "You hear when something you don't recognise joins your network." },
+  { title: "Monthly report.", body: "Uptime, outages and evening speeds, in plain English, every month." },
+];
+
+/** Broadband evidence service, €199: his six steps. */
+export const EVIDENCE_STEPS: { title: string; body: string }[] = [
+  { title: "Book online.", body: `Pay €${EVIDENCE_EURO} and tell us the speed you pay for.` },
+  { title: "We post you a small box.", body: "Plug it into your router with the cable supplied. That's it." },
+  { title: "It logs your line for 7 days.", body: "Dropouts and delays every minute, and speed tests through the day and evening." },
+  { title: "We write your report.", body: "One page showing every dropout, slowdown and evening speed against what you pay for." },
+  { title: "We go through it with you.", body: "We explain the results in your home and collect the box at the same time." },
+  { title: "You send it to your provider.", body: "Hard numbers, not \"it feels slow\"." },
+];
+
+/*
+ * The broadband evidence service, in Nigel's words from his trial page, sold
+ * as he confirmed on 12 October 2026: ready to sell, boxes in hand, €199
+ * including VAT, Dublin and Leinster only because he goes through the results
+ * in the home and collects the box.
  */
 WIFI_PACKAGES.push({
   slug: "broadband-evidence",
   name: "Broadband Evidence Service",
   forWho: "Think your provider is letting you down? Get the evidence they need to take you seriously.",
-  price: { kind: "fixed", euro: EVIDENCE_EURO, note: "No assessment needed. Dublin and Leinster." },
+  price: { kind: "fixed", euro: EVIDENCE_EURO, note: "A broadband quality check, with no assessment needed. Dublin and Leinster." },
   lights: ["amber", "red"],
-  features: [
-    "A small box posted to you, with the cable to plug it into your router",
-    "Your line logged for 7 days: dropouts and delays every minute",
-    "Speed tests through the day and evening",
-    "A one-page report: every dropout, slowdown and evening speed against what you pay for",
-    "We go through it with you in your home and collect the box",
-  ],
+  features: EVIDENCE_STEPS.slice(1, 5).map((st) => `${st.title} ${st.body}`),
   intro:
-    "Hard numbers, not \"it feels slow\". We post you a small box that plugs into your router and logs your broadband line for 7 days, every minute, day and evening. Then we write a one-page report showing every dropout, every slowdown and your evening speeds against the speed you pay for, ready to send to your provider.",
-  details: [
-    {
-      title: "Book, and we post you a box",
-      body: "Book and tell us the speed you pay for. We post you a small box. Plug it into your router with the cable supplied. That's it.",
-    },
-    {
-      title: "Your line, logged for 7 days",
-      body: "Dropouts and delays are recorded every minute, with speed tests through the day and evening, so the busy hours are in the record too.",
-    },
-    {
-      title: "One page your provider can't argue with",
-      body: "Every dropout, slowdown and evening speed against what you pay for, on one page you can send to your provider.",
-    },
-    {
-      title: "Gone through in your home",
-      body: "We explain the results in your home and collect the box at the same time. That is why the service covers Dublin and Leinster only.",
-    },
-  ],
+    "If you have doubts about the broadband service you're getting, we offer a broadband quality check, with no assessment needed. Hard numbers, not \"it feels slow\".",
+  details: EVIDENCE_STEPS.map((st) => ({ title: st.title.replace(/\.$/, ""), body: st.body })),
   faq: [
     {
-      q: "Do I need the home network assessment first?",
-      a: "No. The evidence service is on its own: it measures your broadband line at the router, not the Wi-Fi in your rooms.",
+      q: "Do I need an assessment first?",
+      a: "No. It's a broadband quality check, with no assessment needed.",
     },
     {
-      q: "What does the €199 cover?",
-      a: "The box and its postage, 7 days of logging, the one-page report, and a visit to go through it with you and collect the box. It includes VAT.",
-    },
-    {
-      q: "What if the line turns out to be fine?",
-      a: "Then the report says so, and the problem is inside the house. That is what the 3-day Wi-Fi trial is for.",
+      q: "Is it my broadband or my Wi-Fi?",
+      a: "That's the first thing we find out, with a wired test at your router. If the broadband is the problem, we tell you, and you don't buy kit you don't need.",
     },
     {
       q: "Which areas do you cover?",
-      a: "Dublin and the rest of Leinster, because we go through the results in your home and collect the box.",
+      a: "Dublin and Leinster only, because we go through the results onsite and collect the box.",
     },
   ],
   related: [

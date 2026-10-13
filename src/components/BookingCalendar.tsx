@@ -19,7 +19,7 @@ interface BookingCalendarProps {
   compact?: boolean;
   heading?: string;
   confirmLabel?: string;
-  kind?: "consultation" | "installation";
+  kind?: "consultation" | "installation" | "assessment";
   /**
    * Working-day lead time before the earliest selectable date.
    *

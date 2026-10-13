@@ -2,7 +2,8 @@
 // Calendly, or Nigel's Google Calendar once BOOKING_BACKEND=google (see
 // src/lib/booking/backend.ts). Both answer through the same two functions
 // below, so the routes do not know which one they are talking to.
-// Calendly needs: CALENDLY_PERSONAL_TOKEN, CALENDLY_CONSULTATION_EVENT_TYPE_URI, CALENDLY_INSTALLATION_EVENT_TYPE_URI
+// Calendly needs: CALENDLY_PERSONAL_TOKEN, CALENDLY_CONSULTATION_EVENT_TYPE_URI, CALENDLY_INSTALLATION_EVENT_TYPE_URI,
+// CALENDLY_ASSESSMENT_EVENT_TYPE_URI (the home network assessment, created in Nigel's Calendly on 13 October 2026)
 import { bookingBackend } from "@/lib/booking/backend";
 import { book, freeStarts } from "@/lib/booking/engine";
 import { bookingConfirmedEmails } from "@/lib/booking/notify";
@@ -11,6 +12,9 @@ const CALENDLY_TOKEN = process.env.CALENDLY_PERSONAL_TOKEN;
 const CONSULTATION_EVENT_TYPE_URI = process.env.CALENDLY_CONSULTATION_EVENT_TYPE_URI;
 // Fall back to old env var name so existing Vercel deployments keep working
 const INSTALLATION_EVENT_TYPE_URI = process.env.CALENDLY_INSTALLATION_EVENT_TYPE_URI || process.env.CALENDLY_EVENT_TYPE_URI;
+/* "SmartSpace Networks - Home Network Assessment": its own event type, so Calendly's
+   email to the customer names the assessment and not a Ring installation. */
+const ASSESSMENT_EVENT_TYPE_URI = process.env.CALENDLY_ASSESSMENT_EVENT_TYPE_URI?.trim();
 
 import {
   TIME_SLOTS,
@@ -23,10 +27,19 @@ import {
 export { TIME_SLOTS, AVAILABLE_DAYS, BLOCKED_DATE_RANGES, isDateBlocked, getEarliestBookableDate };
 export type { BlockedDateRange };
 
-type EventKind = "consultation" | "installation";
+export type EventKind = "consultation" | "installation" | "assessment";
+export const EVENT_KINDS: readonly EventKind[] = ["consultation", "installation", "assessment"];
 
 function getEventTypeUri(kind: EventKind): string | undefined {
-  return kind === "consultation" ? CONSULTATION_EVENT_TYPE_URI : INSTALLATION_EVENT_TYPE_URI;
+  if (kind === "consultation") return CONSULTATION_EVENT_TYPE_URI;
+  /* Same slots as an installation (checked 13 Oct 2026). Without its own event
+     type configured it falls back to the installation one, so a paid visit is
+     still booked, under the wrong name rather than not at all. */
+  if (kind === "assessment") {
+    if (!ASSESSMENT_EVENT_TYPE_URI) console.warn("[calendly] CALENDLY_ASSESSMENT_EVENT_TYPE_URI unset; booking the assessment as an installation");
+    return ASSESSMENT_EVENT_TYPE_URI || INSTALLATION_EVENT_TYPE_URI;
+  }
+  return INSTALLATION_EVENT_TYPE_URI;
 }
 
 

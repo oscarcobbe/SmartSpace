@@ -33,7 +33,7 @@ export async function GET(request: Request) {
   const { visits, problems } = await visitsBetween(startIso, endIso);
   // Smart Space's own installations: the request is in Smart Space's name, so
   // a SmartCare Living installation in the same calendar is never asked.
-  for (const v of visits.filter((x) => !x.consultation && x.site === "ss")) {
+  for (const v of visits.filter((x) => !x.consultation && !x.assessment && x.site === "ss")) {
     if (!v.email) {
       outcomes.push(`${v.key}: no customer email`);
       continue;

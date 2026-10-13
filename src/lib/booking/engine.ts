@@ -31,7 +31,7 @@ import {
 } from "./google-calendar";
 
 export type BookingSite = "ss" | "scl";
-export type BookingKind = "consultation" | "installation";
+export type BookingKind = "consultation" | "installation" | "assessment";
 
 /** Start times, Dublin, and the length of every visit. Calendly's schedule for all four visit types. */
 export const SLOT_STARTS = ["10:00", "12:30", "15:00"] as const;
@@ -160,8 +160,17 @@ export function manageUrl(b: Pick<Booking, "ref" | "site">, action?: "cancel" | 
 // ─── Reading ────────────────────────────────────────────────────────
 
 const TITLES: Record<BookingSite, Record<BookingKind, string>> = {
-  ss: { consultation: "SmartSpace Consultation", installation: "Smart Space Installation" },
-  scl: { consultation: "SmartCare Living - Complimentary Consultation", installation: "SmartCare Living - Installation" },
+  ss: {
+    consultation: "SmartSpace Consultation",
+    installation: "Smart Space Installation",
+    assessment: "SmartSpace Networks - Home Network Assessment",
+  },
+  /* SmartCare Living sells no network service; the entry only completes the table. */
+  scl: {
+    consultation: "SmartCare Living - Complimentary Consultation",
+    installation: "SmartCare Living - Installation",
+    assessment: "SmartSpace Networks - Home Network Assessment",
+  },
 };
 
 export function bookingTitle(site: BookingSite, kind: BookingKind): string {
@@ -172,7 +181,7 @@ function fromEvent(e: CalendarEvent): Booking | null {
   const p = e.extendedProperties?.private;
   if (!p || p.ssbooking !== "1" || !e.start?.dateTime || !e.end?.dateTime) return null;
   const site: BookingSite = p.site === "scl" ? "scl" : "ss";
-  const kind: BookingKind = p.kind === "consultation" ? "consultation" : "installation";
+  const kind: BookingKind = p.kind === "consultation" ? "consultation" : p.kind === "assessment" ? "assessment" : "installation";
   return {
     id: e.id,
     ref: p.ref,

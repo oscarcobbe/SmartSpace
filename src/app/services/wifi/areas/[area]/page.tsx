@@ -4,10 +4,20 @@ import { notFound } from "next/navigation";
 import { MapPin, ArrowRight, Phone, Check, Gauge } from "lucide-react";
 
 import GuideLinks from "@/components/wifi/GuideLinks";
-import { SYMPTOMS, ASSESSMENT_EURO, EVIDENCE_EURO } from "@/data/wifiPackages";
-import { WIFI_AREAS, WIFI_AREA_SLUGS, getWifiAreaBySlug } from "@/data/wifiAreas";
+import { ASSESSMENT_EURO, NIGEL_FAQ, NIGEL_PROBLEMS, NIGEL_STEPS } from "@/data/wifiPackages";
+import { WIFI_AREA_SLUGS, getWifiAreaBySlug } from "@/data/wifiAreas";
+
+/*
+ * A local page for SmartSpace Networks in Nigel's words (src/data/wifiAreas.ts
+ * says why): his headline, who it's for, how it works, a clear answer either
+ * way and his questions, with the area's name and towns.
+ */
 
 const SITE = "https://smart-space.ie";
+const BOOK = "/services/wifi/home-network-assessment#book";
+const QUIET = "font-semibold text-brand-700 hover:text-brand-800 no-underline hover:underline focus-visible:underline underline-offset-4";
+const LEDE =
+  "We measure every floor, leave a working system running for 3 days, and show you the numbers before you decide.";
 
 export function generateStaticParams() {
   return WIFI_AREA_SLUGS.map((area) => ({ area }));
@@ -20,15 +30,15 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const a = getWifiAreaBySlug(area);
   if (!a) return { title: "Not Found | Smart Space" };
   return {
-    title: `Home Network & Wi-Fi Survey in ${a.name} | Smart Space`,
-    description: `${a.teaser} A €${ASSESSMENT_EURO} home network assessment in ${a.name}: your broadband and every floor measured, a three-day trial, and a written report. Credited in full against any work.`,
+    title: `Try-Before-You-Buy Wi-Fi Assessment in ${a.name} | SmartSpace Networks`,
+    description: `Try better Wi-Fi in your own home in ${a.name} for 3 days before you spend a cent on it. ${LEDE} €${ASSESSMENT_EURO} incl. VAT, credited in full against any work.`,
     alternates: { canonical: `/services/wifi/areas/${a.slug}` },
     openGraph: {
-      title: `Home Network Diagnosis in ${a.name} | Smart Space`,
-      description: a.teaser,
+      title: `Try Better Wi-Fi in Your Own Home, ${a.name} | SmartSpace Networks`,
+      description: LEDE,
       url: `${SITE}/services/wifi/areas/${a.slug}`,
       type: "website",
-      images: [{ url: "/og-default.png", width: 1200, height: 630, alt: `Home network diagnosis in ${a.name}, Smart Space` }],
+      images: [{ url: "/og-default.png", width: 1200, height: 630, alt: `SmartSpace Networks in ${a.name}` }],
     },
   };
 }
@@ -41,37 +51,26 @@ export default async function WifiAreaPage({ params }: { params: Promise<Params>
   const serviceLd = {
     "@context": "https://schema.org",
     "@type": "Service",
-    name: `Home Network Diagnosis in ${a.name}`,
-    description: `A measured home network assessment across ${a.name}. ${a.teaser}`,
-    provider: {
-      "@type": "LocalBusiness",
-      "@id": `${SITE}/#localbusiness`,
-      name: "Smart Space",
-      url: SITE,
-      telephone: "+35315130424",
-      email: "info@smart-space.ie",
-    },
-    serviceType: "Home network assessment and diagnosis",
+    name: `Home Network Assessment in ${a.name}`,
+    description: LEDE,
+    provider: { "@id": `${SITE}/#organization` },
+    serviceType: "Home network assessment",
     areaServed: { "@type": "AdministrativeArea", name: `County ${a.name}` },
-    offers: { "@type": "Offer", priceCurrency: "EUR", price: String(ASSESSMENT_EURO), url: `${SITE}/services/wifi` },
+    offers: { "@type": "Offer", priceCurrency: "EUR", price: String(ASSESSMENT_EURO), url: `${SITE}/services/wifi/home-network-assessment` },
   };
   const breadcrumbLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Home", item: `${SITE}/` },
-      { "@type": "ListItem", position: 2, name: "Home Network Diagnosis", item: `${SITE}/services/wifi` },
+      { "@type": "ListItem", position: 2, name: "SmartSpace Networks", item: `${SITE}/services/wifi` },
       { "@type": "ListItem", position: 3, name: a.name, item: `${SITE}/services/wifi/areas/${a.slug}` },
     ],
   };
   const faqLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: a.faqs.map((f) => ({
-      "@type": "Question",
-      name: f.q,
-      acceptedAnswer: { "@type": "Answer", text: f.a },
-    })),
+    mainEntity: NIGEL_FAQ.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
   };
 
   return (
@@ -81,175 +80,120 @@ export default async function WifiAreaPage({ params }: { params: Promise<Params>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-8 flex-wrap">
+        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-8 flex-wrap" aria-label="Breadcrumb">
           <Link href="/" className="hover:text-brand-500 transition-colors">Home</Link>
           <span>/</span>
-          <Link href="/services/wifi" className="hover:text-brand-500 transition-colors">Home Network Diagnosis</Link>
+          <Link href="/services/wifi" className="hover:text-brand-500 transition-colors">SmartSpace Networks</Link>
           <span>/</span>
           <span className="text-[#1a1a1a] font-medium">{a.name}</span>
         </nav>
 
-        {/* Hero */}
         <div className="mb-10">
-          <div className="inline-flex items-center gap-2 bg-brand-500/10 text-brand-500 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider mb-5">
+          <div className="inline-flex items-center gap-2 bg-brand-500/10 text-brand-600 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider mb-5">
             <MapPin className="w-3.5 h-3.5" />
-            Home network diagnosis · {a.name}
+            Ireland&apos;s first try-before-you-buy Wi-Fi assessment · {a.name}
           </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-5 leading-tight">
-            Home network diagnosis in {a.name}.
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-ink mb-5 leading-tight tracking-[-0.035em] text-balance">
+            Try Better Wi-Fi in Your Own Home for 3 Days Before You Spend a Cent on It.
           </h1>
-          <p className="text-gray-600 text-lg leading-relaxed mb-3">{a.teaser}</p>
-          <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">Towns covered: {a.towns}</p>
+          <p className="text-ink-soft text-lg leading-relaxed mb-3">
+            You&apos;ve asked why your Wi-Fi keeps buffering. An AI assistant can tell you what usually causes it, but it
+            can&apos;t see your house. {LEDE}
+          </p>
+          <p className="text-sm font-medium text-ink-muted">Covering {a.towns}.</p>
         </div>
 
-        {/* CTA bar */}
         <div className="flex flex-wrap items-center gap-3 mb-12 pb-10 border-b border-gray-100">
           <Link
-            href="/services/wifi"
-            className="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-bold px-7 py-3 rounded-full transition-colors"
+            href={BOOK}
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold px-7 py-3 rounded-full shadow-[0_10px_40px_-5px_rgba(242,130,34,0.55)]"
           >
-            See the €{ASSESSMENT_EURO} assessment
-            <ArrowRight className="h-4 w-4" />
+            Book your assessment <ArrowRight className="h-4 w-4" />
           </Link>
           <Link
             href="/wifi-check"
-            className="inline-flex items-center gap-2 border border-gray-200 hover:border-brand-500 text-gray-700 hover:text-brand-500 font-semibold px-6 py-3 rounded-full transition-colors"
+            className="inline-flex items-center gap-2 border border-gray-200 hover:border-brand-500 text-ink font-semibold px-6 py-3 rounded-full transition-colors"
           >
-            <Gauge className="h-4 w-4" />
-            Free Wi-Fi check first
+            <Gauge className="h-4 w-4" /> Run the free Wi-Fi check first
           </Link>
-          <a
-            href="tel:+35315130424"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-brand-500 transition-colors"
-          >
-            <Phone className="h-4 w-4" />
-            01 513 0424
+          <a href="tel:+35315130424" className="inline-flex items-center gap-2 text-sm font-semibold text-ink hover:text-brand-600">
+            <Phone className="h-4 w-4" /> 01 513 0424
           </a>
+          <p className="w-full text-xs text-ink-muted">€{ASSESSMENT_EURO} incl. VAT, credited in full against any work.</p>
         </div>
 
-        {/* Local context */}
         <section className="mb-12">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-5">
-            What the network problem usually is in {a.name}
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-ink mb-5 tracking-[-0.03em]">
+            If Any of This Sounds Like Your House, This Is for You.
           </h2>
-          <p className="text-gray-700 leading-relaxed text-[17px]">{a.localContext}</p>
-        </section>
-
-        {/* Symptoms */}
-        <section className="mb-12">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-5">What it is for</h2>
-          <div className="grid sm:grid-cols-3 gap-4">
-            {SYMPTOMS.map((s) => (
-              <div key={s.title} className="bg-white border border-gray-100 rounded-xl p-5">
-                <h3 className="font-bold text-gray-900 mb-2">{s.title}</h3>
-                <p className="text-sm text-gray-600 leading-relaxed">{s.body}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* What the assessment is + the fix */}
-        <section className="mb-12 bg-brand-50/40 border border-brand-100 rounded-2xl p-6 sm:p-8">
-          <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 mb-4">
-            How the {a.name} assessment works
-          </h2>
-          <ul className="space-y-2.5 mb-5">
-            {[
-              "Your broadband tested at the router by cable, so the report can say whether the line itself is the problem",
-              "Every floor measured, so it shows where the connection is lost, not where we guess it is",
-              "A working trial on your weakest floor, measured every hour for 3 days, with up to 3 problem devices moved onto it",
-              "A plain-English report and a 30-minute call, yours to keep even if you take the figures to your provider",
-            ].map((f) => (
-              <li key={f} className="flex items-start gap-3">
-                <Check className="h-4 w-4 text-brand-500 flex-shrink-0 mt-1" />
-                <span className="text-sm text-gray-700 leading-relaxed">{f}</span>
+          <ul className="space-y-3">
+            {NIGEL_PROBLEMS.map((p) => (
+              <li key={p.text} className="flex items-start gap-3 text-[15px] text-ink-soft leading-relaxed">
+                <Check className="h-4 w-4 text-brand-500 flex-shrink-0 mt-1" strokeWidth={3} />
+                <span>
+                  {p.text}.{" "}
+                  <Link href={p.href} className={`text-sm ${QUIET}`}>{p.label}</Link>
+                </span>
               </li>
             ))}
           </ul>
-          <p className="text-gray-700 leading-relaxed text-[15px]">
-            If a fix is worth it, it is powerline carrying your connection over the electrical wiring already in the house
-            to access points placed where the measurements say, on one network name. The €{ASSESSMENT_EURO} assessment is
-            credited in full against it.{" "}
-            <Link href="/services/wifi" className="font-semibold text-brand-700 hover:text-brand-800 underline-offset-4 hover:underline">
-              See the full assessment
-            </Link>
-            .
-          </p>
-          <p className="mt-3 text-sm text-gray-600 leading-relaxed">
-            Only doubt the broadband line itself? The{" "}
-            <Link
-              href="/services/wifi/broadband-evidence"
-              className="font-semibold text-brand-700 hover:text-brand-800 no-underline hover:underline underline-offset-4"
-            >
-              €{EVIDENCE_EURO} broadband evidence service
-            </Link>{" "}
-            logs it for 7 days and gives you a one-page report for your provider.
-          </p>
         </section>
 
-        {/* FAQ */}
+        <section className="mb-12 rounded-2xl bg-cream border border-gray-100 p-6 sm:p-8">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-ink mb-5 tracking-[-0.03em]">Two Visits, Three Days, One Clear Answer.</h2>
+          <ol className="space-y-3">
+            {NIGEL_STEPS.map((st, i) => (
+              <li key={st.title} className="flex items-start gap-3">
+                <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#1C1A18] text-xs font-extrabold text-white">{i + 1}</span>
+                <span className="text-[15px] text-ink-soft leading-relaxed">
+                  <strong className="text-ink">{st.title}.</strong> {st.body}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <section className="mb-12 grid sm:grid-cols-2 gap-5">
+          <div className="rounded-2xl border border-gray-100 bg-white shadow-premium p-6">
+            <h3 className="font-bold text-ink mb-2">If our no-cables solution works</h3>
+            <p className="text-sm text-ink-soft leading-relaxed">
+              We use the latest G.hn powerline technology to carry your connection through your home&apos;s existing
+              electrical wiring, to a tri-band Wi-Fi 6E access point on each floor. No drilling, no trunking, no mess.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-gray-100 bg-white shadow-premium p-6">
+            <h3 className="font-bold text-ink mb-2">If it won&apos;t work in your home</h3>
+            <p className="text-sm text-ink-soft leading-relaxed">
+              The measurements prove it, and the report shows which floors and rooms need a cabled connection. You can
+              hand it to a cable specialist with the knowledge that there is no other option.
+            </p>
+          </div>
+        </section>
+
         <section className="mb-10">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-6">
-            Home network in {a.name}, frequently asked
-          </h2>
-          <div className="space-y-5">
-            {a.faqs.map((f) => (
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-ink mb-6 tracking-[-0.03em]">Questions People Ask</h2>
+          <div className="space-y-4">
+            {NIGEL_FAQ.map((f) => (
               <details key={f.q} className="group bg-white border border-gray-100 rounded-xl p-5">
-                <summary className="flex items-center justify-between cursor-pointer font-bold text-gray-900 list-none">
+                <summary className="flex items-center justify-between cursor-pointer font-bold text-ink list-none">
                   <span>{f.q}</span>
                   <span className="text-brand-500 text-xl group-open:rotate-45 transition-transform">+</span>
                 </summary>
-                <p className="mt-3 text-gray-700 leading-relaxed">{f.a}</p>
+                <p className="mt-3 text-ink-soft leading-relaxed">{f.a}</p>
               </details>
             ))}
           </div>
+          <GuideLinks className="mt-8" />
         </section>
 
-        {/* Guides */}
-        <div className="mb-12">
-          <GuideLinks />
-        </div>
-
-        {/* Final CTA */}
-        <div className="text-center bg-gradient-to-br from-[#1a1a1a] to-[#2a2a2a] text-white rounded-2xl p-8 sm:p-12">
-          <h2 className="text-2xl sm:text-3xl font-extrabold mb-3">Measure your {a.name} home first</h2>
-          <p className="text-white/70 mb-6 max-w-lg mx-auto">
-            A €{ASSESSMENT_EURO} home network assessment: broadband and every floor measured, a three-day trial in the room that
-            struggles, and a written report. Credited in full against any work.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link
-              href="/services/wifi"
-              className="inline-flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-bold px-8 py-3.5 rounded-full transition-colors"
-            >
-              See the assessment
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/wifi-check"
-              className="inline-flex items-center justify-center gap-2 border-2 border-white/20 hover:border-white/40 text-white font-semibold px-8 py-3.5 rounded-full transition-colors"
-            >
-              <Gauge className="h-4 w-4" />
-              Run the free check
-            </Link>
-          </div>
-        </div>
-
-        {/* Sibling areas */}
-        <div className="mt-12 p-6 bg-gray-50 rounded-2xl">
-          <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">We also cover</h3>
-          <div className="flex flex-wrap gap-2">
-            {WIFI_AREAS.filter((other) => other.slug !== a.slug).map((other) => (
-              <Link
-                key={other.slug}
-                href={`/services/wifi/areas/${other.slug}`}
-                className="px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs font-semibold text-gray-700 hover:border-brand-500 hover:text-brand-500 transition-colors"
-              >
-                {other.name}
-              </Link>
-            ))}
-          </div>
+        <div className="rounded-3xl bg-gradient-to-br from-brand-700 to-brand-800 px-6 py-10 sm:px-10 text-center">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-[-0.03em] mb-2">
+            You&apos;ve Done the Research. Now Get the Measurement.
+          </h2>
+          <p className="text-white/85 mb-6">€{ASSESSMENT_EURO} incl. VAT · credited in full against any work we do</p>
+          <Link href={BOOK} className="inline-flex items-center gap-2 bg-white text-ink font-bold text-sm px-8 py-3.5 rounded-full">
+            Book your assessment <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
       </div>
     </div>

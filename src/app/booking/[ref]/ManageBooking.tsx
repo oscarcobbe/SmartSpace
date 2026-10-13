@@ -8,7 +8,7 @@ import BookingCalendar from "@/components/BookingCalendar";
 type Mode = "reschedule" | "cancel" | null;
 type Selection = { date: string; timeSlot: string; dateLabel: string; slotLabel: string } | null;
 
-export default function ManageBooking({ bookingRef, token, kind, initial }: { bookingRef: string; token: string; kind: "consultation" | "installation"; initial: Mode }) {
+export default function ManageBooking({ bookingRef, token, kind, initial }: { bookingRef: string; token: string; kind: "consultation" | "installation" | "assessment"; initial: Mode }) {
   const [mode, setMode] = useState<Mode>(initial);
   const [selection, setSelection] = useState<Selection>(null);
   const [busy, setBusy] = useState(false);
@@ -49,7 +49,7 @@ export default function ManageBooking({ bookingRef, token, kind, initial }: { bo
       <div className="bg-white rounded-2xl border border-[#e6e3df] p-6">
         <h2 className="text-xl font-extrabold text-[#1C1A18] mb-2">Your booking is cancelled</h2>
         <p className="text-[#3a352f] mb-4">{done.emailed ? "We\u2019ve emailed you to confirm. " : ""}If you&apos;d like another time, you can book again whenever suits.</p>
-        <Link href={kind === "consultation" ? "/services/free-consultation" : "/services"} className="inline-flex items-center justify-center bg-brand-600 text-white font-semibold text-sm px-6 py-3 rounded-full">
+        <Link href={kind === "consultation" ? "/services/free-consultation" : kind === "assessment" ? "/services/wifi/home-network-assessment" : "/services"} className="inline-flex items-center justify-center bg-brand-600 text-white font-semibold text-sm px-6 py-3 rounded-full">
           Book another time
         </Link>
       </div>
