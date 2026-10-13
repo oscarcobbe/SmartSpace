@@ -89,7 +89,7 @@ export default function EufyPackagesPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(BREADCRUMB_SCHEMA) }} />
 
-      <section className="pt-28 lg:pt-32 pb-20 lg:pb-28 bg-gradient-to-b from-cream to-white relative overflow-hidden">
+      <section className="pt-32 lg:pt-36 pb-20 lg:pb-28 bg-gradient-to-b from-cream to-white relative overflow-hidden">
         {/* Soft decorative orbs, Eufy-blue tint */}
         <div className="absolute top-20 -left-40 w-80 h-80 bg-[#005d8e]/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-20 -right-40 w-80 h-80 bg-[#005d8e]/5 rounded-full blur-3xl pointer-events-none" />

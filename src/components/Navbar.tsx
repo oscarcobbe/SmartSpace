@@ -42,34 +42,7 @@ export default function Navbar() {
 
   return (
     <>
-      {NETWORK_LIVE ? (
-        /* "We've expanded" (Oscar, 13 Oct 2026): the review strip's place, same 24px
-           height so every page's offset still holds. Black, with an orange glow
-           behind the name and a fine orange line along the foot. */
-        <Link
-          href="/services/wifi"
-          aria-label="We've expanded: SmartSpace Networks. Try better Wi-Fi in your own home for 3 days."
-          className="group fixed top-0 left-0 right-0 z-[60] h-6 overflow-hidden bg-[#0d0b09] text-white flex items-center justify-center gap-2 px-4 text-[11px] sm:text-xs tracking-[0.01em]"
-        >
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_140%_at_50%_50%,rgba(242,130,34,0.42),rgba(242,130,34,0.10)_45%,transparent_75%)] transition-opacity duration-500 group-hover:opacity-90"
-          />
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-brand-500 to-transparent"
-          />
-          <span className="relative inline-flex items-center rounded-full bg-brand-500 px-1.5 py-px text-[9px] sm:text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#0d0b09] shadow-[0_0_12px_rgba(242,130,34,0.65)]">
-            We&apos;ve expanded
-          </span>
-          <span className="relative font-bold">SmartSpace Networks</span>
-          <span className="relative hidden md:inline text-white/70">· Try better Wi-Fi in your own home for 3 days</span>
-          <ArrowRight
-            aria-hidden="true"
-            className="relative h-3 w-3 text-brand-400 transition-transform duration-300 group-hover:translate-x-0.5 motion-reduce:transition-none"
-          />
-        </Link>
-      ) : (
+      {!NETWORK_LIVE && (
         /* Review strip, until the network pages are switched on */
         <Link
           href="/reviews"
@@ -90,12 +63,13 @@ export default function Navbar() {
 
       {/* Nav */}
       <header
-        className={`fixed top-[24px] left-0 right-0 z-50 transition-all duration-200 bg-white ${
+        className={`fixed ${NETWORK_LIVE ? "top-0" : "top-[24px]"} left-0 right-0 z-50 transition-all duration-200 bg-white ${
           scrolled || isOpen ? "shadow-sm" : ""
         }`}
       >
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-24">
+          {/* 88px with the banner under it (88 + 32 = the 120px every page clears), 96px without. */}
+          <div className={`flex items-center justify-between ${NETWORK_LIVE ? "h-[88px]" : "h-24"}`}>
             {/* Logo */}
             <Link href="/" aria-label="Smart Space, home">
               <Image
@@ -173,6 +147,33 @@ export default function Navbar() {
             </div>
           )}
         </nav>
+        {NETWORK_LIVE && (
+          /* "We've expanded" (Oscar, 13 Oct 2026): under the navigation, above every
+             page's hero, 32px. The nav row gives up 8px so header and banner stay
+             120px, the height every page already clears; the review strip that sat
+             above the nav is gone. */
+          <Link
+            href="/services/wifi"
+            aria-label="We've expanded: SmartSpace Networks. Try better Wi-Fi in your own home for 3 days."
+            className="group relative flex h-8 items-center justify-center gap-2.5 overflow-hidden bg-[#0d0b09] px-4 text-xs sm:text-[13px] text-white tracking-[0.01em]"
+          >
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(55%_160%_at_50%_50%,rgba(242,130,34,0.45),rgba(242,130,34,0.10)_45%,transparent_75%)] transition-opacity duration-500 group-hover:opacity-90"
+            />
+            <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-500/70 to-transparent" />
+            <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-brand-500 to-transparent" />
+            <span className="relative inline-flex items-center rounded-full bg-brand-500 px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#0d0b09] shadow-[0_0_14px_rgba(242,130,34,0.7)]">
+              We&apos;ve expanded
+            </span>
+            <span className="relative font-bold">SmartSpace Networks</span>
+            <span className="relative hidden md:inline text-white/70">· Try better Wi-Fi in your own home for 3 days</span>
+            <ArrowRight
+              aria-hidden="true"
+              className="relative h-3.5 w-3.5 text-brand-400 transition-transform duration-300 group-hover:translate-x-0.5 motion-reduce:transition-none"
+            />
+          </Link>
+        )}
       </header>
     </>
   );
