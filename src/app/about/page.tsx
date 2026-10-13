@@ -49,10 +49,10 @@ export default function AboutPage() {
           orange stays the brand's; depth comes from light and shade within it
           (a warm glow top left, a deeper amber bottom right) and the logo's
           own signal arcs, drawn faintly, rather than from more white. */}
-      <section className="px-3 sm:px-6 lg:px-8">
-        <div className="relative max-w-7xl mx-auto overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] bg-gradient-to-br from-brand-500 via-brand-700 to-brand-800 py-16 sm:py-20 lg:py-24 shadow-[0_30px_60px_-30px_rgba(145,68,12,0.55)]">
+      <section className="px-3 sm:px-6 lg:px-8 pt-3 sm:pt-4 lg:pt-2">
+        <div className="relative max-w-7xl mx-auto overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] bg-gradient-to-br from-brand-600 via-brand-700 to-brand-800 py-16 sm:py-20 lg:py-24 shadow-[0_30px_60px_-30px_rgba(145,68,12,0.55)]">
           <div aria-hidden className="pointer-events-none absolute inset-0">
-            <div className="absolute -top-32 -left-24 w-[34rem] h-[34rem] rounded-full bg-[radial-gradient(closest-side,rgba(255,196,140,0.35),rgba(255,196,140,0))]" />
+            <div className="absolute -top-32 -left-24 w-[34rem] h-[34rem] rounded-full bg-[radial-gradient(closest-side,rgba(255,170,100,0.30),rgba(255,170,100,0))]" />
             <div className="absolute -bottom-40 -right-24 w-[38rem] h-[38rem] rounded-full bg-[radial-gradient(closest-side,rgba(109,48,9,0.55),rgba(109,48,9,0))]" />
             <svg className="absolute -right-24 -top-24 w-[30rem] h-[30rem] text-white/[0.09] sm:-right-10" viewBox="0 0 400 400" fill="none" stroke="currentColor" strokeWidth="14" strokeLinecap="round">
               <path d="M200 120a80 80 0 0 1 80 80" />
@@ -62,6 +62,8 @@ export default function AboutPage() {
               <path d="M200 70a130 130 0 0 0-130 130" />
               <path d="M200 20a180 180 0 0 0-180 180" />
             </svg>
+            {/* A soft shade behind the words, so the white reads at 4.5:1 or better on the orange. */}
+            <div className="absolute inset-0 bg-[radial-gradient(60%_55%_at_50%_52%,rgba(109,48,9,0.38),rgba(109,48,9,0))]" />
             <div className="absolute inset-0 rounded-[inherit] ring-1 ring-inset ring-white/15" />
           </div>
           <div className="relative max-w-3xl mx-auto px-6 sm:px-10 text-center">
@@ -71,7 +73,7 @@ export default function AboutPage() {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-[-0.03em] text-white mb-5 [text-shadow:0_2px_24px_rgba(109,48,9,0.35)]">
               We&apos;re Smart Space
             </h1>
-            <p className="text-lg sm:text-xl text-white/90 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg sm:text-xl text-white max-w-2xl mx-auto leading-relaxed">
               Ring installation specialists, bringing professional smart home
               security to homes across Dublin and all of Leinster.
             </p>
