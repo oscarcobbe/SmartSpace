@@ -63,7 +63,7 @@ export default function AboutPage() {
               <path d="M200 20a180 180 0 0 0-180 180" />
             </svg>
             {/* A soft shade behind the words, so the white reads at 4.5:1 or better on the orange. */}
-            <div className="absolute inset-0 bg-[radial-gradient(60%_55%_at_50%_52%,rgba(109,48,9,0.38),rgba(109,48,9,0))]" />
+            <div className="absolute inset-0 bg-[radial-gradient(78%_62%_at_50%_54%,rgba(109,48,9,0.48),rgba(109,48,9,0))]" />
             <div className="absolute inset-0 rounded-[inherit] ring-1 ring-inset ring-white/15" />
           </div>
           <div className="relative max-w-3xl mx-auto px-6 sm:px-10 text-center">
