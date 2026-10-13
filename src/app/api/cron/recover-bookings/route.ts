@@ -39,6 +39,10 @@ function escapeHtml(s: string): string {
  */
 
 interface MissedOrder {
+  /** What became of the booking, from Calendly's history, when it was made and then cancelled. */
+  history: string | null;
+  /** Cancelled within the last fortnight: still worth a nudge even if the original date is past. */
+  recentCancel: boolean;
   sessionId: string;
   name: string;
   email: string;
@@ -76,6 +80,40 @@ async function fetchBookedEmails(): Promise<Set<string>> {
   const { visits, problems } = await visitsBetween(past, future);
   if (problems.length) throw new Error(problems.join("; "));
   return new Set(visits.map((v) => (v.email || "").toLowerCase()).filter(Boolean));
+}
+
+/**
+ * What happened to a customer's booking, when there is no live one.
+ *
+ * On 13 October 2026 the audit told Nigel, every morning, that Ciaran Smith's
+ * paid installation on Wed 14 Oct was "missing a calendar booking". It was not
+ * missing: Ciaran had rescheduled it himself on 9 October, and Nigel had then
+ * cancelled the new time. The audit only asked whether a live booking existed,
+ * read the date from the Stripe order, and so reported a visit that had been
+ * moved and cancelled as one the system had failed to book, which made the
+ * calendar sync look broken when it was working. This reads the customer's
+ * most recent cancelled Calendly event and says who cancelled it and when.
+ */
+async function calendlyHistory(email: string, token: string, userUri: string): Promise<{ text: string; cancelledAt: number } | null> {
+  try {
+    const url = `https://api.calendly.com/scheduled_events?user=${encodeURIComponent(userUri)}&invitee_email=${encodeURIComponent(email)}&status=canceled&sort=start_time:desc&count=5`;
+    const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, cache: "no-store", signal: AbortSignal.timeout(8000) });
+    if (!r.ok) return null;
+    const events = ((await r.json()).collection ?? []) as Array<{ start_time: string; cancellation?: { canceled_by?: string; canceler_type?: string; created_at?: string } }>;
+    const latest = events
+      .filter((e) => e.cancellation?.created_at)
+      .sort((a, b) => Date.parse(b.cancellation!.created_at!) - Date.parse(a.cancellation!.created_at!))[0];
+    if (!latest) return null;
+    const fmt = (iso: string, withTime: boolean) =>
+      new Date(iso).toLocaleString("en-IE", { timeZone: "Europe/Dublin", weekday: "short", day: "numeric", month: "short", ...(withTime ? { hour: "2-digit", minute: "2-digit" } : {}) });
+    const who = latest.cancellation!.canceler_type === "host" ? "you" : "the customer";
+    return {
+      text: `Visit for ${fmt(latest.start_time, true)} was cancelled by ${who} on ${fmt(latest.cancellation!.created_at!, false)}. No other visit is booked.`,
+      cancelledAt: Date.parse(latest.cancellation!.created_at!),
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function GET(request: Request) {
@@ -137,6 +175,8 @@ export async function GET(request: Request) {
     const slotEndHour = parseInt(bookingSlot.split("-")[1]?.split(":")[0] ?? "0", 10);
     const isPast = new Date(`${bookingDate}T${String(slotEndHour).padStart(2, "0")}:00:00`).getTime() < Date.now();
     missed.push({
+      history: null,
+      recentCancel: false,
       sessionId: String(session.id),
       name,
       email,
@@ -148,6 +188,25 @@ export async function GET(request: Request) {
     });
   }
 
+  /* Each order without a live booking: was it ever booked, and if so what
+     happened to it. Without Calendly configured, nothing is added. */
+  const calendlyToken = process.env.CALENDLY_PERSONAL_TOKEN;
+  if (calendlyToken && missed.length) {
+    try {
+      const me = await fetch("https://api.calendly.com/users/me", { headers: { Authorization: `Bearer ${calendlyToken}` }, cache: "no-store", signal: AbortSignal.timeout(8000) });
+      const userUri = me.ok ? String((await me.json()).resource?.uri ?? "") : "";
+      if (userUri) {
+        const fortnight = Date.now() - 14 * 24 * 60 * 60 * 1000;
+        await Promise.all(missed.map(async (m) => {
+          const h = await calendlyHistory(m.email, calendlyToken, userUri);
+          if (h) { m.history = h.text; m.recentCancel = h.cancelledAt > fortnight; }
+        }));
+      }
+    } catch (err) {
+      console.error("[cron/recover-bookings] Calendly history lookup failed:", err);
+    }
+  }
+
   // Nothing to flag → silent success
   if (missed.length === 0) {
     return NextResponse.json({ ok: true, missed: 0, checked: stripeOrders.length });
@@ -156,7 +215,11 @@ export async function GET(request: Request) {
   // Only email when there's something genuinely actionable. Past missed
   // bookings are a one-time phone call, not a recurring problem, emailing
   // about them every day would train Nigel to ignore the alert.
-  const futureRecoverable = missed.filter((m) => !m.isPast);
+  /* Worth an email: a future visit that was never booked, or a booking
+     cancelled in the last fortnight with nothing booked in its place (the
+     customer has paid and has no visit). A cancelled booking's original date
+     says nothing about when the visit is, so it is not counted as "future". */
+  const futureRecoverable = missed.filter((m) => (!m.isPast && !m.history) || m.recentCancel);
   if (futureRecoverable.length === 0) {
     return NextResponse.json({
       ok: true,
@@ -174,8 +237,10 @@ export async function GET(request: Request) {
   const resendFrom = process.env.RESEND_FROM_EMAIL;
   const to = alertTo();
   if (resendKey && resendFrom) {
-    const futureCount = missed.filter((m) => !m.isPast).length;
-    const pastCount = missed.filter((m) => m.isPast).length;
+    const futureCount = missed.filter((m) => !m.isPast && !m.history).length;
+    const cancelledCount = missed.filter((m) => m.history).length;
+    const pastCount = missed.filter((m) => m.isPast && !m.history).length;
+    const statusOf = (m: MissedOrder) => (m.history ? "❌ cancelled, nothing rebooked" : m.isPast ? "⚠️ PAST" : "🔧 future");
     // Escape every Stripe-supplied field. Stripe sanitizes their own
     // fields but we don't trust upstream data into our HTML, a custom
     // product_name with `<script>` would otherwise inject into Nigel's
@@ -183,7 +248,7 @@ export async function GET(request: Request) {
     const rows = missed
       .map(
         (m) =>
-          `<tr><td>${escapeHtml(m.name)}</td><td>${escapeHtml(m.email)}</td><td>${escapeHtml(m.product)}</td><td>${escapeHtml(m.bookingLabel || m.bookingSlot)}</td><td>${m.isPast ? "⚠️ PAST" : "🔧 future"}</td><td>€${escapeHtml(m.amount)}</td></tr>`
+          `<tr><td>${escapeHtml(m.name)}</td><td>${escapeHtml(m.email)}</td><td>${escapeHtml(m.product)}</td><td>${escapeHtml(m.bookingLabel || m.bookingSlot)}${m.history ? `<br/><small>${escapeHtml(m.history)}</small>` : ""}</td><td>${statusOf(m)}</td><td>€${escapeHtml(m.amount)}</td></tr>`
       )
       .join("");
     try {
@@ -192,18 +257,18 @@ export async function GET(request: Request) {
         from: resendFrom,
         to: [to],
         bcc: monitorBcc(),
-        subject: `[Smart Space] ${missed.length} paid order${missed.length === 1 ? "" : "s"} missing a calendar booking`,
+        subject: `[Smart Space] ${missed.length} paid order${missed.length === 1 ? "" : "s"} without a booked visit`,
         text: missed
           .map(
             (m) =>
-              `${m.name} <${m.email}>, ${m.product}, €${m.amount}, ${m.bookingLabel || m.bookingSlot} ${m.isPast ? "(PAST)" : ""}`
+              `${m.name} <${m.email}>, ${m.product}, €${m.amount}, ordered for ${m.bookingLabel || m.bookingSlot}${m.history ? `. ${m.history}` : m.isPast ? " (PAST)" : ""}`
           )
           .join("\n"),
         html: `
           <h2>Daily booking-recovery audit</h2>
-          <p>${futureCount} future booking${futureCount === 1 ? "" : "s"} need recovery; ${pastCount} past booking${pastCount === 1 ? "" : "s"} need a phone call.</p>
-          <p>To recover automatically: SSH into the project and run<br/>
-            <code>node scripts/recover-bookings.mjs --book</code></p>
+          <p>${futureCount} future visit${futureCount === 1 ? "" : "s"} never made it into your calendar; ${cancelledCount} paid order${cancelledCount === 1 ? " has" : "s have"} a visit that was cancelled with nothing rebooked; ${pastCount} past order${pastCount === 1 ? "" : "s"} never had a booking and may need a phone call.</p>
+          <p>A cancelled visit is not a sync problem: the customer has paid, so ring them to rebook or refund. Only the never-booked ones can be recovered with<br/>
+            <code>node scripts/recover-bookings.mjs --book</code>, which leaves cancelled ones alone.</p>
           <table border="1" cellpadding="6" style="border-collapse:collapse;font-family:system-ui">
             <thead style="background:#f3f4f6">
               <tr><th>Customer</th><th>Email</th><th>Product</th><th>Slot</th><th>Status</th><th>Amount</th></tr>

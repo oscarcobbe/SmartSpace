@@ -403,7 +403,11 @@ export default function RingInstallationPage() {
                     size="lg"
                     className="w-full"
                     disabled={!bookingSelection || !foundUs}
-                    disabledText="Select an Installation Date"
+                    /* The button also waits for "How did you hear about us", and
+                       said "Select an Installation Date" when only that was left,
+                       so a customer with a date chosen was told to choose one
+                       (13 Oct 2026). It names whatever is actually missing. */
+                    disabledText={!bookingSelection ? "Select an Installation Date" : "Tell us how you heard about us"}
                     bookingDate={bookingSelection?.date}
                     bookingSlot={bookingSelection?.timeSlot}
                     bookingLabel={bookingSelection ? `${bookingSelection.dateLabel} ${bookingSelection.slotLabel}` : undefined}

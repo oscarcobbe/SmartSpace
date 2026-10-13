@@ -301,7 +301,24 @@ for (const session of stripeOrders) {
   }
 }
 
-const futureRecoverable = missed.filter((m) => !m.isTestOrder && !m.isPast);
+/*
+ * A booking that was made and then cancelled is not missing, and must not be
+ * re-created on its original date. Ciaran Smith's (13 Oct 2026) was moved by
+ * him and then cancelled by Nigel; --book would have put him back into a slot
+ * on a day Nigel had marked out of office. Each candidate's Calendly history
+ * is read first, and any with a cancellation is listed and left alone.
+ */
+const meForHistory = await (await fetch("https://api.calendly.com/users/me", { headers: { Authorization: `Bearer ${CALENDLY_TOKEN}` } })).json();
+for (const m of missed.filter((x) => !x.isTestOrder)) {
+  const url = `https://api.calendly.com/scheduled_events?user=${encodeURIComponent(meForHistory.resource.uri)}&invitee_email=${encodeURIComponent(m.email)}&status=canceled&count=5`;
+  const r = await fetch(url, { headers: { Authorization: `Bearer ${CALENDLY_TOKEN}` } });
+  const latest = r.ok ? ((await r.json()).collection || []).filter((e) => e.cancellation?.created_at)
+    .sort((a, b) => Date.parse(b.cancellation.created_at) - Date.parse(a.cancellation.created_at))[0] : null;
+  if (latest) m.cancelled = `${latest.start_time} cancelled by ${latest.cancellation.canceler_type === "host" ? "Nigel" : "the customer"} on ${latest.cancellation.created_at.slice(0, 10)}`;
+}
+const cancelledOrders = missed.filter((m) => !m.isTestOrder && m.cancelled);
+for (const m of cancelledOrders) console.log(`↩️  ${m.name} (${m.email}): booked, then ${m.cancelled}. Not re-booked; ring them.`);
+const futureRecoverable = missed.filter((m) => !m.isTestOrder && !m.isPast && !m.cancelled);
 const pastUnrecoverable = missed.filter((m) => !m.isTestOrder && m.isPast);
 const testOrders = missed.filter((m) => m.isTestOrder);
 
