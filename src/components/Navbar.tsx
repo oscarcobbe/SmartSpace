@@ -149,13 +149,13 @@ export default function Navbar() {
         </nav>
         {NETWORK_LIVE && (
           /* "We've expanded" (Oscar, 13 Oct 2026): under the navigation, above every
-             page's hero, 32px. The nav row gives up 8px so header and banner stay
-             120px, the height every page already clears; the review strip that sat
-             above the nav is gone. */
+             page's hero. A heading, then the rest as a subheading, 60px tall.
+             Header and banner are 148px; pages clear 120px, so the spacer below
+             the header adds the other 28px once, for every page. */
           <Link
             href="/services/wifi"
             aria-label="We've expanded: SmartSpace Networks. Try better Wi-Fi in your own home for 3 days."
-            className="group relative flex h-8 items-center justify-center gap-2.5 overflow-hidden bg-[#0d0b09] px-4 text-xs sm:text-[13px] text-white tracking-[0.01em]"
+            className="group relative flex h-[60px] flex-col items-center justify-center gap-0.5 overflow-hidden bg-[#0d0b09] px-4 text-center text-white"
           >
             <span
               aria-hidden="true"
@@ -163,18 +163,24 @@ export default function Navbar() {
             />
             <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-500/70 to-transparent" />
             <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-brand-500 to-transparent" />
-            <span className="relative inline-flex items-center rounded-full bg-brand-500 px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#0d0b09] shadow-[0_0_14px_rgba(242,130,34,0.7)]">
+            <span className="relative text-[15px] sm:text-[17px] font-extrabold uppercase leading-none tracking-[0.14em] text-brand-400 [text-shadow:0_0_18px_rgba(242,130,34,0.55)]">
               We&apos;ve expanded
             </span>
-            <span className="relative font-bold">SmartSpace Networks</span>
-            <span className="relative hidden md:inline text-white/70">· Try better Wi-Fi in your own home for 3 days</span>
-            <ArrowRight
-              aria-hidden="true"
-              className="relative h-3.5 w-3.5 text-brand-400 transition-transform duration-300 group-hover:translate-x-0.5 motion-reduce:transition-none"
-            />
+            <span className="relative inline-flex items-center gap-1.5 whitespace-nowrap text-[12px] sm:text-[13.5px] leading-tight text-white/80">
+              <span className="font-bold text-white">SmartSpace Networks</span>
+              <span aria-hidden="true">·</span>
+              <span className="sm:hidden">3-day Wi-Fi trial at home</span>
+              <span className="hidden sm:inline">Try better Wi-Fi in your own home for 3 days</span>
+              <ArrowRight
+                aria-hidden="true"
+                className="h-3.5 w-3.5 text-brand-400 transition-transform duration-300 group-hover:translate-x-0.5 motion-reduce:transition-none"
+              />
+            </span>
           </Link>
         )}
       </header>
+      {/* The banner is 28px taller than the 32px every page was spaced for; this pushes them all down once. */}
+      {NETWORK_LIVE && <div aria-hidden="true" className="h-7" />}
     </>
   );
 }
