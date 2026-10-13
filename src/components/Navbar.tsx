@@ -9,10 +9,19 @@ import { useCart } from "@/context/CartContext";
 
 const navLinks = [
   { href: "/services", label: "Services" },
+  /* The home network service under its own name, listed once its pages are
+     signed off and switched on, like the footer's links (Footer.tsx). */
+  ...(process.env.NEXT_PUBLIC_NETWORK_PAGES_LIVE === "1" ? [{ href: "/services/wifi", label: "SmartSpace Networks" }] : []),
   { href: "/reviews", label: "Reviews" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];
+
+/** The current section. Services stays unlit on the network pages, which have their own item. */
+function isActive(href: string, pathname: string): boolean {
+  if (href === "/services" && (pathname === "/services/wifi" || pathname.startsWith("/services/wifi/"))) return false;
+  return pathname === href || pathname.startsWith(href + "/");
+}
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -73,8 +82,8 @@ export default function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`text-sm font-medium transition-colors ${
-                    pathname === link.href || pathname.startsWith(link.href + "/")
+                  className={`text-sm font-medium transition-colors whitespace-nowrap ${
+                    isActive(link.href, pathname)
                       ? "text-brand-500"
                       : "text-[#555] hover:text-[#1a1a1a]"
                   }`}

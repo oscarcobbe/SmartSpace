@@ -45,19 +45,37 @@ export default function AboutPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutSchema) }}
       />
 
-      {/* Hero */}
-      <section className="bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 py-20 lg:py-28 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute -top-20 -right-20 w-96 h-96 bg-white rounded-full blur-3xl" />
-        </div>
-        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-6">
-            We&apos;re Smart Space
-          </h1>
-          <p className="text-xl text-white/80 max-w-2xl mx-auto leading-relaxed">
-            Ring installation specialists, bringing professional smart home
-            security to homes across Dublin and all of Leinster.
-          </p>
+      {/* Hero: an inset, rounded panel rather than a full-width block. The
+          orange stays the brand's; depth comes from light and shade within it
+          (a warm glow top left, a deeper amber bottom right) and the logo's
+          own signal arcs, drawn faintly, rather than from more white. */}
+      <section className="px-3 sm:px-6 lg:px-8">
+        <div className="relative max-w-7xl mx-auto overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] bg-gradient-to-br from-brand-500 via-brand-700 to-brand-800 py-16 sm:py-20 lg:py-24 shadow-[0_30px_60px_-30px_rgba(145,68,12,0.55)]">
+          <div aria-hidden className="pointer-events-none absolute inset-0">
+            <div className="absolute -top-32 -left-24 w-[34rem] h-[34rem] rounded-full bg-[radial-gradient(closest-side,rgba(255,196,140,0.35),rgba(255,196,140,0))]" />
+            <div className="absolute -bottom-40 -right-24 w-[38rem] h-[38rem] rounded-full bg-[radial-gradient(closest-side,rgba(109,48,9,0.55),rgba(109,48,9,0))]" />
+            <svg className="absolute -right-24 -top-24 w-[30rem] h-[30rem] text-white/[0.09] sm:-right-10" viewBox="0 0 400 400" fill="none" stroke="currentColor" strokeWidth="14" strokeLinecap="round">
+              <path d="M200 120a80 80 0 0 1 80 80" />
+              <path d="M200 70a130 130 0 0 1 130 130" />
+              <path d="M200 20a180 180 0 0 1 180 180" />
+              <path d="M200 120a80 80 0 0 0-80 80" />
+              <path d="M200 70a130 130 0 0 0-130 130" />
+              <path d="M200 20a180 180 0 0 0-180 180" />
+            </svg>
+            <div className="absolute inset-0 rounded-[inherit] ring-1 ring-inset ring-white/15" />
+          </div>
+          <div className="relative max-w-3xl mx-auto px-6 sm:px-10 text-center">
+            <p className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-xs sm:text-sm font-semibold uppercase tracking-[0.14em] text-white/95 ring-1 ring-inset ring-white/20 mb-6">
+              About us
+            </p>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-[-0.03em] text-white mb-5 [text-shadow:0_2px_24px_rgba(109,48,9,0.35)]">
+              We&apos;re Smart Space
+            </h1>
+            <p className="text-lg sm:text-xl text-white/90 max-w-2xl mx-auto leading-relaxed">
+              Ring installation specialists, bringing professional smart home
+              security to homes across Dublin and all of Leinster.
+            </p>
+          </div>
         </div>
       </section>
 
