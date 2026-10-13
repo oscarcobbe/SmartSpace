@@ -73,7 +73,17 @@ async function resolveItems(items: CartItem[]): Promise<ResolvedItem[]> {
       if (item.quantity !== 1 || Math.round(item.price * 100) !== network.cents) {
         throw new Error(`Price out of range for ${item.productId}: submitted €${item.price}, expected €${network.cents / 100}`);
       }
-      resolved.push({ id: item.productId, title: network.name, unitAmountCents: network.cents, quantity: 1, image: "" });
+      /* The assessment's first visit is booked like an install (NetworkBookAndPay), so its slot is kept. */
+      resolved.push({
+        id: item.productId,
+        title: network.name,
+        unitAmountCents: network.cents,
+        quantity: 1,
+        image: "",
+        bookingDate: item.bookingDate,
+        bookingSlot: item.bookingSlot,
+        bookingLabel: item.bookingLabel,
+      });
       continue;
     }
 
@@ -266,11 +276,12 @@ export async function POST(request: Request) {
     }
 
     /* A home network service names itself, so the webhook sends the network
-       order email and Nigel's alert says what was bought, not "Installation". */
+       order email and Nigel's alert says what was bought, not "Installation".
+       Booked or not: an assessment carries its visit's slot as well. */
     const networkItem = resolved.map((i) => networkCheckoutItem(i.id)).find(Boolean);
-    if (networkItem && !bookedItem) {
+    if (networkItem) {
       params.append("metadata[network_service]", networkItem.slug);
-      params.append("metadata[product_name]", networkItem.name);
+      if (!bookedItem) params.append("metadata[product_name]", networkItem.name);
     }
 
     // Aggregate every item's product-page answers into a single JSON-encoded

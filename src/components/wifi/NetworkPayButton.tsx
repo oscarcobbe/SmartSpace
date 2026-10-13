@@ -11,7 +11,21 @@ import FoundUsField from "@/components/FoundUsField";
  * and refuses any other. "How did you hear about us?" is required here as on
  * every checkout (scripts/check-found-us.mjs).
  */
-export default function NetworkPayButton({ slug, name, euro }: { slug: string; name: string; euro: number }) {
+export default function NetworkPayButton({
+  slug,
+  name,
+  euro,
+  booking = null,
+  needsBooking = false,
+}: {
+  slug: string;
+  name: string;
+  euro: number;
+  /** The visit's date and slot, when the service is booked into the calendar (NetworkBookAndPay). */
+  booking?: { date: string; slot: string; label: string } | null;
+  /** Hold the button until a date and time are chosen. */
+  needsBooking?: boolean;
+}) {
   const [foundUs, setFoundUs] = useState("");
   const [foundUsDetail, setFoundUsDetail] = useState("");
   return (
@@ -32,8 +46,11 @@ export default function NetworkPayButton({ slug, name, euro }: { slug: string; n
         image=""
         size="lg"
         className="w-full"
-        disabled={!foundUs}
-        disabledText="Tell us how you heard about us"
+        disabled={!foundUs || (needsBooking && !booking)}
+        disabledText={needsBooking && !booking ? "Choose a date and time first" : "Tell us how you heard about us"}
+        bookingDate={booking?.date}
+        bookingSlot={booking?.slot}
+        bookingLabel={booking?.label}
         directCheckout
         directLabel={`Pay €${euro} and Book`}
         foundUs={foundUs}

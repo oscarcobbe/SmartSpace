@@ -5,6 +5,7 @@ import { ArrowRight, Check, Phone } from "lucide-react";
 import TrafficLight, { LIGHT_WORD } from "@/components/wifi/TrafficLight";
 import WifiEnquiryForm from "@/components/wifi/WifiEnquiryForm";
 import NetworkPayButton from "@/components/wifi/NetworkPayButton";
+import NetworkBookAndPay from "@/components/wifi/NetworkBookAndPay";
 import {
   WIFI_PACKAGES,
   MONITOR_POINTS,
@@ -200,7 +201,7 @@ export default function WifiPackagePage({ params }: { params: { slug: string } }
 
           {pkg.related.length > 0 && (
             <p className="mt-6 text-sm text-ink-soft text-center sm:text-left">
-              Read around it:{" "}
+              Suggested Resources:{" "}
               {pkg.related.map((r, i) => (
                 <span key={r.href}>
                   {i > 0 && " · "}
@@ -284,11 +285,15 @@ export default function WifiPackagePage({ params }: { params: { slug: string } }
                   {isEvidence ? "Book the evidence service" : "Book your assessment"}
                 </h2>
                 <p className="text-sm text-ink-soft leading-relaxed mb-5">
-                  Pay €{payable} securely now and we ring you within one working day to{" "}
-                  {isEvidence ? "confirm your speed and post the box" : "pick a time for the first visit"}.
-                  {isAssessment && " Credited in full against any work."}
+                  {isAssessment
+                    ? `Choose a date and time for the first visit, about 2 hours, and pay €${payable} securely. Credited in full against any work.`
+                    : `Pay €${payable} securely now and we ring you within one working day to confirm your speed and post the box.`}
                 </p>
-                <NetworkPayButton slug={pkg.slug} name={pkg.name} euro={payable} />
+                {isAssessment ? (
+                  <NetworkBookAndPay slug={pkg.slug} name={pkg.name} euro={payable} />
+                ) : (
+                  <NetworkPayButton slug={pkg.slug} name={pkg.name} euro={payable} />
+                )}
               </div>
             )}
             <WifiEnquiryForm
