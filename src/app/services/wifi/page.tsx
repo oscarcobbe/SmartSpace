@@ -102,7 +102,7 @@ const USUAL_WAY = [
 ];
 
 const STEPS = [
-  { title: "Book", body: "Leave your details and we ring you to pick a time." },
+  { title: "Book", body: "Choose a date and time online, or leave your details and we ring you." },
   { title: "First visit, about 2 hours", body: "We test your broadband and every floor, set up the trial and move up to 3 problem devices onto it." },
   { title: "3 days of real life", body: "The trial records speed every hour and watches your devices while you carry on as normal." },
   { title: "30-minute call", body: "We go through your report together." },

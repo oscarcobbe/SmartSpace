@@ -137,7 +137,7 @@ export const ENTRIES: Entry[] = [
     source: "src/app/api/webhooks/stripe/route.ts",
     alongside: "Stripe's payment receipt.",
     render: () =>
-      networkOrderConfirmed({ name: SAMPLE.name, service: "home-network-assessment", product: "Home Network Assessment", amount: "€395" }),
+      networkOrderConfirmed({ name: SAMPLE.name, service: "home-network-assessment", product: "Home Network Assessment", amount: "€395", visit: "Tue 20 Oct 10:00 – 12:00" }),
   },
   {
     id: "consultation-booked",

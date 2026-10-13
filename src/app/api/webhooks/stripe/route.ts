@@ -80,7 +80,9 @@ async function sendOrderNotification(params: {
     return;
   }
 
-  const calendlyLine = params.network
+  /* A network service with no slot (the evidence box, or an order from before
+     the assessment had a calendar) still needs a call; a booked one reads like an install. */
+  const calendlyLine = params.network && params.calendlyStatus === "skipped"
     ? "📞 A home network service: ring the customer to pick the visit (nothing is booked automatically)."
     : params.calendlyStatus === "created"
       ? "✅ Booked into your calendar automatically."
@@ -123,7 +125,7 @@ async function sendOrderNotification(params: {
         `Product: ${params.productName}`,
         `Amount: ${formattedAmount}`,
         "",
-        `Installation Date: ${dateLabel}`,
+        `${params.network ? "Visit Date" : "Installation Date"}: ${dateLabel}`,
         `Time Slot: ${slotLabel}`,
         "",
         calendlyLine,
@@ -141,7 +143,7 @@ async function sendOrderNotification(params: {
         <p><strong>Product:</strong> ${escapeHtml(params.productName)}</p>
         <p><strong>Amount:</strong> ${escapeHtml(formattedAmount)}</p>
         <hr />
-        <p><strong>Installation Date:</strong> ${escapeHtml(dateLabel)}</p>
+        <p><strong>${params.network ? "Visit Date" : "Installation Date"}:</strong> ${escapeHtml(dateLabel)}</p>
         <p><strong>Time Slot:</strong> ${escapeHtml(slotLabel)}</p>
         <p>${escapeHtml(calendlyLine)}</p>
         <hr />
@@ -187,6 +189,7 @@ async function sendOrderNotification(params: {
         service: params.network,
         product: params.productName,
         amount: formattedAmount,
+        visit: params.calendlyStatus === "created" ? params.bookingLabel || undefined : undefined,
       });
       await resend.emails.send({ from, to: [params.email], replyTo: to, subject: mail.subject, text: mail.text, html: mail.html });
       console.log(`[stripe webhook] network order email sent for session=${params.sessionId}`);

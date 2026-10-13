@@ -229,6 +229,7 @@ export function orderConfirmed(d: { name: string; product: string; amount: strin
 const NETWORK_NEXT: Record<"home-network-assessment" | "broadband-evidence", string[]> = {
   "home-network-assessment": [
     "We ring you within one working day to pick a time for the first visit, about 2 hours.",
+    /* Replaced by VISIT_FIRST when the visit was booked online (NetworkBookAndPay). */
     "On the visit we test your broadband at the router, measure every floor, set up the trial on your weakest floor and move up to 3 problem devices onto it.",
     "The trial is measured every hour for 3 days while you carry on as normal. Then we go through your report together on a 30-minute call.",
     "The €395 is credited in full against any work you go ahead with.",
@@ -240,14 +241,19 @@ const NETWORK_NEXT: Record<"home-network-assessment" | "broadband-evidence", str
   ],
 };
 
+/** The first step when the assessment's visit was booked and is in the calendar. */
+const VISIT_FIRST = "We arrive in your slot for the first visit, about 2 hours.";
+
 export function networkOrderConfirmed(d: {
   name: string;
   service: "home-network-assessment" | "broadband-evidence";
   product: string;
   amount: string;
+  /** The booked first visit, "Tue 20 Oct 10:00 – 12:00", once it is in the calendar. */
+  visit?: string;
 }): Email {
   const f = first(d.name);
-  const next = NETWORK_NEXT[d.service];
+  const next = d.visit ? [VISIT_FIRST, ...NETWORK_NEXT[d.service].slice(1)] : NETWORK_NEXT[d.service];
   const preheader = `Payment received for your ${d.product}. Here is what happens next.`;
   return {
     subject: `Booked, Smart Space, ${d.product}`,
@@ -261,6 +267,7 @@ export function networkOrderConfirmed(d: {
         para("We've got your payment. Here's what you booked and what happens next.", { size: 16, pad: "14px 32px 0" }),
         summary("Your booking", [
           ["Service", d.product],
+          ...(d.visit ? ([["First visit", d.visit]] as [string, string][]) : []),
           ["Paid", d.amount],
         ]),
         steps("What happens next", next.map(esc)),
@@ -279,6 +286,7 @@ export function networkOrderConfirmed(d: {
       "",
       "Your booking",
       `  Service: ${d.product}`,
+      ...(d.visit ? [`  First visit: ${d.visit}`] : []),
       `  Paid:    ${d.amount}`,
       "",
       "What happens next",
