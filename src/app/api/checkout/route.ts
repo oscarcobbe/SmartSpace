@@ -5,6 +5,7 @@ import type { AttributionRecord } from "@/lib/leads";
 import { foundUsDetailFrom, foundUsFrom } from "@/lib/found-us";
 import { browserContext } from "@/lib/server-conversions";
 import { networkCheckoutItem } from "@/data/wifiPackages";
+import { EIRCODE, VISIT_KEYS } from "@/lib/network-visit";
 
 // POST routes are inherently dynamic but explicit is better, without
 // this, Next.js may try static optimization on a future major.
@@ -83,6 +84,8 @@ async function resolveItems(items: CartItem[]): Promise<ResolvedItem[]> {
         bookingDate: item.bookingDate,
         bookingSlot: item.bookingSlot,
         bookingLabel: item.bookingLabel,
+        /* The visit's name, phone, email, address and Eircode (NetworkBookAndPay). */
+        configuration: item.configuration,
       });
       continue;
     }
@@ -295,7 +298,26 @@ export async function POST(request: Request) {
         if (!bookedItem) {
           return NextResponse.json({ error: "Choose a date and time for the first visit" }, { status: 400 });
         }
+        /* One checkout books one visit: an installation in the same basket would
+           take the assessment's place in the calendar. */
+        if (resolved.some((i) => i.bookingDate && networkCheckoutItem(i.id)?.slug !== "home-network-assessment")) {
+          return NextResponse.json({ error: "Please check out the home network assessment on its own, then book the installation separately." }, { status: 400 });
+        }
         params.append("metadata[booking_kind]", "assessment");
+        /* Who the visit is for and where, as typed on the page: Nigel's alert, the
+           calendar booking and the CRM read these rather than whoever's card paid. */
+        const cfg = resolved.find((i) => networkCheckoutItem(i.id)?.slug === "home-network-assessment")?.configuration ?? {};
+        const v = (k: string) => String(cfg[k] ?? "").trim().slice(0, 200);
+        const visitAddress = [v(VISIT_KEYS.address), v(VISIT_KEYS.eircode)].filter(Boolean).join(", ");
+        if (!v(VISIT_KEYS.name) || !v(VISIT_KEYS.phone) || !visitAddress || !EIRCODE.test(v(VISIT_KEYS.eircode))) {
+          return NextResponse.json({ error: "Fill in the name, phone, address and Eircode for the visit" }, { status: 400 });
+        }
+        params.append("metadata[visit_name]", v(VISIT_KEYS.name));
+        params.append("metadata[visit_phone]", v(VISIT_KEYS.phone));
+        if (v(VISIT_KEYS.email)) params.append("metadata[visit_email]", v(VISIT_KEYS.email));
+        params.append("metadata[visit_address]", visitAddress);
+        if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v(VISIT_KEYS.email))) params.append("customer_email", v(VISIT_KEYS.email));
+        params.append("custom_fields[0][text][default_value]", visitAddress.slice(0, 255));
       }
     }
 

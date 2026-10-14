@@ -56,6 +56,8 @@ function escapeHtml(text: string) {
  */
 async function sendOrderNotification(params: {
   customerName: string;
+  /** The card-holder, when not the person the visit is for. */
+  paidBy?: string;
   email: string;
   phone: string;
   productName: string;
@@ -121,6 +123,7 @@ async function sendOrderNotification(params: {
         `New paid order via smart-space.ie`,
         "",
         `Customer: ${params.customerName}`,
+        ...(params.paidBy ? [`Paid by: ${params.paidBy}`] : []),
         `Email: ${params.email}`,
         `Phone: ${params.phone || "(none)"}`,
         `Address: ${params.installationAddress || "(none)"}`,
@@ -139,6 +142,7 @@ async function sendOrderNotification(params: {
       html: `
         <h2>New Paid Order</h2>
         <p><strong>Customer:</strong> ${escapeHtml(params.customerName)}</p>
+        ${params.paidBy ? `<p><strong>Paid by:</strong> ${escapeHtml(params.paidBy)}</p>` : ""}
         <p><strong>Email:</strong> ${escapeHtml(params.email)}</p>
         <p><strong>Phone:</strong> ${escapeHtml(params.phone || "(none)")}</p>
         <p><strong>Address:</strong> ${escapeHtml(params.installationAddress || "(none)")}</p>
@@ -395,6 +399,8 @@ async function sendOrderNotification(params: {
  */
 async function sendPurchaseAttemptAlert(params: {
   kind: "failed" | "expired" | "async_failed";
+  /** The card-holder, when not the person the visit is for. */
+  paidBy?: string;
   customerName: string;
   email: string;
   phone: string;
@@ -468,6 +474,7 @@ async function sendPurchaseAttemptAlert(params: {
         urgencyLine,
         "",
         `Customer: ${params.customerName}`,
+        ...(params.paidBy ? [`Paid by: ${params.paidBy}`] : []),
         `Email: ${params.email || "-"}`,
         `Phone: ${params.phone || "-"}`,
         `Address: ${params.installationAddress || "-"}`,
@@ -486,6 +493,7 @@ async function sendPurchaseAttemptAlert(params: {
         <p style="color:#b91c1c;font-weight:bold;margin-top:0">${escapeHtml(urgencyLine)}</p>
         <hr/>
         <p><strong>Customer:</strong> ${escapeHtml(params.customerName)}</p>
+        ${params.paidBy ? `<p><strong>Paid by:</strong> ${escapeHtml(params.paidBy)}</p>` : ""}
         <p><strong>Email:</strong> ${escapeHtml(params.email || "-")}</p>
         <p><strong>Phone:</strong> ${escapeHtml(params.phone || "-")}</p>
         <p><strong>Address:</strong> ${escapeHtml(params.installationAddress || "-")}</p>
@@ -623,8 +631,14 @@ export async function POST(req: NextRequest) {
        the buyer answered (src/lib/found-us.ts). A payment link carries none. */
     const foundUs = foundUsFrom(session.metadata?.found_us);
     const foundUsDetail = foundUsDetailFrom(session.metadata?.found_us_detail);
-    const customerName = session.customer_details?.name ?? email.split("@")[0];
-    const phone = session.customer_details?.phone ?? "";
+    /* An assessment carries who the visit is for and where, typed on the page
+       (NetworkBookAndPay, written by /api/checkout); those come before the card's. */
+    const visitName = (session.metadata?.visit_name as string) || "";
+    const visitPhone = (session.metadata?.visit_phone as string) || "";
+    const visitAddress = (session.metadata?.visit_address as string) || "";
+    const payerName = session.customer_details?.name ?? email.split("@")[0];
+    const customerName = visitName || payerName;
+    const phone = visitPhone || session.customer_details?.phone || "";
     // Pull the installation address from the Stripe custom field (set in
     // /api/checkout). Falls back to the billing address if the customer
     // didn't provide a separate one.
@@ -643,7 +657,9 @@ export async function POST(req: NextRequest) {
           .filter(Boolean)
           .join(", ")
       : "";
-    const installationAddress = installationAddressField || billingAddressString;
+    const installationAddress = visitAddress || installationAddressField || billingAddressString;
+    /* Said on Nigel's alert when the card-holder is someone else, e.g. a son paying for a parent's visit. */
+    const paidBy = visitName && payerName && visitName.trim().toLowerCase() !== payerName.trim().toLowerCase() ? `${payerName} (${email})` : "";
 
     // Pull product-page question/answer pairs out of metadata.configuration
     // (set in /api/checkout) and format as a readable note string. The Sheet
@@ -790,7 +806,9 @@ export async function POST(req: NextRequest) {
       network: networkService,
       paidSpeed,
       customerName,
-      email,
+      paidBy,
+      /* The visit's own email on Nigel's alert; the card-holder's is on the Paid by line. */
+      email: (session.metadata?.visit_email as string) || email,
       phone,
       productName,
       amount: amountTotal,
