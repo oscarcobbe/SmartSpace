@@ -17,6 +17,23 @@ const day = (iso: string | null) =>
 export default async function OutreachPage() {
   const { site } = requireSession();
 
+  /* Smart Space writes to no prospects; its outreach is the LinkedIn posts. */
+  if (site === "smart-space") {
+    return (
+      <>
+        <PageHeader title="Outreach" sub="What Smart Space is putting out on LinkedIn." />
+        <div className="mb-6">
+          <Note>
+            Posts for the Smart Space company page, including the launch of SmartSpace Networks. Copy the caption,
+            upload the film and set the still as its thumbnail. The same files are in the shared drive under
+            Marketing, LinkedIn.
+          </Note>
+        </div>
+        <LinkedInSection business="smart-space" />
+      </>
+    );
+  }
+
   if (site !== "smartcareliving") {
     return (
       <>

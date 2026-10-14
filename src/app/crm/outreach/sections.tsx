@@ -12,6 +12,7 @@
 import { useState } from "react";
 import { Panel } from "../ui";
 import { LINKEDIN_POSTS, type LinkedInPost } from "@/lib/crm/content/linkedin-posts";
+import { SMARTSPACE_LINKEDIN_POSTS } from "@/lib/crm/content/smartspace-linkedin-posts";
 import { PITCH, WHO, OPENER, OBJECTIONS, ECONOMICS } from "@/lib/crm/content/partners";
 
 /* Four thousand two hundred and eighty four euro reads as a part number
@@ -76,7 +77,7 @@ function Post({ post }: { post: LinkedInPost }) {
           </h3>
           <Copy text={post.caption + (post.tags.length ? "\n\n" + post.tags.join(" ") : "")} />
         </div>
-        <p className="mt-1 text-xs text-slate-500">Closes on a {post.close || "line"}.</p>
+        {post.close && <p className="mt-1 text-xs text-slate-500">Closes on a {post.close}.</p>}
         <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-slate-700">{post.caption}</p>
         {post.tags.length > 0 && (
           <p className="mt-3 text-xs text-slate-500">{post.tags.join("  ")}</p>
@@ -86,18 +87,20 @@ function Post({ post }: { post: LinkedInPost }) {
   );
 }
 
-export function LinkedInSection() {
+/** Each business's posts: SmartCare Living's from its drafts, Smart Space's from its packaged folder. */
+export function LinkedInSection({ business = "smartcareliving" }: { business?: "smartcareliving" | "smart-space" }) {
+  const posts = business === "smart-space" ? SMARTSPACE_LINKEDIN_POSTS : LINKEDIN_POSTS;
   return (
     <Panel
       title="What is going out on LinkedIn"
-      aside={<span className="text-xs text-slate-500">{LINKEDIN_POSTS.length} written, artwork made</span>}
+      aside={<span className="text-xs text-slate-500">{posts.length} written, artwork made</span>}
     >
-      {LINKEDIN_POSTS.length === 0 ? (
+      {posts.length === 0 ? (
         <p className="p-6 text-center text-sm text-slate-500">
-          Nothing written yet. The drafts live in the SmartCare Living repository and are built in here.
+          Nothing written yet.
         </p>
       ) : (
-        LINKEDIN_POSTS.map((p) => <Post key={p.n} post={p} />)
+        posts.map((p) => <Post key={p.n} post={p} />)
       )}
     </Panel>
   );
