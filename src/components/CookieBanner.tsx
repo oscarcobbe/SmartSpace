@@ -185,8 +185,8 @@ export default function CookieBanner() {
           <path d="M7 14v.01" />
         </svg>
       </span>
-      <p className="text-base sm:text-lg font-semibold text-gray-900 leading-snug mb-6">
-        We&rsquo;re a small Irish business trying to reach the people who need us.{" "}
+      {/* "We're a small Irish business..." taken out, Oscar, 14 October 2026. */}
+      <p className="text-sm text-gray-600 leading-snug mb-5">
         <a href="/privacy" className="text-brand-700 underline hover:text-brand-800">
           Privacy policy
         </a>
