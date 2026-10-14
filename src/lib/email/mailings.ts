@@ -52,6 +52,17 @@ const SITE_URL = "https://smart-space.ie";
 export const unsubscribeUrl = (email: string, secret: string) =>
   `${SITE_URL}/api/email/unsubscribe?t=${encodeURIComponent(unsubscribeToken(email, secret))}`;
 
+/**
+ * The Resend key mailings send with. news.smart-space.ie is verified in the
+ * FourWinds Digital Resend account, and a key can only send from its own
+ * account's domains, so mailings carry their own key (MARKETING_RESEND_API_KEY,
+ * sending access, that domain only). The booking and order emails keep
+ * RESEND_API_KEY on Smart Space's account. Without the mailings key it falls
+ * back to RESEND_API_KEY, which only works if the mailings domain is on that
+ * same account.
+ */
+const mailingsKey = () => process.env.MARKETING_RESEND_API_KEY?.trim() || process.env.RESEND_API_KEY?.trim() || "";
+
 /** What must be true before any mailing can send, as sentences. Empty means ready. */
 export function readiness(): string[] {
   const out: string[] = [];
@@ -59,7 +70,7 @@ export function readiness(): string[] {
   const sender = marketingSenderProblem(process.env.MARKETING_FROM_EMAIL, process.env.RESEND_FROM_EMAIL);
   if (sender) out.push(sender);
   if (!process.env.EMAIL_UNSUBSCRIBE_SECRET?.trim()) out.push("The unsubscribe links cannot be signed yet (EMAIL_UNSUBSCRIBE_SECRET).");
-  if (!process.env.RESEND_API_KEY?.trim()) out.push("No email provider key is set (RESEND_API_KEY).");
+  if (!mailingsKey()) out.push("No email provider key is set for mailings (MARKETING_RESEND_API_KEY).");
   return out;
 }
 
@@ -156,7 +167,7 @@ export async function runDailyBatch(): Promise<{ ready: string[]; reports: Batch
   if (ready.length) return { ready, reports: [] };
   const secret = process.env.EMAIL_UNSUBSCRIBE_SECRET!.trim();
   const from = process.env.MARKETING_FROM_EMAIL!.trim();
-  const resend = new Resend(process.env.RESEND_API_KEY!.trim());
+  const resend = new Resend(mailingsKey());
   const today = dublinDate();
   const blocked = await optedOut();
 
