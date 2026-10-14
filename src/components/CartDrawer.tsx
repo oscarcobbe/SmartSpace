@@ -139,10 +139,19 @@ export default function CartDrawer() {
                       {formatPrice(item.price)}
                     </p>
                     {item.bookingLabel && (
-                      <p className="text-xs text-brand-500 mt-1">Installation: {item.bookingLabel}</p>
+                      <p className="text-xs text-brand-500 mt-1">
+                        {item.productId.startsWith("network:") ? "First visit" : "Installation"}: {item.bookingLabel}
+                      </p>
+                    )}
+                    {/* A network service is one visit, so it has no quantity. */}
+                    {item.productId.startsWith("network:") && item.configuration?.["Visit address"] && (
+                      <p className="text-xs text-gray-500 mt-0.5 truncate">
+                        {item.configuration["Name for the visit"]}, {item.configuration["Visit address"]}, {item.configuration["Eircode"]}
+                      </p>
                     )}
 
                     <div className="flex items-center gap-2 mt-2">
+                      {!item.productId.startsWith("network:") && (<>
                       <button
                         onClick={() => {
                           if (item.quantity === 1) removeItem(item.productId);
@@ -163,6 +172,7 @@ export default function CartDrawer() {
                       >
                         <Plus className="w-3 h-3" />
                       </button>
+                      </>)}
                       <button
                         onClick={() => removeItem(item.productId)}
                         disabled={isCheckingOut}
