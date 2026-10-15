@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireSession } from "@/lib/crm/session";
 import { listMailings, readiness, type MailingSummary } from "@/lib/email/mailings";
+import { announcementHolds } from "@/lib/email/announce-hold";
 import { BASIS_LABEL, MAILING_TEMPLATES } from "@/lib/email/mailing-rules";
 import { allApprovals } from "@/lib/signoff/state";
 import { PageHeader, Panel, Note, Pill } from "../ui";
@@ -29,6 +30,8 @@ export default async function MailingsPage() {
   requireSession();
   const problems = readiness();
   const { states } = await allApprovals();
+  // The announcement goes only after the SmartCare Living relaunch and the network pages' approval (announce-hold.ts).
+  const holds = new Map(await Promise.all(MAILING_TEMPLATES.map(async (t) => [t.id, await announcementHolds(t.id)] as const)));
   let mailings: MailingSummary[] = [];
   let readError: string | null = null;
   try {
@@ -70,6 +73,7 @@ export default async function MailingsPage() {
           const current = mailings.find((m) => m.template === t.id && m.status !== "done");
           const finished = mailings.filter((m) => m.template === t.id && m.status === "done").length;
           const approved = st?.approved === true;
+          const held = holds.get(t.id) ?? [];
           return (
             <Panel
               key={t.id}
@@ -90,6 +94,16 @@ export default async function MailingsPage() {
                   Can go to people who {t.bases.map((b) => BASIS_LABEL[b]).join(", or who ")}.
                   {finished ? ` Sent ${finished} time${finished === 1 ? "" : "s"} before.` : ""}
                 </p>
+                {held.length > 0 && (
+                  <Note tone="warn">
+                    <p className="font-medium">Held until both of these are done. After that, a mailing set to send goes on the next weekday morning without anyone lifting the hold:</p>
+                    <ul className="mt-1 list-disc pl-5">
+                      {held.map((h) => (
+                        <li key={h}>{h}</li>
+                      ))}
+                    </ul>
+                  </Note>
+                )}
 
                 {!current ? (
                   <ActionForm action={startMailing} className="flex flex-wrap items-center gap-3">
