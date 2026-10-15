@@ -418,7 +418,7 @@ export function reminderConsultation(d: { name: string; slot: string }): Email {
         heading(`Looking forward to seeing you, ${f}.`),
         para(`Just a quick note to confirm we're calling out tomorrow ${esc(between(d.slot))} for your free site visit.`, { pad: "14px 32px 0" }),
         panel(
-          "We'll walk the property with you, point out where Wi-Fi might struggle, and send you a written quote within 24 hours, often less. There's nothing to prepare. Just be home for the slot.",
+          "We'll listen to your needs and suggest system options based on a site survey, which includes potential blind spots and Wi-Fi dead zones. You'll have a written quote in your inbox within 24 hours, often less. There's nothing to prepare. Just be home for the slot.",
         ),
         para(`If anything comes up on the day, ring us on ${phoneLink()} and we'll sort it.`, { pad: "22px 32px 0" }),
         signoff("Talk soon,", "Nigel, Smart Space"),
@@ -430,7 +430,7 @@ export function reminderConsultation(d: { name: string; slot: string }): Email {
       "",
       `Just a quick note to confirm we're calling out tomorrow ${between(d.slot)} for your free site visit.`,
       "",
-      "We'll walk the property with you, point out where Wi-Fi might struggle, and send you a written quote within 24 hours, often less. There's nothing to prepare. Just be home for the slot.",
+      "We'll listen to your needs and suggest system options based on a site survey, which includes potential blind spots and Wi-Fi dead zones. You'll have a written quote in your inbox within 24 hours, often less. There's nothing to prepare. Just be home for the slot.",
       "",
       `If anything comes up on the day, ring us on ${BUSINESS_PHONE_DISPLAY} and we'll sort it.`,
       "",
@@ -455,7 +455,7 @@ export const reminderSms = {
   install: (d: { name: string; slot: string }) =>
     `Hi ${first(d.name)}, Smart Space: install confirmed for tomorrow at ${startTime(d.slot)}. Have your app account created. Any issue, text ${BUSINESS_MOBILE_DISPLAY} or ring ${BUSINESS_PHONE_DISPLAY}.`,
   consultation: (d: { name: string; slot: string }) =>
-    `Hi ${first(d.name)}, Nigel from Smart Space. See you tomorrow, ${slotTo(d.slot)}, for your free site visit. Nothing to prepare. Any questions, ring ${BUSINESS_PHONE_DISPLAY}.`,
+    `Hi ${first(d.name)}, Nigel from Smart Space. See you tomorrow, ${slotTo(d.slot)}, for your free site survey. Quote within 24 hours. Questions? Ring ${BUSINESS_PHONE_DISPLAY}.`,
 };
 
 /* ── After the install: new ─────────────────────────────────────────── */
