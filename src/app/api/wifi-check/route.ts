@@ -38,6 +38,7 @@ import { consentFrom, openAiConsented, recordEnquiryConsent, type ConsentInput }
 import { browserContext, fireServerConversion } from "@/lib/server-conversions";
 import { GADS_WIFI_SEND_TO, WIFI_LEAD_VALUE } from "@/lib/lead-conversion";
 import { alertTo, monitorBcc, BUSINESS_SITE, BUSINESS_EMAIL } from "@/lib/business-constants";
+import { newMarkRef, markButtonsHtml, markButtonsText } from "@/lib/crm/mark-link";
 
 export const dynamic = "force-dynamic";
 /* The sheet append runs after the answer and can take minutes to settle
@@ -136,6 +137,8 @@ export async function POST(request: Request) {
   const notes = report.join("\n").slice(0, 3000);
   /* One id for this enquiry's Ads conversion, from the server and the page. */
   const conversionId = randomUUID();
+  /* This enquiry's reference for the mark buttons in Nigel's email (src/lib/crm/mark-link.ts). */
+  const markRef = newMarkRef();
 
   if (!live()) {
     console.log(`[wifi-check] DRY RUN, nothing sent. Would have emailed Nigel, the customer, the sheet and the CRM:\n${lines.join("\n")}`);
@@ -157,9 +160,9 @@ export async function POST(request: Request) {
     bcc: monitorBcc(),
     replyTo: email,
     subject: g ? `Wi-Fi check (${g.light.toUpperCase()}): ${name}` : `Wi-Fi enquiry: ${name}, ${pkg?.name ?? "Wi-Fi"}`,
-    text: lines.join("\n"),
+    text: lines.join("\n") + markButtonsText("smart-space", markRef),
     html: `<h2 style="margin:0 0 12px">${g ? `Wi-Fi check: <span style="color:${LIGHT_HEX[g.light]}">${g.light.toUpperCase()}</span>` : "Wi-Fi enquiry"}</h2>
-<pre style="font-family:system-ui,sans-serif;white-space:pre-wrap;font-size:14px;line-height:1.55">${esc(lines.join("\n"))}</pre>`,
+<pre style="font-family:system-ui,sans-serif;white-space:pre-wrap;font-size:14px;line-height:1.55">${esc(lines.join("\n"))}</pre>${markButtonsHtml("smart-space", markRef)}`,
   });
   if (error) {
     console.error("[wifi-check] Resend refused the lead email:", error);
@@ -267,6 +270,7 @@ export async function POST(request: Request) {
       tags: ["wifi-check", ...(g ? [`wifi-${g.light}`] : [])],
       custom: {
         conversion_id: conversionId,
+        mark_ref: markRef,
         found_us: foundUs || null,
         found_us_detail: foundUsDetail || null,
         wifi: g

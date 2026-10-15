@@ -7,7 +7,7 @@ import { getContact, STATUSES, type ActivityRow, type TaskRow } from "@/lib/crm/
 import { STATUS_PILL, STATUS_LABEL, sourceLabel, kindLabel, telHref, FOUND_US, foundUsOf, foundUsLabel, chatGptAdClick, LIGHTS, LIGHT_LABEL, LIGHT_DOT, LIGHT_PILL, lightOf } from "@/lib/crm/labels";
 import { moneyExact, money } from "@/lib/crm/leads";
 import { PageHeader, Panel, Empty, Pill, Note } from "../../ui";
-import { saveNote, setLeadStatus, setLeadLight, addTask, completeTask } from "../actions";
+import { saveNote, saveLead, addTask, completeTask } from "../actions";
 import PaymentLinkForm from "../payment-link-form";
 import { ActionForm, SubmitButton } from "../../action-form";
 import { plainText, slotText } from "@/lib/crm/display";
@@ -243,9 +243,11 @@ export default async function ContactPage({ params }: { params: { id: string } }
                     </dl>
                     <AdLine o={ads?.leads.get(l.id)} />
 
-                    <ActionForm action={setLeadStatus} className="mt-3 flex flex-wrap items-end gap-2">
-                      <input type="hidden" name="leadId" value={l.id} />
-                      <input type="hidden" name="contactId" value={person.id} />
+                    {/* Everything about this enquiry in one Save (src/lib/crm/lead-mark.ts).
+                        Two forms with a Save each dropped a light chosen in one
+                        when the other's button was pressed. */}
+                    <ActionForm action={saveLead} className="mt-3 space-y-3 rounded-lg border border-slate-200 bg-slate-50/60 p-3">
+                      <div className="flex flex-wrap items-end gap-2">
                       <div className="min-w-0 flex-1 sm:flex-none">
                         <label htmlFor={`status-${l.id}`} className="mb-1 block text-xs text-slate-500">Where it stands</label>
                         <select
@@ -268,16 +270,7 @@ export default async function ContactPage({ params }: { params: { id: string } }
                           {Object.entries(FOUND_US).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                         </select>
                       </div>
-                      <SubmitButton
-                        pendingLabel="Saving"
-                        className="min-h-[44px] w-full rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 sm:min-h-[36px] sm:w-auto sm:px-3"
-                      >
-                        Save
-                      </SubmitButton>
-                    </ActionForm>
-
-                    {/* Nigel's traffic light: how good a lead this is, and a note if needed. */}
-                    <ActionForm action={setLeadLight} className="mt-3 rounded-lg border border-slate-200 bg-slate-50/60 p-3">
+                      </div>
                       <input type="hidden" name="leadId" value={l.id} />
                       <input type="hidden" name="contactId" value={person.id} />
                       <fieldset>
@@ -298,7 +291,7 @@ export default async function ContactPage({ params }: { params: { id: string } }
                           )}
                         </div>
                       </fieldset>
-                      <label htmlFor={`light-note-${l.id}`} className="mb-1 mt-3 block text-xs text-slate-500">Note (optional)</label>
+                      <label htmlFor={`light-note-${l.id}`} className="mb-1 block text-xs text-slate-500">Note (optional)</label>
                       <textarea
                         id={`light-note-${l.id}`}
                         name="light_note"
@@ -309,9 +302,9 @@ export default async function ContactPage({ params }: { params: { id: string } }
                       />
                       <SubmitButton
                         pendingLabel="Saving"
-                        className="mt-2 min-h-[44px] w-full rounded-lg bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-800 sm:min-h-[36px] sm:w-auto"
+                        className="min-h-[44px] w-full rounded-lg bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-800 sm:min-h-[36px] sm:w-auto"
                       >
-                        Save light
+                        Save
                       </SubmitButton>
                     </ActionForm>
                   </li>
