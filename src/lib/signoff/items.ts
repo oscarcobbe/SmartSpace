@@ -210,14 +210,6 @@ export const SIGNOFF_ITEMS: SignoffItem[] = [
     preview: [studio("network-diagnosis-a")],
     content: () => rendered("network-diagnosis-a"),
   },
-  {
-    id: "mailing:network-diagnosis-b",
-    group: "mailings",
-    title: "The network service, for security customers",
-    effect: "Lets this email go to the past customers you add in Mailings, fifty a day.",
-    preview: [studio("network-diagnosis-b")],
-    content: () => rendered("network-diagnosis-b"),
-  },
 ];
 
 export const itemById = (id: string) => SIGNOFF_ITEMS.find((i) => i.id === id) ?? null;

@@ -122,7 +122,10 @@ const T = (id) => M.templateById(id);
 const net = T("network-diagnosis-a");
 /* Version A carries SmartGuardian since 15 October 2026, so it is consent-only. */
 const sg = net;
-const netB = T("network-diagnosis-b");
+/* Version B was the only template that took the customer basis; it was
+   removed on 15 October 2026. The 12-month rule is still law and still code,
+   so it is checked against a copy of A that accepts customers. */
+const netB = { ...net, bases: ["customer", "consent"] };
 const cust = (d) => ({ email: "mary@example.ie", basis: "customer", last_purchase_on: d });
 eq("customer, 11 months ago", M.recipientVerdict(cust("2025-11-01"), netB, "2026-10-01", false).send, true);
 eq("customer, on the anniversary", M.recipientVerdict(cust("2025-10-01"), netB, "2026-10-01", false).send, true);
