@@ -36,25 +36,43 @@ const REASON: Record<Recipient["basis"], string> = {
   consent: "You're receiving this because you said yes to emails from Smart Space.",
 };
 
+const SITE = "https://smart-space.ie";
 const POWERLINE = "The fix uses powerline, which carries the network over the electrical wiring already in your walls.";
 const BOOK = "mailto:info@smart-space.ie?subject=Network%20assessment";
 
-/* ── Network diagnosis, Version A: problem-led, for most of the base ─── */
-
+/* ── The announcement: SmartSpace Networks and SmartGuardian together ── */
+/*
+ * Nigel's sign-off notes of 15 October 2026 asked for Version A to be
+ * rewritten in his own words and merged with the SmartGuardian announcement.
+ * The network paragraphs are his, word for word bar typos; his note was cut
+ * off by the sign-off form's 2,000-character limit mid-sentence ("the report
+ * will show where wired access points should"), so that sentence is finished
+ * with "go." and nothing is added after it. The SmartGuardian half is the one
+ * below (SG_INTRO, SG_POINTS), with his price line.
+ *
+ * Because it now advertises SmartCare Living's product, it may go only to
+ * people who said yes to marketing (see mailing-rules.ts).
+ */
 export function networkDiagnosisA(r: Recipient): Email {
   const f = first(r.name);
-  const subject = "Does your Wi-Fi drop upstairs?";
-  const preheader = "A three-day trial in your house, then a written report with the actual figures.";
-  const paras = [
-    "A quick note about something new we're offering.",
-    "If your broadband is fine downstairs but slow upstairs, the TV buffers in the evening, or a camera or thermostat keeps dropping offline, we can now find out why and fix it.",
-    "We visit, test your broadband at the router, and measure signal strength room by room. We then install a trial system in the part of your house with the problem, and leave a monitoring device connected to your router for three days.",
-    "You live with the trial for those three days and judge it yourself. We come back, collect everything, and send you a written report with the actual figures: whether your broadband is at fault, whether it's your Wi-Fi, and what we'd recommend.",
-    "If the trial doesn't perform well in your house, the report says so. You find out what works before you pay for the fix.",
-    POWERLINE,
+  const subject = "Two new things from Smart Space";
+  const preheader = "Try a home network upgrade in your own home before you spend a cent, and meet SmartGuardian.";
+  const book = `${SITE}/services/wifi/home-network-assessment`;
+  const report = `${SITE}/network-sample-report.html`;
+  const net = [
+    "A quick note about something new we're offering. As far as we know it's an Ireland first: you try a tailored home network upgrade in your own home before you spend a cent on it.",
+    "If your broadband is fine downstairs but slow upstairs, the TV buffers in the evening, or a camera or thermostat keeps dropping offline, we can find out why and let you test the upgrade for yourself.",
+    "We visit, test your broadband at the router, and measure signal strength room by room. We then set up a trial system in the part of the house with the problem, using the latest powerline and Wi-Fi 6 equipment. Powerline carries the network over the electrical wiring already in your walls. If you've already tried powerline and it let you down, ours uses the next generation G.hn standard, coupled with the latest tri-band mesh system.",
+    "For three days you live with it. We can move up to three problem devices, like a TV that buffers, onto the trial network, monitor them the whole time, and report any time they drop offline. You can switch your phone or laptop over too and use it the way you normally would. We don't switch off your existing Wi-Fi, so you can compare the two and nothing stops working. We also test the broadband coming in from your provider.",
   ];
-  const offerHtml = `The assessment is €395 including VAT, and it's credited in full against any work you go ahead with. As an existing customer, ${placeholder("OFFER")}.`;
-  const offerText = "The assessment is €395 including VAT, and it's credited in full against any work you go ahead with. As an existing customer, [OFFER].";
+  const reportLine = "After the three days we send you a written report with the actual figures. You can see a sample report here:";
+  const after = [
+    "We then call you to go through your report and arrange a date and time to either remove our trial system or install the complete one.",
+    "This service is for people who want to try the latest options before deciding their house needs cables run through it, which is more disruptive, costs more, and isn't something we offer. If the trial doesn't work in your house, you'll know you've tried everything else first, and the report will show where wired access points should go.",
+    "The assessment is €395 including VAT.",
+  ];
+  const sgLead = "And a second piece of news: our sister company, SmartCare Living, now offers SmartGuardian, a service for older people living at home.";
+  const P = (t: string) => para(t, { size: 16, pad: "14px 32px 0" });
   return {
     subject,
     preheader,
@@ -63,12 +81,18 @@ export function networkDiagnosisA(r: Recipient): Email {
       preheader,
       blocks: [
         eyebrow("New from Smart Space"),
-        heading(subject),
+        heading("Try a home network upgrade before you spend a cent"),
         para(`Hi ${esc(f)},`, { size: 16, pad: "18px 32px 0" }),
-        ...paras.map((p) => para(esc(p), { size: 16, pad: "14px 32px 0" })),
-        para(offerHtml, { size: 16, pad: "14px 32px 0" }),
-        para("Just reply to this email if you'd like to book one, or if you want to talk it through first.", { size: 16, pad: "14px 32px 0" }),
-        button("Reply to book an assessment", BOOK),
+        ...net.map((t) => P(esc(t))),
+        P(`${esc(reportLine)} <a href="${esc(report)}" style="color:#1C1A18;font-weight:700;text-decoration:underline;">see a sample report</a>.`),
+        ...after.map((t) => P(esc(t))),
+        button("Book a home network assessment", book),
+        P(esc(sgLead)),
+        smartGuardianFeature(),
+        para(
+          `The SmartGuardian consultation is free. <a href="${esc(SG_CONSULT)}" style="color:${SCL_TEAL};font-weight:700;text-decoration:underline;">Book a complimentary consultation</a>, or ring the same number as always, 01 513 0424.`,
+          { size: 16, pad: "22px 32px 0" },
+        ),
         signoff("All the best,", "Nigel"),
       ],
       footer: { kind: "marketing", reason: REASON[r.basis], unsubscribeUrl: r.unsubscribeUrl },
@@ -76,10 +100,23 @@ export function networkDiagnosisA(r: Recipient): Email {
     text: [
       `Hi ${f},`,
       "",
-      ...paras.flatMap((p) => [p, ""]),
-      offerText,
+      ...net.flatMap((t) => [t, ""]),
+      `${reportLine} ${report}`,
       "",
-      "Just reply to this email if you'd like to book one, or if you want to talk it through first.",
+      ...after.flatMap((t) => [t, ""]),
+      `Book a home network assessment: ${book}`,
+      "",
+      sgLead,
+      "",
+      SG_INTRO,
+      "",
+      ...SG_POINTS.map((t) => `  - ${t}`),
+      "",
+      SG_PRICE,
+      "",
+      `Take the 2-minute assessment: ${SG_ASSESSMENT}`,
+      `The SmartGuardian consultation is free. Book one here: ${SG_CONSULT}`,
+      "Or ring the same number as always, 01 513 0424.",
       "",
       "All the best,",
       "Nigel",
@@ -160,71 +197,28 @@ const utm = (content: string) =>
 const SG_INTRO =
   "SmartGuardian's sensors show how the everyday pattern changes (sleep, movement, trips to the bathroom at night) and catch a fall automatically when one happens. There is nothing to wear, and no video.";
 
-export function smartGuardianAnnouncement(r: Recipient): Email {
-  const f = first(r.name);
-  const subject = "Meet our sister company, SmartCare Living";
-  const preheader = "SmartGuardian catches a fall automatically. Nothing to wear, and no video.";
-  const assessment = `${SCL}/assessment?${utm("assessment")}`;
-  const consult = `${SCL}/book-consultation?service=smartguardian&${utm("consultation")}`;
-  const points = [
-    "Detects a fall automatically, including gradual collapses and slides to the floor. Nothing to press.",
-    "Shows how time in bed, hours of movement and trips to the bathroom at night change week to week.",
-    "Alerts up to four family members through the SmartCare Living app.",
-    "No video of your loved one is ever recorded.",
-  ];
-  return {
-    subject,
-    preheader,
-    html: renderEmail({
-      title: subject,
-      preheader,
-      blocks: [
-        eyebrow("News from Smart Space"),
-        heading(subject),
-        para(`Hi ${esc(f)},`, { size: 16, pad: "18px 32px 0" }),
-        para("A quick note about our sister company, SmartCare Living, and its service for older people living at home: SmartGuardian.", {
-          size: 16,
-          pad: "14px 32px 0",
-        }),
-        feature({
-          accent: SCL_TEAL,
-          tint: "#eef6f6",
-          tag: "SmartCare Living",
-          title: "SmartGuardian",
-          logo: { src: `${SCL}/images/logo-square.png`, alt: "SmartCare Living", width: 56 },
-          bodyHtml: `<p style="margin:0 0 12px;">${esc(SG_INTRO)}</p>
-<ul style="margin:0;padding-left:20px;">${points.map((p) => `<li style="margin-bottom:8px;">${esc(p)}</li>`).join("")}</ul>
-<p style="margin:12px 0 0;font-size:14px;color:#5a524c;">From €549 to install, then €119 a month. Cancel anytime.</p>`,
-          cta: { label: "Take the 2-minute assessment", href: assessment },
-        }),
-        para(
-          `The consultation is free. <a href="${esc(consult)}" style="color:${SCL_TEAL};font-weight:700;text-decoration:underline;">Book a complimentary consultation</a>, or ring the same number as always, 01 513 0424.`,
-          { size: 16, pad: "22px 32px 0" },
-        ),
-        signoff("All the best,", "Nigel"),
-      ],
-      footer: { kind: "marketing", reason: REASON[r.basis], unsubscribeUrl: r.unsubscribeUrl },
-    }),
-    text: [
-      `Hi ${f},`,
-      "",
-      "A quick note about our sister company, SmartCare Living, and its service for older people living at home: SmartGuardian.",
-      "",
-      SG_INTRO,
-      "",
-      ...points.map((p) => `  - ${p}`),
-      "",
-      "From €549 to install, then €119 a month. Cancel anytime.",
-      "",
-      `Take the 2-minute assessment: ${assessment}`,
-      "",
-      `The consultation is free. Book one here: ${consult}`,
-      "Or ring the same number as always, 01 513 0424.",
-      "",
-      "All the best,",
-      "Nigel",
-      "",
-      `${REASON[r.basis]} Unsubscribe: ${r.unsubscribeUrl}`,
-    ].join("\n"),
-  };
+const SG_ASSESSMENT = `${SCL}/assessment?${utm("assessment")}`;
+const SG_CONSULT = `${SCL}/book-consultation?service=smartguardian&${utm("consultation")}`;
+const SG_POINTS = [
+  "Detects a fall automatically, including gradual collapses and slides to the floor. Nothing to press.",
+  "Shows how time in bed, hours of movement and trips to the bathroom at night change week to week.",
+  "Alerts up to four family members through the SmartCare Living app.",
+  "No video of your loved one is ever recorded.",
+];
+/* Nigel's wording, sign-off note of 15 October 2026. */
+const SG_PRICE = "From €549 to install (first room), then €119 a month. Cancel anytime.";
+
+/** SmartGuardian's panel in the announcement. */
+function smartGuardianFeature(): string {
+  return feature({
+    accent: SCL_TEAL,
+    tint: "#eef6f6",
+    tag: "SmartCare Living",
+    title: "SmartGuardian",
+    logo: { src: `${SCL}/images/logo-square.png`, alt: "SmartCare Living", width: 56 },
+    bodyHtml: `<p style="margin:0 0 12px;">${esc(SG_INTRO)}</p>
+<ul style="margin:0;padding-left:20px;">${SG_POINTS.map((p) => `<li style="margin-bottom:8px;">${esc(p)}</li>`).join("")}</ul>
+<p style="margin:12px 0 0;font-size:14px;color:#5a524c;">${esc(SG_PRICE)}</p>`,
+    cta: { label: "Take the 2-minute assessment", href: SG_ASSESSMENT },
+  });
 }

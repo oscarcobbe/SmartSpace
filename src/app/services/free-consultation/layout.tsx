@@ -5,7 +5,7 @@ const SITE = "https://smart-space.ie";
 export const metadata: Metadata = {
   title: "Free Home Security Consultation | Dublin & Leinster | Smart Space",
   description:
-    "Book a complimentary in-home security consultation with Smart Space. Honest advice, no obligation, written quote the same day. Dublin and all of Leinster.",
+    "Book a complimentary in-home security consultation with Smart Space. Honest advice, no obligation, written quote within 24 hours, often less. Dublin and all of Leinster.",
   alternates: { canonical: "/services/free-consultation" },
   openGraph: {
     title: "Free Home Security Consultation | Dublin & Leinster",

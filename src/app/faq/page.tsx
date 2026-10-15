@@ -34,7 +34,7 @@ const INCLUDES = [
 
 const HOW_IT_WORKS = [
   { n: 1, title: "Book a complimentary consultation online or on the phone." },
-  { n: 2, title: "We visit for a complimentary consultation, walk the house with you, and send a written quote the same day." },
+  { n: 2, title: "We visit for a complimentary consultation, walk the house with you, and send a written quote within 24 hours, often less." },
   { n: 3, title: "You approve. We book the install, usually within a week." },
   { n: 4, title: "We install, configure and hand over, typically in 30 minutes to 3 hours." },
   { n: 5, title: "You get a follow-up call at 30 days to make sure everything's perfect." },
@@ -138,7 +138,7 @@ export default function FAQPage() {
           <h2 className="text-3xl sm:text-4xl font-extrabold mb-3">Still have questions?</h2>
           <p className="text-white/70 text-lg mb-8">
             Book a complimentary consultation. We&apos;ll walk your home with you,
-            answer everything in person, and send a written quote the same day.
+            answer everything in person, and send a written quote within 24 hours, often less.
           </p>
           <Link
             href="/services/free-consultation"
@@ -148,7 +148,7 @@ export default function FAQPage() {
             <ArrowRight className="w-4 h-4" />
           </Link>
           <p className="text-xs text-white/50 mt-4">
-            No obligation &nbsp;•&nbsp; No hard sell &nbsp;•&nbsp; Honest quote, same day
+            No obligation &nbsp;•&nbsp; No hard sell &nbsp;•&nbsp; Honest quote within 24 hours
           </p>
         </div>
       </section>

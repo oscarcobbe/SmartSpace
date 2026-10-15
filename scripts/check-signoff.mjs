@@ -120,16 +120,18 @@ if (!/isNetwork && process\.env\.NEXT_PUBLIC_NETWORK_PAGES_LIVE !== "1"\) h\.set
 /* ── Who a mailing may reach ─────────────────────────────────────── */
 const T = (id) => M.templateById(id);
 const net = T("network-diagnosis-a");
-const sg = T("smartguardian-announce");
+/* Version A carries SmartGuardian since 15 October 2026, so it is consent-only. */
+const sg = net;
+const netB = T("network-diagnosis-b");
 const cust = (d) => ({ email: "mary@example.ie", basis: "customer", last_purchase_on: d });
-eq("customer, 11 months ago", M.recipientVerdict(cust("2025-11-01"), net, "2026-10-01", false).send, true);
-eq("customer, on the anniversary", M.recipientVerdict(cust("2025-10-01"), net, "2026-10-01", false).send, true);
-eq("customer, a day past 12 months", M.recipientVerdict(cust("2025-09-30"), net, "2026-10-01", false).send, false);
+eq("customer, 11 months ago", M.recipientVerdict(cust("2025-11-01"), netB, "2026-10-01", false).send, true);
+eq("customer, on the anniversary", M.recipientVerdict(cust("2025-10-01"), netB, "2026-10-01", false).send, true);
+eq("customer, a day past 12 months", M.recipientVerdict(cust("2025-09-30"), netB, "2026-10-01", false).send, false);
 /* Mid-month too: a window stretched by a month is hidden at a month's end by
    the leap-day correction, which is how this check first passed a broken rule. */
-eq("customer, mid-month anniversary", M.recipientVerdict(cust("2025-09-15"), net, "2026-09-15", false).send, true);
-eq("customer, a day past a mid-month anniversary", M.recipientVerdict(cust("2025-09-15"), net, "2026-09-16", false).send, false);
-eq("customer with no date", M.recipientVerdict(cust(null), net, "2026-10-01", false).send, false);
+eq("customer, mid-month anniversary", M.recipientVerdict(cust("2025-09-15"), netB, "2026-09-15", false).send, true);
+eq("customer, a day past a mid-month anniversary", M.recipientVerdict(cust("2025-09-15"), netB, "2026-09-16", false).send, false);
+eq("customer with no date", M.recipientVerdict(cust(null), netB, "2026-10-01", false).send, false);
 eq("SmartGuardian to a customer without consent", M.recipientVerdict(cust("2026-09-01"), sg, "2026-10-01", false).send, false);
 eq("SmartGuardian with consent", M.recipientVerdict({ email: "a@b.ie", basis: "consent", last_purchase_on: null }, sg, "2026-10-01", false).send, true);
 eq("unsubscribed is never sent", M.recipientVerdict({ email: "a@b.ie", basis: "consent", last_purchase_on: null }, net, "2026-10-01", true).send, false);

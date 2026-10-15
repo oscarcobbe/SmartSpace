@@ -72,7 +72,7 @@ export const COUNTIES: County[] = [
     towns:
       "Bray, Greystones, Wicklow town, Arklow, Rathdrum, Newtownmountkennedy, Enniskerry, Blessington",
     copy:
-      "We cover all of County Wicklow from Bray and Greystones in the north down to Arklow in the south, with regular appointments in Rathdrum, Newtownmountkennedy, Enniskerry and Blessington. Wicklow homes often have longer driveways and more rural Wi-Fi coverage challenges, which is exactly the sort of install we specialise in. Our Ring installers carry network extenders and long-run power cabling as standard, so we can get cameras and doorbells online even when your existing Wi-Fi doesn't reach. Free consultations available throughout the county, we'll survey the property, identify blind spots, and send a written quote the same day.",
+      "We cover all of County Wicklow from Bray and Greystones in the north down to Arklow in the south, with regular appointments in Rathdrum, Newtownmountkennedy, Enniskerry and Blessington. Wicklow homes often have longer driveways and more rural Wi-Fi coverage challenges, which is exactly the sort of install we specialise in. Our Ring installers carry network extenders and long-run power cabling as standard, so we can get cameras and doorbells online even when your existing Wi-Fi doesn't reach. Free consultations available throughout the county, we'll survey the property, identify blind spots, and send a written quote within 24 hours, often less.",
     extended: {
       teaser:
         "Long driveways, rural Wi-Fi, the whole Garden of Ireland, we carry extenders and long-run cabling as standard.",
@@ -210,7 +210,7 @@ export const COUNTIES: County[] = [
     slug: "laois",
     towns: "Portlaoise, Portarlington, Mountmellick, Mountrath, Abbeyleix",
     copy:
-      "County Laois is within our Leinster service area. We cover Portlaoise, Portarlington, Mountmellick, Mountrath and Abbeyleix for Ring doorbell and camera installations. Many Laois homes are on larger plots with longer driveways, so we often recommend a Floodlight Cam at the entrance paired with a Video Doorbell at the main door. This gives you a full view of anyone arriving, plus motion alerts the moment a car pulls in. Free consultation available, we'll survey the property and send a written quote the same day.",
+      "County Laois is within our Leinster service area. We cover Portlaoise, Portarlington, Mountmellick, Mountrath and Abbeyleix for Ring doorbell and camera installations. Many Laois homes are on larger plots with longer driveways, so we often recommend a Floodlight Cam at the entrance paired with a Video Doorbell at the main door. This gives you a full view of anyone arriving, plus motion alerts the moment a car pulls in. Free consultation available, we'll survey the property and send a written quote within 24 hours, often less.",
   },
   {
     name: "Offaly",
@@ -224,7 +224,7 @@ export const COUNTIES: County[] = [
     slug: "westmeath",
     towns: "Athlone, Mullingar, Moate, Kinnegad, Castlepollard",
     copy:
-      "We cover County Westmeath for Ring installations, Athlone, Mullingar, Moate, Kinnegad and Castlepollard. Westmeath's commuter towns (particularly Mullingar and Kinnegad) are within easy reach, and Athlone we treat as a regular scheduled visit. Whether you want a single Ring Video Doorbell installed on a semi-D in Mullingar, or a Whole Home Bundle with doorbell plus two Floodlight Cams on a detached property outside Athlone, we'll scope it on a complimentary consultation and deliver a written quote the same day.",
+      "We cover County Westmeath for Ring installations, Athlone, Mullingar, Moate, Kinnegad and Castlepollard. Westmeath's commuter towns (particularly Mullingar and Kinnegad) are within easy reach, and Athlone we treat as a regular scheduled visit. Whether you want a single Ring Video Doorbell installed on a semi-D in Mullingar, or a Whole Home Bundle with doorbell plus two Floodlight Cams on a detached property outside Athlone, we'll scope it on a complimentary consultation and deliver a written quote within 24 hours, often less.",
   },
   {
     name: "Longford",

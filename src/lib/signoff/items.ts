@@ -203,17 +203,9 @@ export const SIGNOFF_ITEMS: SignoffItem[] = [
     content: () => rendered("wifi-report"),
   },
   {
-    id: "mailing:smartguardian-announce",
-    group: "mailings",
-    title: "Meet SmartCare Living and SmartGuardian",
-    effect: "Lets this email go to the past customers you add in Mailings, fifty a day.",
-    preview: [studio("smartguardian-announce")],
-    content: () => rendered("smartguardian-announce"),
-  },
-  {
     id: "mailing:network-diagnosis-a",
     group: "mailings",
-    title: "The network service, problem-led version",
+    title: "SmartSpace Networks and SmartGuardian announcement",
     effect: "Lets this email go to the past customers you add in Mailings, fifty a day.",
     preview: [studio("network-diagnosis-a")],
     content: () => rendered("network-diagnosis-a"),

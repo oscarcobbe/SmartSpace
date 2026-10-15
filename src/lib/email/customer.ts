@@ -25,7 +25,7 @@ import {
   steps,
   summary,
 } from "./layout";
-import { BUSINESS_PHONE_DISPLAY, GOOGLE_REVIEW_URL } from "@/lib/business-constants";
+import { BUSINESS_MOBILE_DISPLAY, BUSINESS_PHONE_DISPLAY, GOOGLE_REVIEW_URL } from "@/lib/business-constants";
 
 export interface Email {
   subject: string;
@@ -118,12 +118,12 @@ export function consultationBooked(d: { name: string; dateLabel: string; slot: s
       blocks: [
         eyebrow("Consultation booked"),
         heading(`You're booked in, ${f}.`),
-        para("Here's your visit and what to expect.", { size: 16, pad: "14px 32px 0" }),
+        para("Here is your complimentary consultation and what to expect.", { size: 16, pad: "14px 32px 0" }),
         summary("Your booking", rows),
         steps("At the visit", [
-          "We walk your home with you and flag blind spots, Wi-Fi dead zones and wiring constraints.",
+          "We listen to your needs and suggest system options based on a site survey, which includes potential blind spots and Wi-Fi dead zones.",
           "Allow up to 30 minutes.",
-          "You get a written quote to your inbox the same day.",
+          "You get a written quote to your inbox within 24 hours, often less.",
         ]),
         panel("There's nothing to prepare. Just be home for the slot."),
         contactNote("Need to change the time?"),
@@ -137,7 +137,7 @@ export function consultationBooked(d: { name: string; dateLabel: string; slot: s
     text: [
       `Hi ${f},`,
       "",
-      "You're booked in. Here's your visit and what to expect.",
+      "You're booked in. Here is your complimentary consultation and what to expect.",
       "",
       "Your booking",
       "  Visit: Free site visit",
@@ -146,9 +146,9 @@ export function consultationBooked(d: { name: string; dateLabel: string; slot: s
       ...(d.address ? [`  Address: ${d.address}`] : []),
       "",
       "At the visit",
-      "  1. We walk your home with you and flag blind spots, Wi-Fi dead zones and wiring constraints.",
+      "  1. We listen to your needs and suggest system options based on a site survey, which includes potential blind spots and Wi-Fi dead zones.",
       "  2. Allow up to 30 minutes.",
-      "  3. You get a written quote to your inbox the same day.",
+      "  3. You get a written quote to your inbox within 24 hours, often less.",
       "",
       "There's nothing to prepare. Just be home for the slot.",
       "",
@@ -336,22 +336,37 @@ export function productName(product: string): string | null {
   return name && !/^install(ation)?$/i.test(name) ? name : null;
 }
 
+/** The slot's start as a customer would say it: "10:00 – 12:00" is "10am", "14:30 – 16:30" is "2:30pm". */
+export function startTime(slot: string): string {
+  const m = /^(\d{1,2}):(\d{2})/.exec(slot.trim());
+  if (!m) return slot;
+  const h = Number(m[1]);
+  const h12 = h % 12 || 12;
+  return `${h12}${m[2] === "00" ? "" : `:${m[2]}`}${h < 12 ? "am" : "pm"}`;
+}
+
+/* Nigel's checklist, from his sign-off notes of 15 October 2026. Without
+   working Wi-Fi and the app account the install cannot go ahead. */
 const PREP = [
-  ["Wi-Fi at the install spot.", "Check the signal reaches the front door, or wherever the device is going. If it's weak there, move the router closer or plug in an extender before we arrive."],
-  ["The app on your phone.", "Install the app for the brand you bought (Ring, Eufy, Nest, Tapo or Aosu) on the phone you want to use. We'll sign in together on the day."],
-  ["Your passwords.", "Have your Wi-Fi password and your app account password ready. We can't recover these for you."],
-  ["Someone at home for the slot.", "Even a quick install needs access to the door."],
+  ["Your Wi-Fi must be working.", "Without it the installation can't take place."],
+  ["The app on your phone, with an account.", "Download the app for the brand you chose (Ring, Eufy, Nest, Tapo or Aosu) on your smartphone and create your account before we arrive."],
+  ["Your passwords.", "Have both your Wi-Fi password and your app account password to hand."],
+  ["Your smartphone.", "We'll need it at the start and at the end of the installation."],
 ] as const;
+
+/** What to do if the booked time no longer suits, in Nigel's words. */
+const ISSUE_LINE = `If there is an issue with this date or time, please text ${BUSINESS_MOBILE_DISPLAY} or ring ${BUSINESS_PHONE_DISPLAY}.`;
 
 const REMINDER_FOOTER = "This is a one-off reminder about your booking with Smart Space.";
 
 export function reminderInstall(d: { name: string; slot: string; product: string }): Email {
   const f = first(d.name);
   const product = productName(d.product);
-  const visit = `tomorrow ${between(d.slot)} ${product ? `to fit your ${product}` : "for your installation"}`;
-  const preheader = `Tomorrow ${between(d.slot)}. A few things to have ready.`;
+  const at = startTime(d.slot);
+  const booked = `Your ${product ? `${product} installation` : "installation"} is confirmed for tomorrow at ${at}.`;
+  const preheader = `Confirmed for tomorrow at ${at}. A few things to have ready.`;
   return {
-    subject: `Tomorrow's installation with Smart Space, ${slotTo(d.slot)}`,
+    subject: `Tomorrow's installation with Smart Space, ${at}`,
     preheader,
     html: renderEmail({
       title: "Tomorrow's booking with Smart Space",
@@ -359,12 +374,15 @@ export function reminderInstall(d: { name: string; slot: string; product: string
       blocks: [
         eyebrow("Tomorrow's booking"),
         heading(`Looking forward to seeing you, ${f}.`),
-        para(`Just a quick note to confirm we're calling out ${esc(visit)}.`, { pad: "14px 32px 0" }),
+        para(esc(booked), { pad: "14px 32px 0" }),
         checklist(
-          "A few things before we arrive",
+          "Before we arrive",
           PREP.map(([b, t]) => `<strong style="color:#1C1A18;">${esc(b)}</strong> ${esc(t)}`),
         ),
-        para(`If anything comes up on the day, ring us on ${phoneLink()} and we'll sort it.`, { pad: "22px 32px 0" }),
+        para(
+          `If there is an issue with this date or time, please text <strong style="color:#1C1A18;">${esc(BUSINESS_MOBILE_DISPLAY)}</strong> or ring ${phoneLink()}.`,
+          { pad: "22px 32px 0" },
+        ),
         signoff("Talk soon,", "Nigel, Smart Space"),
       ],
       footer: { kind: "transactional", note: REMINDER_FOOTER },
@@ -372,12 +390,12 @@ export function reminderInstall(d: { name: string; slot: string; product: string
     text: [
       `Hi ${f},`,
       "",
-      `Just a quick note to confirm we're calling out ${visit}.`,
+      booked,
       "",
-      "A few things before we arrive:",
+      "Before we arrive:",
       ...PREP.map(([b, t]) => `  - ${b} ${t}`),
       "",
-      `If anything comes up on the day, ring us on ${BUSINESS_PHONE_DISPLAY} and we'll sort it.`,
+      ISSUE_LINE,
       "",
       "Talk soon,",
       "Nigel, Smart Space",
@@ -400,7 +418,7 @@ export function reminderConsultation(d: { name: string; slot: string }): Email {
         heading(`Looking forward to seeing you, ${f}.`),
         para(`Just a quick note to confirm we're calling out tomorrow ${esc(between(d.slot))} for your free site visit.`, { pad: "14px 32px 0" }),
         panel(
-          "We'll walk the property with you, point out where Wi-Fi might struggle, and send you a written quote the same day. There's nothing to prepare. Just be home for the slot.",
+          "We'll walk the property with you, point out where Wi-Fi might struggle, and send you a written quote within 24 hours, often less. There's nothing to prepare. Just be home for the slot.",
         ),
         para(`If anything comes up on the day, ring us on ${phoneLink()} and we'll sort it.`, { pad: "22px 32px 0" }),
         signoff("Talk soon,", "Nigel, Smart Space"),
@@ -412,7 +430,7 @@ export function reminderConsultation(d: { name: string; slot: string }): Email {
       "",
       `Just a quick note to confirm we're calling out tomorrow ${between(d.slot)} for your free site visit.`,
       "",
-      "We'll walk the property with you, point out where Wi-Fi might struggle, and send you a written quote the same day. There's nothing to prepare. Just be home for the slot.",
+      "We'll walk the property with you, point out where Wi-Fi might struggle, and send you a written quote within 24 hours, often less. There's nothing to prepare. Just be home for the slot.",
       "",
       `If anything comes up on the day, ring us on ${BUSINESS_PHONE_DISPLAY} and we'll sort it.`,
       "",
@@ -430,11 +448,12 @@ export function reminderConsultation(d: { name: string; slot: string }): Email {
  * as three texts each: the slot's en dash is outside the GSM-7 alphabet, so
  * the whole message fell back to UCS-2 at 70 characters a text, and both ran
  * past 160 characters anyway. The slot is spelt "10:00 to 12:00" here, and
- * both fit one text for a first name up to fourteen letters.
+ * both fit one text for a first name up to fourteen letters. The install text
+ * gives the start time only ("10am"), as Nigel asked on 15 October 2026.
  */
 export const reminderSms = {
   install: (d: { name: string; slot: string }) =>
-    `Hi ${first(d.name)}, Nigel from Smart Space. See you tomorrow, ${slotTo(d.slot)}. Have Wi-Fi at the install spot, the app installed and passwords ready. ${BUSINESS_PHONE_DISPLAY}`,
+    `Hi ${first(d.name)}, Smart Space: install confirmed for tomorrow at ${startTime(d.slot)}. Have your app account created. Any issue, text ${BUSINESS_MOBILE_DISPLAY} or ring ${BUSINESS_PHONE_DISPLAY}.`,
   consultation: (d: { name: string; slot: string }) =>
     `Hi ${first(d.name)}, Nigel from Smart Space. See you tomorrow, ${slotTo(d.slot)}, for your free site visit. Nothing to prepare. Any questions, ring ${BUSINESS_PHONE_DISPLAY}.`,
 };

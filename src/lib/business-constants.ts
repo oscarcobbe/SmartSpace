@@ -30,6 +30,8 @@ export const BUSINESS_SITE = `https://${BUSINESS_DOMAIN}`;
 
 export const BUSINESS_PHONE_E164 = "+35315130424";
 export const BUSINESS_PHONE_DISPLAY = "01 513 0424";
+/** The mobile customers text about a booking, from Nigel's sign-off notes (15 Oct 2026). */
+export const BUSINESS_MOBILE_DISPLAY = "087 057 0000";
 
 export const BUSINESS_EMAIL = "info@smart-space.ie";
 

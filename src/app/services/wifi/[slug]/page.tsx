@@ -129,6 +129,14 @@ export default function WifiPackagePage({ params }: { params: { slug: string } }
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-ink mb-4 tracking-[-0.035em]">{pkg.name}</h1>
               <p className="text-ink-soft text-base sm:text-lg max-w-xl mx-auto lg:mx-0">{pkg.forWho}</p>
               <p className="mt-5 text-ink-soft leading-relaxed max-w-2xl mx-auto lg:mx-0">{pkg.intro}</p>
+              {pkg.sampleReport && (
+                <p className="mt-3 text-sm max-w-2xl mx-auto lg:mx-0">
+                  {/* A static file, so a plain link, not client navigation. */}
+                  <a href={pkg.sampleReport} className={`inline-flex items-center gap-1.5 ${QUIET}`}>
+                    {isMonitoring ? "See a sample monthly report" : "See a sample report"} <ArrowRight className="h-4 w-4" />
+                  </a>
+                </p>
+              )}
               {!isAssessment && !isEvidence && (
                 <p className="mt-3 text-sm text-ink-soft max-w-2xl mx-auto lg:mx-0">
                   Starts with the{" "}

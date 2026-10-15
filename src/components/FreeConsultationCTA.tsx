@@ -23,7 +23,7 @@ export default function FreeConsultationCTA() {
               </h2>
               <p className="text-white/70 text-[15px] sm:text-lg leading-relaxed mb-6 sm:mb-8 max-w-xl mx-auto lg:mx-0">
                 We&apos;ll come to your home, walk the property with you, identify the right
-                setup, and send a written quote the same day. No pressure, no hard sell.
+                setup, and send a written quote within 24 hours, often less. No pressure, no hard sell.
               </p>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-5">
@@ -55,7 +55,7 @@ export default function FreeConsultationCTA() {
                 {
                   icon: Clock,
                   title: "Typically 30 minutes",
-                  body: "Quick, professional, and respectful of your time. Same-day written quote to your inbox.",
+                  body: "Quick, professional, and respectful of your time. Written quote to your inbox within 24 hours, often less.",
                 },
                 {
                   icon: ShieldCheck,

@@ -14,7 +14,7 @@ const SERVICE_SCHEMA = {
   name: "Free Home Security Consultation Dublin & Leinster",
   serviceType: "Home Security Consultation",
   description:
-    "Complimentary on-site home security consultation: we walk your property, check Wi-Fi coverage and existing wiring, identify blind spots, and send a written quote the same day. No card required, no obligation. Available across Dublin and all of Leinster.",
+    "Complimentary on-site home security consultation: we walk your property, check Wi-Fi coverage and existing wiring, identify blind spots, and send a written quote within 24 hours, often less. No card required, no obligation. Available across Dublin and all of Leinster.",
   provider: { "@id": `${SITE}/#localbusiness` },
   areaServed: [
     { "@type": "AdministrativeArea", name: "Dublin" },

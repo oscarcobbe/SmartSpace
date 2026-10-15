@@ -17,9 +17,11 @@
  * booking forms and its Stripe checkout offer no marketing opt-out, so an
  * online buyer does not qualify on this basis by buying alone.
  *
- * SmartGuardian is SmartCare Living's product, not Smart Space's, so its
- * announcement accepts consent only until someone decides otherwise with
- * advice; the network emails are Smart Space's own service and accept either.
+ * SmartGuardian is SmartCare Living's product, not Smart Space's, so the
+ * announcement that carries it (network-diagnosis-a, merged with the
+ * SmartGuardian announcement at Nigel's request on 15 October 2026) accepts
+ * consent only until someone decides otherwise with advice; Version B is
+ * Smart Space's own service alone and accepts either.
  *
  * Pure, bar Node's crypto for the unsubscribe links, so the build check runs
  * exactly this.
@@ -30,16 +32,15 @@ export type Basis = "customer" | "consent";
 
 export interface MailingTemplate {
   /** The email studio entry, and the template's name in the database. */
-  id: "smartguardian-announce" | "network-diagnosis-a" | "network-diagnosis-b";
+  id: "network-diagnosis-a" | "network-diagnosis-b";
   itemId: string;
   title: string;
   bases: Basis[];
 }
 
 export const MAILING_TEMPLATES: MailingTemplate[] = [
-  { id: "network-diagnosis-a", itemId: "mailing:network-diagnosis-a", title: "The network service, problem-led version", bases: ["customer", "consent"] },
+  { id: "network-diagnosis-a", itemId: "mailing:network-diagnosis-a", title: "SmartSpace Networks and SmartGuardian announcement", bases: ["consent"] },
   { id: "network-diagnosis-b", itemId: "mailing:network-diagnosis-b", title: "The network service, for security customers", bases: ["customer", "consent"] },
-  { id: "smartguardian-announce", itemId: "mailing:smartguardian-announce", title: "Meet SmartCare Living and SmartGuardian", bases: ["consent"] },
 ];
 
 export const templateById = (id: string) => MAILING_TEMPLATES.find((t) => t.id === id) ?? null;
