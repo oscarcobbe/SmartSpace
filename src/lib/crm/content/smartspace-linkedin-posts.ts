@@ -11,7 +11,7 @@ export const SMARTSPACE_LINKEDIN_POSTS: LinkedInPost[] = [
     "n": "01",
     "title": "Ring video doorbells",
     "hook": "The courier rang the bell while you were out in the garden.",
-    "caption": "The courier rang the bell while you were out in the garden.\n\nA Ring video doorbell lets you see, hear and speak to whoever is at the door from your phone, wherever you are. We supply it, fit it and set up the Ring app with you before we leave.\n\nEvery doorbell installation includes a Ring Chime, so you hear the bell anywhere in the house. If you already have a working wired doorbell, we re-use the wiring.\n\nPlus Video Doorbell, 2K with 6x zoom: €329 fitted.\nPro Video Doorbell, 4K with 10x zoom: €479 fitted.\n\n5,000+ installations across Dublin and Leinster.\nsmart-space.ie/services/doorbell",
+    "caption": "The courier rang the bell while you were out in the garden.\n\nA Ring video doorbell lets you see, hear and speak to whoever is at the door from your phone, wherever you are. We supply it, fit it and set up the Ring app with you before we leave.\n\nEvery doorbell installation includes a Ring Chime, so you hear the bell anywhere in the house. If you already have a working wired doorbell, we re-use the wiring.\n\nPlus Video Doorbell, 2K with 6x zoom: €329 fitted.\nPro Video Doorbell, 4K with 10x zoom: €479 fitted.\n\n5,000+ installations across Dublin and Leinster.\nhttps://smart-space.ie/services/doorbell",
     "tags": [
       "#Ring",
       "#HomeSecurity",
@@ -26,7 +26,7 @@ export const SMARTSPACE_LINKEDIN_POSTS: LinkedInPost[] = [
     "n": "02",
     "title": "Ring floodlight cameras",
     "hook": "Something set off the light in the driveway at 3am. Who was it?",
-    "caption": "Something set off the light in the driveway at 3am. Who was it?\n\nA Ring floodlight camera lights the area, records it and sends an alert to your phone. We set the motion zones to your own boundary, so it ignores the road and next door's driveway and tells you about movement on your property.\n\nMost of our installs replace an existing floodlight, so the wiring is usually already in place.\n\nPlus Floodlight Cam, 1080p: €379 fitted.\nPro Floodlight Cam, 4K with 10x zoom: €479 fitted. On a longer driveway, the 4K makes a number plate readable.\n\nsmart-space.ie/services/camera",
+    "caption": "Something set off the light in the driveway at 3am. Who was it?\n\nA Ring floodlight camera lights the area, records it and sends an alert to your phone. We set the motion zones to your own boundary, so it ignores the road and next door's driveway and tells you about movement on your property.\n\nMost of our installs replace an existing floodlight, so the wiring is usually already in place.\n\nPlus Floodlight Cam, 1080p: €379 fitted.\nPro Floodlight Cam, 4K with 10x zoom: €479 fitted. On a longer driveway, the 4K makes a number plate readable.\n\nhttps://smart-space.ie/services/camera",
     "tags": [
       "#Ring",
       "#HomeSecurity",
@@ -41,7 +41,7 @@ export const SMARTSPACE_LINKEDIN_POSTS: LinkedInPost[] = [
     "n": "03",
     "title": "Ring home bundles",
     "hook": "The doorbell covers the front door. It does not cover the driveway or the back garden.",
-    "caption": "The doorbell covers the front door. It does not cover the driveway or the back garden.\n\nOur Ring bundles cover the rest of the house: everything supplied, fitted and set up in the one Ring app.\n\nDriveway Bundle: video doorbell and a floodlight cam, from €658. Saves €50.\nWhole Home Bundle: video doorbell and two floodlight cams, front and rear, from €987. Saves €100.\n\nBoth come in Plus and Pro, with a Ring Chime included.\n\nsmart-space.ie/services/bundles",
+    "caption": "The doorbell covers the front door. It does not cover the driveway or the back garden.\n\nOur Ring bundles cover the rest of the house: everything supplied, fitted and set up in the one Ring app.\n\nDriveway Bundle: video doorbell and a floodlight cam, from €658. Saves €50.\nWhole Home Bundle: video doorbell and two floodlight cams, front and rear, from €987. Saves €100.\n\nBoth come in Plus and Pro, with a Ring Chime included.\n\nhttps://smart-space.ie/services/bundles",
     "tags": [
       "#Ring",
       "#HomeSecurity",
@@ -56,7 +56,7 @@ export const SMARTSPACE_LINKEDIN_POSTS: LinkedInPost[] = [
     "n": "04",
     "title": "Eldercare security bundle",
     "hook": "A parent living alone, carers who need to get in, and a spare key under the plant pot.",
-    "caption": "A parent living alone, carers who need to get in, and a spare key under the plant pot.\n\nOur Eldercare Security Bundle replaces the hidden key. A Smart Wi-Fi Keybox at the door opens with a code, a fingerprint or an RFID tag, and carers can be given a one-time code, managed from the app. A Ring video doorbell lets the family see who is at the door from anywhere.\n\nSupplied, fitted, and the app set up for family members. €509, with a Ring Chime included.\n\nsmart-space.ie/services/eldercare-security-bundle",
+    "caption": "A parent living alone, carers who need to get in, and a spare key under the plant pot.\n\nOur Eldercare Security Bundle replaces the hidden key. A Smart Wi-Fi Keybox at the door opens with a code, a fingerprint or an RFID tag, and carers can be given a one-time code, managed from the app. A Ring video doorbell lets the family see who is at the door from anywhere.\n\nSupplied, fitted, and the app set up for family members. €509, with a Ring Chime included.\n\nhttps://smart-space.ie/services/eldercare-security-bundle",
     "tags": [
       "#Eldercare",
       "#Ring",
@@ -71,7 +71,7 @@ export const SMARTSPACE_LINKEDIN_POSTS: LinkedInPost[] = [
     "n": "05",
     "title": "Eufy installation",
     "hook": "Not everybody wants another monthly subscription for a doorbell.",
-    "caption": "Not everybody wants another monthly subscription for a doorbell.\n\nEufy keeps every recording on a memory card or a HomeBase in your own house, with no monthly fee. We supply, fit and set up Eufy doorbells and cameras, with the motion zones tuned and an SD memory card included.\n\nA single Eufy doorbell or camera: from €394 fitted.\nEufy home bundles with an S380 HomeBase: from €554 fitted.\n\nsmart-space.ie/services/eufy",
+    "caption": "Not everybody wants another monthly subscription for a doorbell.\n\nEufy keeps every recording on a memory card or a HomeBase in your own house, with no monthly fee. We supply, fit and set up Eufy doorbells and cameras, with the motion zones tuned and an SD memory card included.\n\nA single Eufy doorbell or camera: from €394 fitted.\nEufy home bundles with an S380 HomeBase: from €554 fitted.\n\nhttps://smart-space.ie/services/eufy",
     "tags": [
       "#Eufy",
       "#HomeSecurity",
@@ -86,7 +86,7 @@ export const SMARTSPACE_LINKEDIN_POSTS: LinkedInPost[] = [
     "n": "06",
     "title": "Installation only",
     "hook": "You bought the doorbell months ago. It is still in the box.",
-    "caption": "You bought the doorbell months ago. It is still in the box.\n\nWe install Ring, Eufy, Nest, Tapo and Aosu devices you have already bought, all at the same price. We mount and wire it, check your Wi-Fi reaches it, and set up the app on your phone with the motion zones, alerts and shared users.\n\nFrom €139, and the booking page shows your exact total before you book. Most installations take under an hour.\n\nsmart-space.ie/services/installation-only",
+    "caption": "You bought the doorbell months ago. It is still in the box.\n\nWe install Ring, Eufy, Nest, Tapo and Aosu devices you have already bought, all at the same price. We mount and wire it, check your Wi-Fi reaches it, and set up the app on your phone with the motion zones, alerts and shared users.\n\nFrom €139, and the booking page shows your exact total before you book. Most installations take under an hour.\n\nhttps://smart-space.ie/services/installation-only",
     "tags": [
       "#SmartHome",
       "#Ring",
@@ -101,7 +101,7 @@ export const SMARTSPACE_LINKEDIN_POSTS: LinkedInPost[] = [
     "n": "07",
     "title": "Free home consultation",
     "hook": "Doorbell, floodlight, two cameras, or all of them? It is hard to tell from a product page which camera goes where on your house.",
-    "caption": "Doorbell, floodlight, two cameras, or all of them? It is hard to tell from a product page which camera goes where on your house.\n\nBook a free home consultation and we walk the property with you. We look at the best places for cameras and doorbells, check the Wi-Fi coverage and the existing wiring, and send you a written quote the same day.\n\nComplimentary, with no obligation and no card required. Dublin and all of Leinster.\n\nsmart-space.ie/services/free-consultation",
+    "caption": "Doorbell, floodlight, two cameras, or all of them? It is hard to tell from a product page which camera goes where on your house.\n\nBook a free home consultation and we walk the property with you. We look at the best places for cameras and doorbells, check the Wi-Fi coverage and the existing wiring, and send you a written quote the same day.\n\nComplimentary, with no obligation and no card required. Dublin and all of Leinster.\n\nhttps://smart-space.ie/services/free-consultation",
     "tags": [
       "#HomeSecurity",
       "#Ring",
@@ -116,7 +116,7 @@ export const SMARTSPACE_LINKEDIN_POSTS: LinkedInPost[] = [
     "n": "08",
     "title": "Launch: SmartSpace Networks",
     "hook": "Introducing SmartSpace Networks.",
-    "caption": "Introducing SmartSpace Networks.\n\nAfter 5,000+ smart doorbell and camera installs across Dublin and Leinster, we are adding a second service for the thing every one of those devices depends on: the home network. In plenty of homes the Wi-Fi is fine beside the router and gives up in the back bedroom.\n\nSmartSpace Networks is our new home network service, and it starts with Ireland's first try-before-you-buy Wi-Fi assessment:\n\n1. Measured. We test your broadband at the router by cable, then measure every floor.\n2. Trialled. We leave a working system on your weakest floor for 3 days, measured every hour, evenings included, with up to 3 of your problem devices moved onto it.\n3. Fixed. If it works, G.hn powerline carries the connection over your existing electrical wiring to a Wi-Fi 6E access point on each floor that needs one. No cables through walls.\n\nYou see the numbers before you decide. The assessment is €395 incl. VAT, credited in full against any work.\n\nAlso new: Network Monitoring, the €199 Broadband Evidence Service, and a free room-by-room Wi-Fi check at smart-space.ie/wifi-check.\n\nsmart-space.ie/services/wifi",
+    "caption": "Introducing SmartSpace Networks.\n\nAfter 5,000+ smart doorbell and camera installs across Dublin and Leinster, we are adding a second service for the thing every one of those devices depends on: the home network. In plenty of homes the Wi-Fi is fine beside the router and gives up in the back bedroom.\n\nSmartSpace Networks is our new home network service, and it starts with Ireland's first try-before-you-buy Wi-Fi assessment:\n\n1. Measured. We test your broadband at the router by cable, then measure every floor.\n2. Trialled. We leave a working system on your weakest floor for 3 days, measured every hour, evenings included, with up to 3 of your problem devices moved onto it.\n3. Fixed. If it works, G.hn powerline carries the connection over your existing electrical wiring to a Wi-Fi 6E access point on each floor that needs one. No cables through walls.\n\nYou see the numbers before you decide. The assessment is €395 incl. VAT, credited in full against any work.\n\nAlso new: Network Monitoring, the €199 Broadband Evidence Service, and a free room-by-room Wi-Fi check:\nhttps://smart-space.ie/wifi-check\n\nhttps://smart-space.ie/services/wifi",
     "tags": [
       "#WiFi",
       "#HomeNetwork",
@@ -131,7 +131,7 @@ export const SMARTSPACE_LINKEDIN_POSTS: LinkedInPost[] = [
     "n": "08b",
     "title": "Launch: SmartSpace Networks, the long film (66s)",
     "hook": "Friday night, and the film in the back bedroom stops to buffer again.",
-    "caption": "Friday night, and the film in the back bedroom stops to buffer again.\n\nToday we are launching SmartSpace Networks, our home network service, and it starts where that evening does.\n\nRun our free Wi-Fi check on your phone, once in the room that struggles and once beside the router, and answer six questions about the house. The report tells you whether the problem is the broadband line or the Wi-Fi inside the house.\n\nIf it is the Wi-Fi, book a Home Network Assessment online, with a date and time for the first visit. We test your broadband at the router by cable, measure every floor, and leave a working system on your weakest floor for 3 days, measured every hour, evenings included. You get a plain-English report with the numbers before you decide anything. Where it works, G.hn powerline carries the connection over your existing electrical wiring to a Wi-Fi 6E access point on each floor that needs one. No cables chased into walls.\n\n€395 incl. VAT, credited in full against any work. Dublin and Leinster.\n\nFree Wi-Fi check: smart-space.ie/wifi-check\nSmartSpace Networks: smart-space.ie/services/wifi\n\nThe readings in the film are samples, and the report shown is our public sample report.",
+    "caption": "Friday night, and the film in the back bedroom stops to buffer again.\n\nToday we are launching SmartSpace Networks, our home network service, and it starts where that evening does.\n\nRun our free Wi-Fi check on your phone, once in the room that struggles and once beside the router, and answer six questions about the house. The report tells you whether the problem is the broadband line or the Wi-Fi inside the house.\n\nIf it is the Wi-Fi, book a Home Network Assessment online, with a date and time for the first visit. We test your broadband at the router by cable, measure every floor, and leave a working system on your weakest floor for 3 days, measured every hour, evenings included. You get a plain-English report with the numbers before you decide anything. Where it works, G.hn powerline carries the connection over your existing electrical wiring to a Wi-Fi 6E access point on each floor that needs one. No cables chased into walls.\n\n€395 incl. VAT, credited in full against any work. Dublin and Leinster.\n\nFree Wi-Fi check: https://smart-space.ie/wifi-check\nSmartSpace Networks: https://smart-space.ie/services/wifi\n\nThe readings in the film are samples, and the report shown is our public sample report.",
     "tags": [
       "#WiFi",
       "#HomeNetwork",
@@ -146,7 +146,7 @@ export const SMARTSPACE_LINKEDIN_POSTS: LinkedInPost[] = [
     "n": "09",
     "title": "Free Wi-Fi check",
     "hook": "Is it the broadband, or is it the Wi-Fi?",
-    "caption": "Is it the broadband, or is it the Wi-Fi?\n\nOur free Wi-Fi check answers that in your own house. Run the speed test beside the router, then again in the room where the Wi-Fi struggles, and answer six questions about your home. Your report is graded green, amber or red, with what to do next.\n\nIt measures download, upload, ping and the response when the line is busy, the delay a video call feels when somebody else is streaming.\n\nFree, with no sign-up.\nsmart-space.ie/wifi-check",
+    "caption": "Is it the broadband, or is it the Wi-Fi?\n\nOur free Wi-Fi check answers that in your own house. Run the speed test beside the router, then again in the room where the Wi-Fi struggles, and answer six questions about your home. Your report is graded green, amber or red, with what to do next.\n\nIt measures download, upload, ping and the response when the line is busy, the delay a video call feels when somebody else is streaming.\n\nFree, with no sign-up.\nhttps://smart-space.ie/wifi-check",
     "tags": [
       "#WiFi",
       "#SpeedTest",
@@ -161,7 +161,7 @@ export const SMARTSPACE_LINKEDIN_POSTS: LinkedInPost[] = [
     "n": "10",
     "title": "Home network assessment",
     "hook": "New mesh kit, and the TV still buffers in the evening.",
-    "caption": "New mesh kit, and the TV still buffers in the evening.\n\nThe speed printed on the box was measured in a lab, not in your house. Our Home Network Assessment brings the fix to your home first and lets it prove itself there:\n\nA first visit of about 2 hours: your broadband tested at the router by cable, then every floor measured.\nA working trial system on your weakest floor for 3 days, beside your own Wi-Fi, measured every hour.\nUp to 3 of your problem devices moved onto the trial and watched.\nA plain-English report, a 30-minute call to go through it, and a second visit to collect the kit or install your new system.\n\n€395 incl. VAT, credited in full against any work you go ahead with. Dublin and Leinster.\n\nsmart-space.ie/services/wifi/home-network-assessment",
+    "caption": "New mesh kit, and the TV still buffers in the evening.\n\nThe speed printed on the box was measured in a lab, not in your house. Our Home Network Assessment brings the fix to your home first and lets it prove itself there:\n\nA first visit of about 2 hours: your broadband tested at the router by cable, then every floor measured.\nA working trial system on your weakest floor for 3 days, beside your own Wi-Fi, measured every hour.\nUp to 3 of your problem devices moved onto the trial and watched.\nA plain-English report, a 30-minute call to go through it, and a second visit to collect the kit or install your new system.\n\n€395 incl. VAT, credited in full against any work you go ahead with. Dublin and Leinster.\n\nhttps://smart-space.ie/services/wifi/home-network-assessment",
     "tags": [
       "#WiFi",
       "#HomeNetwork",
@@ -176,7 +176,7 @@ export const SMARTSPACE_LINKEDIN_POSTS: LinkedInPost[] = [
     "n": "11",
     "title": "Powerline and access points",
     "hook": "Running network cable through an existing house means chasing walls and lifting floors.",
-    "caption": "Running network cable through an existing house means chasing walls and lifting floors.\n\nOur fix uses the wiring already in your walls. G.hn powerline carries your connection through the electrical wiring to a tri-band Wi-Fi 6E access point on each floor that needs one. No drilling, no trunking. Your phones, TVs, cameras and thermostats join the nearest access point, on one network name and password.\n\nHow fast powerline runs depends on each house's wiring, so it is quoted from the figures your assessment measured, and tested on every floor before we leave. The €395 assessment is credited in full against the work.\n\nsmart-space.ie/services/wifi/powerline-access-points",
+    "caption": "Running network cable through an existing house means chasing walls and lifting floors.\n\nOur fix uses the wiring already in your walls. G.hn powerline carries your connection through the electrical wiring to a tri-band Wi-Fi 6E access point on each floor that needs one. No drilling, no trunking. Your phones, TVs, cameras and thermostats join the nearest access point, on one network name and password.\n\nHow fast powerline runs depends on each house's wiring, so it is quoted from the figures your assessment measured, and tested on every floor before we leave. The €395 assessment is credited in full against the work.\n\nhttps://smart-space.ie/services/wifi/powerline-access-points",
     "tags": [
       "#WiFi",
       "#Powerline",
@@ -191,7 +191,7 @@ export const SMARTSPACE_LINKEDIN_POSTS: LinkedInPost[] = [
     "n": "12",
     "title": "Network monitoring",
     "hook": "When the camera over the back door drops off the Wi-Fi, how long before anybody notices?",
-    "caption": "When the camera over the back door drops off the Wi-Fi, how long before anybody notices?\n\nWith Network Monitoring, a small, silent unit wired to your router keeps watch around the clock. It tests your broadband every six hours, alerts us when the line goes down and when a device you named drops off, and flags new devices and ports opened on your router. Every month you get a plain-English report: uptime, outages and evening speeds.\n\nMonitored, not managed: it sees that a device is offline, not what you browse, stream or record.\n\nFrom €39 a month.\nsmart-space.ie/services/wifi/network-monitoring",
+    "caption": "When the camera over the back door drops off the Wi-Fi, how long before anybody notices?\n\nWith Network Monitoring, a small, silent unit wired to your router keeps watch around the clock. It tests your broadband every six hours, alerts us when the line goes down and when a device you named drops off, and flags new devices and ports opened on your router. Every month you get a plain-English report: uptime, outages and evening speeds.\n\nMonitored, not managed: it sees that a device is offline, not what you browse, stream or record.\n\nFrom €39 a month.\nhttps://smart-space.ie/services/wifi/network-monitoring",
     "tags": [
       "#HomeNetwork",
       "#WiFi",
@@ -206,7 +206,7 @@ export const SMARTSPACE_LINKEDIN_POSTS: LinkedInPost[] = [
     "n": "13",
     "title": "Broadband evidence service",
     "hook": "Your provider says the line is fine.",
-    "caption": "Your provider says the line is fine.\n\nOur Broadband Evidence Service turns \"it feels slow\" into figures. We post you a small box that plugs into your router and logs your line every minute for 7 days, with speed tests through the day and evening. Then we write a one-page report of every dropout, every slowdown and your evening speeds against the speed you pay for, ready to send to your provider.\n\nWe go through it with you at home and collect the box. If the line turns out to be fine, the report says so, and the problem is inside the house.\n\n€199 incl. VAT. No assessment needed. Dublin and Leinster.\nsmart-space.ie/services/wifi/broadband-evidence",
+    "caption": "Your provider says the line is fine.\n\nOur Broadband Evidence Service turns \"it feels slow\" into figures. We post you a small box that plugs into your router and logs your line every minute for 7 days, with speed tests through the day and evening. Then we write a one-page report of every dropout, every slowdown and your evening speeds against the speed you pay for, ready to send to your provider.\n\nWe go through it with you at home and collect the box. If the line turns out to be fine, the report says so, and the problem is inside the house.\n\n€199 incl. VAT. No assessment needed. Dublin and Leinster.\nhttps://smart-space.ie/services/wifi/broadband-evidence",
     "tags": [
       "#Broadband",
       "#WiFi",
@@ -221,7 +221,7 @@ export const SMARTSPACE_LINKEDIN_POSTS: LinkedInPost[] = [
     "n": "14",
     "title": "Ring doorbell film",
     "hook": "The courier rang the bell while you were out the back, and the parcel is sitting on the step.",
-    "caption": "The courier rang the bell while you were out the back, and the parcel is sitting on the step.\n\nA Ring video doorbell lets you see, hear and speak to whoever is at the door from your phone, wherever you are.\n\nChoose your doorbell on smart-space.ie, tell us whether there is a working wired doorbell to connect to, and pick a date and time for the installation. We supply it, fit it and set up the Ring app with you before we leave. If a working wired doorbell is already there, we re-use the wiring, and an installation can take as little as an hour.\n\nPlus Video Doorbell, 2K with 6x zoom: €329 fitted. Pro Video Doorbell, 4K with 10x zoom: €479 fitted. Every doorbell installation includes a Ring Chime.\n\n5,000+ installations across Dublin and Leinster.\nsmart-space.ie/services/doorbell",
+    "caption": "The courier rang the bell while you were out the back, and the parcel is sitting on the step.\n\nA Ring video doorbell lets you see, hear and speak to whoever is at the door from your phone, wherever you are.\n\nChoose your doorbell on smart-space.ie, tell us whether there is a working wired doorbell to connect to, and pick a date and time for the installation. We supply it, fit it and set up the Ring app with you before we leave. If a working wired doorbell is already there, we re-use the wiring, and an installation can take as little as an hour.\n\nPlus Video Doorbell, 2K with 6x zoom: €329 fitted. Pro Video Doorbell, 4K with 10x zoom: €479 fitted. Every doorbell installation includes a Ring Chime.\n\n5,000+ installations across Dublin and Leinster.\nhttps://smart-space.ie/services/doorbell",
     "tags": [
       "#Ring",
       "#HomeSecurity",
@@ -236,7 +236,7 @@ export const SMARTSPACE_LINKEDIN_POSTS: LinkedInPost[] = [
     "n": "15",
     "title": "Eldercare film",
     "hook": "A parent living at home, carers who need to get in, and a spare key under the plant pot.",
-    "caption": "A parent living at home, carers who need to get in, and a spare key under the plant pot.\n\nOur Eldercare Security Bundle takes the key off the step. A Smart Wi-Fi Keybox at the door opens with a code, a fingerprint or an RFID tag, and carers can be given a one-time code, managed from the app. A Ring video doorbell lets the family see who is at the door from anywhere.\n\nPick a date and time on smart-space.ie and we supply, fit and set it all up, including the app for family members.\n\n€509, with a Ring Chime included. Dublin and Leinster.\nsmart-space.ie/services/eldercare-security-bundle",
+    "caption": "A parent living at home, carers who need to get in, and a spare key under the plant pot.\n\nOur Eldercare Security Bundle takes the key off the step. A Smart Wi-Fi Keybox at the door opens with a code, a fingerprint or an RFID tag, and carers can be given a one-time code, managed from the app. A Ring video doorbell lets the family see who is at the door from anywhere.\n\nPick a date and time on smart-space.ie and we supply, fit and set it all up, including the app for family members.\n\n€509, with a Ring Chime included. Dublin and Leinster.\nhttps://smart-space.ie/services/eldercare-security-bundle",
     "tags": [
       "#Eldercare",
       "#Ring",
@@ -251,7 +251,7 @@ export const SMARTSPACE_LINKEDIN_POSTS: LinkedInPost[] = [
     "n": "16",
     "title": "Broadband evidence film",
     "hook": "The video call freezes again, and your provider says the line is fine.",
-    "caption": "The video call freezes again, and your provider says the line is fine.\n\nOur Broadband Evidence Service turns \"it feels slow\" into figures. We post you a small box that plugs into your router and logs your line every minute for 7 days, with speed tests through the day and evening. Then we write a one-page report of every dropout, every slowdown and your evening speeds against the speed you pay for, ready to send to your provider.\n\nWe go through it with you at home and collect the box. Book and pay online, or leave your details and we ring you first.\n\n€199 incl. VAT. No assessment needed. Dublin and Leinster.\nsmart-space.ie/services/wifi/broadband-evidence\n\nThe details typed in the film are samples.",
+    "caption": "The video call freezes again, and your provider says the line is fine.\n\nOur Broadband Evidence Service turns \"it feels slow\" into figures. We post you a small box that plugs into your router and logs your line every minute for 7 days, with speed tests through the day and evening. Then we write a one-page report of every dropout, every slowdown and your evening speeds against the speed you pay for, ready to send to your provider.\n\nWe go through it with you at home and collect the box. Book and pay online, or leave your details and we ring you first.\n\n€199 incl. VAT. No assessment needed. Dublin and Leinster.\nhttps://smart-space.ie/services/wifi/broadband-evidence\n\nThe details typed in the film are samples.",
     "tags": [
       "#Broadband",
       "#WiFi",
@@ -266,7 +266,7 @@ export const SMARTSPACE_LINKEDIN_POSTS: LinkedInPost[] = [
     "n": "17",
     "title": "Free consultation film",
     "hook": "Doorbell, floodlight, two cameras, or all of them? It is hard to tell from a product page which camera goes where on your house.",
-    "caption": "Doorbell, floodlight, two cameras, or all of them? It is hard to tell from a product page which camera goes where on your house.\n\nBook a free home consultation on smart-space.ie: your details, a date and a time, and no card needed. We visit, walk the property with you, look at the best places for cameras and doorbells, check the Wi-Fi coverage and the existing wiring, and send you a written quote the same day.\n\nComplimentary, with no obligation. Dublin and all of Leinster.\nsmart-space.ie/services/free-consultation\n\nThe details typed in the film are samples.",
+    "caption": "Doorbell, floodlight, two cameras, or all of them? It is hard to tell from a product page which camera goes where on your house.\n\nBook a free home consultation on smart-space.ie: your details, a date and a time, and no card needed. We visit, walk the property with you, look at the best places for cameras and doorbells, check the Wi-Fi coverage and the existing wiring, and send you a written quote the same day.\n\nComplimentary, with no obligation. Dublin and all of Leinster.\nhttps://smart-space.ie/services/free-consultation\n\nThe details typed in the film are samples.",
     "tags": [
       "#HomeSecurity",
       "#Ring",
