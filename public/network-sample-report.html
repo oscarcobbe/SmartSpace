@@ -179,7 +179,26 @@ figcaption{font-size:9.2pt;line-height:1.5;color:var(--ss-ink-soft);margin-top:3
 </style>
 </head>
 <body>
-<div style="background:#1C1A18;color:#fff;font:600 13px/1.4 \'Plus Jakarta Sans\',sans-serif;text-align:center;padding:10px 16px">Sample report. The house and every figure in it are an example; yours are measured in your home. <a href="/services/wifi" style="color:#F7A35C">Back to the Wi-Fi trial</a></div>
+<style>
+.sample-bar{position:sticky;top:0;z-index:20;margin:-10mm 0 10mm;background:#1C1A18;color:#fff;font:600 13px/1.4 "Plus Jakarta Sans",Arial,sans-serif;text-align:center;padding:10px 16px}
+.sample-bar a{color:#F7A35C;white-space:nowrap}
+@media (max-width:680px){.sample-bar{margin:0}}
+@media print{.sample-bar{display:none}}
+</style>
+<div class="sample-bar">Sample report. The house and every figure in it are an example; yours are measured in your home. <a id="sample-back" href="/services/wifi/home-network-assessment">Back to the home network assessment</a></div>
+<script>
+/* Back to exactly where the visitor clicked: the browser's own back keeps the
+   page and its scroll position. Someone who arrived from elsewhere (a shared
+   link) goes to the assessment's page instead. */
+(function () {
+  var a = document.getElementById("sample-back");
+  var fromHere = false;
+  try { fromHere = !!document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1; } catch (e) {}
+  if (!fromHere) return;
+  a.textContent = "\u2190 Back";
+  a.addEventListener("click", function (e) { e.preventDefault(); history.back(); });
+})();
+</script>
 <div class="sheet">
 
 <!-- ============================================================

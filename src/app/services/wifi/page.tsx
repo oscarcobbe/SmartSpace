@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Check, Clock, Gauge, Home, Tv, X } from "lucide-react";
+import { ArrowRight, Check, Clock, FileText, Gauge, Home, Tv, X } from "lucide-react";
 import NetworkHouse from "@/components/wifi/NetworkHouse";
 import GuideLinks from "@/components/wifi/GuideLinks";
 import { WIFI_AREAS } from "@/data/wifiAreas";
@@ -498,54 +498,70 @@ export default function NetworkDiagnosisPage() {
               getting, we also offer a broadband quality check, with no assessment needed.
             </p>
           </div>
+          {/* Two services for two different people, so the two boxes look the same
+              (Oscar, 15 October 2026): neither is dressed up over the other. Each
+              ends on its sample report, then the page with the details. */}
           <div className="grid lg:grid-cols-2 gap-5 sm:gap-6">
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1a1a1a] via-[#1f1a16] to-[#1a1a1a] p-6 sm:p-9 shadow-premium-lg flex flex-col">
-              <div className="absolute -top-20 -right-20 w-80 h-80 bg-brand-500/20 rounded-full blur-3xl pointer-events-none" />
-              <div className="relative flex-1">
-                <h3 className="text-2xl font-extrabold text-white tracking-[-0.02em]">Ongoing Monitoring</h3>
-                <div className="mt-1 text-brand-400 font-bold">from €39/month</div>
-                <p className="mt-4 text-white/75 leading-relaxed">
-                  A small box keeps an eye on your network around the clock, so we often know about a problem before you do.
-                </p>
-                <ul className="mt-5 space-y-3">
-                  {MONITORING_POINTS.map((m) => (
-                    <li key={m.title} className="flex items-start gap-3 text-sm leading-relaxed">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" strokeWidth={3} />
-                      <span className="text-white/75">
-                        <strong className="text-white">{m.title}</strong> {m.body}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+            {[
+              {
+                title: "Ongoing Monitoring",
+                price: "from €39/month",
+                intro: "A small box keeps an eye on your network around the clock, so we often know about a problem before you do.",
+                points: MONITORING_POINTS,
+                numbered: false,
+                sample: packageBySlug("network-monitoring")?.sampleReport,
+                href: "/services/wifi/network-monitoring",
+              },
+              {
+                title: "Broadband Evidence Service",
+                price: `€${EVIDENCE_EURO}`,
+                intro: "Think your provider is letting you down? Get the evidence they need to take you seriously.",
+                points: EVIDENCE_STEPS,
+                numbered: true,
+                sample: packageBySlug("broadband-evidence")?.sampleReport,
+                href: "/services/wifi/broadband-evidence",
+              },
+            ].map((card) => (
+              <div key={card.title} className="rounded-3xl bg-white border border-gray-100 shadow-premium p-6 sm:p-9 flex flex-col">
+                <div className="flex-1">
+                  <h3 className="text-2xl font-extrabold text-ink tracking-[-0.02em]">{card.title}</h3>
+                  <div className="mt-1 text-brand-700 font-bold">{card.price}</div>
+                  <p className="mt-4 text-ink-soft leading-relaxed">{card.intro}</p>
+                  <ul className="mt-5 space-y-3">
+                    {card.points.map((m, i) => (
+                      <li key={m.title} className="flex items-start gap-3 text-sm leading-relaxed">
+                        {card.numbered ? (
+                          <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-[11px] font-extrabold text-brand-700">
+                            {i + 1}
+                          </span>
+                        ) : (
+                          <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-500/10">
+                            <Check className="h-3 w-3 text-brand-600" strokeWidth={3} />
+                          </span>
+                        )}
+                        <span className="text-ink-soft">
+                          <strong className="text-ink">{m.title}</strong> {m.body}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="mt-6 pt-5 border-t border-gray-100 space-y-2 text-sm">
+                  {card.sample && (
+                    <p>
+                      <a href={card.sample} className={`inline-flex items-center gap-1.5 ${QUIET}`}>
+                        <FileText className="h-4 w-4" /> See a sample report
+                      </a>
+                    </p>
+                  )}
+                  <p>
+                    <Link href={card.href} className={`inline-flex items-center gap-1.5 ${QUIET}`}>
+                      More details <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </p>
+                </div>
               </div>
-              <Link href="/services/wifi/network-monitoring" className={`relative mt-6 inline-flex items-center gap-1.5 text-sm ${QUIET_DARK}`}>
-                Network monitoring <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-            <div className="rounded-3xl bg-cream border border-gray-100 p-6 sm:p-9 flex flex-col">
-              <div className="flex-1">
-                <h3 className="text-2xl font-extrabold text-ink tracking-[-0.02em]">Broadband Evidence Service</h3>
-                <div className="mt-1 text-brand-700 font-bold">€{EVIDENCE_EURO}</div>
-                <p className="mt-4 text-ink-soft leading-relaxed">
-                  Think your provider is letting you down? Get the evidence they need to take you seriously.
-                </p>
-                <ol className="mt-5 space-y-3">
-                  {EVIDENCE_STEPS.map((m, i) => (
-                    <li key={m.title} className="flex items-start gap-3 text-sm leading-relaxed">
-                      <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1C1A18] text-[11px] font-extrabold text-white">
-                        {i + 1}
-                      </span>
-                      <span className="text-ink-soft">
-                        <strong className="text-ink">{m.title}</strong> {m.body}
-                      </span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-              <Link href="/services/wifi/broadband-evidence" className={`mt-6 inline-flex items-center gap-1.5 text-sm ${QUIET}`}>
-                Book the evidence service <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
+            ))}
           </div>
         </div>
       </section>
