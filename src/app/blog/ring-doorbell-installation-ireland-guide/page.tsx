@@ -270,7 +270,7 @@ export default function Post() {
           If you want Smart Space to handle your Ring doorbell install, book a free
           consultation and we&apos;ll come out to survey the property. We&apos;ll identify
           the right model for your door and wiring, flag any Wi-Fi issues, and send a
-          written quote the same day. Serving Dublin and all of Leinster.
+          written quote within 24 hours, often less. Serving Dublin and all of Leinster.
         </p>
       </BlogLayout>
     </>

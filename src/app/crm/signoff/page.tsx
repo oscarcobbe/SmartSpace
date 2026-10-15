@@ -144,10 +144,12 @@ export default async function SignoffPage() {
                         </fieldset>
                         <label className="min-w-[220px] flex-1">
                           <span className="sr-only">Note</span>
-                          <input
+                          <textarea
                             name="comment"
+                            rows={2}
+                            maxLength={10000}
                             placeholder="What should change (optional when approving)"
-                            className="min-h-[40px] w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
+                            className="min-h-[40px] w-full resize-y rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
                           />
                         </label>
                         <SubmitButton pendingLabel="Saving" className="min-h-[40px] rounded-lg bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-800">

@@ -43,6 +43,8 @@ export interface WifiPackage {
   faq: { q: string; a: string }[];
   /** Guides and pages to link quietly from the package page, most relevant first. */
   related: { href: string; label: string }[];
+  /** A sample of the report the service ends with, in the assessment report's style (Nigel, 15 October 2026). */
+  sampleReport?: string;
 }
 
 export const priceLabel = (p: WifiPackage) =>
@@ -119,6 +121,7 @@ export const WIFI_PACKAGES: WifiPackage[] = [
         a: "Dublin and the rest of Leinster, the same area as our smart security installations.",
       },
     ],
+    sampleReport: "/network-sample-report.html",
     related: [
       { href: "/services/wifi", label: "How the 3-day trial works" },
       { href: "/network-sample-report.html", label: "A sample report" },
@@ -239,7 +242,9 @@ export const WIFI_PACKAGES: WifiPackage[] = [
         a: "Yes. The unit connects to the router you already have.",
       },
     ],
+    sampleReport: "/network-monitoring-sample-report.html",
     related: [
+      { href: "/network-monitoring-sample-report.html", label: "A sample monthly report" },
       { href: "/services/wifi", label: "The 3-day trial" },
       { href: "/blog/wifi-slow-in-the-evening-ireland", label: "Evening slowdowns" },
       { href: "/blog/smart-camera-wifi-drops-irish-homes", label: "Devices dropping off" },
@@ -330,7 +335,9 @@ WIFI_PACKAGES.push({
       a: "Dublin and Leinster only, because we go through the results onsite and collect the box.",
     },
   ],
+  sampleReport: "/broadband-evidence-sample-report.html",
   related: [
+    { href: "/broadband-evidence-sample-report.html", label: "A sample evidence report" },
     { href: "/blog/broadband-speed-test-ireland-line-or-wifi", label: "Is it the line or the Wi-Fi?" },
     { href: "/blog/wifi-slow-in-the-evening-ireland", label: "Evening slowdowns" },
     { href: "/services/wifi", label: "The 3-day Wi-Fi trial" },

@@ -29,7 +29,7 @@ const post = getPostBySlug("ring-installation-cost-ireland")!;
  *    power is run. Eldercare bundle from €509.
  *  - /services/single only routes to the doorbell and camera pages.
  *  - /services/free-consultation: "Complimentary", no obligation, no card,
- *    Wi-Fi and wiring check, written quote the same day.
+ *    Wi-Fi and wiring check, written quote within 24 hours, often less.
  *  - /terms: 12-month workmanship guarantee, warranty-claim help, public
  *    liability insurance. /faq: Ring Protect is paid to Ring.
  *
@@ -107,7 +107,7 @@ const FAQ = [
   },
   {
     q: "Is the home security consultation really free?",
-    a: "Yes. Smart Space's consultation is complimentary, with no obligation and no card required. We check Wi-Fi coverage and existing wiring, and send a written quote the same day.",
+    a: "Yes. Smart Space's consultation is complimentary, with no obligation and no card required. We check Wi-Fi coverage and existing wiring, and send a written quote within 24 hours, often less.",
   },
 ];
 
@@ -392,7 +392,7 @@ export default function Post() {
         </table>
         <p>
           Not sure which row is yours? Book the <Link href="/services/free-consultation">free consultation</Link>: we
-          check the Wi-Fi and wiring, and send a written quote the same day.
+          check the Wi-Fi and wiring, and send a written quote within 24 hours, often less.
         </p>
 
         <h2 id="faq">Questions people ask</h2>

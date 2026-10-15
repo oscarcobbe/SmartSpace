@@ -5,7 +5,7 @@ const SITE = "https://smart-space.ie";
 export const metadata: Metadata = {
   title: "Ring Doorbell Installation in Ireland, From €139 | Smart Space",
   description:
-    "Professional Ring doorbell installation in Dublin and across Leinster. From €139, same-day quote, 5,000+ installs done, 5★ Google reviews. Book online, we confirm by phone within 1 hour.",
+    "Professional Ring doorbell installation in Dublin and across Leinster. From €139, written quote within 24 hours, 5,000+ installs done, 5★ Google reviews. Book online, we confirm by phone within 1 hour.",
   alternates: { canonical: `${SITE}/ring-installation` },
   // Paid-only landing page, keep out of organic search to avoid
   // cannibalising /services/installation-only.

@@ -23,7 +23,7 @@ type Props = {
 
 const CONSULTATION: Cta = {
   title: "Want Smart Space to handle it for you?",
-  body: "Book a complimentary consultation. We'll walk your home with you, identify the right setup, and send a written quote the same day.",
+  body: "Book a complimentary consultation. We'll walk your home with you, identify the right setup, and send a written quote within 24 hours, often less.",
   primary: { label: "Get a Free Quote", href: "/services/free-consultation" },
 };
 

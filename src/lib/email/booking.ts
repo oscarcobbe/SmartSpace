@@ -48,7 +48,7 @@ const textDetails = (d: BookingFacts) => [
 const FOOTER = { kind: "transactional" as const, note: "You're receiving this because you made a booking on smart-space.ie." };
 
 export function bookingConfirmed(d: BookingFacts): Email {
-  const preheader = `${d.dateLabel}, ${d.time}. Add it to your calendar, or move it if you need to.`;
+  const preheader = `${d.dateLabel}, ${d.time}. It's in your calendar. Move it if you need to.`;
   return {
     subject: `Confirmed: ${d.title} on ${d.dateLabel} at ${d.time.split(" ")[0]}`,
     preheader,
@@ -58,7 +58,7 @@ export function bookingConfirmed(d: BookingFacts): Email {
       blocks: [
         eyebrow("Booking confirmed"),
         heading(`You're booked in, ${first(d.name)}.`),
-        para("The calendar file attached adds it to your calendar.", { size: 16, pad: "14px 32px 0" }),
+        para("The following event is now in your calendar.", { size: 16, pad: "14px 32px 0" }),
         summary("Your booking", details(d)),
         para("Need a different time? You can move or cancel it yourself:", { pad: "24px 32px 0" }),
         button("Reschedule", d.rescheduleUrl),
@@ -71,7 +71,7 @@ export function bookingConfirmed(d: BookingFacts): Email {
     text: [
       `Hi ${first(d.name)},`,
       "",
-      "You're booked in. The calendar file attached adds it to your calendar.",
+      "You're booked in. The following event is now in your calendar.",
       "",
       "Your booking",
       ...textDetails(d),
@@ -96,7 +96,7 @@ export function bookingMoved(d: BookingFacts & { fromLabel: string }): Email {
       blocks: [
         eyebrow("Booking moved"),
         heading(`All set, ${first(d.name)}.`),
-        para(`Your booking has moved from ${d.fromLabel}. The calendar file attached updates your calendar.`, { size: 16, pad: "14px 32px 0" }),
+        para(`Your booking has moved from ${d.fromLabel}. The event in your calendar has moved to the new time.`, { size: 16, pad: "14px 32px 0" }),
         summary("Your new time", details(d)),
         button("Reschedule again", d.rescheduleUrl),
         button("Cancel", d.cancelUrl, "ink"),
@@ -108,7 +108,7 @@ export function bookingMoved(d: BookingFacts & { fromLabel: string }): Email {
     text: [
       `Hi ${first(d.name)},`,
       "",
-      `Your booking has moved from ${d.fromLabel}. The calendar file attached updates your calendar.`,
+      `Your booking has moved from ${d.fromLabel}. The event in your calendar has moved to the new time.`,
       "",
       "Your new time",
       ...textDetails(d),
@@ -133,7 +133,7 @@ export function bookingCancelled(d: Omit<BookingFacts, "rescheduleUrl" | "cancel
       blocks: [
         eyebrow("Booking cancelled"),
         heading(`That's cancelled, ${first(d.name)}.`),
-        para("We've taken it out of the calendar. The calendar file attached removes it from yours.", { size: 16, pad: "14px 32px 0" }),
+        para("This event has been removed from your calendar.", { size: 16, pad: "14px 32px 0" }),
         summary("Cancelled", details({ ...d, rescheduleUrl: "", cancelUrl: "" })),
         button("Book another time", d.bookAgainUrl),
         contactNote("Questions? Talk to us:"),
@@ -144,7 +144,7 @@ export function bookingCancelled(d: Omit<BookingFacts, "rescheduleUrl" | "cancel
     text: [
       `Hi ${first(d.name)},`,
       "",
-      "That's cancelled. We've taken it out of the calendar. The calendar file attached removes it from yours.",
+      "That's cancelled. This event has been removed from your calendar.",
       "",
       "Cancelled",
       ...textDetails({ ...d, rescheduleUrl: "", cancelUrl: "" }),

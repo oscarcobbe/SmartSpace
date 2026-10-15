@@ -20,7 +20,7 @@ import {
   networkOrderConfirmed,
   type Email,
 } from "./customer";
-import { networkDiagnosisA, networkDiagnosisB, smartGuardianAnnouncement } from "./marketing";
+import { networkDiagnosisA, networkDiagnosisB } from "./marketing";
 import { bookingCancelled, bookingConfirmed, bookingMoved } from "./booking";
 
 export type Status = "live" | "paused" | "draft";
@@ -288,32 +288,18 @@ export const ENTRIES: Entry[] = [
     render: () => reviewRequest({ name: SAMPLE.name, product: SAMPLE.product }),
   },
   {
-    id: "smartguardian-announce",
-    stage: "broadcast",
-    name: "Meet SmartCare Living and SmartGuardian",
-    channel: "email",
-    status: "draft",
-    statusNote: "New. Every line about SmartGuardian is taken from the SmartCare Living website. The June drafts of this email say things that site does not, and should not be sent.",
-    trigger: "Sent from Mailings to the past customers you add there.",
-    timing: "Fifty a day, weekday mornings.",
-    from: "Nigel, Smart Space",
-    replyTo: "info@smart-space.ie",
-    source: "src/lib/email/marketing.ts",
-    render: () => smartGuardianAnnouncement({ name: SAMPLE.name, unsubscribeUrl: "#unsubscribe", basis: "consent" }),
-  },
-  {
     id: "network-diagnosis-a",
     stage: "broadcast",
-    name: "Network diagnosis, Version A (problem-led)",
+    name: "SmartSpace Networks and SmartGuardian announcement",
     channel: "email",
     status: "draft",
-    statusNote: "From the network service plan. The offer for existing customers is left for you to fill in.",
+    statusNote: "Nigel's own wording for the network service (15 October), merged with the SmartGuardian announcement as he asked. Because it advertises SmartCare Living's product, it goes only to people who said yes to marketing.",
     trigger: "Sent from Mailings to the past customers you add there.",
     timing: "Fifty a day, weekday mornings.",
     from: "Nigel, Smart Space",
     replyTo: "info@smart-space.ie",
     source: "src/lib/email/marketing.ts",
-    render: () => networkDiagnosisA({ name: SAMPLE.name, unsubscribeUrl: "#unsubscribe", basis: "customer" }),
+    render: () => networkDiagnosisA({ name: SAMPLE.name, unsubscribeUrl: "#unsubscribe", basis: "consent" }),
   },
   {
     id: "network-diagnosis-b",

@@ -16,6 +16,8 @@ import { sclItems, recordSclDecision } from "@/lib/signoff/scl";
 import { SIGNOFF_NOTIFY_TO } from "@/lib/business-constants";
 import { done, failed, writeFailed, type ActionState } from "../action-state";
 
+const COMMENT_MAX = 10_000;
+
 async function tellFourWinds(subject: string, text: string) {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM_EMAIL;
@@ -39,7 +41,10 @@ export async function decide(_prev: ActionState, form: FormData): Promise<Action
   const decision = form.get("decision");
   if (decision !== "approved" && decision !== "changes") return failed("Choose whether to approve it or ask for changes.");
   const choice = form.get("choice") ? String(form.get("choice")) : null;
-  const comment = String(form.get("comment") ?? "").trim().slice(0, 2000);
+  /* Refused, not cut: on 15 October 2026 a pasted email was cut at 2,000
+     characters mid-sentence and nobody was told. */
+  const comment = String(form.get("comment") ?? "").trim();
+  if (comment.length > COMMENT_MAX) return failed(`That note is ${comment.length} characters; the limit is ${COMMENT_MAX}. Nothing was saved.`);
   if (decision === "approved" && item.choices?.length && !choice) return failed("Pick one of the options, then approve.");
   if (decision === "changes" && !comment) return failed("Say what should change, so it can be done.");
 
