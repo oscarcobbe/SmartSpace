@@ -13,6 +13,7 @@ import { crm, crmConfigured } from "@/lib/crm/db";
 import { approval, SIGNOFF_SITE } from "@/lib/signoff/state";
 import { networkDiagnosisA, networkDiagnosisB, type Recipient } from "./marketing";
 import type { Email } from "./customer";
+import { announcementHolds } from "./announce-hold";
 import {
   MAILING_TEMPLATES,
   marketingSenderProblem,
@@ -179,6 +180,11 @@ export async function runDailyBatch(): Promise<{ ready: string[]; reports: Batch
     const ok = await approval(template.itemId);
     if (!ok.approved) {
       reports.push({ mailing: m.template, sent: 0, skipped: 0, failed: 0, note: `Held: ${ok.reason}` });
+      continue;
+    }
+    const holds = await announcementHolds(m.template);
+    if (holds.length) {
+      reports.push({ mailing: m.template, sent: 0, skipped: 0, failed: 0, note: `Held: ${holds.join(" ")}` });
       continue;
     }
 
