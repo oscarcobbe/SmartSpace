@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { timingSafeEqual } from "crypto";
 import { alertTo, monitorBcc } from "@/lib/business-constants";
+import { fetchMarks } from "@/lib/crm/order-marks";
 import { visitsBetween } from "@/lib/booking/upcoming";
 import { googleCalendarConfigured } from "@/lib/booking/google-calendar";
 
@@ -188,6 +189,14 @@ export async function GET(request: Request) {
     });
   }
 
+  /* An order Nigel has marked Done or Cancelled in the CRM (Orders) is settled:
+     the job happened, or the customer was dealt with by phone. Left in, the
+     same months-old orders were listed every morning (15 Oct 2026). A failed
+     read keeps everything in, rather than hiding an order that needs a visit. */
+  const marks = await fetchMarks("smart-space");
+  if (marks.problem) console.error("[cron/recover-bookings]", marks.problem);
+  for (let i = missed.length - 1; i >= 0; i--) if (marks.has(missed[i].sessionId)) missed.splice(i, 1);
+
   /* Each order without a live booking: was it ever booked, and if so what
      happened to it. Without Calendly configured, nothing is added. */
   const calendlyToken = process.env.CALENDLY_PERSONAL_TOKEN;
@@ -226,6 +235,9 @@ export async function GET(request: Request) {
       missed: missed.length,
       futureRecoverable: 0,
       past: missed.filter((m) => m.isPast).length,
+      cancelledEarlier: missed.filter((m) => m.history).length,
+      marked: marks.size,
+      marksProblem: marks.problem ?? null,
       checked: stripeOrders.length,
       emailed: false,
       note: "All missed bookings are past, phone call only, no email sent",
@@ -237,15 +249,20 @@ export async function GET(request: Request) {
   const resendFrom = process.env.RESEND_FROM_EMAIL;
   const to = alertTo();
   if (resendKey && resendFrom) {
-    const futureCount = missed.filter((m) => !m.isPast && !m.history).length;
-    const cancelledCount = missed.filter((m) => m.history).length;
-    const pastCount = missed.filter((m) => m.isPast && !m.history).length;
+    /* The email lists what needs doing now; the older ones are one line, not
+       twenty rows every morning that train Nigel to stop reading it. */
+    const older = missed.filter((m) => !futureRecoverable.includes(m));
+    const futureCount = futureRecoverable.filter((m) => !m.isPast && !m.history).length;
+    const cancelledCount = futureRecoverable.filter((m) => m.history).length;
+    const olderLine = older.length
+      ? `${older.length} older paid order${older.length === 1 ? "" : "s"} without a booked visit ${older.length === 1 ? "is" : "are"} left out of this email. Mark each Done or Cancelled in the CRM's Orders and ${older.length === 1 ? "it stops" : "they stop"} being counted.`
+      : "";
     const statusOf = (m: MissedOrder) => (m.history ? "❌ cancelled, nothing rebooked" : m.isPast ? "⚠️ PAST" : "🔧 future");
     // Escape every Stripe-supplied field. Stripe sanitizes their own
     // fields but we don't trust upstream data into our HTML, a custom
     // product_name with `<script>` would otherwise inject into Nigel's
     // inbox.
-    const rows = missed
+    const rows = futureRecoverable
       .map(
         (m) =>
           `<tr><td>${escapeHtml(m.name)}</td><td>${escapeHtml(m.email)}</td><td>${escapeHtml(m.product)}</td><td>${escapeHtml(m.bookingLabel || m.bookingSlot)}${m.history ? `<br/><small>${escapeHtml(m.history)}</small>` : ""}</td><td>${statusOf(m)}</td><td>€${escapeHtml(m.amount)}</td></tr>`
@@ -257,16 +274,17 @@ export async function GET(request: Request) {
         from: resendFrom,
         to: [to],
         bcc: monitorBcc(),
-        subject: `[Smart Space] ${missed.length} paid order${missed.length === 1 ? "" : "s"} without a booked visit`,
-        text: missed
-          .map(
+        subject: `[Smart Space] ${futureRecoverable.length} paid order${futureRecoverable.length === 1 ? " needs" : "s need"} a visit booked`,
+        text: [
+          ...futureRecoverable.map(
             (m) =>
               `${m.name} <${m.email}>, ${m.product}, €${m.amount}, ordered for ${m.bookingLabel || m.bookingSlot}${m.history ? `. ${m.history}` : m.isPast ? " (PAST)" : ""}`
-          )
-          .join("\n"),
+          ),
+          ...(olderLine ? ["", olderLine] : []),
+        ].join("\n"),
         html: `
           <h2>Daily booking-recovery audit</h2>
-          <p>${futureCount} future visit${futureCount === 1 ? "" : "s"} never made it into your calendar; ${cancelledCount} paid order${cancelledCount === 1 ? " has" : "s have"} a visit that was cancelled with nothing rebooked; ${pastCount} past order${pastCount === 1 ? "" : "s"} never had a booking and may need a phone call.</p>
+          <p>${futureCount} future visit${futureCount === 1 ? "" : "s"} never made it into your calendar; ${cancelledCount} paid order${cancelledCount === 1 ? " has" : "s have"} a visit cancelled in the last fortnight with nothing rebooked.</p>
           <p>A cancelled visit is not a sync problem: the customer has paid, so ring them to rebook or refund. Only the never-booked ones can be recovered with<br/>
             <code>node scripts/recover-bookings.mjs --book</code>, which leaves cancelled ones alone.</p>
           <table border="1" cellpadding="6" style="border-collapse:collapse;font-family:system-ui">
@@ -275,6 +293,7 @@ export async function GET(request: Request) {
             </thead>
             <tbody>${rows}</tbody>
           </table>
+          ${olderLine ? `<p style="color:#5A524C">${escapeHtml(olderLine)}</p>` : ""}
         `,
       });
     } catch (err) {
@@ -285,7 +304,8 @@ export async function GET(request: Request) {
   return NextResponse.json({
     ok: true,
     missed: missed.length,
-    futureRecoverable: missed.filter((m) => !m.isPast).length,
+    futureRecoverable: futureRecoverable.length,
+    emailed: true,
     past: missed.filter((m) => m.isPast).length,
     checked: stripeOrders.length,
   });
