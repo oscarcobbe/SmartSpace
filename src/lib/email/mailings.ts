@@ -11,7 +11,7 @@
 import { Resend } from "resend";
 import { crm, crmConfigured } from "@/lib/crm/db";
 import { approval, SIGNOFF_SITE } from "@/lib/signoff/state";
-import { networkDiagnosisA, networkDiagnosisB, type Recipient } from "./marketing";
+import { networkDiagnosisA, type Recipient } from "./marketing";
 import type { Email } from "./customer";
 import { announcementHolds } from "./announce-hold";
 import {
@@ -44,7 +44,6 @@ export interface MailingSummary extends Mailing {
 
 const RENDER: Record<MailingTemplate["id"], (r: Recipient) => Email> = {
   "network-diagnosis-a": networkDiagnosisA,
-  "network-diagnosis-b": networkDiagnosisB,
 };
 
 const SITE_URL = "https://smart-space.ie";

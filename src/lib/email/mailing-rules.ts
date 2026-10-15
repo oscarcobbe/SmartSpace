@@ -32,7 +32,7 @@ export type Basis = "customer" | "consent";
 
 export interface MailingTemplate {
   /** The email studio entry, and the template's name in the database. */
-  id: "network-diagnosis-a" | "network-diagnosis-b";
+  id: "network-diagnosis-a";
   itemId: string;
   title: string;
   bases: Basis[];
@@ -40,7 +40,6 @@ export interface MailingTemplate {
 
 export const MAILING_TEMPLATES: MailingTemplate[] = [
   { id: "network-diagnosis-a", itemId: "mailing:network-diagnosis-a", title: "SmartSpace Networks and SmartGuardian announcement", bases: ["consent"] },
-  { id: "network-diagnosis-b", itemId: "mailing:network-diagnosis-b", title: "The network service, for security customers", bases: ["customer", "consent"] },
 ];
 
 export const templateById = (id: string) => MAILING_TEMPLATES.find((t) => t.id === id) ?? null;

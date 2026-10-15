@@ -20,7 +20,7 @@ import {
   networkOrderConfirmed,
   type Email,
 } from "./customer";
-import { networkDiagnosisA, networkDiagnosisB } from "./marketing";
+import { networkDiagnosisA } from "./marketing";
 import { bookingCancelled, bookingConfirmed, bookingMoved } from "./booking";
 
 export type Status = "live" | "paused" | "draft";
@@ -293,27 +293,13 @@ export const ENTRIES: Entry[] = [
     name: "SmartSpace Networks and SmartGuardian announcement",
     channel: "email",
     status: "draft",
-    statusNote: "Nigel's own wording for the network service (15 October), merged with the SmartGuardian announcement as he asked. Because it advertises SmartCare Living's product, it goes only to people who said yes to marketing.",
+    statusNote: "Nigel's network email (15 October), merged with the SmartGuardian announcement as he asked, with his corrected SmartGuardian price. The only mailing. Because it advertises SmartCare Living's product, it goes only to people who said yes to marketing.",
     trigger: "Sent from Mailings to the past customers you add there.",
     timing: "Fifty a day, weekday mornings.",
     from: "Nigel, Smart Space",
     replyTo: "info@smart-space.ie",
     source: "src/lib/email/marketing.ts",
     render: () => networkDiagnosisA({ name: SAMPLE.name, unsubscribeUrl: "#unsubscribe", basis: "consent" }),
-  },
-  {
-    id: "network-diagnosis-b",
-    stage: "broadcast",
-    name: "Network diagnosis, Version B (device reliability)",
-    channel: "email",
-    status: "draft",
-    statusNote: "From the network service plan, for security and SmartGuardian customers. The offer is left for you to fill in.",
-    trigger: "Sent from Mailings to the security and SmartGuardian customers you add there.",
-    timing: "Fifty a day, weekday mornings.",
-    from: "Nigel, Smart Space",
-    replyTo: "info@smart-space.ie",
-    source: "src/lib/email/marketing.ts",
-    render: () => networkDiagnosisB({ name: SAMPLE.name, unsubscribeUrl: "#unsubscribe", basis: "customer" }),
   },
 ];
 
