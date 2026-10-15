@@ -58,12 +58,12 @@ the other Pi is unaffected. `install.sh <host> --key` puts a new key on.
 
 ## What it will do
 
-Only these seven things, named in `ACTIONS` in `agent.py` and in
+Only these nine things, named in `ACTIONS` in `agent.py` and in
 `src/lib/network/pi-protocol.ts`. `scripts/check-network-assessments.mjs`
 fails the build if the two lists differ, or if `agent.py` ever passes a string
 to a shell.
 
-| Instruction | What happens on the node Pi |
+| Instruction | What happens on the Pi |
 | --- | --- |
 | measure | iperf3 to the Pi at the router, down (`-R`) then up |
 | check | the facts `check.sh` reads, a five-second live test, a ping to each watched device |
@@ -72,6 +72,14 @@ to a shell.
 | stop_watch | removes the devicewatch cron line |
 | collect | sends both logs to the portal; a final collection moves them into the archive first |
 | clear_logs | deletes archived logs, each only if its SHA-256 matches the copy the portal holds |
+| start_broadband | on the Pi wired into the customer's router (either Pi): every minute 20 pings to 1.1.1.1 and 20 to the router, and a Cloudflare speed test every 30, 60 or 180 minutes (or none), into `~/broadband.csv`; a log from before is moved into the archive first |
+| collect_broadband | sends `broadband.csv` to the portal; a final collection stops the test and moves the log into the archive first |
+
+The broadband test runs inside the agent, so it carries on after a power cut
+for as long as the test is started. Each speed test uses about 140 MB, so ask
+about a data allowance before choosing how often. A Pi set up before 15
+October 2026 needs `install.sh` run again to learn the two broadband
+instructions; the portal's other buttons work either way.
 
 It never deletes a log the portal does not hold. The files and formats are
 those of Nigel's Mac scripts (`check`, `targetdevicewatch`, `collect`,

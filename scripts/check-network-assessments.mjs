@@ -19,6 +19,10 @@
  *      figures where the line is at fault, a test failed, nobody mentioned the
  *      evening and no monitoring price is set, it must say so and nothing else.
  *   6. The pre-departure check must catch a double NAT and an old log.
+ *   7. The broadband evidence must blame the broadband only for what the
+ *      router answered through: a drop with the router silent too is the
+ *      house side, a gap in the log is the Pi being off, and neither goes to
+ *      the provider. The fixture is written in agent.py's own column order.
  *
  *   node scripts/check-network-assessments.mjs
  */
@@ -38,13 +42,14 @@ const compile = (name) => {
     .outputText.replace(/from "\.\/(\w[\w-]*)"/g, 'from "./$1.mjs"');
   writeFileSync(join(dir, `${name}.mjs`), js);
 };
-let L, P, C, RD;
+let L, P, C, RD, B;
 try {
-  for (const m of ["logs", "pi-protocol", "check", "capture", "report-data"]) compile(m);
+  for (const m of ["logs", "pi-protocol", "check", "capture", "report-data", "broadband"]) compile(m);
   L = await import(pathToFileURL(join(dir, "logs.mjs")).href);
   P = await import(pathToFileURL(join(dir, "pi-protocol.mjs")).href);
   C = await import(pathToFileURL(join(dir, "check.mjs")).href);
   RD = await import(pathToFileURL(join(dir, "report-data.mjs")).href);
+  B = await import(pathToFileURL(join(dir, "broadband.mjs")).href);
 } finally {
   rmSync(dir, { recursive: true, force: true });
 }
@@ -132,8 +137,11 @@ const done = (n) => { count += n; };
   ok("a file that is not a log is refused", !ck("clear_logs", { assessment: a, files: [{ dir: "20261014-101500-6f2a1c3e", name: "key", sha256: "0".repeat(64) }] }).ok);
   ok("a hundred-second measurement is refused", !ck("measure", { seconds: 100 }).ok);
   ok("an action the Pi does not know is refused", !ck("reboot", {}).ok);
+  ok("a speed test every 45 minutes is refused", !ck("start_broadband", { assessment: a, speed_every: 45 }).ok);
+  eq("a broadband test with no interval runs hourly speed tests", ck("start_broadband", { assessment: a }).ok && ck("start_broadband", { assessment: a }).args.speed_every, 60);
+  ok("an archived broadband log can be cleared", ck("clear_logs", { assessment: a, files: [{ dir: "20261014-101500-6f2a1c3e", name: "broadband.csv", sha256: "0".repeat(64) }] }).ok);
   ok("a normal start is accepted", ck("start_trial", { assessment: a, devices: [{ name: "Bedroom TV", ip: "192.168.68.61" }] }).ok);
-  done(10);
+  done(13);
 }
 
 /* ── 5. The report says only what was measured ────────────────────── */
@@ -239,9 +247,53 @@ const done = (n) => { count += n; };
   done(4);
 }
 
+/* ── 7. The broadband evidence ────────────────────────────────────── */
+{
+  const agent = readFileSync(join(ROOT, "scripts/network-pi/agent.py"), "utf8");
+  const fields = /BB_FIELDS = \[([\s\S]*?)\]/.exec(agent);
+  const csv = readFileSync(join(FIX, "broadband.csv"), "utf8");
+  eq("the fixture's columns are agent.py's", csv.split("\n")[0], fields ? [...fields[1].matchAll(/"([a-z_]+)"/g)].map((m) => m[1]).join(",") : "agent.py has no BB_FIELDS");
+
+  const p = B.parseBroadbandCsv(csv);
+  eq("a line cut short by a power cut is counted, not read", p.unreadable, 1);
+  eq("a quoted error with a comma in it is read whole", p.rows[p.rows.length - 1].error, "curl: (6) could not resolve, host speed.cloudflare.com");
+  const f = B.broadbandFigures(p.rows);
+  eq("minutes measured", f.internet.minutes, 130);
+  eq("drops: when, how long, and whose", f.outages.map((o) => [B.clockLabel(o.from), o.minutes, o.routerToo]), [["17:30", 3, false], ["18:10", 2, true]]);
+  eq("only the drop the router answered through is the broadband's", [f.broadbandOutageMinutes, f.houseOutageMinutes], [3, 2]);
+  eq("the Pi switched off is a gap, not a drop", f.silences.map((x) => [B.clockLabel(x.from), x.minutes]), [["17:39", 20]]);
+  eq("evening is 18:00 to 23:00 Dublin time", [B.isEvening(Date.UTC(2026, 9, 17, 16, 59)), B.isEvening(Date.UTC(2026, 9, 17, 17, 0))], [false, true]);
+  eq("speed tests, one of which reached nothing", [f.speeds.length, f.speeds.filter((x) => x.failed).length], [4, 1]);
+  eq("download: typical, lowest, highest", f.down, { median: 298.4, lowest: 140.2, highest: 412.3 });
+  eq("evening download against the rest of the day", f.eveningDown, { evening: 219.3, rest: 412.3 });
+  eq("minutes a call would stutter: drops plus the jittery evening minutes", f.callTroubleMinutes, 11);
+  eq("both kinds of trouble are said", f.finding, "both");
+  done(13);
+
+  /* The same week without the two minutes the router went silent: the broadband alone. */
+  const clean = B.broadbandFigures(p.rows.filter((r) => !(r.at >= Date.UTC(2026, 9, 17, 17, 10) && r.at < Date.UTC(2026, 9, 17, 17, 12))));
+  eq("with the router answering throughout it is the broadband", clean.finding, "broadband");
+  const quiet = B.broadbandFigures(p.rows.filter((r) => r.kind !== "ping" || r.lost === 0));
+  eq("a clean week is called clean", quiet.finding, "clean");
+
+  const template = readFileSync(join(ROOT, "docs/report-style/network-assessment.html"), "utf8");
+  const src = { customerName: "</h1><script>alert(1)</script>", address: "1 Test Road", provider: "Three", packageMbps: 500, figures: f, speedEvery: 60, reportDate: "18 October 2026" };
+  const html = B.renderEvidence(template, src);
+  ok("a customer's name can open a script element", !html.includes("<script>alert(1)"));
+  ok("the evidence page is not in the house style", html.includes('class="letterhead"') && html.includes("--ss-orange") && html.includes('class="legal"'));
+  ok("the evidence page carries the assessment's scripts", !/<script>/.test(html.split("</head>")[1]));
+  ok("the printed footer still names the assessment", html.includes('"Smart Space \\00B7  Broadband evidence report"'));
+  const v = B.evidenceVerdict(src);
+  ok("the house side's drop is put on the provider", v.lines.some((l) => /router did not answer either.*not counted it against your Three connection/.test(l)));
+  ok("the drop beyond the router is not said", v.lines.some((l) => /completely for 3 minutes in all, in 1 separate drop/.test(l)));
+  ok("the Pi being off is not explained", v.lines.some((l) => /recorded nothing for 20 minutes/.test(l)));
+  ok("an em dash reached the page", !html.includes("—"));
+  done(10);
+}
+
 if (fail.length) {
   console.error(`Network assessments: ${fail.length} problem${fail.length === 1 ? "" : "s"}:\n`);
   for (const f of fail) console.error(`  ${f}`);
   process.exit(1);
 }
-console.log(`Network assessments: ${count} checks pass. The log reader matches parse_iperf.py, the Pi does only the portal's seven actions, and the report says only what was measured.`);
+console.log(`Network assessments: ${count} checks pass. The log reader matches parse_iperf.py, the Pi does only the portal's nine actions, the report says only what was measured, and the broadband evidence blames the provider only for what the router answered through.`);

@@ -4,7 +4,7 @@
  * The Pis spend three days at a time inside customers' homes, on the
  * customer's own network. Whoever can queue an instruction can make a Pi do
  * something there, and the CRM sits behind a one-letter password. So the Pi
- * runs only the seven actions below, each with fixed programs and fixed
+ * runs only the nine actions below, each with fixed programs and fixed
  * arguments, and the only values that come from the portal are checked twice:
  * here, before anything is queued, and again on the Pi
  * (scripts/network-pi/agent.py), which also refuses any action it does not
@@ -38,18 +38,32 @@ export const PI_ACTIONS = {
   collect: { ttlMinutes: 60 * 24, label: "Collect the logs" },
   /** Delete archived logs on the Pi whose exact copy (by SHA-256) the portal holds. */
   clear_logs: { ttlMinutes: 60 * 24 * 7, label: "Clear the Pi's copy" },
+  /** The broadband evidence test, on the Pi at the router: pings every minute, a speed test every so often, into broadband.csv. */
+  start_broadband: { ttlMinutes: 30, label: "Start the broadband test" },
+  /** Send broadband.csv to the portal. "final" stops the test and files the log in the archive first. */
+  collect_broadband: { ttlMinutes: 60 * 24, label: "Collect the broadband log" },
 } as const;
 
 export type PiAction = keyof typeof PI_ACTIONS;
 
 export const PI_ACTION_NAMES = Object.keys(PI_ACTIONS) as PiAction[];
 
+/**
+ * What the Pi at the router may be asked. Everything else is the node Pi's.
+ * The broadband test runs on whichever Pi is wired into the router, and the
+ * archive it leaves there is cleared the same way as the node's.
+ */
+export const ANY_PI_ACTIONS: readonly PiAction[] = ["start_broadband", "collect_broadband", "clear_logs"];
+
+/** How often the broadband test runs a speed test, in minutes; 0 for never. About 140 MB a test. */
+export const SPEED_EVERY = [0, 30, 60, 180] as const;
+
 export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** An archive folder on the Pi: the moment it was filed, and the first eight of the assessment id. */
 export const ARCHIVE_DIR_RE = /^\d{8}-\d{6}(?:-[0-9a-f]{8})?$/;
 
-export const LOG_NAMES = ["iperf.log", "devices.log"] as const;
+export const LOG_NAMES = ["iperf.log", "devices.log", "broadband.csv"] as const;
 
 /** A device name as devicewatch.sh can write it: no pipe, no line break, no control characters. */
 export function cleanDeviceName(raw: unknown): string {
@@ -87,6 +101,8 @@ export type ArgsFor = {
   stop_watch: { assessment: string };
   collect: { assessment: string; final: boolean };
   clear_logs: { assessment: string; files: { dir: string; name: string; sha256: string }[] };
+  start_broadband: { assessment: string; speed_every: number };
+  collect_broadband: { assessment: string; final: boolean };
 };
 
 export type CheckedArgs<A extends PiAction> = { ok: true; args: ArgsFor[A] } | { ok: false; why: string };
@@ -146,6 +162,15 @@ export function checkArgs<A extends PiAction>(action: A, raw: unknown): CheckedA
       }
       return { ok: true, args: { assessment, files } as ArgsFor[A] };
     }
+    case "start_broadband": {
+      if (!assessment) return { ok: false, why: "No assessment to start the broadband test for." };
+      const every = a.speed_every == null ? 60 : Number(a.speed_every);
+      if (!(SPEED_EVERY as readonly number[]).includes(every)) return { ok: false, why: "A speed test runs every 30, 60 or 180 minutes, or not at all." };
+      return { ok: true, args: { assessment, speed_every: every } as ArgsFor[A] };
+    }
+    case "collect_broadband":
+      if (!assessment) return { ok: false, why: "No assessment to collect the broadband log for." };
+      return { ok: true, args: { assessment, final: a.final === true } as ArgsFor[A] };
     default:
       return { ok: false, why: "That is not something a Pi can be asked to do." };
   }

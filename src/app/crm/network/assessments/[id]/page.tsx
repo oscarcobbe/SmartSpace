@@ -13,13 +13,14 @@ import { clearable, parsedLogs, pending, readings } from "@/lib/network/flow";
 import { reportFor, renderReport, htmlHash } from "@/lib/network/report";
 import { driveConfigured, driveAccount, folderUrl, docUrl } from "@/lib/network/drive";
 import { UUID_RE } from "@/lib/network/pi-protocol";
+import { evidenceFor, lastBroadbandStart } from "@/lib/network/evidence";
 import { PageHeader, Panel, Note, Pill } from "../../../ui";
 import { ActionForm, SubmitButton } from "../../../action-form";
 import SectionForm, { type Reading, type SectionButton } from "../section-form";
 import Live from "../live";
 import { BackTo, PiStrip, CheckPanel, LogsPanel, TrialStatus, Waiting, Failures, History, Versions, online } from "../parts";
 import { inputValue, when, secondsSince, STAGE_TONE } from "../format";
-import { sectionAction, saveCustomer, makeFolder, choosePis, setStage, approveReport } from "../actions";
+import { sectionAction, saveCustomer, makeFolder, choosePis, setStage, approveReport, broadbandAction } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +50,7 @@ function SectionPanel({ section, capture, children }: { section: Section; captur
 
 const STEPS = [
   { href: "#customer", label: "Booking" },
+  { href: "#broadband", label: "Broadband" },
   { href: "#line", label: "Line" },
   { href: "#sockets", label: "Sockets" },
   { href: "#rooms", label: "Rooms" },
@@ -77,13 +79,15 @@ export default async function AssessmentPage({ params }: { params: { id: string 
   const live = pis.filter((p) => !p.revoked_at);
   const node: Pi | null = live.find((p) => p.id === a.node_pi_id) ?? (live.filter((p) => p.role === "node").length === 1 ? live.find((p) => p.role === "node")! : null);
   const server: Pi | null = live.find((p) => p.id === a.server_pi_id) ?? (live.filter((p) => p.role === "server").length === 1 ? live.find((p) => p.role === "server")! : null);
+  const bbStart = lastBroadbandStart(commands);
+  const bbPi: Pi | null = bbStart ? live.find((p) => p.id === bbStart.pi_id) ?? null : null;
 
   /* While the assessment is being worked, ask its Pis to call in every few
      seconds, so a button pressed on site is answered in seconds, not a minute. */
   const active = ["booked", "visit", "trial", "collected"].includes(a.stage);
   const soon = Date.now() + 5 * 60_000;
-  if (active && [node, server].some((p) => p && (!p.fast_until || Date.parse(p.fast_until) < soon))) {
-    await hurryPis([node?.id, server?.id]).catch(() => undefined);
+  if (active && [node, server, bbPi].some((p) => p && (!p.fast_until || Date.parse(p.fast_until) < soon))) {
+    await hurryPis([node?.id, server?.id, bbPi?.id]).catch(() => undefined);
   }
 
   const waiting = pending(commands);
@@ -113,6 +117,10 @@ export default async function AssessmentPage({ params }: { params: { id: string 
   const html = renderReport(report.R);
   const hash = htmlHash(html);
   const toClear = await clearable(a.id, node);
+  const bbToClear = bbPi ? (await clearable(a.id, bbPi)).filter((f) => f.name === "broadband.csv") : [];
+  const bbRunning = !!bbPi && bbPi.status?.bb_job === a.id;
+  const evidence = evidenceFor(a, logs.broadband, commands);
+  const bbCopies = copies.filter((x) => x.kind === "broadband");
 
   const c = a.capture ?? {};
   const lineSpeed = numberOf(c, "line", "down");
@@ -134,7 +142,7 @@ export default async function AssessmentPage({ params }: { params: { id: string 
   const noNode = node ? undefined : "No node Pi is chosen for this assessment.";
   const started = !!a.trial_started_at;
   const stageLabel = STAGES.find((s) => s.value === a.stage)?.label ?? a.stage;
-  const refresh = waiting.length ? 3 : a.stage === "trial" ? 60 : null;
+  const refresh = waiting.length ? 3 : a.stage === "trial" || bbRunning ? 60 : null;
 
   const trialButtons: SectionButton[] = [
     { intent: "baseline", label: baseline ? "Measure the baseline again" : "Measure the baseline", disabled: noNode },
@@ -255,6 +263,83 @@ export default async function AssessmentPage({ params }: { params: { id: string 
             <SubmitButton pendingLabel="Saving" className={plain}>Save</SubmitButton>
           </ActionForm>
         </Panel>
+
+        <div id="broadband" className="scroll-mt-44 lg:scroll-mt-28">
+          <Panel title="Broadband evidence test" aside={bbRunning ? <Pill className="bg-sky-100 text-sky-900">Running</Pill> : evidence ? <Pill className="bg-slate-100 text-slate-800">{bbCopies.some((x) => x.final) ? "Collected" : "Copy held"}</Pill> : undefined}>
+            <div className="space-y-4 px-4 py-4 text-sm">
+              <p className="text-slate-700">
+                For the broadband evidence service, or to rule the broadband in or out during an assessment. One Pi, wired straight into the customer&apos;s router, pings the internet and the router every minute for as long as it is left there (usually 7 days) and runs a speed test as often as chosen below. It carries on by itself after a power cut. Loss to the internet while the router answers is the broadband; loss to both is the house side.
+              </p>
+              {bbStart && (
+                <div className="rounded-lg bg-slate-50 px-4 py-3 text-slate-700">
+                  {bbRunning ? (
+                    <p><span className="font-semibold text-slate-900">Running on {bbPi!.name}</span> since {when(bbPi!.status?.bb_started ?? bbStart.finished_at)}: {bbPi!.status?.bb_minutes ?? 0} minutes logged{bbPi!.status?.bb_last ? `, the last at ${bbPi!.status.bb_last.slice(5, 16)}` : ""}.</p>
+                  ) : (
+                    <p>Started on {bbPi?.name ?? "a Pi that is now switched off"} {when(bbStart.finished_at)}. {bbCopies.some((x) => x.final) ? "The log has been collected and the test is over." : "The Pi is not running it now."}</p>
+                  )}
+                </div>
+              )}
+              <ActionForm action={broadbandAction} className="flex flex-wrap items-end gap-3">
+                <input type="hidden" name="id" value={a.id} />
+                <input type="hidden" name="intent" value="start" />
+                <div className="min-w-[180px] flex-1">
+                  <label htmlFor="bb-pi" className="mb-1.5 block text-sm font-medium text-slate-700">The Pi at the router</label>
+                  <select id="bb-pi" name="pi" defaultValue={bbPi?.id ?? server?.id ?? ""} className={input}>
+                    <option value="">Choose</option>
+                    {live.map((p) => <option key={p.id} value={p.id}>{p.name}{online(p) ? "" : " (offline)"}</option>)}
+                  </select>
+                </div>
+                <div className="min-w-[220px] flex-1">
+                  <label htmlFor="bb-every" className="mb-1.5 block text-sm font-medium text-slate-700">Speed test</label>
+                  <select id="bb-every" name="speed_every" defaultValue="60" className={input}>
+                    <option value="60">Every hour (about 3.4 GB a day)</option>
+                    <option value="30">Every 30 minutes (about 7 GB a day)</option>
+                    <option value="180">Every 3 hours (about 1.1 GB a day)</option>
+                    <option value="0">None, pings only (a few MB a day)</option>
+                  </select>
+                </div>
+                <SubmitButton pendingLabel="Sending" className={primary}>{bbStart ? "Start the test again" : "Start the broadband test"}</SubmitButton>
+                <p className="basis-full text-xs text-slate-500">Ask about a data allowance first: a 5G or mobile plan may have one. {bbStart ? "Starting again files the log so far away on the Pi and begins a fresh one." : "The first minute's result shows in the history within a few seconds."}</p>
+              </ActionForm>
+              <div className="flex flex-wrap gap-2 border-t border-slate-200 pt-4">
+                {([
+                  { intent: "look", label: "Look at the log now", tone: plain, off: !bbRunning ? "Only while the test is running." : undefined },
+                  { intent: "collect", label: "Stop and collect the log", tone: primary, off: !bbRunning ? "The test is not running." : undefined },
+                  { intent: "file", label: "File in Drive", tone: plain, off: !a.drive?.dataId ? "Make the Drive folder first." : !bbCopies.length ? "No log yet." : undefined },
+                  { intent: "clear", label: "Clear the Pi's copy", tone: plain, off: !bbToClear.length ? "The Pi holds no broadband log the portal has an exact copy of." : undefined },
+                ] as const).map((b) => b.off ? (
+                  <button key={b.intent} type="button" disabled title={b.off} className={`${b.tone} cursor-not-allowed opacity-50`}>{b.label}</button>
+                ) : (
+                  <ActionForm key={b.intent} action={broadbandAction} className="inline-flex flex-col">
+                    <input type="hidden" name="id" value={a.id} />
+                    <input type="hidden" name="intent" value={b.intent} />
+                    <SubmitButton pendingLabel="Sending" className={b.tone}>{b.label}</SubmitButton>
+                  </ActionForm>
+                ))}
+              </div>
+              {evidence ? (
+                <div className="space-y-3">
+                  <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+                    <div><dt className="text-xs text-slate-500">Measured</dt><dd className="font-semibold tabular-nums">{evidence.figures.internet.minutes} minutes over {Math.round(evidence.figures.spanHours)} hours</dd></div>
+                    <div><dt className="text-xs text-slate-500">Loss to the internet</dt><dd className="font-semibold tabular-nums">{evidence.figures.internet.lossPct}%{evidence.figures.router ? `, router ${evidence.figures.router.lossPct}%` : ""}</dd></div>
+                    <div><dt className="text-xs text-slate-500">Drops</dt><dd className="font-semibold tabular-nums">{evidence.figures.outages.length} ({evidence.figures.broadbandOutageMinutes + evidence.figures.houseOutageMinutes} min)</dd></div>
+                    <div><dt className="text-xs text-slate-500">Minutes a call would stutter</dt><dd className="font-semibold tabular-nums">{evidence.figures.callTroubleMinutes}</dd></div>
+                    <div><dt className="text-xs text-slate-500">Download, typical</dt><dd className="font-semibold tabular-nums">{evidence.figures.down ? `${evidence.figures.down.median} Mbps` : "no speed tests"}</dd></div>
+                    <div><dt className="text-xs text-slate-500">Jitter, typical</dt><dd className="font-semibold tabular-nums">{evidence.figures.internet.jitterMedian ?? "-"} ms</dd></div>
+                    <div><dt className="text-xs text-slate-500">Lag under load</dt><dd className="font-semibold tabular-nums">{evidence.figures.loadedLatencyMedian ?? "-"} ms, quiet {evidence.figures.idleLatencyMedian ?? "-"} ms</dd></div>
+                    <div><dt className="text-xs text-slate-500">Points at</dt><dd className="font-semibold">{{ broadband: "the broadband", house: "the house side", both: "both", clean: "nothing: clean", none: "too little data" }[evidence.figures.finding]}</dd></div>
+                  </dl>
+                  {evidence.figures.spanHours < 24 * 6 && <p className="text-amber-800">The log covers {Math.round(evidence.figures.spanHours)} hours so far, not a full week.</p>}
+                  <a href={`/crm/network/assessments/${a.id}/broadband`} target="_blank" rel="noopener" className={plain}>
+                    Open the evidence report <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                  </a>
+                </div>
+              ) : bbStart ? (
+                <p className="text-slate-600">No log here yet. Look at the log while it runs, or collect it at the end.</p>
+              ) : null}
+            </div>
+          </Panel>
+        </div>
 
         <div id="booking" className="scroll-mt-44 lg:scroll-mt-28">{form("booking")}</div>
         <div id="complaint" className="scroll-mt-44 lg:scroll-mt-28">{form("customer")}</div>

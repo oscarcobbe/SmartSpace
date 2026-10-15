@@ -7,7 +7,7 @@
  */
 import { createHash, randomBytes } from "crypto";
 import { crm, unlessWrongKey } from "@/lib/crm/db";
-import { PI_ACTIONS, checkArgs, type PiAction } from "./pi-protocol";
+import { ANY_PI_ACTIONS, PI_ACTIONS, checkArgs, type PiAction } from "./pi-protocol";
 import type { Capture, SectionValues } from "./capture";
 
 export type Stage = "booked" | "visit" | "trial" | "collected" | "reported" | "closed" | "cancelled";
@@ -99,6 +99,14 @@ export interface PiStatus {
   job?: string | null;
   archive?: { dir: string; files: { name: string; bytes: number; sha256: string }[] }[];
   today?: string;
+  /** The broadband test: the assessment it is for, when it started, minutes between speed tests. */
+  bb_job?: string | null;
+  bb_started?: string | null;
+  bb_every?: number | null;
+  /** broadband.csv: its size, how many minutes of pings it holds, the last one's local time. */
+  bb_bytes?: number;
+  bb_minutes?: number;
+  bb_last?: string | null;
 }
 
 export interface Command {
@@ -118,12 +126,14 @@ export interface Command {
   finished_at: string | null;
 }
 
+export type LogKind = "iperf" | "devices" | "broadband";
+
 export interface LogCopy {
   id: string;
   assessment_id: string;
   pi_id: string | null;
   command_id: string | null;
-  kind: "iperf" | "devices";
+  kind: LogKind;
   final: boolean;
   source: string;
   bytes: number;
@@ -283,7 +293,7 @@ export async function queueCommand<A extends PiAction>(input: {
   pi: Pi; assessmentId: string | null; action: A; args: unknown; purpose?: string | null; by: string;
 }): Promise<Command> {
   if (input.pi.revoked_at) throw new Error(`${input.pi.name} is switched off`);
-  if (input.pi.role !== "node") throw new Error(`${input.pi.name} is the Pi at the router; instructions go to the node Pi`);
+  if (input.pi.role !== "node" && !ANY_PI_ACTIONS.includes(input.action)) throw new Error(`${input.pi.name} is the Pi at the router; instructions go to the node Pi`);
   const checked = checkArgs(input.action, input.args);
   if (!checked.ok) throw new Error(checked.why);
   const ttl = PI_ACTIONS[input.action].ttlMinutes;
@@ -381,18 +391,20 @@ export async function logContent(id: string): Promise<string | null> {
   return rows?.[0]?.content ?? null;
 }
 
+type HeldLog = (LogCopy & { content: string }) | null;
+
 /** The newest copy of each log for an assessment, final copies first. */
-export async function bestLogs(assessmentId: string): Promise<{ iperf: (LogCopy & { content: string }) | null; devices: (LogCopy & { content: string }) | null }> {
+export async function bestLogs(assessmentId: string): Promise<{ iperf: HeldLog; devices: HeldLog; broadband: HeldLog }> {
   const list = await logsFor(assessmentId);
-  const pick = (kind: "iperf" | "devices") =>
+  const pick = (kind: LogKind) =>
     list.filter((l) => l.kind === kind).sort((a, b) => Number(b.final) - Number(a.final) || b.received_at.localeCompare(a.received_at))[0] ?? null;
   const load = async (l: LogCopy | null) => (l ? { ...l, content: (await logContent(l.id)) ?? "" } : null);
-  const [iperf, devices] = await Promise.all([load(pick("iperf")), load(pick("devices"))]);
-  return { iperf, devices };
+  const [iperf, devices, broadband] = await Promise.all([load(pick("iperf")), load(pick("devices")), load(pick("broadband"))]);
+  return { iperf, devices, broadband };
 }
 
 export async function storeLog(row: {
-  assessment_id: string; pi_id: string; command_id: string; kind: "iperf" | "devices"; final: boolean;
+  assessment_id: string; pi_id: string; command_id: string; kind: LogKind; final: boolean;
   source: string; content: string; bytes: number; sha256: string;
 }): Promise<{ id: string; duplicate: boolean }> {
   const existing = await crm<{ id: string; final: boolean }[]>(
