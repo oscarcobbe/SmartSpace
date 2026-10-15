@@ -279,7 +279,7 @@ export default function InstallationOnlyPage() {
                   <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 text-sm text-amber-900">
                     <p className="font-semibold mb-1">No fixed price for this combination yet</p>
                     <p className="mb-3">
-                      Jobs at this size and configuration are quoted individually after a quick chat about access, wiring routes, and Wi-Fi coverage. Give us a call or drop us a message and we&apos;ll come back with a flat price the same day.
+                      Jobs at this size and configuration are quoted individually after a quick chat about access, wiring routes, and Wi-Fi coverage. Give us a call or drop us a message and we&apos;ll come back with a flat price within 24 hours, often less.
                     </p>
                     <div className="flex flex-wrap gap-2">
                       <a

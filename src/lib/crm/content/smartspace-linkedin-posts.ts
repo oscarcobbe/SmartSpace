@@ -101,7 +101,7 @@ export const SMARTSPACE_LINKEDIN_POSTS: LinkedInPost[] = [
     "n": "07",
     "title": "Free home consultation",
     "hook": "Doorbell, floodlight, two cameras, or all of them? It is hard to tell from a product page which camera goes where on your house.",
-    "caption": "Doorbell, floodlight, two cameras, or all of them? It is hard to tell from a product page which camera goes where on your house.\n\nBook a free home consultation and we walk the property with you. We look at the best places for cameras and doorbells, check the Wi-Fi coverage and the existing wiring, and send you a written quote the same day.\n\nComplimentary, with no obligation and no card required. Dublin and all of Leinster.\n\nhttps://smart-space.ie/services/free-consultation",
+    "caption": "Doorbell, floodlight, two cameras, or all of them? It is hard to tell from a product page which camera goes where on your house.\n\nBook a free home consultation and we walk the property with you. We look at the best places for cameras and doorbells, check the Wi-Fi coverage and the existing wiring, and send you a written quote within 24 hours, often less.\n\nComplimentary, with no obligation and no card required. Dublin and all of Leinster.\n\nhttps://smart-space.ie/services/free-consultation",
     "tags": [
       "#HomeSecurity",
       "#Ring",
@@ -266,7 +266,7 @@ export const SMARTSPACE_LINKEDIN_POSTS: LinkedInPost[] = [
     "n": "17",
     "title": "Free consultation film",
     "hook": "Doorbell, floodlight, two cameras, or all of them? It is hard to tell from a product page which camera goes where on your house.",
-    "caption": "Doorbell, floodlight, two cameras, or all of them? It is hard to tell from a product page which camera goes where on your house.\n\nBook a free home consultation on smart-space.ie: your details, a date and a time, and no card needed. We visit, walk the property with you, look at the best places for cameras and doorbells, check the Wi-Fi coverage and the existing wiring, and send you a written quote the same day.\n\nComplimentary, with no obligation. Dublin and all of Leinster.\nhttps://smart-space.ie/services/free-consultation\n\nThe details typed in the film are samples.",
+    "caption": "Doorbell, floodlight, two cameras, or all of them? It is hard to tell from a product page which camera goes where on your house.\n\nBook a free home consultation on smart-space.ie: your details, a date and a time, and no card needed. We visit, walk the property with you, look at the best places for cameras and doorbells, check the Wi-Fi coverage and the existing wiring, and send you a written quote within 24 hours, often less.\n\nComplimentary, with no obligation. Dublin and all of Leinster.\nhttps://smart-space.ie/services/free-consultation\n\nThe details typed in the film are samples.",
     "tags": [
       "#HomeSecurity",
       "#Ring",

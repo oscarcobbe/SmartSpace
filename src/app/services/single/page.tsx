@@ -140,8 +140,8 @@ export default function SingleDevicePage() {
                 free home survey
               </Link>{" "}
               is the right next step. We walk the property with you, identify the
-              blind spots, check Wi-Fi coverage, and send a written quote the
-              same day. If you want to compare full bundles, see the{" "}
+              blind spots, check Wi-Fi coverage, and send a written quote within
+              24 hours, often less. If you want to compare full bundles, see the{" "}
               <Link href="/services/bundles/driveway" className="text-brand-700 underline hover:text-brand-800">
                 Driveway Bundle
               </Link>{" "}
