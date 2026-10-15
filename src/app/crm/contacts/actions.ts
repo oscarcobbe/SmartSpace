@@ -10,8 +10,9 @@
 import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/crm/session";
 import { crm, upsertContact, logActivity, type Site } from "@/lib/crm/db";
-import { STATUSES, type LeadStatus } from "@/lib/crm/contacts";
-import { FOUND_US, STATUS_LABEL, LIGHTS, LIGHT_LABEL, lightOf, type LeadLight } from "@/lib/crm/labels";
+import { type LeadStatus } from "@/lib/crm/contacts";
+import { FOUND_US, STATUS_LABEL, type LeadLight } from "@/lib/crm/labels";
+import { applyLeadMark, isLight, isStatus } from "@/lib/crm/lead-mark";
 import { done, failed, writeFailed, type ActionState } from "../action-state";
 import { getPerson } from "@/lib/crm/people";
 import { createPaymentLink } from "@/lib/crm/payment-link";
@@ -79,95 +80,45 @@ export async function saveNote(_prev: ActionState, formData: FormData): Promise<
   }
 }
 
-export async function setLeadStatus(_prev: ActionState, formData: FormData): Promise<ActionState> {
+/*
+ * Everything Nigel says about one enquiry, in one Save: where it stands, how
+ * they found us, the traffic light and its note.
+ *
+ * These were two forms with a Save each, and choosing a light then pressing
+ * the status form's Save dropped the light without a word. The write itself is
+ * src/lib/crm/lead-mark.ts, shared with the page the enquiry email links to,
+ * so both doors record a mark the same way.
+ */
+export async function saveLead(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const { site, email } = requireSession();
   const leadId = String(formData.get("leadId") ?? "");
   const contactId = String(formData.get("contactId") ?? "");
-  const status = String(formData.get("status") ?? "") as LeadStatus;
-  if (!UUID.test(leadId) || !STATUSES.includes(status)) return failed("That is not a status this CRM knows.");
-  /* How they found us is saved with the status, from the same row, because
-     that is when Nigel knows it: on the call. Checked against the one list, so
-     a hand-made request cannot write a value the report does not know. */
+  const status = String(formData.get("status") ?? "");
   const found = String(formData.get("found_us") ?? "");
+  const light = String(formData.get("light") ?? "");
+  if (!UUID.test(leadId)) return failed("That enquiry could not be found.");
+  if (status && !isStatus(status)) return failed("That is not a status this CRM knows.");
+  if (light && light !== "none" && !isLight(light)) return failed("Choose green, amber or red.");
   try {
-    const [before] = (await crm<{ status: string; custom: Record<string, unknown> | null; contact_id: string | null; source_detail: string | null }[]>(
-      `crm_leads?site=eq.${site}&id=eq.${leadId}&select=status,custom,contact_id,source_detail&limit=1`,
-    )) ?? [];
-    if (!before) return failed("This enquiry could not be found, so nothing was changed.");
-    const custom = { ...(before.custom ?? {}) };
-    const foundChanged = !!FOUND_US[found] && custom.found_us !== found;
-    if (foundChanged) custom.found_us = found;
-    const statusChanged = before.status !== status;
-    if (!statusChanged && !foundChanged) return done("Nothing to change.");
-
-    await crm(`crm_leads?site=eq.${site}&id=eq.${leadId}`, {
-      method: "PATCH",
-      prefer: "return=minimal",
-      body: JSON.stringify(foundChanged ? { status, custom } : { status }),
-    });
-    const said = [
-      statusChanged ? `Moved to ${STATUS_LABEL[status] ?? status}` : null,
-      foundChanged ? `Found us: ${FOUND_US[found]}` : null,
-    ].filter(Boolean).join(". ");
-    const logged = await logActivity(site, {
-      lead_id: leadId, contact_id: UUID.test(contactId) ? contactId : null,
-      kind: "status", summary: said, actor: email, detail: foundChanged ? { found_us: found } : {},
-    });
-    const review = statusChanged && status === "installed" && site === "smart-space"
-      ? await reviewOnInstalled(site, leadId, before.contact_id, before.source_detail)
+    const r = await applyLeadMark(site, leadId, {
+      status: status ? (status as LeadStatus) : null,
+      foundUs: FOUND_US[found] ? found : null,
+      light: light === "none" ? "none" : light ? (light as LeadLight) : null,
+      note: String(formData.get("light_note") ?? ""),
+    }, { actor: email, contactId: UUID.test(contactId) ? contactId : null });
+    if (!r.ok) return failed(r.message);
+    if (!r.changed) return done("Nothing to change.");
+    const [lead] = r.status === "installed" && site === "smart-space"
+      ? (await crm<{ contact_id: string | null; source_detail: string | null }[]>(
+          `crm_leads?site=eq.${site}&id=eq.${leadId}&select=contact_id,source_detail&limit=1`,
+        )) ?? []
+      : [];
+    const review = lead && r.said.includes(`Moved to ${STATUS_LABEL.installed}`)
+      ? await reviewOnInstalled(site, leadId, lead.contact_id, lead.source_detail)
       : "";
-    return done(logged ? `Saved. ${said}.${review}` : NOT_IN_HISTORY(`Saved. ${said}${review}`));
+    return done(r.logged ? `Saved. ${r.said}.${review}` : NOT_IN_HISTORY(`Saved. ${r.said}${review}`));
   } catch (err) {
     return writeFailed("The change", err);
-  }
-}
-
-/*
- * Nigel's traffic light on an enquiry, with a note if he wants one. Kept on
- * the lead (custom.lead_light) and written to the history with the note, so
- * the list, the contact page and any later upload to Google read one value.
- */
-export async function setLeadLight(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  const { site, email } = requireSession();
-  const leadId = String(formData.get("leadId") ?? "");
-  const contactId = String(formData.get("contactId") ?? "");
-  const light = String(formData.get("light") ?? "");
-  const note = String(formData.get("light_note") ?? "").trim().slice(0, 2000);
-  if (!UUID.test(leadId)) return failed("That enquiry could not be found.");
-  if (light !== "none" && !LIGHTS.includes(light as LeadLight)) return failed("Choose green, amber or red.");
-  try {
-    const [before] = (await crm<{ custom: Record<string, unknown> | null }[]>(
-      `crm_leads?site=eq.${site}&id=eq.${leadId}&select=custom&limit=1`,
-    )) ?? [];
-    if (!before) return failed("This enquiry could not be found, so nothing was changed.");
-    const custom = { ...(before.custom ?? {}) };
-    const was = lightOf(custom);
-    const now = light === "none" ? null : (light as LeadLight);
-    if (was === now && !note) return done("Nothing to change.");
-    if (now) {
-      custom.lead_light = now;
-      custom.lead_light_at = new Date().toISOString();
-      custom.lead_light_by = email;
-    } else {
-      delete custom.lead_light;
-      delete custom.lead_light_at;
-      delete custom.lead_light_by;
-    }
-    if (note) custom.lead_light_note = note;
-    await crm(`crm_leads?site=eq.${site}&id=eq.${leadId}`, {
-      method: "PATCH",
-      prefer: "return=minimal",
-      body: JSON.stringify({ custom }),
-    });
-    const said = now ? `Marked ${now}: ${LIGHT_LABEL[now]}` : "Traffic light cleared";
-    const logged = await logActivity(site, {
-      lead_id: leadId, contact_id: UUID.test(contactId) ? contactId : null,
-      kind: "light", summary: note ? `${said}. ${note}` : said, actor: email,
-      detail: { light: now, note: note || null },
-    });
-    return done(logged ? `Saved. ${said}.` : NOT_IN_HISTORY(`Saved. ${said}`));
-  } catch (err) {
-    return writeFailed("The traffic light", err);
   }
 }
 

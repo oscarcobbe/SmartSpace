@@ -6,6 +6,7 @@ import LoginForm from "./login-form";
 import { PageHeader } from "./ui";
 import { NeedsYou, LatestIn, MoneyThisMonth, AdsThisMonth, RecentActivity, PanelSkeleton, orderLogTitle } from "./overview-panels";
 import { greeting, slowNote, todayLine } from "./loading-copy";
+import { ToMark } from "./to-mark";
 
 export const dynamic = "force-dynamic";
 /* SmartCare Living's enquiry sheet can take most of a minute to wake. The
@@ -34,6 +35,12 @@ export default function CrmHome() {
             own, so the fastest is on screen while Google Ads is still
             answering, instead of the page waiting for the slowest. */}
         <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
+          {/* First, because it is the one thing here that waits on Nigel. */}
+          <div className="lg:col-span-2">
+            <Suspense fallback={<PanelSkeleton title="To mark" rows={3} />}>
+              <ToMark site={session.site} />
+            </Suspense>
+          </div>
           <Suspense fallback={<PanelSkeleton title="Itinerary" rows={4} slow={slow} />}>
             <NeedsYou site={session.site} />
           </Suspense>

@@ -10,6 +10,7 @@ import { monitorBcc } from "@/lib/business-constants";
 import { afterResponse, AFTER_CEILING, type AfterResult } from "@/lib/after-response";
 import { foundUsDetailFrom, foundUsFrom, foundUsLine, notesWithFoundUs } from "@/lib/found-us";
 import { enquiryReceived, SPECIALISTS } from "@/lib/email/customer";
+import { newMarkRef, markButtonsHtml, markButtonsText } from "@/lib/crm/mark-link";
 
 
 // POST routes are inherently dynamic but explicit is better, without
@@ -39,6 +40,8 @@ function escapeHtml(text: string) {
 
 export async function POST(request: Request) {
   try {
+    /* This enquiry's reference for the mark buttons in Nigel's email (src/lib/crm/mark-link.ts). */
+    const markRef = newMarkRef();
     const apiKey = process.env.RESEND_API_KEY;
     const from = process.env.RESEND_FROM_EMAIL;
     const to = process.env.CONTACT_TO_EMAIL ?? "info@smart-space.ie";
@@ -150,6 +153,7 @@ export async function POST(request: Request) {
         `Topic: ${subjectLabel}`,
         "",
         message.trim(),
+        markButtonsText("smart-space", markRef),
       ].join("\n"),
       html: `
         <h2>New message from smart-space.ie</h2>
@@ -160,6 +164,7 @@ export async function POST(request: Request) {
         <p><strong>Found us:</strong> ${escapeHtml(foundUsLine(foundUs, foundUsDetail))}</p>
         <hr />
         <pre style="font-family:system-ui,sans-serif;white-space:pre-wrap;">${escapeHtml(message.trim())}</pre>
+        ${markButtonsHtml("smart-space", markRef)}
       `,
     });
 
@@ -453,7 +458,7 @@ export async function POST(request: Request) {
         referrer: attribution?.referrer ?? null,
         tags: ["contact-form"],
         custom: {
-          conversion_id: conversionId, subject_key: subjectKey, found_us: foundUs || null, found_us_detail: foundUsDetail || null,
+          conversion_id: conversionId, mark_ref: markRef, subject_key: subjectKey, found_us: foundUs || null, found_us_detail: foundUsDetail || null,
           ...chatGptAdOf(browser, openAiOk),
         },
       }),

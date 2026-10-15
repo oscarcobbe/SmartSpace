@@ -11,6 +11,7 @@ import { sendSiteAlert } from "@/lib/site-alerts";
 import { alertTo, monitorBcc } from "@/lib/business-constants";
 import { afterResponse, AFTER_CEILING } from "@/lib/after-response";
 import { sendConsultationConfirmation } from "@/lib/email/send-customer";
+import { newMarkRef, markButtonsHtml, markButtonsText } from "@/lib/crm/mark-link";
 
 
 // POST routes are inherently dynamic but explicit is better, without
@@ -63,6 +64,8 @@ interface BookingBody {
 
 export async function POST(request: Request) {
   try {
+    /* This enquiry's reference for the mark buttons in Nigel's email (src/lib/crm/mark-link.ts). */
+    const markRef = newMarkRef();
     // Parse the body in its own try-block. Bots, scanners and stray curls
     // POST malformed JSON constantly, those should 400 quietly rather than
     // surface as 500s via sendSiteAlert at the bottom of the route.
@@ -231,6 +234,7 @@ export async function POST(request: Request) {
             `Time: ${slotLabel}`,
             "",
             message?.trim() ? `Notes from customer:\n${message.trim()}` : "",
+            markButtonsText("smart-space", markRef),
           ]
             .filter(Boolean)
             .join("\n"),
@@ -248,6 +252,7 @@ export async function POST(request: Request) {
                 ? `<hr /><p><strong>Notes from customer:</strong></p><pre style="font-family:system-ui,sans-serif;white-space:pre-wrap;">${escapeHtml(message.trim())}</pre>`
                 : ""
             }
+            ${markButtonsHtml("smart-space", markRef)}
           `,
         });
       } catch (err) {
@@ -334,6 +339,7 @@ export async function POST(request: Request) {
       tags: ["site-visit-booking"],
       custom: {
         conversion_id: conversionId,
+        mark_ref: markRef,
         booking_date: date,
         booking_slot: timeSlot,
         booking_kind: "consultation",

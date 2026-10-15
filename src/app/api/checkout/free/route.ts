@@ -10,6 +10,7 @@ import { alertTo, monitorBcc } from "@/lib/business-constants";
 import { afterResponse, AFTER_CEILING } from "@/lib/after-response";
 import { foundUsDetailFrom, foundUsFrom, foundUsLine, notesWithFoundUs } from "@/lib/found-us";
 import { sendConsultationConfirmation } from "@/lib/email/send-customer";
+import { newMarkRef, markButtonsHtml, markButtonsText } from "@/lib/crm/mark-link";
 
 // POST routes are inherently dynamic but explicit is better, without
 // this, Next.js may try static optimization on a future major.
@@ -63,6 +64,8 @@ function escapeHtml(text: string) {
 
 export async function POST(request: Request) {
   try {
+    /* This enquiry's reference for the mark buttons in Nigel's email (src/lib/crm/mark-link.ts). */
+    const markRef = newMarkRef();
     // Parse JSON in its own try-block so bot/scanner traffic with malformed
     // bodies returns a quiet 400 rather than dropping into the outer catch
     // and being logged as a real checkout failure.
@@ -192,6 +195,7 @@ export async function POST(request: Request) {
             `Found us: ${foundUsLine(foundUs, foundUsDetail)}`,
             `Date: ${bookedItem.bookingLabel || bookedItem.bookingDate}`,
             `Time Slot: ${bookedItem.bookingSlot}`,
+            markButtonsText("smart-space", markRef),
           ].join("\n"),
           html: `
             <h2>New Free Consultation Booking</h2>
@@ -203,6 +207,7 @@ export async function POST(request: Request) {
             <hr />
             <p><strong>Date:</strong> ${escapeHtml(bookedItem.bookingLabel || bookedItem.bookingDate || "")}</p>
             <p><strong>Time Slot:</strong> ${escapeHtml(bookedItem.bookingSlot || "")}</p>
+            ${markButtonsHtml("smart-space", markRef)}
           `,
         });
         /* The booking is in Nigel's Calendly either way, so the visitor still
@@ -332,6 +337,7 @@ export async function POST(request: Request) {
         tags: ["free-consultation"],
         custom: {
           conversion_id: conversionId,
+          mark_ref: markRef,
           booking_date: bookedItem?.bookingDate || null,
           booking_slot: bookedItem?.bookingSlot || null,
           address: customer?.address || null,
