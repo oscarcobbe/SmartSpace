@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sample Monthly Network Report | Smart Space</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ================================================================
+   SMART SPACE REPORT STYLE
+   The smart-space.ie look on an A4 sheet: Plus Jakarta Sans, extrabold
+   headings, orange eyebrows and section numerals, one dark panel for
+   the verdict, and the Wi-Fi check's traffic-light colours for status.
+   Every colour is a token here; the charts read the same tokens.
+   ================================================================ */
+:root{
+  /* brand orange, from the site's tailwind brand scale */
+  --ss-orange:#F48222;         /* brand-500: rules and marks */
+  --ss-orange-strong:#D96D15;  /* brand-600: section numerals, upload line */
+  --ss-orange-text:#B55810;    /* brand-700: small orange text on white */
+  --ss-orange-line:#FACBA1;    /* brand-200: borders, the "what you pay for" bar */
+  --ss-orange-wash:#FEF4EB;    /* brand-50: tinted callouts */
+  /* warm neutrals, from globals.css */
+  --ss-ink:#26221E;
+  --ss-ink-soft:#5A524C;
+  --ss-ink-muted:#8A817A;
+  --ss-dark:#1C1A18;
+  --ss-cream-100:#F5F3EE;
+  --ss-cream-200:#EDEAE3;
+  --ss-paper:#FFFFFF;
+  --ss-on-dark:#FFFFFF;
+  --ss-on-dark-soft:#D6D0C9;
+  /* status: the traffic light's lamps, and darker shades for text */
+  --ss-good:#16A34A; --ss-good-text:#15803D; --ss-good-wash:#DCFCE7;
+  --ss-fair:#F5B400; --ss-fair-text:#B45309; --ss-fair-wash:#FEF3C7;
+  --ss-poor:#DC2626; --ss-poor-text:#B91C1C; --ss-poor-wash:#FEE2E2;
+  /* the desk the sheet sits on; the sheet itself stays paper white */
+  --ss-wash:#EDEAE3;
+  --ss-font:"Plus Jakarta Sans",Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ss-wash:#171513}}
+:root[data-theme="dark"]{--ss-wash:#171513}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  padding-block:10mm;
+  background:var(--ss-wash);
+  color:var(--ss-ink);
+  font-family:var(--ss-font);
+  font-size:10.6pt;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  font-feature-settings:"kern" 1,"liga" 1,"calt" 1;
+}
+.sheet{
+  background:var(--ss-paper);
+  max-width:210mm;
+  margin:0 auto;
+  padding:14mm 18mm 16mm;
+  border-radius:20px;
+  box-shadow:0 2px 4px rgba(38,34,30,.03),0 12px 24px rgba(38,34,30,.06),0 40px 80px -20px rgba(38,34,30,.12);
+}
+h1,h2,h3{color:var(--ss-ink);text-wrap:balance}
+h1{font-size:30pt;line-height:1.05;font-weight:800;letter-spacing:-.035em;margin:0 0 7mm}
+h2{font-size:16pt;line-height:1.2;font-weight:800;letter-spacing:-.03em;margin:0}
+h3{font-size:11pt;line-height:1.3;font-weight:800;letter-spacing:-.015em;margin:7mm 0 2mm}
+p{margin:0 0 3.4mm;max-width:74ch}
+strong{font-weight:700}
+.lede{font-size:12.6pt;line-height:1.55;font-weight:500;max-width:64ch}
+.soft{color:var(--ss-ink-soft)}
+.small{font-size:9.2pt}
+.kicker{font-size:8.2pt;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--ss-orange-text);margin:0 0 3mm}
+
+/* letterhead: the logo, the contact line, one orange rule */
+.letterhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:4mm 8mm;padding-bottom:5mm;border-bottom:3px solid var(--ss-orange)}
+.ss-logo{display:block;height:18mm;width:auto}
+.lh-contact{font-size:8.6pt;line-height:1.55;font-weight:500;color:var(--ss-ink-soft);text-align:right;font-variant-numeric:tabular-nums}
+.lh-contact b{display:block;color:var(--ss-ink);font-weight:700}
+
+/* cover */
+.cover{padding:10mm 0 9mm}
+.meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-flow:dense;gap:4mm 6mm;background:var(--ss-cream-100);border-radius:14px;padding:5mm 6mm;font-size:9.6pt;line-height:1.45}
+.meta div{min-width:0}
+.meta .wide{grid-column:span 2}
+.meta span{display:block;color:var(--ss-ink-soft);font-size:7.4pt;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:1mm}
+
+/* verdict: the one dark moment, like the site's dark surfaces */
+.verdict{background:var(--ss-dark);color:var(--ss-on-dark);border-radius:18px;padding:9mm 9mm 8mm;margin:0 0 13mm}
+.verdict h2{color:var(--ss-orange);font-size:8.2pt;font-weight:700;letter-spacing:.2em;text-transform:uppercase;margin:0 0 4mm}
+.verdict p{color:var(--ss-on-dark);font-size:16.5pt;line-height:1.32;font-weight:700;letter-spacing:-.02em;margin:0;max-width:52ch;text-wrap:pretty}
+.verdict .after{color:var(--ss-on-dark-soft);font-size:10.6pt;line-height:1.65;font-weight:400;margin-top:5mm;max-width:66ch}
+
+/* section head: an orange numeral, the title, a line saying how it was measured */
+section{margin:0 0 13mm}
+.shead{display:grid;grid-template-columns:10mm minmax(0,1fr);gap:0 4mm;align-items:baseline;border-top:1px solid var(--ss-cream-200);padding-top:5mm;margin-bottom:5mm}
+.shead .n{font-size:20pt;line-height:1;font-weight:800;letter-spacing:-.04em;color:var(--ss-orange-strong);font-variant-numeric:tabular-nums}
+.shead .gloss{font-size:9.3pt;line-height:1.5;color:var(--ss-ink-soft);margin:1.6mm 0 0;max-width:64ch}
+
+/* the client's words at collection */
+blockquote{margin:7mm 0 0;padding:6mm 7mm;background:var(--ss-cream-100);border-radius:16px;font-size:12pt;line-height:1.5;font-weight:500;max-width:none}
+blockquote cite{display:block;margin-top:2.5mm;font-size:8.6pt;font-style:normal;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ss-ink-soft)}
+
+/* tables */
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:4mm 0 5mm;font-size:9.8pt;font-variant-numeric:tabular-nums}
+th{text-align:left;font-size:7.4pt;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ss-ink-soft);border-bottom:1.5px solid var(--ss-ink);padding:0 3mm 2mm 0;white-space:nowrap}
+td{padding:2.2mm 3mm 2.2mm 0;border-bottom:1px solid var(--ss-cream-200);vertical-align:top}
+td.n,th.n{text-align:right;white-space:nowrap}
+td.n:not(:last-child),th.n:not(:last-child){padding-right:7mm}
+td:last-child,th:last-child{padding-right:0}
+tr.total td{border-bottom:none;border-top:1.5px solid var(--ss-ink);font-weight:800;font-size:11.5pt;padding-top:3mm}
+
+/* status pills: a lamp and a word, like the Wi-Fi check */
+.pill{display:inline-flex;align-items:center;gap:1.4mm;font-size:7.8pt;font-weight:700;line-height:1.5;padding:.4mm 2.4mm .4mm 2mm;border-radius:999px;white-space:nowrap;vertical-align:1px}
+.pill::before{content:"";width:1.8mm;height:1.8mm;border-radius:50%;flex:none}
+.pill.good{background:var(--ss-good-wash);color:var(--ss-good-text)}
+.pill.good::before{background:var(--ss-good)}
+.pill.fair{background:var(--ss-fair-wash);color:var(--ss-fair-text)}
+.pill.fair::before{background:var(--ss-fair)}
+.pill.poor{background:var(--ss-poor-wash);color:var(--ss-poor-text)}
+.pill.poor::before{background:var(--ss-poor)}
+.pill.chosen{background:var(--ss-orange-wash);color:var(--ss-orange-text)}
+.pill.chosen::before{background:var(--ss-orange)}
+
+/* charts */
+figure{margin:6mm 0 7mm}
+.chart{overflow-x:auto}
+.chart svg{display:block;width:100%;min-width:520px;height:auto}
+.chart svg text{font-family:var(--ss-font)}
+figcaption{font-size:9.2pt;line-height:1.5;color:var(--ss-ink-soft);margin-top:3mm;max-width:72ch}
+.ftitle{font-size:10.2pt;font-weight:700;margin:0 0 3mm}
+
+/* what we are not recommending: the site's orange-tinted callout */
+.wont{background:var(--ss-orange-wash);border:1px solid var(--ss-orange-line);border-radius:16px;padding:6mm 7mm;margin:6mm 0 0}
+.wont h3{margin:0 0 2mm}
+.wont p{margin:0}
+
+/* sign-off and company particulars */
+.foot{display:grid;gap:1.6mm;border-top:3px solid var(--ss-orange);padding-top:4mm;font-size:8.8pt;line-height:1.5;color:var(--ss-ink-soft)}
+.foot p{margin:0;max-width:none}
+.foot .legal{font-size:7.8pt}
+
+@media (max-width:680px){
+  body{padding-block:0}
+  .sheet{padding:7mm 5mm 10mm;border-radius:0;box-shadow:none}
+  .ss-logo{height:14mm}
+  .lh-contact{text-align:left}
+  h1{font-size:23pt}
+  .verdict{padding:7mm 6mm}
+  .verdict p{font-size:13.5pt}
+  .meta{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .shead{grid-template-columns:7mm minmax(0,1fr)}
+  .shead .n{font-size:16pt}
+}
+
+@media print{
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{background:var(--ss-paper);padding:0}
+  .sheet{max-width:none;padding:0;border-radius:0;box-shadow:none}
+  section{margin-bottom:9mm}
+  .shead{break-inside:avoid;break-after:avoid;padding-top:4mm;margin-bottom:4mm}
+  figure,table,blockquote,.wont,.meta,.verdict,.foot{break-inside:avoid}
+  figure{margin:4mm 0 5mm}
+  p{orphans:3;widows:3}
+  .pagebreak{break-before:page}
+  .chart{overflow:visible}
+  .chart svg{min-width:0}
+}
+@page{
+  size:A4;margin:14mm 16mm 16mm;
+  @bottom-left{content:"Smart Space \00B7  Monthly network report";font:500 7.5pt "Plus Jakarta Sans",Arial,sans-serif;color:#8A817A}
+  @bottom-right{content:"Page " counter(page) " of " counter(pages);font:500 7.5pt "Plus Jakarta Sans",Arial,sans-serif;color:#8A817A}
+}
+</style>
+<style>
+/* sample banner and key-figure row, built from the same tokens */
+.sample{display:flex;gap:3mm;align-items:baseline;background:var(--ss-orange-wash);border:1px solid var(--ss-orange-line);border-radius:12px;padding:3mm 5mm;margin:0 0 6mm;font-size:9pt;line-height:1.5;color:var(--ss-ink-soft)}
+.sample b{color:var(--ss-orange-text);font-size:7.6pt;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap}
+.figs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4mm;margin:0 0 6mm}
+.fig{border-top:3px solid var(--ss-cream-200);padding-top:3mm;min-width:0}
+.fig.good{border-color:var(--ss-good)}.fig.fair{border-color:var(--ss-fair)}.fig.poor{border-color:var(--ss-poor)}
+.fig .v{font-size:19pt;line-height:1.1;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.fig .k{font-size:8.6pt;line-height:1.4;color:var(--ss-ink-soft);margin-top:1mm}
+.key{display:flex;flex-wrap:wrap;gap:2mm 5mm;font-size:8.8pt;color:var(--ss-ink-soft);margin-top:3mm}
+.key i{display:inline-block;width:3.2mm;height:3.2mm;border-radius:1mm;margin-right:1.4mm;vertical-align:-.5mm}
+ul.plain{margin:0 0 3.4mm;padding-left:5mm;max-width:74ch}ul.plain li{margin-bottom:1.6mm}
+@media (max-width:680px){.figs{grid-template-columns:repeat(2,minmax(0,1fr))}.sample{flex-direction:column;gap:1mm}}
+</style>
+</head>
+<body>
+<div style="background:#1C1A18;color:#fff;font:600 13px/1.4 'Plus Jakarta Sans',sans-serif;text-align:center;padding:10px 16px">Sample report. The household and every figure in it are an example; yours are measured in your home. <a href="/services/wifi" style="color:#F7A35C">Back to the Wi-Fi trial</a></div>
+<div class="sheet">
+<div class="letterhead">
+  <img class="ss-logo" alt="Smart Space" src="data:image/png;base64,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">
+  <div class="lh-contact"><b>smart-space.ie</b>01 513 0424 · info@smart-space.ie<br>Dublin and Leinster</div>
+</div>
+
+<header class="cover">
+  <p class="kicker">Monthly network report, September 2026</p>
+  <div class="sample"><b>Sample report</b><span>The household, address, devices and every figure in this report are invented, to show what you receive each month on Smart Space monitoring.</span></div>
+  <h1>The Sample household</h1>
+  <div class="meta">
+    <div><span>Property</span>1 Test Road, D04 X1X1</div>
+    <div class="wide"><span>What we watch</span>Your broadband, three floors of Wi-Fi, two cameras</div>
+    <div><span>Period</span>1 to 30 September 2026</div>
+    <div><span>Report date</span>1 October 2026</div>
+    <div><span>Report by</span>Nigel Cobbe, SmartSpace Networks</div>
+  </div>
+</header>
+
+<div class="verdict">
+  <h2>Your month</h2>
+  <p>A good month. Your home network did its job, and the two short internet drops were on your provider’s side, not in your house.</p>
+  <div class="after">Your internet was up 99.95% of the time. It went down twice, for 20 minutes in all, and we texted you both times, once when it went and once when it came back. Your router stayed up and answering throughout, so both drops were beyond your home.<br><br>
+  The second floor got 206 Mbps on a typical hourly test, close to the 212 Mbps your trial measured. One evening, 14 September, was slower, and we explain it below. Your front door camera went offline once, for 47 minutes, and three new devices joined your Wi-Fi. You confirmed all three.</div>
+</div>
+
+<section>
+  <div class="shead"><div class="n">1</div><div class="t"><h2>The month at a glance</h2>
+    <p class="gloss">One square per day for everything we watch. Green means nothing happened that day.</p></div></div>
+  <div class="figs">
+    <div class="fig good"><div class="v">99.95%</div><div class="k">of the month your internet was up</div></div>
+    <div class="fig good"><div class="v">206 Mbps</div><div class="k">typical speed on the second floor, tested hourly</div></div>
+    <div class="fig fair"><div class="v">3</div><div class="k">short drops on the first floor, all on one evening</div></div>
+    <div class="fig good"><div class="v">9</div><div class="k">texts we sent you this month</div></div>
+  </div>
+  <figure><div class="chart"><svg viewBox="0 0 800 294" role="img" aria-label="Each thing we watch, day by day through September"><text x="238.2" y="15" text-anchor="middle" font-size="12.5" style="fill:var(--ss-ink-soft)">1</text><text x="352.2" y="15" text-anchor="middle" font-size="12.5" style="fill:var(--ss-ink-soft)">7</text><text x="485.2" y="15" text-anchor="middle" font-size="12.5" style="fill:var(--ss-ink-soft)">14</text><text x="618.2" y="15" text-anchor="middle" font-size="12.5" style="fill:var(--ss-ink-soft)">21</text><text x="751.2" y="15" text-anchor="middle" font-size="12.5" style="fill:var(--ss-ink-soft)">28</text><text x="0" y="41" font-size="14.5" font-weight="700" style="fill:var(--ss-ink)">Internet</text><text x="0" y="58" font-size="12" style="fill:var(--ss-ink-soft)">beyond your router</text><rect x="230.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Tue 1 Sep: no problems</title></rect><rect x="249.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Wed 2 Sep: no problems</title></rect><rect x="268.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Thu 3 Sep: no problems</title></rect><rect x="287.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Fri 4 Sep: no problems</title></rect><rect x="306.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Sat 5 Sep: no problems</title></rect><rect x="325.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Sun 6 Sep: no problems</title></rect><rect x="344.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Mon 7 Sep: no problems</title></rect><rect x="363.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Tue 8 Sep: no problems</title></rect><rect x="382.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-poor)"><title>Internet, Wed 9 Sep: see below</title></rect><rect x="401.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Thu 10 Sep: no problems</title></rect><rect x="420.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Fri 11 Sep: no problems</title></rect><rect x="439.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Sat 12 Sep: no problems</title></rect><rect x="458.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Sun 13 Sep: no problems</title></rect><rect x="477.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Mon 14 Sep: no problems</title></rect><rect x="496.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Tue 15 Sep: no problems</title></rect><rect x="515.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Wed 16 Sep: no problems</title></rect><rect x="534.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Thu 17 Sep: no problems</title></rect><rect x="553.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Fri 18 Sep: no problems</title></rect><rect x="572.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Sat 19 Sep: no problems</title></rect><rect x="591.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Sun 20 Sep: no problems</title></rect><rect x="610.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Mon 21 Sep: no problems</title></rect><rect x="629.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Tue 22 Sep: no problems</title></rect><rect x="648.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-poor)"><title>Internet, Wed 23 Sep: see below</title></rect><rect x="667.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Thu 24 Sep: no problems</title></rect><rect x="686.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Fri 25 Sep: no problems</title></rect><rect x="705.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Sat 26 Sep: no problems</title></rect><rect x="724.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Sun 27 Sep: no problems</title></rect><rect x="743.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Mon 28 Sep: no problems</title></rect><rect x="762.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Tue 29 Sep: no problems</title></rect><rect x="781.0" y="28" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Internet, Wed 30 Sep: no problems</title></rect><text x="0" y="85" font-size="14.5" font-weight="700" style="fill:var(--ss-ink)">Ground floor</text><text x="0" y="102" font-size="12" style="fill:var(--ss-ink-soft)">tri-band access point at the router</text><rect x="230.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Tue 1 Sep: no problems</title></rect><rect x="249.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Wed 2 Sep: no problems</title></rect><rect x="268.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Thu 3 Sep: no problems</title></rect><rect x="287.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Fri 4 Sep: no problems</title></rect><rect x="306.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Sat 5 Sep: no problems</title></rect><rect x="325.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Sun 6 Sep: no problems</title></rect><rect x="344.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Mon 7 Sep: no problems</title></rect><rect x="363.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Tue 8 Sep: no problems</title></rect><rect x="382.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Wed 9 Sep: no problems</title></rect><rect x="401.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Thu 10 Sep: no problems</title></rect><rect x="420.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Fri 11 Sep: no problems</title></rect><rect x="439.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Sat 12 Sep: no problems</title></rect><rect x="458.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Sun 13 Sep: no problems</title></rect><rect x="477.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Mon 14 Sep: no problems</title></rect><rect x="496.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Tue 15 Sep: no problems</title></rect><rect x="515.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Wed 16 Sep: no problems</title></rect><rect x="534.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Thu 17 Sep: no problems</title></rect><rect x="553.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Fri 18 Sep: no problems</title></rect><rect x="572.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Sat 19 Sep: no problems</title></rect><rect x="591.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Sun 20 Sep: no problems</title></rect><rect x="610.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Mon 21 Sep: no problems</title></rect><rect x="629.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Tue 22 Sep: no problems</title></rect><rect x="648.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Wed 23 Sep: no problems</title></rect><rect x="667.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Thu 24 Sep: no problems</title></rect><rect x="686.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Fri 25 Sep: no problems</title></rect><rect x="705.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Sat 26 Sep: no problems</title></rect><rect x="724.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Sun 27 Sep: no problems</title></rect><rect x="743.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Mon 28 Sep: no problems</title></rect><rect x="762.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Tue 29 Sep: no problems</title></rect><rect x="781.0" y="72" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Ground floor, Wed 30 Sep: no problems</title></rect><text x="0" y="129" font-size="14.5" font-weight="700" style="fill:var(--ss-ink)">First floor</text><text x="0" y="146" font-size="12" style="fill:var(--ss-ink-soft)">tri-band access point</text><rect x="230.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Tue 1 Sep: no problems</title></rect><rect x="249.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Wed 2 Sep: no problems</title></rect><rect x="268.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Thu 3 Sep: no problems</title></rect><rect x="287.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Fri 4 Sep: no problems</title></rect><rect x="306.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Sat 5 Sep: no problems</title></rect><rect x="325.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Sun 6 Sep: no problems</title></rect><rect x="344.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Mon 7 Sep: no problems</title></rect><rect x="363.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Tue 8 Sep: no problems</title></rect><rect x="382.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Wed 9 Sep: no problems</title></rect><rect x="401.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Thu 10 Sep: no problems</title></rect><rect x="420.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Fri 11 Sep: no problems</title></rect><rect x="439.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Sat 12 Sep: no problems</title></rect><rect x="458.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Sun 13 Sep: no problems</title></rect><rect x="477.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-fair)"><title>First floor, Mon 14 Sep: see below</title></rect><rect x="496.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Tue 15 Sep: no problems</title></rect><rect x="515.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Wed 16 Sep: no problems</title></rect><rect x="534.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Thu 17 Sep: no problems</title></rect><rect x="553.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Fri 18 Sep: no problems</title></rect><rect x="572.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Sat 19 Sep: no problems</title></rect><rect x="591.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Sun 20 Sep: no problems</title></rect><rect x="610.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Mon 21 Sep: no problems</title></rect><rect x="629.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Tue 22 Sep: no problems</title></rect><rect x="648.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Wed 23 Sep: no problems</title></rect><rect x="667.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Thu 24 Sep: no problems</title></rect><rect x="686.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Fri 25 Sep: no problems</title></rect><rect x="705.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Sat 26 Sep: no problems</title></rect><rect x="724.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Sun 27 Sep: no problems</title></rect><rect x="743.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Mon 28 Sep: no problems</title></rect><rect x="762.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Tue 29 Sep: no problems</title></rect><rect x="781.0" y="116" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>First floor, Wed 30 Sep: no problems</title></rect><text x="0" y="173" font-size="14.5" font-weight="700" style="fill:var(--ss-ink)">Second floor</text><text x="0" y="190" font-size="12" style="fill:var(--ss-ink-soft)">access point and our box</text><rect x="230.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Tue 1 Sep: no problems</title></rect><rect x="249.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Wed 2 Sep: no problems</title></rect><rect x="268.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Thu 3 Sep: no problems</title></rect><rect x="287.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Fri 4 Sep: no problems</title></rect><rect x="306.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Sat 5 Sep: no problems</title></rect><rect x="325.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Sun 6 Sep: no problems</title></rect><rect x="344.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Mon 7 Sep: no problems</title></rect><rect x="363.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Tue 8 Sep: no problems</title></rect><rect x="382.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Wed 9 Sep: no problems</title></rect><rect x="401.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Thu 10 Sep: no problems</title></rect><rect x="420.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Fri 11 Sep: no problems</title></rect><rect x="439.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Sat 12 Sep: no problems</title></rect><rect x="458.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Sun 13 Sep: no problems</title></rect><rect x="477.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-fair)"><title>Second floor, Mon 14 Sep: see below</title></rect><rect x="496.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Tue 15 Sep: no problems</title></rect><rect x="515.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Wed 16 Sep: no problems</title></rect><rect x="534.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Thu 17 Sep: no problems</title></rect><rect x="553.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Fri 18 Sep: no problems</title></rect><rect x="572.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Sat 19 Sep: no problems</title></rect><rect x="591.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Sun 20 Sep: no problems</title></rect><rect x="610.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Mon 21 Sep: no problems</title></rect><rect x="629.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Tue 22 Sep: no problems</title></rect><rect x="648.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Wed 23 Sep: no problems</title></rect><rect x="667.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Thu 24 Sep: no problems</title></rect><rect x="686.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Fri 25 Sep: no problems</title></rect><rect x="705.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Sat 26 Sep: no problems</title></rect><rect x="724.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Sun 27 Sep: no problems</title></rect><rect x="743.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Mon 28 Sep: no problems</title></rect><rect x="762.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Tue 29 Sep: no problems</title></rect><rect x="781.0" y="160" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Second floor, Wed 30 Sep: no problems</title></rect><text x="0" y="217" font-size="14.5" font-weight="700" style="fill:var(--ss-ink)">Front door camera</text><rect x="230.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Tue 1 Sep: no problems</title></rect><rect x="249.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Wed 2 Sep: no problems</title></rect><rect x="268.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Thu 3 Sep: no problems</title></rect><rect x="287.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Fri 4 Sep: no problems</title></rect><rect x="306.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Sat 5 Sep: no problems</title></rect><rect x="325.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Sun 6 Sep: no problems</title></rect><rect x="344.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Mon 7 Sep: no problems</title></rect><rect x="363.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Tue 8 Sep: no problems</title></rect><rect x="382.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Wed 9 Sep: no problems</title></rect><rect x="401.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Thu 10 Sep: no problems</title></rect><rect x="420.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Fri 11 Sep: no problems</title></rect><rect x="439.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Sat 12 Sep: no problems</title></rect><rect x="458.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Sun 13 Sep: no problems</title></rect><rect x="477.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Mon 14 Sep: no problems</title></rect><rect x="496.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Tue 15 Sep: no problems</title></rect><rect x="515.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Wed 16 Sep: no problems</title></rect><rect x="534.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Thu 17 Sep: no problems</title></rect><rect x="553.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Fri 18 Sep: no problems</title></rect><rect x="572.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Sat 19 Sep: no problems</title></rect><rect x="591.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Sun 20 Sep: no problems</title></rect><rect x="610.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Mon 21 Sep: no problems</title></rect><rect x="629.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-poor)"><title>Front door camera, Tue 22 Sep: see below</title></rect><rect x="648.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Wed 23 Sep: no problems</title></rect><rect x="667.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Thu 24 Sep: no problems</title></rect><rect x="686.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Fri 25 Sep: no problems</title></rect><rect x="705.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Sat 26 Sep: no problems</title></rect><rect x="724.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Sun 27 Sep: no problems</title></rect><rect x="743.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Mon 28 Sep: no problems</title></rect><rect x="762.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Tue 29 Sep: no problems</title></rect><rect x="781.0" y="204" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Front door camera, Wed 30 Sep: no problems</title></rect><text x="0" y="261" font-size="14.5" font-weight="700" style="fill:var(--ss-ink)">Back garden camera</text><rect x="230.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Tue 1 Sep: no problems</title></rect><rect x="249.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Wed 2 Sep: no problems</title></rect><rect x="268.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Thu 3 Sep: no problems</title></rect><rect x="287.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Fri 4 Sep: no problems</title></rect><rect x="306.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Sat 5 Sep: no problems</title></rect><rect x="325.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Sun 6 Sep: no problems</title></rect><rect x="344.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Mon 7 Sep: no problems</title></rect><rect x="363.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Tue 8 Sep: no problems</title></rect><rect x="382.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Wed 9 Sep: no problems</title></rect><rect x="401.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Thu 10 Sep: no problems</title></rect><rect x="420.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Fri 11 Sep: no problems</title></rect><rect x="439.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Sat 12 Sep: no problems</title></rect><rect x="458.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Sun 13 Sep: no problems</title></rect><rect x="477.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Mon 14 Sep: no problems</title></rect><rect x="496.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Tue 15 Sep: no problems</title></rect><rect x="515.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Wed 16 Sep: no problems</title></rect><rect x="534.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Thu 17 Sep: no problems</title></rect><rect x="553.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Fri 18 Sep: no problems</title></rect><rect x="572.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Sat 19 Sep: no problems</title></rect><rect x="591.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Sun 20 Sep: no problems</title></rect><rect x="610.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Mon 21 Sep: no problems</title></rect><rect x="629.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Tue 22 Sep: no problems</title></rect><rect x="648.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Wed 23 Sep: no problems</title></rect><rect x="667.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Thu 24 Sep: no problems</title></rect><rect x="686.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Fri 25 Sep: no problems</title></rect><rect x="705.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Sat 26 Sep: no problems</title></rect><rect x="724.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Sun 27 Sep: no problems</title></rect><rect x="743.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Mon 28 Sep: no problems</title></rect><rect x="762.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Tue 29 Sep: no problems</title></rect><rect x="781.0" y="248" width="16.5" height="26" rx="3" style="fill:var(--ss-good)"><title>Back garden camera, Wed 30 Sep: no problems</title></rect></svg></div>
+    <div class="key"><span><i style="background:var(--ss-good)"></i>no problems</span><span><i style="background:var(--ss-fair)"></i>slow, or a drop of under two minutes</span><span><i style="background:var(--ss-poor)"></i>offline for longer</span></div>
+    <figcaption>Every row is checked every minute, day and night. Days are numbered 1 to 30 September.</figcaption></figure>
+</section>
+
+<section>
+  <div class="shead"><div class="n">2</div><div class="t"><h2>Your broadband</h2>
+    <p class="gloss">Our box checks the internet and your router every minute. If the router answers and the internet does not, the fault is with your provider.</p></div></div>
+  <div class="scroll"><table>
+    <tr><th>When</th><th class="n">How long</th><th>Where the fault was</th><th>Alert</th></tr>
+    <tr><td>Wed 9 Sep, 02:14 to 02:28</td><td class="n">14 minutes</td><td><span class="pill good">Router up</span> provider’s side</td><td><span class="pill good">Texted</span></td></tr><tr><td>Wed 23 Sep, 19:05 to 19:11</td><td class="n">6 minutes</td><td><span class="pill good">Router up</span> provider’s side</td><td><span class="pill good">Texted</span></td></tr>
+  </table></div>
+  <p>Two short drops in a month is within what most providers would call normal, so we do not suggest a complaint. If they become more frequent, your evidence pack is already building: every drop is timed, with proof your router was up, ready to send to your provider.</p>
+</section>
+
+<section>
+  <div class="shead"><div class="n">3</div><div class="t"><h2>Speed on your second floor</h2>
+    <p class="gloss">Our box sits on the second floor, the floor that needed the most help. Every hour it tests the link from your router through the interfloor portal, in both directions.</p></div></div>
+  <figure><div class="chart"><svg viewBox="0 0 820 290" role="img" aria-label="Second floor speed, day by day"><line x1="48" y1="232.0" x2="806" y2="232.0" stroke-width="1" stroke="currentColor" style="color:var(--ss-cream-200)"/><text x="40" y="236.5" text-anchor="end" font-size="12.5" style="fill:var(--ss-ink-soft)">0</text><line x1="48" y1="188.4" x2="806" y2="188.4" stroke-width="1" stroke="currentColor" style="color:var(--ss-cream-200)"/><text x="40" y="192.9" text-anchor="end" font-size="12.5" style="fill:var(--ss-ink-soft)">50</text><line x1="48" y1="144.8" x2="806" y2="144.8" stroke-width="1" stroke="currentColor" style="color:var(--ss-cream-200)"/><text x="40" y="149.3" text-anchor="end" font-size="12.5" style="fill:var(--ss-ink-soft)">100</text><line x1="48" y1="101.2" x2="806" y2="101.2" stroke-width="1" stroke="currentColor" style="color:var(--ss-cream-200)"/><text x="40" y="105.7" text-anchor="end" font-size="12.5" style="fill:var(--ss-ink-soft)">150</text><line x1="48" y1="57.6" x2="806" y2="57.6" stroke-width="1" stroke="currentColor" style="color:var(--ss-cream-200)"/><text x="40" y="62.1" text-anchor="end" font-size="12.5" style="fill:var(--ss-ink-soft)">200</text><line x1="48" y1="14.0" x2="806" y2="14.0" stroke-width="1" stroke="currentColor" style="color:var(--ss-cream-200)"/><text x="40" y="18.5" text-anchor="end" font-size="12.5" style="fill:var(--ss-ink-soft)">250</text><line x1="48" y1="47.1" x2="806" y2="47.1" stroke-width="2" stroke-dasharray="6 4" stroke="currentColor" style="color:var(--ss-orange-strong)"/><text x="806" y="40.1" text-anchor="end" font-size="12.5" font-weight="700" style="fill:var(--ss-orange-text)">212 Mbps at your trial</text><polyline points="48.0,72.4 74.1,68.1 100.3,70.7 126.4,70.7 152.6,71.6 178.7,68.9 204.8,71.6 231.0,71.6 257.1,71.6 283.2,74.2 309.4,73.3 335.5,78.5 361.7,70.7 387.8,155.3 413.9,66.3 440.1,76.8 466.2,70.7 492.3,66.3 518.5,68.9 544.6,68.9 570.8,71.6 596.9,71.6 623.0,72.4 649.2,73.3 675.3,72.4 701.4,69.8 727.6,73.3 753.7,75.9 779.9,70.7 806.0,73.3" fill="none" stroke-width="2.2" stroke-dasharray="6 4" stroke-linejoin="round" stroke="currentColor" style="color:var(--ss-ink-soft)"/><polyline points="48.0,50.6 74.1,49.8 100.3,52.4 126.4,51.5 152.6,53.2 178.7,50.6 204.8,50.6 231.0,53.2 257.1,50.6 283.2,54.1 309.4,52.4 335.5,52.4 361.7,54.1 387.8,54.1 413.9,52.4 440.1,52.4 466.2,48.9 492.3,50.6 518.5,51.5 544.6,54.1 570.8,52.4 596.9,53.2 623.0,51.5 649.2,48.9 675.3,52.4 701.4,52.4 727.6,52.4 753.7,54.1 779.9,50.6 806.0,51.5" fill="none" stroke-width="3" stroke-linejoin="round" stroke="currentColor" style="color:var(--ss-good)"/><circle cx="387.8" cy="172.7" r="5" style="fill:var(--ss-fair)"/><text x="397.8" y="177.7" font-size="12.5" font-weight="700" style="fill:var(--ss-fair-text)">68 Mbps, lowest test, Mon 14 Sep</text><text x="48.0" y="252" text-anchor="middle" font-size="12.5" style="fill:var(--ss-ink-soft)">1 Sep</text><text x="204.8" y="252" text-anchor="middle" font-size="12.5" style="fill:var(--ss-ink-soft)">7 Sep</text><text x="387.8" y="252" text-anchor="middle" font-size="12.5" style="fill:var(--ss-ink-soft)">14 Sep</text><text x="570.8" y="252" text-anchor="middle" font-size="12.5" style="fill:var(--ss-ink-soft)">21 Sep</text><text x="753.7" y="252" text-anchor="middle" font-size="12.5" style="fill:var(--ss-ink-soft)">28 Sep</text><rect x="48" y="270" width="22" height="4" rx="2" style="fill:var(--ss-good)"/><text x="78" y="277" font-size="13" font-weight="600" style="fill:var(--ss-ink)">typical for the day</text><line x1="248" y1="272" x2="270" y2="272" stroke-width="2.2" stroke-dasharray="6 4" stroke="currentColor" style="color:var(--ss-ink-soft)"/><text x="278" y="277" font-size="13" font-weight="600" style="fill:var(--ss-ink)">typical evening, 18:00 to 23:00</text></svg></div>
+    <figcaption>Download to the second floor in Mbps, from 720 hourly tests. The orange line is what we measured during your three-day trial, before anything was installed for good.</figcaption></figure>
+  <div class="scroll"><table>
+    <tr><th></th><th class="n">This month</th><th class="n">At your trial</th></tr>
+    <tr><td>Download to the second floor, typical</td><td class="n">206 Mbps</td><td class="n">212 Mbps</td></tr>
+    <tr><td>Download, typical evening</td><td class="n">184 Mbps</td><td class="n">182 Mbps</td></tr>
+    <tr><td>Upload from the second floor, typical</td><td class="n">188 Mbps</td><td class="n">192 Mbps</td></tr>
+    <tr><td>Lowest single test</td><td class="n">68 Mbps</td><td class="n">180 Mbps</td></tr>
+  </table></div>
+  <h3>The slow evening on 14 September</h3>
+  <p>From 19:00 to 23:00 on Mon 14 Sep, the second floor dropped to between 68 and 99 Mbps, and the first floor access point lost its link three times for a minute or two. Both floors share your electrical wiring, and everything was back to normal by the next morning. That pattern usually means something new was plugged in nearby for the evening, such as a heater or a phone charger. It did nothing worse than slow things down, and a 4K stream needs only 25 Mbps.</p>
+  <p>If you remember plugging something in that evening, let us know and we will tell you whether it is worth moving. If it happens again we will be in touch first.</p>
+</section>
+
+<section>
+  <div class="shead"><div class="n">4</div><div class="t"><h2>Your other floors</h2>
+    <p class="gloss">On the ground and first floors we check every minute that each access point is online and connected. Only the second floor has the hourly speed test.</p></div></div>
+  <div class="scroll"><table>
+    <tr><th>Floor</th><th class="n">Online</th><th class="n">Drops</th></tr>
+    <tr><td>Ground floor access point, at the router</td><td class="n">100%</td><td class="n">0</td></tr>
+    <tr><td>First floor access point</td><td class="n">99.99%</td><td class="n">3</td></tr>
+    <tr><td>Second floor access point</td><td class="n">100%</td><td class="n">0</td></tr>
+  </table></div>
+  <div class="scroll"><table>
+    <tr><th>Drop</th><th>When</th><th class="n">How long</th></tr>
+    <tr><td>First floor access point</td><td>Mon 14 Sep, 19:41</td><td class="n">1 min</td></tr><tr><td>First floor access point</td><td>Mon 14 Sep, 20:02</td><td class="n">2 min</td></tr><tr><td>First floor access point</td><td>Mon 14 Sep, 20:37</td><td class="n">1 min</td></tr>
+  </table></div>
+  <p class="soft small">Drops of under two minutes are recorded but not texted, so you are not woken by something that has already fixed itself.</p>
+</section>
+
+<section>
+  <div class="shead"><div class="n">5</div><div class="t"><h2>Cameras</h2>
+    <p class="gloss">We check every minute that each camera is online. If one is gone for ten minutes, we text you.</p></div></div>
+  <div class="scroll"><table>
+    <tr><th>Camera</th><th class="n">Online</th><th>Offline</th></tr>
+    <tr><td>Front door camera</td><td class="n">99.89%</td><td>Tue 22 Sep, 10:12 to 10:59, 47 minutes. Back after you restarted it.</td></tr>
+    <tr><td>Back garden camera</td><td class="n">100%</td><td>Not once</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <div class="shead"><div class="n">6</div><div class="t"><h2>New devices on your Wi-Fi</h2>
+    <p class="gloss">Whenever something joins your Wi-Fi for the first time, we text you so you can tell us if you do not recognise it.</p></div></div>
+  <div class="scroll"><table>
+    <tr><th>When</th><th>Device</th><th>What happened</th></tr>
+    <tr><td style="white-space:nowrap">Sun 6 Sep, 18:20</td><td>Galaxy phone</td><td>You replied: a visitor. Nothing to do.</td></tr><tr><td style="white-space:nowrap">Thu 17 Sep, 11:03</td><td>Unnamed device</td><td>You replied: the new printer in the study. We named it for you.</td></tr><tr><td style="white-space:nowrap">Sun 27 Sep, 15:46</td><td>LG TV</td><td>You replied: the new television in the sitting room.</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <div class="shead"><div class="n">7</div><div class="t"><h2>Every text we sent you</h2>
+    <p class="gloss">The alerts from this month, in the order they went out.</p></div></div>
+  <div class="scroll"><table>
+    <tr><th>When</th><th>Message</th></tr>
+    <tr><td style="white-space:nowrap">Sun 6 Sep, 18:20</td><td>A new device joined your Wi-Fi: Galaxy phone. Reply if you do not recognise it.</td></tr><tr><td style="white-space:nowrap">Wed 9 Sep, 02:14</td><td>Your internet is down. Our box shows your router is fine, so this is on your provider’s side.</td></tr><tr><td style="white-space:nowrap">Wed 9 Sep, 02:28</td><td>Your internet is back, after 14 minutes.</td></tr><tr><td style="white-space:nowrap">Thu 17 Sep, 11:03</td><td>A new device joined your Wi-Fi: Unnamed device. Reply if you do not recognise it.</td></tr><tr><td style="white-space:nowrap">Tue 22 Sep, 10:22</td><td>Your front door camera has been offline for 10 minutes.</td></tr><tr><td style="white-space:nowrap">Tue 22 Sep, 10:59</td><td>Your front door camera is back online, after 47 minutes.</td></tr><tr><td style="white-space:nowrap">Wed 23 Sep, 19:05</td><td>Your internet is down. Our box shows your router is fine, so this is on your provider’s side.</td></tr><tr><td style="white-space:nowrap">Wed 23 Sep, 19:11</td><td>Your internet is back, after 6 minutes.</td></tr><tr><td style="white-space:nowrap">Sun 27 Sep, 15:46</td><td>A new device joined your Wi-Fi: LG TV. Reply if you do not recognise it.</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <div class="shead"><div class="n">8</div><div class="t"><h2>Anything to do?</h2>
+    <p class="gloss">Our advice for next month.</p></div></div>
+  <ul class="plain">
+    <li><strong>Nothing needs doing.</strong> Your network is performing as it did at the trial.</li>
+    <li><strong>We are keeping an eye on the first floor.</strong> If 14 September repeats, we will call you to talk it through.</li>
+    <li><strong>Front door camera:</strong> if it goes offline again, a restart is the first thing to try, as you did on 22 September.</li>
+  </ul>
+</section>
+
+<footer class="foot">
+  <p>Prepared by Nigel Cobbe, SmartSpace Networks, and issued on 1 October 2026. Smart Space monitoring, from €39 a month. Every figure in a real report comes from the equipment in your home, measured around the clock.</p>
+  <p class="legal">Smart Space Technologies Limited, trading as Smart Space. Registered in Ireland, company number 625163. Registered office: Fourwinds Cottage, Cuckoo Corner, Ballymerrigan, Co. Wicklow.</p>
+</footer>
+
+</div>
+</body>
+</html>
