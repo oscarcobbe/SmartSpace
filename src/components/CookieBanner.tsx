@@ -207,8 +207,9 @@ export default function CookieBanner() {
       >
         Accept cookies
       </button>
+      {/* "Shows us which of our ads work..." replaced with this link, Oscar, 15 October 2026. */}
       <p className="mt-2 text-[13px] text-gray-500 leading-snug">
-        Shows us which of our ads work, so we spend less reaching you.
+        <a href="/terms" className="underline underline-offset-2 hover:text-gray-700 inline-block py-1">Terms of service</a>
       </p>
       <button
         type="button"
