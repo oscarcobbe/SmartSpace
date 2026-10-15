@@ -17,7 +17,7 @@ import { crmConfigured, logActivity, upsertContact } from "@/lib/crm/db";
 import { done, failed, writeFailed, type ActionState } from "../../action-state";
 import { readSection, sectionById, type Row } from "@/lib/network/capture";
 import { dublinWallToEpoch } from "@/lib/network/logs";
-import { cleanDeviceName, privateIpv4, UUID_RE, PI_ACTIONS, type PiAction } from "@/lib/network/pi-protocol";
+import { cleanDeviceName, privateIpv4, UUID_RE, PI_ACTIONS, SPEED_EVERY, type PiAction } from "@/lib/network/pi-protocol";
 import {
   addEvent, createAssessment, getAssessment, listPis, queueCommand, reportsFor, saveCaptureSection,
   saveReportVersion, markReportFiled, updateAssessment, STAGES, type Assessment, type Pi, type Stage,
@@ -26,6 +26,7 @@ import { driveConfigured, makeCustomerFolder, putFile, DriveError } from "@/lib/
 import { clearable, fileLogsInDrive, parsedLogs } from "@/lib/network/flow";
 import { commandsFor } from "@/lib/network/store";
 import { htmlHash, renderReport, reportFor } from "@/lib/network/report";
+import { lastBroadbandStart } from "@/lib/network/evidence";
 
 function session() {
   const s = requireSession();
@@ -134,16 +135,20 @@ async function pisFor(a: Assessment): Promise<{ node: Pi | null; server: Pi | nu
 async function queue(a: Assessment, by: string, action: PiAction, args: unknown, purpose: string | null, what?: string): Promise<ActionState> {
   const { node } = await pisFor(a);
   if (!node) return failed("No node Pi is set up. Add it under Pis first.");
+  return queueTo(node, a, by, action, args, purpose, what);
+}
+
+async function queueTo(pi: Pi, a: Assessment, by: string, action: PiAction, args: unknown, purpose: string | null, what?: string): Promise<ActionState> {
   try {
-    await queueCommand({ pi: node, assessmentId: a.id, action, args, purpose, by });
+    await queueCommand({ pi, assessmentId: a.id, action, args, purpose, by });
   } catch (err) {
     return failed(`Not sent to the Pi: ${err instanceof Error ? err.message : String(err)}`);
   }
   if (a.stage === "booked") await updateAssessment(a.id, { stage: "visit" });
-  await addEvent({ assessment_id: a.id, pi_id: node.id, kind: `asked:${action}`, summary: `Asked ${node.name}: ${what ?? PI_ACTIONS[action].label.toLowerCase()}`, actor: by });
-  const last = node.last_seen_at ? (Date.now() - Date.parse(node.last_seen_at)) / 1000 : null;
-  const when = last == null ? `${node.name} has never called in, so this waits until it does.`
-    : last > 180 ? `${node.name} last called in ${Math.round(last / 60)} min ago, so this waits until it is back.`
+  await addEvent({ assessment_id: a.id, pi_id: pi.id, kind: `asked:${action}`, summary: `Asked ${pi.name}: ${what ?? PI_ACTIONS[action].label.toLowerCase()}`, actor: by });
+  const last = pi.last_seen_at ? (Date.now() - Date.parse(pi.last_seen_at)) / 1000 : null;
+  const when = last == null ? `${pi.name} has never called in, so this waits until it does.`
+    : last > 180 ? `${pi.name} last called in ${Math.round(last / 60)} min ago, so this waits until it is back.`
     : "The Pi picks it up within a few seconds.";
   return done(`Sent. ${when}`);
 }
@@ -234,6 +239,52 @@ export async function sectionAction(_prev: ActionState, form: FormData): Promise
     return queue(a, s.email, "clear_logs", { assessment: id, files }, null, `delete its ${files.length} archived log${files.length === 1 ? "" : "s"}, each held here byte for byte`);
   }
   return failed("Saved, but that button does nothing in this section.");
+}
+
+/**
+ * The broadband evidence test: "start" on the Pi chosen (the one wired into
+ * the customer's router), then "look", "collect", "file" and "clear" on
+ * whichever Pi the test was started on.
+ */
+export async function broadbandAction(_prev: ActionState, form: FormData): Promise<ActionState> {
+  let s;
+  try { s = session(); } catch (e) { return failed((e as Error).message); }
+  const id = field(form, "id", 40);
+  const intent = field(form, "intent", 20);
+  let a: Assessment | null;
+  try { a = await loadFor(id); } catch (err) { return writeFailed("The broadband test", err); }
+  if (!a) return failed("This assessment could not be found.");
+  try {
+    const live = (await listPis()).filter((p) => !p.revoked_at);
+    if (intent === "start") {
+      const pi = live.find((p) => p.id === field(form, "pi", 40));
+      if (!pi) return failed("Choose the Pi that is wired into the customer's router.");
+      const every = Number(field(form, "speed_every", 4));
+      if (!(SPEED_EVERY as readonly number[]).includes(every)) return failed("Choose how often to run a speed test.");
+      const other = pi.status?.bb_job && pi.status.bb_job !== id ? await getAssessment(pi.status.bb_job).catch(() => null) : null;
+      if (other) return failed(`${pi.name} is still running ${other.customer_name}'s broadband test. Collect that first.`);
+      return queueTo(pi, a, s.email, "start_broadband", { assessment: id, speed_every: every }, null,
+        `start the broadband test${every ? `, a speed test every ${every} minutes` : ", without speed tests"}`);
+    }
+    const started = lastBroadbandStart(await commandsFor(id));
+    const pi = started ? live.find((p) => p.id === started.pi_id) ?? null : null;
+    if (!started) return failed("The broadband test has not been started from the portal.");
+    if (intent === "file") {
+      const r = await fileLogsInDrive(id);
+      return r.ok ? done(`Drive: ${r.outcome}.`) : failed(`Not filed: ${r.outcome}.`);
+    }
+    if (!pi) return failed("The Pi this test was started on is switched off or gone.");
+    if (intent === "look") return queueTo(pi, a, s.email, "collect_broadband", { assessment: id, final: false }, null, "send a copy of the broadband log");
+    if (intent === "collect") return queueTo(pi, a, s.email, "collect_broadband", { assessment: id, final: true }, null, "stop the broadband test and send the log");
+    if (intent === "clear") {
+      const files = (await clearable(id, pi)).filter((f) => f.name === "broadband.csv");
+      if (!files.length) return failed("The Pi holds no broadband log the portal has an exact copy of, so there is nothing to clear.");
+      return queueTo(pi, a, s.email, "clear_logs", { assessment: id, files }, null, `delete its ${files.length} archived broadband log${files.length === 1 ? "" : "s"}, each held here byte for byte`);
+    }
+    return failed("That button does nothing here.");
+  } catch (err) {
+    return failed(err instanceof DriveError ? err.message : `Not done: ${err instanceof Error ? err.message.slice(0, 200) : String(err).slice(0, 200)}`);
+  }
 }
 
 export async function makeFolder(_prev: ActionState, form: FormData): Promise<ActionState> {

@@ -5,9 +5,11 @@
  * a measurement means the same thing wherever it is shown.
  */
 import { parseIperfLog, parseDevicesLog, throughputCsv } from "./logs";
+import { parseBroadbandCsv } from "./broadband";
+import { evidenceFor } from "./evidence";
 import { putFile, driveConfigured } from "./drive";
 import {
-  addEvent, bestLogs, getAssessment, logsFor, markLogFiled, markLogsCleared, updateAssessment,
+  addEvent, bestLogs, commandsFor, getAssessment, logsFor, markLogFiled, markLogsCleared, updateAssessment,
   type Command, type Pi,
 } from "./store";
 import { PI_ACTIONS } from "./pi-protocol";
@@ -43,6 +45,18 @@ export function describe(cmd: Command): string {
       const kept = Array.isArray(r.kept) ? r.kept.length : 0;
       return `Pi's copy cleared: ${deleted} file${deleted === 1 ? "" : "s"} deleted${kept ? `, ${kept} kept` : ""}`;
     }
+    case "start_broadband": {
+      const first = (r.first ?? {}) as { internet?: { sent?: number; lost?: number; avg_ms?: number | null }; router?: { lost?: number; sent?: number } | null };
+      const net = first.internet;
+      const said = net && typeof net.sent === "number"
+        ? net.lost === net.sent ? " The first minute reached nothing on the internet: check the cable and the router."
+          : ` First minute: ${net.lost ?? 0} of ${net.sent} lost, ${net.avg_ms ?? "no"} ms.`
+        : "";
+      const every = typeof r.speed_every === "number" ? (r.speed_every ? `, a speed test every ${r.speed_every} minutes` : ", no speed tests") : "";
+      return `Broadband test started${every}.${said}`;
+    }
+    case "collect_broadband":
+      return r.final ? "Broadband log collected; the test is over" : "Broadband log looked at during the test";
   }
   return label;
 }
@@ -61,6 +75,7 @@ export async function afterCommand(pi: Pi, cmd: Command): Promise<{ fileLogs: bo
     await updateAssessment(aid, { stage: "collected", trial_ended_at: new Date().toISOString() });
     return { fileLogs: true };
   }
+  if (cmd.action === "collect_broadband" && r.final === true) return { fileLogs: true };
   if (cmd.action === "clear_logs" && Array.isArray(r.deleted)) {
     await markLogsCleared(aid, (r.deleted as { sha256: string }[]).map((d) => d.sha256).filter((x) => /^[0-9a-f]{64}$/.test(x)));
   }
@@ -77,7 +92,7 @@ export async function fileLogsInDrive(assessmentId: string): Promise<{ ok: boole
   if (!driveConfigured()) return { ok: false, outcome: "Drive is not set up here" };
   const a = await getAssessment(assessmentId);
   if (!a?.drive?.dataId) return { ok: false, outcome: "no Drive folder yet" };
-  const { iperf, devices } = await bestLogs(assessmentId);
+  const { iperf, devices, broadband } = await bestLogs(assessmentId);
   const filed: string[] = [];
   if (iperf) {
     const f = await putFile(a.drive.dataId, "iperf.log", "text/plain", iperf.content, true);
@@ -89,6 +104,17 @@ export async function fileLogsInDrive(assessmentId: string): Promise<{ ok: boole
     const f = await putFile(a.drive.dataId, "devices.log", "text/plain", devices.content, true);
     await markLogFiled(devices.id, f.id);
     filed.push("devices.log");
+  }
+  if (broadband) {
+    const f = await putFile(a.drive.dataId, "broadband.csv", "text/csv", broadband.content, true);
+    await markLogFiled(broadband.id, f.id);
+    filed.push("broadband.csv");
+    /* The evidence report beside the assessment report, drawn from the copy just filed. */
+    const evidence = a.drive.reportId ? evidenceFor(a, parseBroadbandCsv(broadband.content), await commandsFor(assessmentId)) : null;
+    if (evidence && a.drive.reportId) {
+      await putFile(a.drive.reportId, `${a.drive.folderName ?? a.customer_name} broadband evidence.html`, "text/html", evidence.html, true);
+      filed.push("the broadband evidence report");
+    }
   }
   if (filed.length) await addEvent({ assessment_id: assessmentId, kind: "drive:logs", summary: `Filed in Drive: ${filed.join(", ")}`, actor: "portal" });
   return { ok: true, outcome: filed.length ? `filed ${filed.join(", ")}` : "no logs yet" };
@@ -123,12 +149,14 @@ export function pending(commands: Command[]): Command[] {
 
 /** The parsed logs for an assessment, newest final copy first. */
 export async function parsedLogs(assessmentId: string) {
-  const { iperf, devices } = await bestLogs(assessmentId);
+  const { iperf, devices, broadband } = await bestLogs(assessmentId);
   return {
     iperfCopy: iperf,
     devicesCopy: devices,
+    broadbandCopy: broadband,
     iperf: iperf ? parseIperfLog(iperf.content) : null,
     devices: devices ? parseDevicesLog(devices.content) : null,
+    broadband: broadband ? parseBroadbandCsv(broadband.content) : null,
   };
 }
 

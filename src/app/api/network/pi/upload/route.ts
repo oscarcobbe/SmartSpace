@@ -1,8 +1,11 @@
 /**
- * Where a Pi sends iperf.log and devices.log when it is told to collect them.
+ * Where a Pi sends iperf.log and devices.log when it is told to collect them,
+ * and broadband.csv when it is told to collect the broadband test.
  *
- * Only while carrying out a "collect" instruction that was sent to this Pi,
- * for the assessment that instruction names. The file arrives gzipped (three
+ * Only while carrying out a "collect" (the trial's two logs) or a
+ * "collect_broadband" (broadband.csv) instruction that was sent to this Pi,
+ * for the assessment that instruction names. Seven days of broadband.csv is
+ * about 1.5 MB, a few hundred KB gzipped. The file arrives gzipped (three
  * days of iperf.log is about 200 KB, a few tens gzipped, far inside the
  * platform's 4.5 MB request limit) with its length and SHA-256, and is kept
  * only if both match what arrived. The answer repeats the SHA-256: the Pi
@@ -36,13 +39,15 @@ export async function POST(req: Request) {
   }
 
   const cmd = typeof b.command === "string" ? await getCommand(b.command) : null;
-  if (!cmd || cmd.pi_id !== pi.id || cmd.action !== "collect" || cmd.state !== "sent") {
+  if (!cmd || cmd.pi_id !== pi.id || (cmd.action !== "collect" && cmd.action !== "collect_broadband") || cmd.state !== "sent") {
     return refuse(409, "There is no collection under way on this Pi for that instruction.");
   }
   if (b.assessment !== cmd.assessment_id || b.assessment !== (cmd.args as { assessment?: string }).assessment) {
     return refuse(409, "That file is for a different assessment from the one being collected.");
   }
-  const kind = b.kind === "iperf" || b.kind === "devices" ? b.kind : null;
+  const kind = cmd.action === "collect_broadband"
+    ? (b.kind === "broadband" ? b.kind : null)
+    : (b.kind === "iperf" || b.kind === "devices" ? b.kind : null);
   const source = typeof b.source === "string" && (b.source === "current" || ARCHIVE_DIR_RE.test(b.source)) ? b.source : null;
   const sha256 = typeof b.sha256 === "string" && /^[0-9a-f]{64}$/.test(b.sha256) ? b.sha256 : null;
   const bytes = typeof b.bytes === "number" && Number.isInteger(b.bytes) && b.bytes >= 0 && b.bytes <= MAX_LOG_BYTES ? b.bytes : null;

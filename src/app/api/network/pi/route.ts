@@ -30,6 +30,7 @@ const STATUS_KEYS = new Set([
   "role", "hostname", "time", "uptime_s", "ip_eth0", "wlan_inet", "gateway", "throttled", "temp_c", "disk_pct",
   "iperf3_running", "reboot_cron", "cron_iperf", "cron_sched", "cron_both", "log_bytes", "log_lines", "log_first",
   "log_last_stamp", "devices_conf", "devices_cron", "devices_lines", "rpi_connect", "job", "archive", "today",
+  "bb_job", "bb_started", "bb_every", "bb_bytes", "bb_minutes", "bb_last",
 ]);
 
 function cleanStatus(raw: unknown): PiStatus {

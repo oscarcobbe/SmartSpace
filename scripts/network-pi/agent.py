@@ -15,12 +15,18 @@ their files exactly as they were, so his own scripts keep working beside it:
                the same devicewatch.sh and the same cron line
   collect.sh   "collect" sends iperf.log and devices.log to the portal
 
-It only ever does the seven things in ACTIONS. It never runs anything the
+It only ever does the nine things in ACTIONS. It never runs anything the
 portal sends as a command: every program it starts is named here, with its
 arguments as a list (never through a shell), and the only values that come
 from the portal are an assessment id, device names that are only ever written
 to a file, and addresses that must be private IPv4 addresses before anything
 pings them.
+
+The Pi at a customer's router can also run the broadband test on its own
+(the broadband evidence service): "start_broadband" pings the internet and
+the router every minute, runs a speed test as often as the portal says, and
+writes broadband.csv, which "collect_broadband" sends to the portal. The test
+runs in this program, so systemd starts it again after a power cut.
 
 It never deletes a log. "start_trial" and a final "collect" move the logs
 into ~/archive/<when>-<assessment>/ and start empty ones in their place.
@@ -30,6 +36,7 @@ does not hold.
 
 Python 3 standard library only. Installed by install.sh, run by systemd.
 """
+import csv
 import gzip
 import base64
 import hashlib
@@ -41,18 +48,22 @@ import shutil
 import socket
 import subprocess
 import sys
+import tempfile
+import threading
 import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 
-VERSION = "2026-10-06.1"
+VERSION = "2026-10-15.1"
 
 AGENT_HOME = os.environ.get("SMARTSPACE_AGENT_HOME", os.path.expanduser("~/.smartspace-agent"))
 
 UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.I)
 ARCHIVE_DIR_RE = re.compile(r"^\d{8}-\d{6}(?:-[0-9a-f]{8})?$")
-LOG_NAMES = ("iperf.log", "devices.log")
+TRIAL_LOGS = ("iperf.log", "devices.log")
+BB_LOG = "broadband.csv"
+LOG_NAMES = TRIAL_LOGS + (BB_LOG,)
 HOST_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9.-]{0,252}$")
 
 
@@ -87,6 +98,7 @@ def paths(cfg):
         "devices_log": os.path.join(home, "devices.log"),
         "devices_conf": os.path.join(home, "devices.conf"),
         "devicewatch": os.path.join(home, "devicewatch.sh"),
+        "broadband": os.path.join(home, BB_LOG),
         "archive": os.path.join(home, "archive"),
     }
 
@@ -322,6 +334,8 @@ def status(cfg, state):
         "disk_pct": disk_pct(cfg),
         "today": today_label(),
     }
+    s.update(bb_facts(cfg, state))
+    s["archive"] = archive_listing(cfg)
     cron = read_crontab()
     if cfg["role"] == "server":
         s["iperf3_running"] = count_processes("iperf3")
@@ -337,7 +351,6 @@ def status(cfg, state):
     s["devices_lines"] = count_lines(paths(cfg)["devices_log"])
     s["rpi_connect"] = rpi_connect()
     s["job"] = state.get("job")
-    s["archive"] = archive_listing(cfg)
     return s
 
 
@@ -391,6 +404,210 @@ def need_devices(args):
         seen.add(name)
         out.append((name, ip))
     return out
+
+
+# ── The broadband test ──────────────────────────────────────────────────────
+#
+# What the customer's broadband actually delivers, from a Pi wired into their
+# router: every minute 20 pings to the internet (1.1.1.1) and 20 to the router
+# itself, and every so often a speed test with pings running during it (lag
+# under load). The pings to the router tell the two failures apart: the
+# internet silent while the router answers is the broadband; both silent is
+# the cable, the Pi or the power.
+#
+# The speed test is Cloudflare's (speed.cloudflare.com), four downloads of
+# 25 MB and four uploads of 10 MB at once: about 140 MB a test, so hourly is
+# about 3.4 GB a day. The portal chooses 30, 60 or 180 minutes, or none, so a
+# customer with a data cap is not charged for the evidence.
+
+BB_INTERNET = "1.1.1.1"
+BB_FIELDS = ["epoch", "local_time", "kind", "target", "sent", "lost", "avg_ms", "max_ms", "jitter_ms",
+             "down_mbps", "up_mbps", "loaded_sent", "loaded_lost", "loaded_avg_ms", "error"]
+BB_SPEED_EVERY = (0, 30, 60, 180)
+BB_STREAMS = 4
+BB_DOWN_BYTES = 25000000
+BB_UP_BYTES = 10000000
+
+_bb_lock = threading.Lock()
+
+
+def ping_stats(target, count=20, interval=0.2):
+    """Loss, average, worst and jitter (the average change between one reply
+    and the next, which is what breaks up a video call) for count pings."""
+    code, out, err = run(["ping", "-n", "-c", str(count), "-i", str(interval), "-W", "2", target],
+                         timeout=int(count * interval) + 15)
+    times = [float(t) for t in re.findall(r"time=([\d.]+) ms", out)]
+    r = {"sent": count, "lost": count - len(times), "avg_ms": None, "max_ms": None, "jitter_ms": None, "error": ""}
+    if times:
+        r["avg_ms"] = round(sum(times) / len(times), 1)
+        r["max_ms"] = round(max(times), 1)
+        if len(times) > 1:
+            r["jitter_ms"] = round(sum(abs(b - a) for a, b in zip(times, times[1:])) / (len(times) - 1), 1)
+    elif code not in (0, 1):
+        r["error"] = (err.strip() or "ping did not run")[:120]
+    return r
+
+
+def _bb_base(kind, target):
+    now = time.time()
+    return {"epoch": int(now), "local_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(now)),
+            "kind": kind, "target": target}
+
+
+def bb_write(cfg, job, rows):
+    """Appends rows to broadband.csv, only while the test is still this
+    assessment's: a minute in flight when the log is collected is dropped,
+    rather than starting a new log in the next customer's name."""
+    path = paths(cfg)["broadband"]
+    with _bb_lock:
+        if ((load_state().get("bb") or {}).get("job")) != job:
+            return False
+        new = not os.path.isfile(path) or os.path.getsize(path) == 0
+        with open(path, "a", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=BB_FIELDS, extrasaction="ignore", lineterminator="\n")
+            if new:
+                w.writeheader()
+            for row in rows:
+                w.writerow(row)
+    return True
+
+
+def bb_minute(cfg, job):
+    """One minute's pings, to the internet and the router at the same time."""
+    gw = gateway()
+    got = {}
+
+    def one(name, target):
+        got[name] = ping_stats(target)
+
+    threads = [threading.Thread(target=one, args=("internet", BB_INTERNET))]
+    if gw and private_ipv4(gw):
+        threads.append(threading.Thread(target=one, args=("router", gw)))
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    rows = [dict(_bb_base("ping", "internet"), **got["internet"])]
+    if "router" in got:
+        rows.append(dict(_bb_base("ping", "router"), **got["router"]))
+    else:
+        rows.append(dict(_bb_base("ping", "router"), sent=0, lost=0, error="no router address on this network"))
+    bb_write(cfg, job, rows)
+    return {"internet": got["internet"], "router": got.get("router"), "gateway": gw}
+
+
+def _curl_total(argv_list):
+    """Runs the curls at once and returns megabits a second over the time they took together."""
+    sizes = []
+
+    def one(argv):
+        code, out, _ = run(argv, timeout=45)
+        parts = out.split()
+        if len(parts) == 2:
+            try:
+                sizes.append(float(parts[0]) + float(parts[1]))
+            except ValueError:
+                pass
+
+    start = time.time()
+    threads = [threading.Thread(target=one, args=(a,)) for a in argv_list]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    took = time.time() - start
+    total = sum(sizes)
+    return round(total * 8 / took / 1e6, 1) if took > 0 and total else None
+
+
+def bb_speed(cfg, job):
+    curl = ["curl", "-s", "-o", "/dev/null", "--max-time", "30", "-w", "%{size_download} %{size_upload}"]
+    loaded = {}
+
+    def under_load():
+        loaded["r"] = ping_stats(BB_INTERNET, 40, 0.25)
+
+    t = threading.Thread(target=under_load)
+    t.start()
+    down = _curl_total([curl + ["https://speed.cloudflare.com/__down?bytes=%d" % BB_DOWN_BYTES]] * BB_STREAMS)
+    fd, blob = tempfile.mkstemp(prefix="smartspace-up-")
+    try:
+        with os.fdopen(fd, "wb") as fh:
+            fh.write(os.urandom(BB_UP_BYTES))
+        up = _curl_total([curl + ["-X", "POST", "--data-binary", "@" + blob, "-H", "Content-Type: application/octet-stream",
+                                  "https://speed.cloudflare.com/__up"]] * BB_STREAMS)
+    finally:
+        os.unlink(blob)
+    t.join()
+    l = loaded.get("r") or {}
+    row = dict(_bb_base("speed", "internet"), down_mbps=down, up_mbps=up, loaded_sent=l.get("sent"),
+               loaded_lost=l.get("lost"), loaded_avg_ms=l.get("avg_ms"),
+               error="" if down or up else "the speed test reached nothing")
+    bb_write(cfg, job, [row])
+    return row
+
+
+def broadband_loop(cfg):
+    """Runs beside the calls to the portal for as long as the agent runs, and
+    tests only while a broadband test is started on this Pi."""
+    next_speed, job_seen = 0.0, None
+    while True:
+        tick = time.time()
+        try:
+            bb = load_state().get("bb") or {}
+            job = bb.get("job")
+            if job != job_seen:
+                next_speed, job_seen = 0.0, job  # a new test starts with a speed test
+            if job:
+                bb_minute(cfg, job)
+                every = bb.get("speed_every") or 0
+                if every and time.time() >= next_speed:
+                    next_speed = time.time() + every * 60
+                    bb_speed(cfg, job)
+        except Exception as e:  # the watch must outlive any one bad minute
+            say("broadband test:", "%s: %s" % (type(e).__name__, str(e)[:200]))
+        time.sleep(max(1, 60 - (time.time() - tick)))
+
+
+_bb_facts_cache = {}
+
+
+def bb_facts(cfg, state):
+    bb = state.get("bb") or {}
+    facts = {"bb_job": bb.get("job"), "bb_started": bb.get("started"), "bb_every": bb.get("speed_every"),
+             "bb_bytes": 0, "bb_minutes": 0, "bb_last": None}
+    path = paths(cfg)["broadband"]
+    try:
+        st = os.stat(path)
+    except OSError:
+        return facts
+    key = (st.st_size, st.st_mtime_ns)
+    if _bb_facts_cache.get("key") != key:
+        minutes, last = 0, None
+        with open(path, errors="replace") as fh:
+            for line in fh:
+                if ",ping,internet," in line:
+                    minutes += 1
+                    last = line.split(",", 2)[1]
+        _bb_facts_cache.update({"key": key, "minutes": minutes, "last": last})
+    facts.update({"bb_bytes": st.st_size, "bb_minutes": _bb_facts_cache["minutes"], "bb_last": _bb_facts_cache["last"]})
+    return facts
+
+
+def archive_broadband(cfg, job):
+    """Files broadband.csv away in the archive, as archive_logs does the
+    trial's logs. Returns what was filed, or None if there was nothing."""
+    p = paths(cfg)
+    with _bb_lock:
+        src = p["broadband"]
+        if not os.path.isfile(src) or os.path.getsize(src) == 0:
+            return None
+        name = time.strftime("%Y%m%d-%H%M%S") + ("-" + job[:8] if job else "")
+        folder = os.path.join(p["archive"], name)
+        os.makedirs(folder, exist_ok=True)
+        dest = os.path.join(folder, BB_LOG)
+        os.rename(src, dest)
+    return {"dir": name, "files": [{"name": BB_LOG, "bytes": os.path.getsize(dest), "sha256": sha256_of(dest)}]}
 
 
 # ── The actions ─────────────────────────────────────────────────────────────
@@ -475,7 +692,7 @@ def archive_logs(cfg, job):
     or None if the logs were empty."""
     p = paths(cfg)
     clear_of_the_hourly_test()
-    present = [(n, p["iperf"] if n == "iperf.log" else p["devices_log"]) for n in LOG_NAMES]
+    present = [(n, p["iperf"] if n == "iperf.log" else p["devices_log"]) for n in TRIAL_LOGS]
     present = [(n, f) for n, f in present if os.path.isfile(f) and os.path.getsize(f) > 0]
     if not present:
         return None
@@ -491,11 +708,14 @@ def archive_logs(cfg, job):
     return {"dir": name, "files": filed}
 
 
-def newest_archive_for(cfg, job):
+def newest_archive_for(cfg, job, names=TRIAL_LOGS):
+    """The newest archive folder for this assessment holding any of these logs.
+    The trial's logs and the broadband log are filed in separate folders."""
     root = paths(cfg)["archive"]
     if not os.path.isdir(root):
         return None
-    mine = sorted(d for d in os.listdir(root) if ARCHIVE_DIR_RE.match(d) and d.endswith("-" + job[:8]))
+    mine = sorted(d for d in os.listdir(root) if ARCHIVE_DIR_RE.match(d) and d.endswith("-" + job[:8])
+                  and any(os.path.isfile(os.path.join(root, d, n)) for n in names))
     return mine[-1] if mine else None
 
 
@@ -602,7 +822,7 @@ def act_collect(cfg, args, cmd):
         if not name:
             raise Refused("The logs for this assessment are no longer on the Pi.")
         folder = os.path.join(p["archive"], name)
-        files = [(n, os.path.join(folder, n), name) for n in LOG_NAMES if os.path.isfile(os.path.join(folder, n))]
+        files = [(n, os.path.join(folder, n), name) for n in TRIAL_LOGS if os.path.isfile(os.path.join(folder, n))]
     elif final:
         write_crontab([l for l in read_crontab() if "devicewatch" not in l])
         filed = archive_logs(cfg, job)
@@ -611,7 +831,7 @@ def act_collect(cfg, args, cmd):
         folder = os.path.join(p["archive"], filed["dir"])
         files = [(f["name"], os.path.join(folder, f["name"]), filed["dir"]) for f in filed["files"]]
     else:
-        files = [(n, p["iperf"] if n == "iperf.log" else p["devices_log"], "current") for n in LOG_NAMES]
+        files = [(n, p["iperf"] if n == "iperf.log" else p["devices_log"], "current") for n in TRIAL_LOGS]
         files = [(n, f, s) for n, f, s in files if os.path.isfile(f) and os.path.getsize(f) > 0]
         if not files:
             raise Refused("The logs are empty. Nothing to collect.")
@@ -649,6 +869,56 @@ def act_clear_logs(cfg, args, cmd):
     return {"deleted": deleted, "kept": kept}
 
 
+def act_start_broadband(cfg, args, cmd):
+    job = need_assessment(args)
+    every = args.get("speed_every", 60)
+    if every not in BB_SPEED_EVERY:
+        raise Refused("A speed test runs every 30, 60 or 180 minutes, or not at all.")
+    state = load_state()
+    running = (state.get("bb") or {}).get("job")
+    if running and running != job:
+        raise Refused("This Pi is running the broadband test for another assessment (%s). Collect that first." % running[:8])
+    # Starting again for the same assessment files the log so far away, as starting a trial again does.
+    archived = archive_broadband(cfg, running or state.get("last_bb_job"))
+    state = load_state()
+    state["bb"] = {"job": job, "started": datetime.now(timezone.utc).isoformat(), "speed_every": every}
+    save_state(state)
+    first = bb_minute(cfg, job)
+    return {"job": job, "speed_every": every, "archived": archived, "first": first}
+
+
+def act_collect_broadband(cfg, args, cmd):
+    job = need_assessment(args)
+    final = args.get("final") is True
+    state = load_state()
+    p = paths(cfg)
+    running = (state.get("bb") or {}).get("job")
+    resend = final and running != job and state.get("last_bb_job") == job
+    if running != job and not resend:
+        if running:
+            raise Refused("This Pi's broadband test is another assessment's (%s)." % running[:8])
+        raise Refused("No broadband test is running on this Pi for this assessment, so there is no log to collect.")
+    if resend:
+        name = newest_archive_for(cfg, job, (BB_LOG,))
+        if not name:
+            raise Refused("The broadband log for this assessment is no longer on the Pi.")
+        path, source = os.path.join(p["archive"], name, BB_LOG), name
+    elif final:
+        # Stop first, so no minute lands after the log is filed.
+        state["bb"] = None
+        state["last_bb_job"] = job
+        save_state(state)
+        filed = archive_broadband(cfg, job)
+        if not filed:
+            raise Refused("The broadband log is empty. Nothing to collect.")
+        path, source = os.path.join(p["archive"], filed["dir"], BB_LOG), filed["dir"]
+    else:
+        path, source = p["broadband"], "current"
+        if not os.path.isfile(path) or os.path.getsize(path) == 0:
+            raise Refused("The broadband log is empty so far. Nothing to collect.")
+    return {"files": [upload(cfg, cmd, job, "broadband", path, source, final)], "final": final}
+
+
 ACTIONS = {
     "measure": act_measure,
     "check": act_check,
@@ -657,6 +927,8 @@ ACTIONS = {
     "stop_watch": act_stop_watch,
     "collect": act_collect,
     "clear_logs": act_clear_logs,
+    "start_broadband": act_start_broadband,
+    "collect_broadband": act_collect_broadband,
 }
 
 
@@ -713,6 +985,8 @@ def main():
     say("smartspace-agent", VERSION, "starting as the", cfg["role"], "Pi, calling", cfg["url"])
     results, backoff = [], 15
     once = "--once" in sys.argv
+    if not once:
+        threading.Thread(target=broadband_loop, args=(cfg,), daemon=True).start()
     while True:
         try:
             state = load_state()
