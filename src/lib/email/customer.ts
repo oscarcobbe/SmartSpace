@@ -363,7 +363,7 @@ export function reminderInstall(d: { name: string; slot: string; product: string
   const f = first(d.name);
   const product = productName(d.product);
   const at = startTime(d.slot);
-  const booked = `Your installation${product ? ` of your ${product}` : ""} is confirmed for tomorrow at ${at}.`;
+  const booked = `Your ${product ? `${product} installation` : "installation"} is confirmed for tomorrow at ${at}.`;
   const preheader = `Confirmed for tomorrow at ${at}. A few things to have ready.`;
   return {
     subject: `Tomorrow's installation with Smart Space, ${at}`,
